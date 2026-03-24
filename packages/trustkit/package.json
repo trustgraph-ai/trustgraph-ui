@@ -1,0 +1,35 @@
+{
+  "name": "@trustgraph/trustkit",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/trustkit.js",
+  "module": "./dist/trustkit.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/trustkit.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -b && vite build",
+    "dev": "vite build --watch"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "@trustgraph/react-provider": "^1.4.0",
+    "@trustgraph/react-state": "^1.4.6",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "vite": "^7.3.1",
+    "vite-plugin-dts": "^4.5.0"
+  }
+}
