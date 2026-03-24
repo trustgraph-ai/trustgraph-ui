@@ -33,9 +33,8 @@ export function QueryView() {
 
   // Get graph entities from embeddings - only fetch when we have embeddings
   const hasEmbeddings = embeddings && embeddings.length > 0;
-  // @ts-expect-error — react-state types expect `vec` but runtime API accepts `vecs`
   const { graphEmbeddings, isLoading: graphEmbeddingsLoading } = useGraphEmbeddings({
-    vecs: hasEmbeddings ? embeddings : [[]],
+    vec: hasEmbeddings ? embeddings[0] : undefined,
     limit: hasEmbeddings ? 10 : 0,
     collection: COLLECTION,
   });

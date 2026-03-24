@@ -98,12 +98,13 @@ export function DataView() {
   // Core search function - searches ALL schemas, stores ALL results
   const performSearch = useCallback(async (vectors: number[][]) => {
     try {
+      const vector = vectors[0];
       // Always search ALL schemas
       const embeddingsResults = await Promise.all(
         schemas.map(async (schema) => {
           try {
             const matches = await executeQueryAsync({
-              vectors,
+              vectors: vector,
               schemaName: schema.key,
               collection: COLLECTION,
               limit: 10,
