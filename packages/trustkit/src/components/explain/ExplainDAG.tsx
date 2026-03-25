@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { DAGLayout } from "../../hooks/useExplainDAG";
-import { text, border, withGlow } from "../../theme";
+import { text, withGlow } from "../../theme";
 
 const NODE_W = 140;
 const NODE_H = 40;

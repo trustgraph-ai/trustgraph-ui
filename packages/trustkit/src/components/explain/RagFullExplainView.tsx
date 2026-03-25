@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
+import { SearchInput, SectionLabel, Toolbar } from "../common";
 import { StreamingResponse } from "./StreamingResponse";
 import { ExplainEventCard } from "./ExplainEventCard";
 import { ExplainDAG } from "./ExplainDAG";
