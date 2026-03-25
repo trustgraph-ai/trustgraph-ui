@@ -80,9 +80,9 @@ export function GraphExplorer({ renderer = "svg", onEntitySelect }: GraphExplore
       />
 
       {/* Main Content */}
-      <div style={{ display: "flex", height: "calc(100vh - 150px)" }}>
-        {/* Graph */}
-        <div style={{ flex: 1, minWidth: 0, position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "relative", height: "calc(100vh - 150px)" }}>
+        {/* Graph — always full width */}
+        <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
           {renderer === "canvas" ? (
             <GraphCanvas
               entities={entities}
@@ -104,15 +104,20 @@ export function GraphExplorer({ renderer = "svg", onEntitySelect }: GraphExplore
           )}
         </div>
 
-        {/* Detail Panel */}
+        {/* Detail Panel — overlays on top of graph */}
         {selectedNode && ontology[selectedNode.domain] && (
           <div style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
             width: 320,
-            flexShrink: 0,
             borderLeft: `1px solid ${border.default}`,
             background: "rgba(12,12,18,0.95)",
+            backdropFilter: "blur(12px)",
             padding: 24,
             overflowY: "auto",
+            zIndex: 10,
           }}>
             {/* Header */}
             <div style={{
