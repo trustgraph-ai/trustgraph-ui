@@ -1,4 +1,5 @@
 export { HomePage } from "./HomePage";
+export { IngestPage } from "./IngestPage";
 export { ExploreView } from "./ExploreView";
 export { GraphRagPage } from "./GraphRagPage";
 export { DocRagPage } from "./DocRagPage";

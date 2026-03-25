@@ -18,6 +18,7 @@ interface HomePageProps {
 const workflows: WorkflowCard[] = [
   {
     key: "ingest",
+    view: "ingest",
     title: "Document Ingestion",
     icon: "⬆",
     color: palette.amber,
