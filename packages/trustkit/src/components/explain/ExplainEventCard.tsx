@@ -102,12 +102,14 @@ export function ExplainEventCard({
       )}
 
       {/* Data */}
-      {data && !loading && <ExplainEventData
-        eventType={eventType}
-        data={data}
-        typeColor={typeColor}
-        onEntityClick={onEntityClick}
-      />}
+      {data != null && !loading ? (
+        <ExplainEventData
+          eventType={eventType}
+          data={data}
+          typeColor={typeColor}
+          onEntityClick={onEntityClick}
+        />
+      ) : null}
     </div>
   );
 }
@@ -229,8 +231,8 @@ function ExplainEventData({
     case "analysis":
       return (
         <div style={{ fontSize: 11, color: text.subtle }}>
-          {d.action && <div><span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Action:</span> {String(d.action)}</div>}
-          {d.arguments && <div style={{ marginTop: 2 }}><span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Args:</span> {String(d.arguments)}</div>}
+          {d.action ? <div><span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Action:</span> {String(d.action)}</div> : null}
+          {d.arguments ? <div style={{ marginTop: 2 }}><span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Args:</span> {String(d.arguments)}</div> : null}
         </div>
       );
 
