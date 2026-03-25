@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   SimpleDocRagView,
   DocRagExplainView,
+  DocRagFullExplainView,
   ModeSelector,
   SectionLabel,
   text,
@@ -10,16 +11,18 @@ import {
 } from "@trustgraph/trustkit";
 import { DevPanel } from "../components/DevPanel";
 
-type DocRagOption = "simple" | "explain";
+type DocRagOption = "simple" | "explain" | "full";
 
 const modes = [
   { key: "simple", label: "Simple" },
-  { key: "explain", label: "With Explainability" },
+  { key: "explain", label: "Timeline" },
+  { key: "full", label: "Full DAG" },
 ];
 
 const optionDescriptions: Record<DocRagOption, string> = {
   simple: "No explainability — just a question and an answer from documents.",
   explain: "Response with explain event timeline and source links.",
+  full: "Full DAG visualization with click-to-inspect detail.",
 };
 
 /**
@@ -57,6 +60,7 @@ export function DocRagPage() {
 
       {option === "simple" && <SimpleDocRagView />}
       {option === "explain" && <DocRagExplainView />}
+      {option === "full" && <DocRagFullExplainView />}
 
       <DevPanel
         explanation="Document RAG searches documents by semantic similarity and generates an answer grounded in the retrieved content. Like Graph RAG, it supports explainability — the event timeline shows the retrieval and synthesis steps."

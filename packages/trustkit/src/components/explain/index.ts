@@ -16,3 +16,4 @@ export { RagFullExplainView } from "./RagFullExplainView";
 // Tier 3 composites — Document RAG
 export { SimpleDocRagView } from "./SimpleDocRagView";
 export { DocRagExplainView } from "./DocRagExplainView";
+export { DocRagFullExplainView } from "./DocRagFullExplainView";

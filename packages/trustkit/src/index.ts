@@ -10,7 +10,7 @@ export type { ExplainGraphNode, ExplainGraphEdge } from "./components/graph";
 export { EntityBadge, EntityProperties, EntityRelationships, GraphExplorer } from "./components/knowledge";
 
 // Components — explain
-export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, ExplainDAG, SourceLinkBadge, SourcePanel, SimpleRagView, RagWithSourcesView, RagWithTimelineView, GraphRagView, RagExplainView, RagFullExplainView, SimpleDocRagView, DocRagExplainView } from "./components/explain";
+export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, ExplainDAG, SourceLinkBadge, SourcePanel, SimpleRagView, RagWithSourcesView, RagWithTimelineView, GraphRagView, RagExplainView, RagFullExplainView, SimpleDocRagView, DocRagExplainView, DocRagFullExplainView } from "./components/explain";
 
 // Hooks
 export { useGraphData } from "./hooks/useGraphData";
