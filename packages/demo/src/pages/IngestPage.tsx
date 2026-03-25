@@ -1,5 +1,4 @@
 import { SectionLabel, text } from "@trustgraph/trustkit";
-import { DevPanel } from "../components/DevPanel";
 
 /**
  * Document Ingestion workflow — placeholder for experimenting
