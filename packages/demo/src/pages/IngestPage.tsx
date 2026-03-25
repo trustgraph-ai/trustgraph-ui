@@ -312,7 +312,105 @@ export function IngestPage() {
       }
     }
 
-    const maxY = Math.max(docY, procY, destY) + 20;
+    // ── Barycentric ordering ──────────────────────────────────
+    // Minimise edge crossings and vertical stretch by ordering
+    // nodes in each column by the average Y of their neighbours
+    // in the adjacent column.
+
+    // Deduplicate edges for layout purposes
+    const edgeSet = new Set<string>();
+    const layoutEdges = edges.filter(e => {
+      const key = `${e.from}→${e.to}`;
+      if (edgeSet.has(key)) return false;
+      edgeSet.add(key);
+      return true;
+    });
+
+    // Build adjacency: for each node, which nodes connect to it and from it
+    const leftNeighbours = new Map<string, string[]>(); // node → nodes in column to its left
+    const rightNeighbours = new Map<string, string[]>(); // node → nodes in column to its right
+    for (const e of layoutEdges) {
+      if (!rightNeighbours.has(e.from)) rightNeighbours.set(e.from, []);
+      rightNeighbours.get(e.from)!.push(e.to);
+      if (!leftNeighbours.has(e.to)) leftNeighbours.set(e.to, []);
+      leftNeighbours.get(e.to)!.push(e.from);
+    }
+
+    // Group nodes by column
+    type ColName = "doc" | "proc" | "dest";
+    const columns: Record<ColName, DiagramNode[]> = { doc: [], proc: [], dest: [] };
+    for (const n of nodes) {
+      const col = n.column as ColName;
+      if (columns[col]) columns[col].push(n);
+    }
+
+    // Assign initial Y positions sequentially per column
+    function assignSequentialY(col: DiagramNode[]) {
+      let y = TOP_PAD;
+      for (const n of col) {
+        n.y = y;
+        y += n.h + ROW_GAP;
+      }
+    }
+
+    // Get barycenter (average Y centre of connected nodes)
+    function barycenter(_nodeId: string, neighbourIds: string[]): number | null {
+      const ys: number[] = [];
+      for (const nid of neighbourIds) {
+        const n = nodeMap.get(nid);
+        if (n) ys.push(n.y + n.h / 2);
+      }
+      return ys.length > 0 ? ys.reduce((a, b) => a + b, 0) / ys.length : null;
+    }
+
+    // Sort a column by barycenter of neighbours, then re-assign Y positions
+    function orderByBarycenter(col: DiagramNode[], getNeighbours: Map<string, string[]>) {
+      // Compute barycenter for each node
+      const scored: { node: DiagramNode; bc: number }[] = [];
+      for (const n of col) {
+        const neighbours = getNeighbours.get(n.id) || [];
+        const bc = barycenter(n.id, neighbours);
+        scored.push({ node: n, bc: bc ?? n.y });
+      }
+      // Sort by barycenter
+      scored.sort((a, b) => a.bc - b.bc);
+      // Reassign Y positions in sorted order
+      let y = TOP_PAD;
+      for (const { node } of scored) {
+        node.y = y;
+        y += node.h + ROW_GAP;
+      }
+      // Update column array order
+      col.length = 0;
+      col.push(...scored.map(s => s.node));
+    }
+
+    // Initial sequential layout
+    assignSequentialY(columns.doc);
+    assignSequentialY(columns.proc);
+    assignSequentialY(columns.dest);
+
+    // Iterate barycentric ordering (left to right, then right to left)
+    for (let iter = 0; iter < 4; iter++) {
+      // Left to right: order proc by doc neighbours, dest by proc neighbours
+      orderByBarycenter(columns.proc, leftNeighbours);
+      orderByBarycenter(columns.dest, leftNeighbours);
+      // Right to left: order doc by proc neighbours
+      orderByBarycenter(columns.doc, rightNeighbours);
+    }
+
+    // Final pass left to right to settle
+    orderByBarycenter(columns.proc, leftNeighbours);
+    orderByBarycenter(columns.dest, leftNeighbours);
+
+    // ── Compute SVG dimensions ──────────────────────────────
+    function colMaxY(col: DiagramNode[]) {
+      if (col.length === 0) return TOP_PAD;
+      const last = col[col.length - 1];
+      return last.y + last.h + ROW_GAP;
+    }
+
+    const maxY = Math.max(colMaxY(columns.doc), colMaxY(columns.proc), colMaxY(columns.dest)) + 20;
     const maxX = COL_X.dest + COL_WIDTH + 20 + LEFT_PAD;
 
     return { nodes, edges, svgHeight: Math.max(maxY, 300), svgWidth: Math.max(maxX, 800) };
