@@ -67,8 +67,8 @@ export function QueryView() {
   const embeddingResults: EmbeddingResultItem[] = [];
   const seenUris = new Set<string>();
 
-  for (const ge of (hasEmbeddings && graphEmbeddings || []) as { t: string; i?: string }[]) {
-    const uri = ge.i;
+  for (const ge of (hasEmbeddings && graphEmbeddings || []) as { entity: { t: string; i?: string }; score: number }[]) {
+    const uri = ge.entity?.i;
     if (!uri || seenUris.has(uri)) continue;
 
     const entityId = getLocalName(uri);
