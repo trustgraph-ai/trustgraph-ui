@@ -1,3 +1,4 @@
+export { HomePage } from "./HomePage";
 export { GraphView } from "./GraphView";
 export { QueryView } from "./QueryView";
 export { ExplainView } from "./ExplainView";

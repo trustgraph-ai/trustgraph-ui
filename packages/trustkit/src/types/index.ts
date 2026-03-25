@@ -61,5 +61,5 @@ export interface GraphNode extends Entity {
 }
 
 // ── UI State Types ───────────────────────────────────────────────
-export type TabKey = "graph" | "query" | "explain" | "ontology" | "data";
+export type TabKey = "home" | "graph" | "query" | "explain" | "ontology" | "data";
 export type QueryPhase = "idle" | "thinking" | "answering" | "done";

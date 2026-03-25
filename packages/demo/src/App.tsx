@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import type { TabKey, DomainKey, Entity } from "@trustgraph/trustkit";
+import type { DomainKey, Entity } from "@trustgraph/trustkit";
 import { Header, StatusBar, Toaster, useGraphData, toast } from "@trustgraph/trustkit";
-import { GraphView, QueryView, ExplainView, DataView, OntologyView } from "./pages";
+import { HomePage, GraphView, QueryView, ExplainView, DataView, OntologyView } from "./pages";
+
+type View = "home" | "graph" | "query" | "explain" | "data" | "ontology";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabKey>("graph");
+  const [activeView, setActiveView] = useState<View>("home");
   const [activeFilter, setActiveFilter] = useState<DomainKey | null>(null);
   const [selectedNode, setSelectedNode] = useState<Entity | null>(null);
   const { entities, isLoading } = useGraphData();
@@ -16,8 +18,8 @@ export default function App() {
     }
   }, [isLoading, entities.length]);
 
-  const handleTabChange = (tab: TabKey) => {
-    setActiveTab(tab);
+  const handleTabChange = (tab: string) => {
+    setActiveView(tab as View);
     if (tab !== "graph") {
       setSelectedNode(null);
     }
@@ -29,9 +31,11 @@ export default function App() {
       fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
       color: "#E5E5E5", overflow: "hidden",
     }}>
-      <Header activeTab={activeTab} onTabChange={handleTabChange} />
+      <Header activeTab={activeView as any} onTabChange={handleTabChange} />
 
-      {activeTab === "graph" && (
+      {activeView === "home" && <HomePage />}
+
+      {activeView === "graph" && (
         <GraphView
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
@@ -40,13 +44,13 @@ export default function App() {
         />
       )}
 
-      {activeTab === "query" && <QueryView />}
+      {activeView === "query" && <QueryView />}
 
-      {activeTab === "explain" && <ExplainView />}
+      {activeView === "explain" && <ExplainView />}
 
-      {activeTab === "data" && <DataView />}
+      {activeView === "data" && <DataView />}
 
-      {activeTab === "ontology" && <OntologyView />}
+      {activeView === "ontology" && <OntologyView />}
 
       <StatusBar />
       <Toaster />
