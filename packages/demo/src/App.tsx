@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import type { DomainKey, Entity } from "@trustgraph/trustkit";
 import { Header, StatusBar, Toaster, useGraphData, toast } from "@trustgraph/trustkit";
-import { HomePage, GraphView, QueryView, ExplainView, DataView, OntologyView } from "./pages";
+import { HomePage, ExploreView, GraphView, QueryView, ExplainView, DataView, OntologyView } from "./pages";
 
-type View = "home" | "graph" | "query" | "explain" | "data" | "ontology";
+type View = "home" | "explore" | "graph" | "query" | "explain" | "data" | "ontology";
 
 export default function App() {
   const [activeView, setActiveView] = useState<View>("home");
@@ -18,11 +18,8 @@ export default function App() {
     }
   }, [isLoading, entities.length]);
 
-  const handleTabChange = (tab: string) => {
-    setActiveView(tab as View);
-    if (tab !== "graph") {
-      setSelectedNode(null);
-    }
+  const handleNavigate = (view: string) => {
+    setActiveView(view as View);
   };
 
   return (
@@ -31,9 +28,11 @@ export default function App() {
       fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
       color: "#E5E5E5", overflow: "hidden",
     }}>
-      <Header activeTab={activeView as any} onTabChange={handleTabChange} />
+      <Header activeTab={activeView as any} onTabChange={handleNavigate} />
 
-      {activeView === "home" && <HomePage />}
+      {activeView === "home" && <HomePage onNavigate={handleNavigate} />}
+
+      {activeView === "explore" && <ExploreView />}
 
       {activeView === "graph" && (
         <GraphView

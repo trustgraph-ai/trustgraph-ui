@@ -6,10 +6,16 @@ export type { FilterItem, Message } from "./components/common";
 export { GraphCanvas, GraphCanvasSVG, ExplainGraph, NodeDetailPanel, ZoomControls } from "./components/graph";
 export type { ExplainGraphNode, ExplainGraphEdge } from "./components/graph";
 
+// Components — knowledge
+export { EntityBadge, EntityProperties, EntityRelationships, GraphExplorer } from "./components/knowledge";
+
 // Hooks
 export { useGraphData } from "./hooks/useGraphData";
 export { useOntologySchema } from "./hooks/useOntologySchema";
 export type { OntologyClass, OntologyProperty, OntologySchema } from "./hooks/useOntologySchema";
+export { useEntityNeighbourhood } from "./hooks/useEntityNeighbourhood";
+export type { EntityNeighbourhood } from "./hooks/useEntityNeighbourhood";
+export { useDomainFilter } from "./hooks/useDomainFilter";
 export { useToastStore, toast } from "./hooks/toastStore";
 export type { Toast, ToastType } from "./hooks/toastStore";
 

@@ -2,11 +2,16 @@ import { Card, SectionLabel, text, surface, border, palette } from "@trustgraph/
 
 interface WorkflowCard {
   key: string;
+  view?: string;
   title: string;
   icon: string;
   color: string;
   description: string;
   detail: string;
+}
+
+interface HomePageProps {
+  onNavigate?: (view: string) => void;
 }
 
 const workflows: WorkflowCard[] = [
@@ -20,6 +25,7 @@ const workflows: WorkflowCard[] = [
   },
   {
     key: "explore",
+    view: "explore",
     title: "Knowledge Explorer",
     icon: "◈",
     color: palette.emerald,
@@ -44,7 +50,7 @@ const workflows: WorkflowCard[] = [
   },
 ];
 
-export function HomePage() {
+export function HomePage({ onNavigate }: HomePageProps) {
   return (
     <div style={{
       padding: "48px 28px",
@@ -83,7 +89,12 @@ export function HomePage() {
           gap: 16,
         }}>
           {workflows.map((wf) => (
-            <Card key={wf.key} borderColor={wf.color + "22"} padding={0}>
+            <Card
+              key={wf.key}
+              borderColor={wf.color + "22"}
+              padding={0}
+              onClick={wf.view && onNavigate ? () => onNavigate(wf.view!) : undefined}
+            >
               {/* Screenshot thumbnail */}
               <div style={{
                 height: 140,
