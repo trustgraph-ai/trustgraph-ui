@@ -156,11 +156,13 @@ export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainVi
           width: 400,
           display: "flex",
           flexDirection: "column",
-          overflowY: "auto",
+          overflow: "hidden",
           background: "rgba(12,12,18,0.95)",
           backdropFilter: "blur(12px)",
         }}>
+          {/* Header — fixed */}
           <div style={{
+            flexShrink: 0,
             padding: "16px 20px",
             borderBottom: `1px solid ${border.default}`,
             display: "flex",
@@ -179,10 +181,11 @@ export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainVi
             </button>
           </div>
 
-          {/* Sub-graph for exploration/focus events */}
+          {/* Sub-graph for exploration/focus events — fixed height */}
           {showSubGraph && (
             <div style={{
-              height: 200,
+              flexShrink: 0,
+              height: 250,
               borderBottom: `1px solid ${border.default}`,
               position: "relative",
             }}>
@@ -205,7 +208,8 @@ export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainVi
             </div>
           )}
 
-          <div style={{ padding: "16px 20px" }}>
+          {/* Event card — scrolls independently */}
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px 20px" }}>
             <ExplainEventCard
               eventType={selectedEvent.eventType}
               data={selectedEvent.data}

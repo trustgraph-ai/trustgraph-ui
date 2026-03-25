@@ -109,14 +109,16 @@ export function RagExplainView({ collection = COLLECTION }: RagExplainViewProps)
         {source && <SourcePanel source={source} onClose={closeSource} />}
       </div>
 
-      {/* Right: Graph + Events */}
-      <div style={{ width: "45%", display: "flex", flexDirection: "column" }}>
-        {/* Provenance graph — generous height */}
+      {/* Right: Graph (top half) + Events (bottom half) */}
+      <div style={{ width: "45%", position: "relative" }}>
+        {/* Provenance graph — top half, fixed */}
         <div style={{
-          height: "55%",
-          minHeight: 300,
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "50%",
           borderBottom: `1px solid ${border.default}`,
-          position: "relative",
         }}>
           <ExplainGraph
             nodes={graphNodes}
@@ -136,15 +138,25 @@ export function RagExplainView({ collection = COLLECTION }: RagExplainViewProps)
           />
         </div>
 
-        {/* Event timeline with full source chains */}
-        <ExplainTimeline
-          events={explainSession.events}
-          isQuerying={isQuerying}
-          onEntityClick={handleEntityClick}
-          onEdgeClick={handleEdgeTripleClick}
-          onSourceClick={handleSourceClick}
-          sourceLevel="full"
-        />
+        {/* Event timeline — bottom half, independently scrollable */}
+        <div style={{
+          position: "absolute",
+          top: "50%",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}>
+          <ExplainTimeline
+            events={explainSession.events}
+            isQuerying={isQuerying}
+            onEntityClick={handleEntityClick}
+            onEdgeClick={handleEdgeTripleClick}
+            onSourceClick={handleSourceClick}
+            sourceLevel="full"
+          />
+        </div>
       </div>
     </div>
   );
