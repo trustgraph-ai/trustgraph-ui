@@ -1,6 +1,7 @@
 export { StreamingResponse } from "./StreamingResponse";
 export { ExplainEventCard, eventTypeColor } from "./ExplainEventCard";
 export { ExplainTimeline } from "./ExplainTimeline";
+export { ExplainDAG } from "./ExplainDAG";
 export { SourceLinkBadge } from "./SourceLinkBadge";
 export { SourcePanel } from "./SourcePanel";
 

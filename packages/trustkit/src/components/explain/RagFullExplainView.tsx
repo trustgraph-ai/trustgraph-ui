@@ -1,15 +1,17 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
-import { ExplainGraph } from "../graph/ExplainGraph";
 import { StreamingResponse } from "./StreamingResponse";
 import { ExplainEventCard } from "./ExplainEventCard";
+import { ExplainDAG } from "./ExplainDAG";
 import { SourcePanel } from "./SourcePanel";
 import { useGraphRag } from "../../hooks/useGraphRag";
 import { useExplainSession } from "../../hooks/useExplainSession";
 import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
+import { useExplainDAG } from "../../hooks/useExplainDAG";
 import { useExplainGraph } from "../../hooks/useExplainGraph";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
+import { ExplainGraph } from "../graph/ExplainGraph";
 import { text, palette, border } from "../../theme";
 import { COLLECTION } from "../../config";
 
@@ -21,6 +23,8 @@ interface RagFullExplainViewProps {
  * Option 5: Full Explainability DAG.
  * The reasoning process as a DAG with click-to-inspect detail panel.
  * DAG on the left with response below, event detail on the right.
+ * Clicking a DAG node shows that event's detail including sub-graphs
+ * for exploration and focus events.
  */
 export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainViewProps) {
   const [input, setInput] = useState("");
@@ -35,6 +39,7 @@ export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainVi
     onExplain: explainSession.addEvent,
   });
   useExplainEventFetcher(explainSession.events, explainSession.updateEvent);
+  const dagLayout = useExplainDAG(explainSession.events);
   const { graphNodes, graphEdges } = useExplainGraph(explainSession.events);
   const { source, loadSource, close: closeSource } = useSourceDocument();
 
@@ -76,6 +81,12 @@ export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainVi
   const selectedEvent = explainSession.events.find(e => e.explainId === selectedEventId);
   const selectedEventIndex = explainSession.events.findIndex(e => e.explainId === selectedEventId);
 
+  // Show sub-graph for exploration/focus events in the detail panel
+  const showSubGraph = selectedEvent && (
+    selectedEvent.eventType === "exploration" ||
+    selectedEvent.eventType === "focus"
+  );
+
   return (
     <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
       {/* Left: Query + DAG + Response */}
@@ -100,40 +111,22 @@ export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainVi
 
         {/* DAG */}
         <div style={{
-          height: "45%",
+          flex: 1,
           borderBottom: `1px solid ${border.default}`,
           position: "relative",
+          minHeight: 200,
         }}>
-          {explainSession.events.length === 0 && !isQuerying ? (
-            <EmptyState message="The explainability DAG will appear here as the query progresses." />
-          ) : (
-            <ExplainGraph
-              nodes={graphNodes}
-              edges={graphEdges}
-              highlightedNodeIds={highlightedNodeIds}
-              highlightedEdgeIds={highlightedEdgeIds}
-              onNodeClick={(nodeId) => {
-                // Check if it's an explain event node or a graph entity node
-                const event = explainSession.events.find(e => e.explainId === nodeId);
-                if (event) {
-                  setSelectedEventId(selectedEventId === nodeId ? null : nodeId);
-                } else {
-                  setHighlightedNodeIds(prev =>
-                    prev.includes(nodeId) ? prev.filter(id => id !== nodeId) : [...prev, nodeId]
-                  );
-                }
-              }}
-              onEdgeClick={(edgeId) => {
-                setHighlightedEdgeIds(prev =>
-                  prev.includes(edgeId) ? prev.filter(id => id !== edgeId) : [...prev, edgeId]
-                );
-              }}
-            />
-          )}
+          <ExplainDAG
+            layout={dagLayout}
+            selectedNodeId={selectedEventId}
+            onNodeClick={(nodeId) => {
+              setSelectedEventId(selectedEventId === nodeId ? null : nodeId);
+            }}
+          />
         </div>
 
         {/* Response */}
-        <div style={{ flex: 1, padding: "24px 28px", overflowY: "auto" }}>
+        <div style={{ maxHeight: "35%", padding: "20px 28px", overflowY: "auto" }}>
           {!response && !isQuerying && !error && (
             <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
               Response will appear here.
@@ -154,7 +147,7 @@ export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainVi
       {/* Right: Event Detail Panel */}
       {selectedEvent && (
         <div style={{
-          width: 380,
+          width: 400,
           display: "flex",
           flexDirection: "column",
           overflowY: "auto",
@@ -179,6 +172,32 @@ export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainVi
               ×
             </button>
           </div>
+
+          {/* Sub-graph for exploration/focus events */}
+          {showSubGraph && (
+            <div style={{
+              height: 200,
+              borderBottom: `1px solid ${border.default}`,
+              position: "relative",
+            }}>
+              <ExplainGraph
+                nodes={graphNodes}
+                edges={graphEdges}
+                highlightedNodeIds={highlightedNodeIds}
+                highlightedEdgeIds={highlightedEdgeIds}
+                onNodeClick={(nodeId) => {
+                  setHighlightedNodeIds(prev =>
+                    prev.includes(nodeId) ? prev.filter(id => id !== nodeId) : [...prev, nodeId]
+                  );
+                }}
+                onEdgeClick={(edgeId) => {
+                  setHighlightedEdgeIds(prev =>
+                    prev.includes(edgeId) ? prev.filter(id => id !== edgeId) : [...prev, edgeId]
+                  );
+                }}
+              />
+            </div>
+          )}
 
           <div style={{ padding: "16px 20px" }}>
             <ExplainEventCard

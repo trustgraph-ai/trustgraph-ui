@@ -4,7 +4,10 @@ export interface ExplainNode {
   explainId: string;
   explainGraph: string;
   eventType: string;
+  label?: string;
   data?: unknown;
+  /** URIs this event was derived from (prov:wasDerivedFrom + prov:wasGeneratedBy) */
+  derivedFrom?: string[];
   fetched: boolean;
   fetching: boolean;
   error?: string;

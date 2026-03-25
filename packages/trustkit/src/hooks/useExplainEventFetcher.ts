@@ -26,6 +26,7 @@ const TG_CONTAINS = TG + "contains";
 const PROV = "http://www.w3.org/ns/prov#";
 const PROV_STARTED_AT_TIME = PROV + "startedAtTime";
 const PROV_WAS_DERIVED_FROM = PROV + "wasDerivedFrom";
+const PROV_WAS_GENERATED_BY = PROV + "wasGeneratedBy";
 
 // Type checks — first match wins
 const TYPE_CHECKS: [string, string][] = [
@@ -66,6 +67,31 @@ function objQuotedTriple(triple: Triple): { s: string; p: string; o: string } | 
     };
   }
   return null;
+}
+
+const RDFS_LABEL_URI = "http://www.w3.org/2000/01/rdf-schema#label";
+
+/**
+ * Extract derivation links (prov:wasDerivedFrom, prov:wasGeneratedBy)
+ * and rdfs:label from an event's triples.
+ */
+function extractDerivationInfo(triples: Triple[]): { derivedFrom: string[]; label?: string } {
+  const derivedFrom: string[] = [];
+  let label: string | undefined;
+
+  for (const t of triples) {
+    const p = predIri(t);
+    const val = objValue(t);
+    if (p === PROV_WAS_DERIVED_FROM && val) {
+      derivedFrom.push(val);
+    } else if (p === PROV_WAS_GENERATED_BY && val) {
+      derivedFrom.push(val);
+    } else if (p === RDFS_LABEL_URI && val) {
+      label = val;
+    }
+  }
+
+  return { derivedFrom, label };
 }
 
 function shortUri(uri: string): string {
@@ -377,9 +403,12 @@ export function useExplainEventFetcher(
         (triples) => {
           latestEventType = getEventTypeFromTriples(triples);
           latestBasicData = parseBasicEventData(latestEventType, triples);
+          const { derivedFrom, label } = extractDerivationInfo(triples);
           updateEvent(explainId, {
             eventType: latestEventType,
+            label,
             data: latestBasicData,
+            derivedFrom: derivedFrom.length > 0 ? derivedFrom : undefined,
             fetched: true,
             fetching: false,
           });
