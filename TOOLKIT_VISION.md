@@ -49,35 +49,47 @@ This means:
 - An embedding result set can drive a data table
 - All of these connections are explicit, not implicit
 
-### Multi-instance data contexts
+### Multi-instance data contexts (channels)
 
-The data layer is not a global singleton. Data connectivity is scoped via
-providers, so multiple independent widget trees can coexist on the same
-page with different TrustGraph connections or collections:
+The data layer is not a global singleton. Data connectivity is managed
+through **channels** — named, shared data contexts that hold a
+TrustGraph connection, collection, and all cached state. A single
+`TrustGraphProvider` wraps the entire application and manages channels
+dynamically:
 
 ```tsx
-<TrustGraphContext connection={connectionA} collection="sales">
-  <GraphCanvas />
-  <QueryPanel />
-</TrustGraphContext>
+<TrustGraphProvider>
+  {/* Two independent data contexts on the same page */}
+  <GraphCanvas channel="sales" connection={connA} collection="sales" />
+  <QueryPanel channel="sales" />
 
-<TrustGraphContext connection={connectionB} collection="research">
-  <GraphCanvas />
-  <QueryPanel />
-</TrustGraphContext>
+  <GraphCanvas channel="research" connection={connB} collection="research" />
+  <QueryPanel channel="research" />
+</TrustGraphProvider>
 ```
 
-Cross-context data flow is possible but always explicit — the app
-developer chooses to pipe data from one context into another.
+Channels are created dynamically on first use — the first component or
+hook to reference a channel name with connection details creates it.
+Subsequent references join by name. Components that don't specify a
+channel use `"default"`, so simple single-connection apps don't need to
+think about channels at all.
+
+Cross-channel data flow is possible but always explicit — the app
+developer chooses to pipe data from one channel into another.
 
 ### Controllable data persistence
 
-When widgets fetch or compute data, the app developer controls whether
-that data persists across view changes. Switching tabs and coming back
-should not lose state — unless the developer wants it to. The toolkit
-provides persistence-aware data hooks that let the consumer choose the
-lifecycle: persist across navigation, reset on unmount, or cache with
-a TTL.
+Channel state lives in the provider, not in individual components.
+Mounting and unmounting components does not destroy cached data — a tab
+switch that unmounts a graph does not lose the fetched entities. When
+the graph remounts with the same channel name, the data is still there.
+
+The application controls data lifecycle through explicit actions:
+- `resetChannel(name)` — clears cached data, keeps connection alive
+- `destroyChannel(name)` — tears down connection and removes all state
+
+Nothing is cleared automatically on component unmount. The application
+decides when information is wiped, not the component lifecycle.
 
 ### Themeable
 

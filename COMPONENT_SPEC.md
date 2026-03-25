@@ -21,6 +21,194 @@ All tiers also build on a shared foundation of **generic primitives**
 
 ---
 
+# Provider Architecture — Channels
+
+All Tier 1 hooks and data-connected components communicate through
+**channels**. A channel is a named, shared data context that holds a
+TrustGraph connection, a collection identifier, and all cached state
+for that connection.
+
+## Core Concepts
+
+### TrustGraphProvider
+
+A single provider wraps the entire application. It manages the channel
+registry, connection pooling, and data lifecycle. It does not need to
+know about channels in advance — they are created dynamically.
+
+```tsx
+// Simple app — one connection, no channel names needed
+<TrustGraphProvider defaultConnection={conn} defaultCollection="main">
+  <App />
+</TrustGraphProvider>
+
+// Everything inside uses the implicit "default" channel
+<GraphCanvas />
+<QueryPanel />
+```
+
+### Channels
+
+A channel is created on first use. The first component or hook to
+reference a channel name with connection details creates it. Subsequent
+references join the existing channel by name.
+
+```tsx
+// First reference creates the channel
+<GraphCanvas channel="sales" connection={connA} collection="sales" />
+
+// Subsequent references just join — connection already established
+<QueryPanel channel="sales" />
+<NodeDetailPanel channel="sales" />
+
+// A second independent channel on the same page
+<GraphCanvas channel="research" connection={connB} collection="research" />
+<QueryPanel channel="research" />
+```
+
+Hooks work the same way:
+
+```tsx
+const salesData = useGraphData({ channel: "sales" });
+const researchData = useGraphData({ channel: "research" });
+```
+
+### Default Channel
+
+Components and hooks that don't specify a channel use `"default"`.
+When a `TrustGraphProvider` is configured with `defaultConnection` and
+`defaultCollection`, those apply to the `"default"` channel. This means
+simple apps never need to think about channels at all.
+
+```tsx
+// These are equivalent
+<GraphCanvas />
+<GraphCanvas channel="default" />
+```
+
+### Imperative Channel Management
+
+Channels can be created, reset, and destroyed imperatively:
+
+```tsx
+const { createChannel, resetChannel, destroyChannel } = useTrustGraph();
+
+// Create a channel programmatically
+createChannel("research", { connection: connB, collection: "research" });
+
+// Clear all cached data in a channel (entities, queries, etc.)
+// without tearing down the connection
+resetChannel("research");
+
+// Tear down the channel entirely — connection closed, state removed
+destroyChannel("research");
+```
+
+## Key Properties
+
+### State is keyed by channel, not by tree position
+
+Two components with `channel="sales"` share the same cached data
+regardless of where they sit in the React tree. There is no need for
+them to be siblings or share a common parent (other than the root
+`TrustGraphProvider`).
+
+### Mount/unmount does not destroy state
+
+Channel data lives in the provider, not in the components. A tab
+switch that unmounts a `GraphCanvas` does not lose the fetched graph.
+When it remounts with the same channel name, the data is still there.
+The application decides when data is cleared, not the component
+lifecycle.
+
+### Lifecycle is explicit
+
+Clearing state is always a deliberate action:
+- `resetChannel(name)` — clears cached data, keeps connection alive
+- `destroyChannel(name)` — tears down connection and removes all state
+
+Nothing happens automatically on component unmount.
+
+### Connections are pooled
+
+If two channels point at the same backend, the provider can share the
+underlying socket connection. Channel identity determines state
+isolation, not connection identity. Two channels can share a socket but
+maintain separate query caches and separate collection scopes.
+
+### Cross-channel data flow
+
+A component or hook can read from multiple channels:
+
+```tsx
+// Comparison view reading from two channels
+const sales = useGraphData({ channel: "sales" });
+const research = useGraphData({ channel: "research" });
+
+// Render both side by side
+<SplitPane>
+  <GraphCanvas channel="sales" />
+  <GraphCanvas channel="research" />
+</SplitPane>
+```
+
+Cross-channel wiring is always explicit — the app developer decides
+what flows where.
+
+### Conflict handling
+
+If two components try to create the same channel with different
+connection details, the provider raises an error. A channel's
+connection is set once on creation and cannot be silently changed.
+To change a channel's connection, destroy it and recreate it.
+
+## How Hooks Use Channels
+
+All Tier 1 hooks accept an optional `channel` parameter. When omitted,
+they use `"default"`. Internally, the hook resolves the channel name to
+the channel's connection, collection, and query cache.
+
+```tsx
+// Reads from default channel
+const { entities } = useGraphData();
+
+// Reads from a named channel
+const { entities } = useGraphData({ channel: "sales" });
+
+// All hooks follow the same pattern
+const { schema } = useOntologySchema({ channel: "research" });
+const { results } = useEmbeddingSearch({ channel: "sales", term: "..." });
+const { events } = useExplainSession({ channel: "sales" });
+```
+
+## How Components Use Channels
+
+Tier 2 domain pieces and Tier 3 composites that fetch data accept an
+optional `channel` prop. Components that are purely presentational
+(they receive data via props, not hooks) do not need a channel prop.
+
+```tsx
+// Tier 3 composite — fetches its own data via channel
+<GraphExplorer channel="sales" />
+
+// Tier 2 domain piece — receives data as props, no channel needed
+<EntityBadge entity={someEntity} />
+
+// Tier 2 domain piece that fetches — needs channel
+<EntitySearchPanel channel="sales" term="risk" />
+```
+
+## Relationship to Existing Providers
+
+The `TrustGraphProvider` wraps and replaces the current combination of:
+- `SocketProvider` from `@trustgraph/react-provider`
+- `QueryClientProvider` from `@tanstack/react-query`
+
+These become internal implementation details. App developers only
+interact with `TrustGraphProvider` and channel names.
+
+---
+
 # Part A — Generic Foundation
 
 These components have no TrustGraph-specific knowledge. They are
