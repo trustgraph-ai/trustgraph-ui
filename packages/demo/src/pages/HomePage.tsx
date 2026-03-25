@@ -51,6 +51,7 @@ const workflows: WorkflowCard[] = [
     color: palette.purple,
     description: "Search documents by semantic similarity and get grounded answers.",
     detail: "Ask a question and find the most relevant document chunks by embedding similarity. The LLM generates an answer grounded in the retrieved content, with source references.",
+    screenshot: "/ss-doc-rag.png",
   },
 ];
 
