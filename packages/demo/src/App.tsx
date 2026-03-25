@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import type { DomainKey, Entity } from "@trustgraph/trustkit";
 import { Header, StatusBar, Toaster, useGraphData, toast } from "@trustgraph/trustkit";
-import { HomePage, ExploreView, GraphRagPage, DocRagPage, GraphView, QueryView, ExplainView, DataView, OntologyView } from "./pages";
+import { HomePage, IngestPage, ExploreView, GraphRagPage, DocRagPage, GraphView, QueryView, ExplainView, DataView, OntologyView } from "./pages";
 
-type View = "home" | "explore" | "graph-rag" | "doc-rag" | "graph" | "query" | "explain" | "data" | "ontology";
+type View = "home" | "ingest" | "explore" | "graph-rag" | "doc-rag" | "graph" | "query" | "explain" | "data" | "ontology";
 
 export default function App() {
   const [activeView, setActiveView] = useState<View>("home");
@@ -31,6 +31,8 @@ export default function App() {
       <Header activeTab={activeView as any} onTabChange={handleNavigate} />
 
       {activeView === "home" && <HomePage onNavigate={handleNavigate} />}
+
+      {activeView === "ingest" && <IngestPage />}
 
       {activeView === "explore" && <ExploreView />}
 
