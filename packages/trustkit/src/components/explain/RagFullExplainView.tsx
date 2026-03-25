@@ -78,6 +78,12 @@ export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainVi
     setHighlightedEdgeIds(edgeIds);
   }, [graphEdges]);
 
+  const handleEdgeTripleClick = useCallback((edge: { s: string; p: string; o: string }, edgeUri: string) => {
+    // Highlight the edge endpoints and the edge itself on the sub-graph
+    setHighlightedNodeIds([edge.s, edge.o]);
+    setHighlightedEdgeIds([edgeUri]);
+  }, []);
+
   const selectedEvent = explainSession.events.find(e => e.explainId === selectedEventId);
   const selectedEventIndex = explainSession.events.findIndex(e => e.explainId === selectedEventId);
 
@@ -207,6 +213,7 @@ export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainVi
               error={selectedEvent.error}
               index={selectedEventIndex}
               onEntityClick={handleEntityClick}
+              onEdgeClick={handleEdgeTripleClick}
               onSourceClick={handleSourceClick}
               sourceLevel="full"
             />

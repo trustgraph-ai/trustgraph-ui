@@ -12,6 +12,8 @@ interface ExplainTimelineProps {
   isQuerying?: boolean;
   /** Entity click handler (for exploration events) */
   onEntityClick?: (uri: string) => void;
+  /** Edge click handler (for focus events) — highlights edge on graph */
+  onEdgeClick?: (edge: { s: string; p: string; o: string }, edgeUri: string) => void;
   /** Source click handler (for focus events). Omit to hide source links. */
   onSourceClick?: (source: ProvenanceChain) => void;
   /** Source detail level */
@@ -25,6 +27,7 @@ export function ExplainTimeline({
   events,
   isQuerying,
   onEntityClick,
+  onEdgeClick,
   onSourceClick,
   sourceLevel = "full",
 }: ExplainTimelineProps) {
@@ -75,6 +78,7 @@ export function ExplainTimeline({
               error={node.error}
               index={idx}
               onEntityClick={onEntityClick}
+              onEdgeClick={onEdgeClick}
               onSourceClick={sourceLevel !== "none" ? onSourceClick : undefined}
               sourceLevel={sourceLevel}
             />

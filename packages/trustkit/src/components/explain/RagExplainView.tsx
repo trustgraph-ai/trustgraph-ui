@@ -64,6 +64,11 @@ export function RagExplainView({ collection = COLLECTION }: RagExplainViewProps)
     setHighlightedEdgeIds(edgeIds);
   }, [graphEdges]);
 
+  const handleEdgeTripleClick = useCallback((edge: { s: string; p: string; o: string }, edgeUri: string) => {
+    setHighlightedNodeIds([edge.s, edge.o]);
+    setHighlightedEdgeIds([edgeUri]);
+  }, []);
+
   const handleSourceClick = useCallback((src: ProvenanceChain) => {
     if (src.chain.length === 0) return;
     const chunkUri = src.chain[0].uri;
@@ -135,6 +140,7 @@ export function RagExplainView({ collection = COLLECTION }: RagExplainViewProps)
           events={explainSession.events}
           isQuerying={isQuerying}
           onEntityClick={handleEntityClick}
+          onEdgeClick={handleEdgeTripleClick}
           onSourceClick={handleSourceClick}
           sourceLevel="full"
         />

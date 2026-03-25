@@ -30,6 +30,8 @@ interface ExplainEventCardProps {
   index: number;
   /** Callback when an entity URI is clicked */
   onEntityClick?: (uri: string) => void;
+  /** Callback when an edge is clicked (subject URI, predicate URI, object URI, edge URI) */
+  onEdgeClick?: (edge: { s: string; p: string; o: string }, edgeUri: string) => void;
   /** Callback when a source link is clicked. Omit to hide source links. */
   onSourceClick?: (source: ProvenanceChain) => void;
   /** Source detail level: "none" hides, "document" collapses to docs, "full" shows chains */
@@ -47,6 +49,7 @@ export function ExplainEventCard({
   error,
   index,
   onEntityClick,
+  onEdgeClick,
   onSourceClick,
   sourceLevel = "full",
 }: ExplainEventCardProps) {
@@ -116,6 +119,7 @@ export function ExplainEventCard({
           data={data}
           typeColor={typeColor}
           onEntityClick={onEntityClick}
+          onEdgeClick={onEdgeClick}
           onSourceClick={onSourceClick}
           sourceLevel={sourceLevel}
         />
@@ -129,6 +133,7 @@ function ExplainEventData({
   data,
   typeColor,
   onEntityClick,
+  onEdgeClick,
   onSourceClick,
   sourceLevel,
 }: {
@@ -136,6 +141,7 @@ function ExplainEventData({
   data: unknown;
   typeColor: string;
   onEntityClick?: (uri: string) => void;
+  onEdgeClick?: (edge: { s: string; p: string; o: string }, edgeUri: string) => void;
   onSourceClick?: (source: ProvenanceChain) => void;
   sourceLevel: "none" | "document" | "full";
 }) {
@@ -205,10 +211,25 @@ function ExplainEventData({
       }>) || [];
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {edgeSelections.map((sel) => (
+          {edgeSelections.map((sel) => {
+            const isEdgeClickable = !!(onEdgeClick && sel.edge);
+            return (
             <div key={sel.edgeUri}>
               {sel.edgeLabels && (
-                <div style={{ fontSize: 11, color: text.secondary, marginBottom: 2 }}>
+                <div
+                  onClick={isEdgeClickable ? () => onEdgeClick!(sel.edge!, sel.edgeUri) : undefined}
+                  style={{
+                    fontSize: 11,
+                    color: text.secondary,
+                    marginBottom: 2,
+                    cursor: isEdgeClickable ? "pointer" : "default",
+                    padding: isEdgeClickable ? "3px 6px" : undefined,
+                    borderRadius: 4,
+                    transition: "background 0.15s ease",
+                  }}
+                  onMouseEnter={e => { if (isEdgeClickable) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                >
                   <span style={{ color: palette.pink }}>{sel.edgeLabels.s}</span>
                   <span style={{ color: text.faint }}> → </span>
                   <span style={{ color: text.subtle, fontFamily: "'IBM Plex Mono', monospace" }}>{sel.edgeLabels.p}</span>
@@ -242,7 +263,8 @@ function ExplainEventData({
                 </div>
               )}
             </div>
-          ))}
+          );
+          })}
         </div>
       );
     }
