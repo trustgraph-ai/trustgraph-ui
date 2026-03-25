@@ -270,6 +270,121 @@ academic research into reasoning chains.
 All five options use the same Tier 1 hooks (`useGraphRag`,
 `useExplainSession`, `useExplainEventFetcher`, `useExplainGraph`).
 The difference is which Tier 2 domain pieces they compose and how
-much of the explain data they expose. A developer can also skip all
-five composites and wire the hooks + pieces directly for a fully
-custom layout.
+much of the explain data they expose.
+
+---
+
+## Beyond the Five Options: Composable Assembly
+
+The five options above are **convenience composites** — single
+components you drop in for common configurations. But they are not
+the only way to build an explainability view.
+
+Every feature in these composites is independently available as a
+Tier 2 domain piece. The app developer can mix and match pieces to
+create configurations that don't match any of the five presets.
+
+### How it works
+
+The composites are built from these pieces:
+
+| Piece | What it does |
+|-------|--------------|
+| `SearchInput` | Query input |
+| `StreamingResponse` | Streaming answer display |
+| `ExplainEventCard` | One explain event (compact or detailed) |
+| `ExplainTimeline` | Scrollable list of event cards |
+| `ExplainDAG` | DAG visualization of event derivations |
+| `ExplainGraph` | Provenance entity/edge graph |
+| `EdgeDetailCard` | One selected edge with triple + reasoning |
+| `SourceLinkBadge` | Clickable source reference (doc/page) |
+| `SourcePanel` | Document chunk text viewer |
+| `ProvenanceChainView` | Breadcrumb trail from edge to document |
+
+### Features as opt-in pieces
+
+Source links are a good example. In Option 1, there are none. In
+Option 2, they appear as a summary. In Option 4, they're clickable.
+But this isn't a binary — the app developer controls it:
+
+- **No source links:** Don't include `SourceLinkBadge` in your
+  edge display. The edges still render, just without provenance.
+
+- **Source links, not clickable:** Include `SourceLinkBadge` but
+  don't provide an `onClick`. They appear as static labels showing
+  which documents contributed.
+
+- **Source links, clickable but no panel:** Include `SourceLinkBadge`
+  with an `onClick` that does whatever the app wants — open a new
+  tab, navigate to a document viewer, log the click.
+
+- **Source links with inline panel:** Include `SourceLinkBadge` +
+  `SourcePanel`. Clicking a source opens the panel showing the
+  chunk text. This is what Options 4 and 5 do.
+
+The same pattern applies to other features:
+
+- **Provenance graph:** Include `ExplainGraph` to show it, omit it
+  to save space. The graph is just a component that reads from the
+  same hooks.
+
+- **Event detail level:** Use `ExplainEventCard` with
+  `variant="compact"` for headlines only (Option 3), or
+  `variant="detailed"` for full data (Option 5). Or render your
+  own component from the hook data.
+
+- **DAG vs timeline:** Use `ExplainDAG` for the dependency graph
+  layout (Option 5), or `ExplainTimeline` for a simple vertical
+  list (Options 3/4). Or both.
+
+### Example: Custom hybrid
+
+An app developer who wants something between Options 3 and 4 —
+a timeline with document-level sources that are clickable but no
+provenance graph — just assembles the pieces:
+
+```tsx
+import {
+  useGraphRag,
+  useExplainSession,
+  useExplainEventFetcher,
+  SearchInput,
+  StreamingResponse,
+  ExplainTimeline,
+  SourcePanel,
+} from "@trustgraph/trustkit";
+
+function MyCustomRagView() {
+  const explain = useExplainSession();
+  const { query, response, isQuerying, error } = useGraphRag({
+    collection: "default",
+    onExplain: explain.addEvent,
+  });
+  useExplainEventFetcher(explain.events, explain.updateEvent);
+
+  const [sourceUri, setSourceUri] = useState(null);
+
+  return (
+    <SplitPane panel={sourceUri ? <SourcePanel uri={sourceUri} /> : null}>
+      <SearchInput onSubmit={query} isLoading={isQuerying} />
+      <StreamingResponse text={response} isStreaming={isQuerying} />
+      <ExplainTimeline
+        events={explain.events}
+        sourceLevel="document"
+        onSourceClick={setSourceUri}
+      />
+    </SplitPane>
+  );
+}
+```
+
+No provenance graph, document-level sources, clickable with a source
+panel. None of the five presets offer this exact combination, but the
+pieces make it straightforward.
+
+### The principle
+
+The five options exist so that common configurations are easy — one
+component, one import. But the toolkit never forces the developer into
+one of these five boxes. The pieces are the real API. The composites
+are just well-tested assemblies of those pieces.
