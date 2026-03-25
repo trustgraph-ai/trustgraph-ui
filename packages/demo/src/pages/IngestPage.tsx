@@ -154,101 +154,110 @@ export function IngestPage() {
       docY += NODE_H + ROW_GAP;
     }
 
-    // Column 2: Processing + Column 3: Store types + Column 4: Targets
+    // Column 2: Processing — collapsed by (flow, collection)
+    const procNodes = new Map<string, string>(); // "flow:collection" → nodeId
+
     for (const proc of procs) {
-      const procId = `proc:${proc.id}`;
-      const bp = bpMap.get(proc.flow || "");
-      const flowLabel = proc.flow ? truncate(proc.flow, 16) : "default";
+      const flow = proc.flow || "default";
+      const coll = proc.collection || "default";
+      const procKey = `${flow}:${coll}`;
+      const bp = bpMap.get(flow);
 
-      const procNode: DiagramNode = {
-        id: procId,
-        label: flowLabel,
-        x: COL_X.proc,
-        y: procY,
-        w: COL_WIDTH,
-        h: NODE_H,
-        color: palette.amber,
-        column: "proc",
-      };
-      nodes.push(procNode);
-      nodeMap.set(procId, procNode);
+      // Create proc node if not seen this (flow, collection) before
+      let procId = procNodes.get(procKey);
+      if (!procId) {
+        procId = `proc:${procKey}`;
+        const flowLabel = truncate(flow, 14);
+        const collLabel = truncate(coll, 14);
+        const procNode: DiagramNode = {
+          id: procId,
+          label: `${flowLabel}\n→ ${collLabel}`,
+          x: COL_X.proc,
+          y: procY,
+          w: COL_WIDTH,
+          h: NODE_H + 14,
+          color: palette.amber,
+          column: "proc",
+        };
+        nodes.push(procNode);
+        nodeMap.set(procId, procNode);
+        procNodes.set(procKey, procId);
+        procY += NODE_H + 14 + ROW_GAP;
 
-      // Edge: doc → proc
+        // Output paths from blueprint tags — only once per proc node
+        const outputPaths = blueprintOutputPaths(bp);
+
+        for (const path of outputPaths) {
+          const cfg = storeConfig[path] || { label: path, color: text.muted };
+
+          // Store node (column 3) — shared across all procs
+          const storeKey = `${path}:${coll}`;
+          let storeId = storeNodes.get(storeKey);
+          if (!storeId) {
+            storeId = `store:${storeKey}`;
+            const storeNode: DiagramNode = {
+              id: storeId,
+              label: cfg.label,
+              x: COL_X.store,
+              y: storeY,
+              w: COL_WIDTH,
+              h: NODE_H,
+              color: cfg.color,
+              column: "store",
+            };
+            nodes.push(storeNode);
+            nodeMap.set(storeId, storeNode);
+            storeNodes.set(storeKey, storeId);
+            storeY += NODE_H + ROW_GAP;
+          }
+
+          // Edge: proc → store
+          edges.push({ from: procId, to: storeId });
+
+          // Target node (column 4) — shared by store type + collection
+          let targetLabel = coll;
+          let targetKey = `${path}:${coll}`;
+          const targetColor = cfg.color;
+
+          if (path === "kg-ontology" && ontoNames.length > 0) {
+            const ontoName = ontoNames[0]?.name || "ontology";
+            targetLabel = `${coll}\n+ ${truncate(ontoName, 14)}`;
+            targetKey += `:onto:${ontoName}`;
+          } else if (path === "row-store" && schemaNames.length > 0) {
+            const schemaName = schemaNames[0]?.name || "schema";
+            targetLabel = `${coll}\n+ ${truncate(schemaName, 14)}`;
+            targetKey += `:schema:${schemaName}`;
+          }
+
+          let targetId = targetNodes.get(targetKey);
+          if (!targetId) {
+            targetId = `target:${targetKey}`;
+            const targetNode: DiagramNode = {
+              id: targetId,
+              label: truncate(targetLabel, 24),
+              x: COL_X.target,
+              y: targetY,
+              w: COL_WIDTH,
+              h: targetLabel.includes("\n") ? NODE_H + 14 : NODE_H,
+              color: targetColor,
+              column: "target",
+            };
+            nodes.push(targetNode);
+            nodeMap.set(targetId, targetNode);
+            targetNodes.set(targetKey, targetId);
+            targetY += targetNode.h + ROW_GAP;
+          }
+
+          // Edge: store → target
+          edges.push({ from: storeId, to: targetId });
+        }
+      }
+
+      // Edge: doc → proc (always, even if proc node already existed)
       const docNodeId = `doc:${proc["document-id"]}`;
-      if (nodeMap.has(docNodeId)) {
+      if (nodeMap.has(docNodeId) && procId) {
         edges.push({ from: docNodeId, to: procId });
       }
-
-      // Output paths from blueprint tags
-      const outputPaths = blueprintOutputPaths(bp);
-
-      for (const path of outputPaths) {
-        const storeKey = `${procId}:${path}`;
-        const cfg = storeConfig[path] || { label: path, color: text.muted };
-
-        // Store node (column 3)
-        let storeId = storeNodes.get(storeKey);
-        if (!storeId) {
-          storeId = `store:${proc.id}:${path}`;
-          const storeNode: DiagramNode = {
-            id: storeId,
-            label: cfg.label,
-            x: COL_X.store,
-            y: storeY,
-            w: COL_WIDTH,
-            h: NODE_H,
-            color: cfg.color,
-            column: "store",
-          };
-          nodes.push(storeNode);
-          nodeMap.set(storeId, storeNode);
-          storeNodes.set(storeKey, storeId);
-          storeY += NODE_H + ROW_GAP;
-        }
-
-        // Edge: proc → store
-        edges.push({ from: procId, to: storeId });
-
-        // Target node (column 4) — collection, +schema or +ontology
-        let targetLabel = proc.collection || "default";
-        let targetKey = `${path}:${proc.collection}`;
-        let targetColor = cfg.color;
-
-        if (path === "kg-ontology" && ontoNames.length > 0) {
-          const ontoName = ontoNames[0]?.name || "ontology";
-          targetLabel = `${proc.collection}\n+ ${truncate(ontoName, 14)}`;
-          targetKey += `:onto:${ontoName}`;
-        } else if (path === "row-store" && schemaNames.length > 0) {
-          const schemaName = schemaNames[0]?.name || "schema";
-          targetLabel = `${proc.collection}\n+ ${truncate(schemaName, 14)}`;
-          targetKey += `:schema:${schemaName}`;
-        }
-
-        let targetId = targetNodes.get(targetKey);
-        if (!targetId) {
-          targetId = `target:${targetKey}`;
-          const targetNode: DiagramNode = {
-            id: targetId,
-            label: truncate(targetLabel, 24),
-            x: COL_X.target,
-            y: targetY,
-            w: COL_WIDTH,
-            h: targetLabel.includes("\n") ? NODE_H + 14 : NODE_H,
-            color: targetColor,
-            column: "target",
-          };
-          nodes.push(targetNode);
-          nodeMap.set(targetId, targetNode);
-          targetNodes.set(targetKey, targetId);
-          targetY += targetNode.h + ROW_GAP;
-        }
-
-        // Edge: store → target
-        edges.push({ from: storeId, targetId: targetId } as any);
-        edges.push({ from: storeId, to: targetId });
-      }
-
-      procY += NODE_H + ROW_GAP;
     }
 
     const maxY = Math.max(docY, procY, storeY, targetY) + 20;
