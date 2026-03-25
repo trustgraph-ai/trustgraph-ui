@@ -111,9 +111,10 @@ export function RagExplainView({ collection = COLLECTION }: RagExplainViewProps)
 
       {/* Right: Graph + Events */}
       <div style={{ width: "45%", display: "flex", flexDirection: "column" }}>
-        {/* Provenance graph */}
+        {/* Provenance graph — generous height */}
         <div style={{
-          height: "45%",
+          height: "55%",
+          minHeight: 300,
           borderBottom: `1px solid ${border.default}`,
           position: "relative",
         }}>
