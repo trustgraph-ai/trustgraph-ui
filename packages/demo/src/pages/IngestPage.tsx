@@ -102,7 +102,7 @@ export function IngestPage() {
     const map = new Map<string, string>();
     for (const flow of flowList) {
       const flowId = flow.id || flow["flow-id"];
-      const bpId = flow.blueprint || flow["blueprint-id"];
+      const bpId = flow.blueprint || flow["blueprint-id"] || flow["blueprint-name"];
       if (flowId && bpId) map.set(flowId, bpId);
     }
     return map;
@@ -180,10 +180,11 @@ export function IngestPage() {
       if (!procId) {
         procId = `proc:${procKey}`;
         const flowLabel = truncate(flow, 14);
+        const bpLabel = truncate(blueprintId, 14);
         const collLabel = truncate(coll, 14);
         const procNode: DiagramNode = {
           id: procId,
-          label: `${flowLabel}\n→ ${collLabel}`,
+          label: `${flowLabel} (${bpLabel})\n→ ${collLabel}`,
           x: COL_X.proc,
           y: procY,
           w: COL_WIDTH,
