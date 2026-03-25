@@ -5,10 +5,9 @@ import { useEntityNeighbourhood } from "../../hooks/useEntityNeighbourhood";
 import { useDomainFilter } from "../../hooks/useDomainFilter";
 import { GraphCanvas } from "../graph/GraphCanvas";
 import { GraphCanvasSVG } from "../graph/GraphCanvasSVG";
-import { FilterBar, LoadingState } from "../common";
+import { FilterBar, LoadingState, SplitPane, DetailPanel } from "../common";
 import { EntityProperties } from "./EntityProperties";
 import { EntityRelationships } from "./EntityRelationships";
-import { text, border } from "../../theme";
 
 interface GraphExplorerProps {
   /** Which graph renderer to use */
@@ -68,9 +67,28 @@ export function GraphExplorer({ renderer = "svg", onEntitySelect }: GraphExplore
     return <LoadingState variant="error" message="Error loading graph data" />;
   }
 
+  const detailPanel = selectedNode && ontology[selectedNode.domain] ? (
+    <DetailPanel
+      title={`${selectedNode.icon} ${selectedNode.label}`}
+      subtitle={`${ontology[selectedNode.domain].label.toUpperCase()} ENTITY`}
+      subtitleColor={ontology[selectedNode.domain].color}
+      onClose={handleClose}
+    >
+      <EntityProperties
+        entity={selectedNode}
+        propertyLabels={propertyLabels}
+      />
+      <EntityRelationships
+        entity={selectedNode}
+        relationships={relationships}
+        entities={entities}
+        onEntityClick={handleNodeSelect}
+      />
+    </DetailPanel>
+  ) : null;
+
   return (
     <>
-      {/* Domain Filter Bar */}
       <FilterBar
         items={filterItems}
         selectedKey={activeFilter}
@@ -79,96 +97,27 @@ export function GraphExplorer({ renderer = "svg", onEntitySelect }: GraphExplore
         emptyMessage={selectedNode ? undefined : "Select a node to filter"}
       />
 
-      {/* Main Content */}
-      <div style={{ position: "relative", height: "calc(100vh - 150px)" }}>
-        {/* Graph — always full width */}
-        <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-          {renderer === "canvas" ? (
-            <GraphCanvas
-              entities={entities}
-              relationships={relationships}
-              ontology={ontology}
-              highlightedEntities={highlightedEntities}
-              onNodeClick={handleNodeClick}
-              activeFilter={activeFilter}
-            />
-          ) : (
-            <GraphCanvasSVG
-              entities={entities}
-              relationships={relationships}
-              ontology={ontology}
-              highlightedEntities={highlightedEntities}
-              onNodeClick={handleNodeClick}
-              activeFilter={activeFilter}
-            />
-          )}
-        </div>
-
-        {/* Detail Panel — overlays on top of graph */}
-        {selectedNode && ontology[selectedNode.domain] && (
-          <div style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: 320,
-            borderLeft: `1px solid ${border.default}`,
-            background: "rgba(12,12,18,0.95)",
-            backdropFilter: "blur(12px)",
-            padding: 24,
-            overflowY: "auto",
-            zIndex: 10,
-          }}>
-            {/* Header */}
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 20,
-            }}>
-              <div style={{
-                color: ontology[selectedNode.domain].color,
-                fontSize: 11,
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontWeight: 600,
-              }}>
-                {ontology[selectedNode.domain].label.toUpperCase()} ENTITY
-              </div>
-              <button
-                onClick={handleClose}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: text.faint,
-                  cursor: "pointer",
-                  fontSize: 18,
-                }}
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Title */}
-            <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
-              {selectedNode.icon} {selectedNode.label}
-            </div>
-
-            {/* Properties — Tier 2 piece */}
-            <EntityProperties
-              entity={selectedNode}
-              propertyLabels={propertyLabels}
-            />
-
-            {/* Relationships — Tier 2 piece */}
-            <EntityRelationships
-              entity={selectedNode}
-              relationships={relationships}
-              entities={entities}
-              onEntityClick={handleNodeSelect}
-            />
-          </div>
+      <SplitPane panel={detailPanel} height="calc(100vh - 150px)">
+        {renderer === "canvas" ? (
+          <GraphCanvas
+            entities={entities}
+            relationships={relationships}
+            ontology={ontology}
+            highlightedEntities={highlightedEntities}
+            onNodeClick={handleNodeClick}
+            activeFilter={activeFilter}
+          />
+        ) : (
+          <GraphCanvasSVG
+            entities={entities}
+            relationships={relationships}
+            ontology={ontology}
+            highlightedEntities={highlightedEntities}
+            onNodeClick={handleNodeClick}
+            activeFilter={activeFilter}
+          />
         )}
-      </div>
+      </SplitPane>
     </>
   );
 }

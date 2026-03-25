@@ -12,3 +12,12 @@ export { FilterBar } from "./FilterBar";
 export type { FilterItem } from "./FilterBar";
 export { MessageBubble } from "./MessageBubble";
 export type { Message } from "./MessageBubble";
+
+// New foundation components
+export { TextInput } from "./TextInput";
+export { SplitPane } from "./SplitPane";
+export { DetailPanel } from "./DetailPanel";
+export { EmptyState } from "./EmptyState";
+export { ModeSelector } from "./ModeSelector";
+export { Toolbar } from "./Toolbar";
+export { PageLayout } from "./PageLayout";
