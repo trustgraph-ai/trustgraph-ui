@@ -10,7 +10,7 @@ export type { ExplainGraphNode, ExplainGraphEdge } from "./components/graph";
 export { EntityBadge, EntityProperties, EntityRelationships, GraphExplorer } from "./components/knowledge";
 
 // Components — explain
-export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, ExplainDAG, SourceLinkBadge, SourcePanel, SimpleRagView, RagWithSourcesView, RagWithTimelineView, GraphRagView, RagExplainView, RagFullExplainView } from "./components/explain";
+export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, ExplainDAG, SourceLinkBadge, SourcePanel, SimpleRagView, RagWithSourcesView, RagWithTimelineView, GraphRagView, RagExplainView, RagFullExplainView, SimpleDocRagView, DocRagExplainView } from "./components/explain";
 
 // Hooks
 export { useGraphData } from "./hooks/useGraphData";
@@ -20,6 +20,7 @@ export { useEntityNeighbourhood } from "./hooks/useEntityNeighbourhood";
 export type { EntityNeighbourhood } from "./hooks/useEntityNeighbourhood";
 export { useDomainFilter } from "./hooks/useDomainFilter";
 export { useGraphRag } from "./hooks/useGraphRag";
+export { useDocumentRag } from "./hooks/useDocumentRag";
 export { useExplainSession } from "./hooks/useExplainSession";
 export type { ExplainNode } from "./hooks/useExplainSession";
 export { useExplainEventFetcher } from "./hooks/useExplainEventFetcher";

@@ -45,6 +45,7 @@ const workflows: WorkflowCard[] = [
   },
   {
     key: "doc-rag",
+    view: "doc-rag",
     title: "Document RAG Query",
     icon: "◉",
     color: palette.purple,

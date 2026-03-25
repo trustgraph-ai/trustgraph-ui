@@ -1,6 +1,7 @@
 export { HomePage } from "./HomePage";
 export { ExploreView } from "./ExploreView";
 export { GraphRagPage } from "./GraphRagPage";
+export { DocRagPage } from "./DocRagPage";
 export { GraphView } from "./GraphView";
 export { QueryView } from "./QueryView";
 export { ExplainView } from "./ExplainView";
