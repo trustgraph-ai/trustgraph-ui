@@ -8,6 +8,7 @@ interface WorkflowCard {
   color: string;
   description: string;
   detail: string;
+  screenshot?: string;
 }
 
 interface HomePageProps {
@@ -40,6 +41,7 @@ const workflows: WorkflowCard[] = [
     color: palette.blue,
     description: "Ask questions answered from the knowledge graph with full provenance.",
     detail: "Ask a natural language question and watch TrustGraph retrieve relevant entities and edges, select evidence, and synthesise an answer. Trace every fact back to its source.",
+    screenshot: "/ss-graph-rag.png",
   },
   {
     key: "doc-rag",
@@ -104,7 +106,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 position: "relative",
               }}>
                 <img
-                  src="/placeholder.png"
+                  src={wf.screenshot || "/placeholder.png"}
                   alt={wf.title}
                   style={{
                     width: "100%",

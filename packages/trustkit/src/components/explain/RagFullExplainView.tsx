@@ -185,7 +185,7 @@ export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainVi
           {showSubGraph && (
             <div style={{
               flexShrink: 0,
-              height: 250,
+              height: "55%",
               borderBottom: `1px solid ${border.default}`,
               position: "relative",
             }}>
