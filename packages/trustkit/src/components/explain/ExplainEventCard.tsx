@@ -1,7 +1,9 @@
 import { Badge } from "../common";
+import { SourceLinkBadge } from "./SourceLinkBadge";
 import { text, withGlow, palette } from "../../theme";
+import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 
-function eventTypeColor(eventType: string): string {
+export function eventTypeColor(eventType: string): string {
   switch (eventType) {
     case "question": return palette.amber;
     case "grounding": return palette.orange;
@@ -28,6 +30,10 @@ interface ExplainEventCardProps {
   index: number;
   /** Callback when an entity URI is clicked */
   onEntityClick?: (uri: string) => void;
+  /** Callback when a source link is clicked. Omit to hide source links. */
+  onSourceClick?: (source: ProvenanceChain) => void;
+  /** Source detail level: "none" hides, "document" collapses to docs, "full" shows chains */
+  sourceLevel?: "none" | "document" | "full";
 }
 
 /**
@@ -41,6 +47,8 @@ export function ExplainEventCard({
   error,
   index,
   onEntityClick,
+  onSourceClick,
+  sourceLevel = "full",
 }: ExplainEventCardProps) {
   const typeColor = eventTypeColor(eventType);
 
@@ -108,6 +116,8 @@ export function ExplainEventCard({
           data={data}
           typeColor={typeColor}
           onEntityClick={onEntityClick}
+          onSourceClick={onSourceClick}
+          sourceLevel={sourceLevel}
         />
       ) : null}
     </div>
@@ -119,11 +129,15 @@ function ExplainEventData({
   data,
   typeColor,
   onEntityClick,
+  onSourceClick,
+  sourceLevel,
 }: {
   eventType: string;
   data: unknown;
   typeColor: string;
   onEntityClick?: (uri: string) => void;
+  onSourceClick?: (source: ProvenanceChain) => void;
+  sourceLevel: "none" | "document" | "full";
 }) {
   const d = data as Record<string, unknown>;
 
@@ -187,7 +201,7 @@ function ExplainEventData({
         edge?: { s: string; p: string; o: string };
         edgeLabels?: { s: string; p: string; o: string };
         reasoning?: string;
-        sources?: Array<{ chain: Array<{ uri: string; label: string }> }>;
+        sources?: ProvenanceChain[];
       }>) || [];
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -213,6 +227,18 @@ function ExplainEventData({
                   {sel.reasoning.length > 150
                     ? sel.reasoning.slice(0, 150) + "…"
                     : sel.reasoning}
+                </div>
+              )}
+              {/* Source links */}
+              {sourceLevel !== "none" && sel.sources && sel.sources.length > 0 && (
+                <div style={{ marginTop: 4, display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {collapseSourcesByDocument(sel.sources, sourceLevel).map((source, si) => (
+                    <SourceLinkBadge
+                      key={si}
+                      source={source}
+                      onClick={onSourceClick}
+                    />
+                  ))}
                 </div>
               )}
             </div>
@@ -251,4 +277,29 @@ function ExplainEventData({
         </div>
       );
   }
+}
+
+/**
+ * Collapse provenance chains to document level when sourceLevel is "document".
+ * Deduplicates by the last item in the chain (the root document).
+ */
+function collapseSourcesByDocument(
+  sources: ProvenanceChain[],
+  sourceLevel: "document" | "full",
+): ProvenanceChain[] {
+  if (sourceLevel === "full") return sources;
+
+  // Collapse to unique documents (last entry in each chain)
+  const seen = new Set<string>();
+  const collapsed: ProvenanceChain[] = [];
+  for (const source of sources) {
+    if (source.chain.length === 0) continue;
+    const docUri = source.chain[source.chain.length - 1].uri;
+    if (!seen.has(docUri)) {
+      seen.add(docUri);
+      // Show just the document, not the full chain
+      collapsed.push({ chain: [source.chain[source.chain.length - 1]] });
+    }
+  }
+  return collapsed;
 }

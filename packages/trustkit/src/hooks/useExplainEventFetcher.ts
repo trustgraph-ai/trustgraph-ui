@@ -22,7 +22,10 @@ const TG_ARGUMENTS = TG + "arguments";
 const TG_THOUGHT = TG + "thought";
 const TG_OBSERVATION = TG + "observation";
 const TG_DOCUMENT = TG + "document";
-const PROV_STARTED_AT_TIME = "http://www.w3.org/ns/prov#startedAtTime";
+const TG_CONTAINS = TG + "contains";
+const PROV = "http://www.w3.org/ns/prov#";
+const PROV_STARTED_AT_TIME = PROV + "startedAtTime";
+const PROV_WAS_DERIVED_FROM = PROV + "wasDerivedFrom";
 
 // Type checks — first match wins
 const TYPE_CHECKS: [string, string][] = [
@@ -215,6 +218,83 @@ async function resolveLabel(
   }
 }
 
+export interface ProvenanceChain {
+  chain: { uri: string; label: string }[];
+}
+
+async function traceProvenanceChain(
+  api: ReturnType<BaseApi["flow"]>,
+  startUri: string,
+  labelCache: Map<string, string>,
+  maxDepth = 10,
+): Promise<ProvenanceChain> {
+  const chain: { uri: string; label: string }[] = [];
+  let current: string | null = startUri;
+
+  for (let i = 0; i < maxDepth && current; i++) {
+    const label = await resolveLabel(api, current, labelCache);
+    chain.push({ uri: current, label });
+
+    const parentTriples = await api.triplesQuery(
+      { t: "i", i: current },
+      { t: "i", i: PROV_WAS_DERIVED_FROM },
+      undefined, 1, COLLECTION,
+    );
+
+    const parentUri = parentTriples.length > 0 ? objValue(parentTriples[0]) : null;
+    if (!parentUri || parentUri === current) break;
+    current = parentUri;
+  }
+
+  return { chain };
+}
+
+async function queryEdgeProvenance(
+  api: ReturnType<BaseApi["flow"]>,
+  edge: { s: string; p: string; o: string },
+  labelCache: Map<string, string>,
+): Promise<ProvenanceChain[]> {
+  const oTerm: Term = (edge.o.startsWith("http") || edge.o.startsWith("urn:"))
+    ? { t: "i", i: edge.o }
+    : { t: "l", v: edge.o };
+
+  const containsTriples = await api.triplesQuery(
+    undefined,
+    { t: "i", i: TG_CONTAINS },
+    {
+      t: "t",
+      tr: {
+        s: { t: "i", i: edge.s },
+        p: { t: "i", i: edge.p },
+        o: oTerm,
+      },
+    },
+    10, COLLECTION,
+  );
+
+  const chains: ProvenanceChain[] = [];
+  for (const t of containsTriples) {
+    const subgraphUri = t.s.t === "i" ? t.s.i : "";
+    if (!subgraphUri) continue;
+
+    const derivedTriples = await api.triplesQuery(
+      { t: "i", i: subgraphUri },
+      { t: "i", i: PROV_WAS_DERIVED_FROM },
+      undefined, 10, COLLECTION,
+    );
+
+    for (const dt of derivedTriples) {
+      const sourceUri = objValue(dt);
+      if (sourceUri) {
+        const chain = await traceProvenanceChain(api, sourceUri, labelCache);
+        chains.push(chain);
+      }
+    }
+  }
+
+  return chains;
+}
+
 async function enrichEventData(
   api: ReturnType<BaseApi["flow"]>,
   eventType: string,
@@ -246,12 +326,16 @@ async function enrichEventData(
         }
 
         if (sel.edge) {
-          const labels = await Promise.all([
-            resolveLabel(api, sel.edge.s, labelCache),
-            resolveLabel(api, sel.edge.p, labelCache),
-            resolveLabel(api, sel.edge.o, labelCache),
+          const [labels, sources] = await Promise.all([
+            Promise.all([
+              resolveLabel(api, sel.edge.s, labelCache),
+              resolveLabel(api, sel.edge.p, labelCache),
+              resolveLabel(api, sel.edge.o, labelCache),
+            ]),
+            queryEdgeProvenance(api, sel.edge, labelCache),
           ]);
           sel.edgeLabels = { s: labels[0], p: labels[1], o: labels[2] };
+          sel.sources = sources;
         }
 
         return sel;

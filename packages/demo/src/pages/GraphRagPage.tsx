@@ -1,105 +1,128 @@
-import { GraphRagView } from "@trustgraph/trustkit";
+import { useState } from "react";
+import {
+  SimpleRagView,
+  RagWithSourcesView,
+  RagWithTimelineView,
+  RagExplainView,
+  RagFullExplainView,
+  ModeSelector,
+  SectionLabel,
+  text,
+  border,
+  palette,
+} from "@trustgraph/trustkit";
 import { DevPanel } from "../components/DevPanel";
 
+type RagOption = "simple" | "sources" | "timeline" | "explain" | "full";
+
+const modes = [
+  { key: "simple", label: "Simple" },
+  { key: "sources", label: "Sources" },
+  { key: "timeline", label: "Timeline" },
+  { key: "explain", label: "Split + Graph" },
+  { key: "full", label: "Full DAG" },
+];
+
+const optionDescriptions: Record<RagOption, string> = {
+  simple: "No explainability — just a question and an answer.",
+  sources: "Answer with source citations in a side panel.",
+  timeline: "Live event timeline with document-level sources.",
+  explain: "Provenance graph + timeline with full source chains.",
+  full: "Full DAG visualization with click-to-inspect detail.",
+};
+
 /**
- * Graph RAG Query workflow — uses the GraphRagView composite
- * from trustkit.
+ * Graph RAG Query workflow — demonstrates all 5 explainability options.
  */
 export function GraphRagPage() {
+  const [option, setOption] = useState<RagOption>("explain");
+
   return (
     <>
-      <GraphRagView />
+      {/* Option selector bar */}
+      <div style={{
+        padding: "10px 28px",
+        borderBottom: `1px solid ${border.default}`,
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+      }}>
+        <SectionLabel>EXPLAINABILITY</SectionLabel>
+        <ModeSelector
+          modes={modes}
+          activeMode={option}
+          onChange={(key) => setOption(key as RagOption)}
+          color={palette.cyan}
+        />
+        <span style={{
+          fontSize: 11,
+          color: text.subtle,
+          fontStyle: "italic",
+          marginLeft: 8,
+        }}>
+          {optionDescriptions[option]}
+        </span>
+      </div>
+
+      {/* Active view */}
+      {option === "simple" && <SimpleRagView />}
+      {option === "sources" && <RagWithSourcesView />}
+      {option === "timeline" && <RagWithTimelineView />}
+      {option === "explain" && <RagExplainView />}
+      {option === "full" && <RagFullExplainView />}
+
       <DevPanel
-        explanation="This view is a single GraphRagView composite. It internally wires useGraphRag (query execution + streaming), useExplainSession (event management), useExplainEventFetcher (triple fetching + parsing), and useExplainGraph (provenance visualization) into a complete Graph RAG experience."
+        explanation="This page demonstrates 5 levels of explainability, from no explain (SimpleRagView) to full DAG visualization (RagFullExplainView). All 5 use the same Tier 1 hooks — the difference is which Tier 2 pieces they compose. Use the selector above to switch between them."
         codeSamples={[
           {
-            label: "Minimal integration",
-            code: `import { GraphRagView } from "@trustgraph/trustkit";
+            label: "Option 1: Simple (no explainability)",
+            code: `import { SimpleRagView } from "@trustgraph/trustkit";
 
-function MyRagPage() {
-  return <GraphRagView />;
-}`,
+<SimpleRagView />`,
           },
           {
-            label: "With custom collection",
-            code: `import { GraphRagView } from "@trustgraph/trustkit";
+            label: "Option 2: With source citations",
+            code: `import { RagWithSourcesView } from "@trustgraph/trustkit";
 
-function MyRagPage() {
-  return <GraphRagView collection="my-collection" />;
-}`,
+<RagWithSourcesView />`,
           },
           {
-            label: "Custom view using Tier 1 + Tier 2",
-            code: `import {
-  useGraphRag,
-  useExplainSession,
-  useExplainEventFetcher,
-  useExplainGraph,
-  StreamingResponse,
-  ExplainEventCard,
-  ExplainGraph,
-  SearchInput,
-} from "@trustgraph/trustkit";
+            label: "Option 3: Timeline with document sources",
+            code: `import { RagWithTimelineView } from "@trustgraph/trustkit";
 
-function CustomRagView() {
-  const explain = useExplainSession();
-  const { query, response, isQuerying, error }
-    = useGraphRag({
-      collection: "default",
-      onExplain: explain.addEvent,
-    });
+<RagWithTimelineView />`,
+          },
+          {
+            label: "Option 4: Split view with provenance graph",
+            code: `import { RagExplainView } from "@trustgraph/trustkit";
 
-  useExplainEventFetcher(
-    explain.events, explain.updateEvent
-  );
-  const { graphNodes, graphEdges }
-    = useExplainGraph(explain.events);
+<RagExplainView />`,
+          },
+          {
+            label: "Option 5: Full explainability DAG",
+            code: `import { RagFullExplainView } from "@trustgraph/trustkit";
 
-  return (
-    <div>
-      <SearchInput
-        value={input}
-        onChange={setInput}
-        onSubmit={() => query(input)}
-        placeholder="Ask..."
-        buttonText="Query"
-        isLoading={isQuerying}
-      />
-      <StreamingResponse
-        text={response}
-        isStreaming={isQuerying}
-        error={error}
-      />
-      <ExplainGraph
-        nodes={graphNodes}
-        edges={graphEdges}
-      />
-      {explain.events.map((e, i) => (
-        <ExplainEventCard
-          key={e.explainId}
-          eventType={e.eventType}
-          data={e.data}
-          loading={e.fetching}
-          index={i}
-        />
-      ))}
-    </div>
-  );
-}`,
+<RagFullExplainView />`,
           },
         ]}
         components={[
-          { name: "GraphRagView", tier: "3", description: "Complete Graph RAG query + explain view" },
-          { name: "StreamingResponse", tier: "2", description: "Renders streaming LLM response with status" },
-          { name: "ExplainEventCard", tier: "2", description: "Single explain event with type-appropriate content" },
-          { name: "ExplainGraph", tier: "2", description: "Provenance graph visualization" },
-          { name: "SearchInput", tier: "2", description: "Text input with action button" },
+          { name: "SimpleRagView", tier: "3", description: "Query + response, no explain" },
+          { name: "RagWithSourcesView", tier: "3", description: "Query + response + source citations" },
+          { name: "RagWithTimelineView", tier: "3", description: "Query + response + event timeline" },
+          { name: "RagExplainView", tier: "3", description: "Split view with provenance graph" },
+          { name: "RagFullExplainView", tier: "3", description: "Full DAG with click-to-inspect" },
+          { name: "StreamingResponse", tier: "2", description: "Streaming LLM response display" },
+          { name: "ExplainEventCard", tier: "2", description: "Single explain event card" },
+          { name: "ExplainTimeline", tier: "2", description: "Scrollable event timeline" },
+          { name: "SourceLinkBadge", tier: "2", description: "Clickable source reference" },
+          { name: "SourcePanel", tier: "2", description: "Document chunk text viewer" },
         ]}
         hooks={[
-          { name: "useGraphRag", tier: "1", description: "Executes Graph RAG with streaming + explain callbacks" },
-          { name: "useExplainSession", tier: "1", description: "Manages explain event stream and state" },
-          { name: "useExplainEventFetcher", tier: "1", description: "Auto-fetches and parses explain event triples" },
-          { name: "useExplainGraph", tier: "1", description: "Derives provenance graph from explain events" },
+          { name: "useGraphRag", tier: "1", description: "Executes Graph RAG with streaming + explain" },
+          { name: "useExplainSession", tier: "1", description: "Manages explain event stream" },
+          { name: "useExplainEventFetcher", tier: "1", description: "Fetches + parses explain triples with provenance" },
+          { name: "useExplainGraph", tier: "1", description: "Derives provenance graph from events" },
+          { name: "useSourceDocument", tier: "1", description: "Fetches document chunk text" },
         ]}
       />
     </>
