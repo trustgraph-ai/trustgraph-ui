@@ -73,9 +73,63 @@ user wants to verify but doesn't need the full reasoning chain.
 
 ---
 
-## Option 3:
+## Option 3: Explain Timeline with Document Sources
 
-(to be defined)
+The full explain timeline — events arrive in real time as the system
+works, each presented as a compact card with summary/headline
+information. Most event types show just their key data point:
+
+- **Question** — the query text
+- **Grounding** — concept count
+- **Exploration** — entity count, edge count
+- **Synthesis** — content length
+- **Analysis** — action name
+- **Conclusion** — complete
+
+The exception is **Focus** events. When focus arrives, each selected
+edge is shown with its triple (subject → predicate → object) and its
+source documents. Sources are collapsed to the **page and document
+level** — no individual chunks. If three different chunks from the
+same page of the same document were relevant, that shows as one
+document entry, not three. This keeps the sources list clean and
+scannable.
+
+Clicking a document source could open it in a viewer, but the timeline
+itself doesn't expand into chunk-level detail.
+
+**Use case:** Analysts and power users who want to follow the
+reasoning process in real time and quickly verify which documents
+contributed, without drowning in chunk-level detail.
+
+**Layout:**
+```
+┌───────────────────────────────┬─────────────────────┐
+│  GRAPH RAG QUERY              │  EXPLAIN EVENTS     │
+│  [Ask a question...  ] [Query]│                     │
+│                               │  ┌ 1. QUESTION ───┐ │
+│  ┌─ RESPONSE ───────────────┐ │  │ What is...?    │ │
+│  │ The answer streams in    │ │  └─────────────────┘ │
+│  │ here...                  │ │  ┌ 2. GROUNDING ──┐ │
+│  │                          │ │  │ 3 concepts     │ │
+│  │                          │ │  └─────────────────┘ │
+│  │                          │ │  ┌ 3. EXPLORATION ┐ │
+│  │                          │ │  │ 12 entities    │ │
+│  │                          │ │  │ 48 edges       │ │
+│  │                          │ │  └─────────────────┘ │
+│  │                          │ │  ┌ 4. FOCUS ──────┐ │
+│  │                          │ │  │ A → rel → B    │ │
+│  │                          │ │  │  📄 report.pdf │ │
+│  │                          │ │  │  📄 memo.docx  │ │
+│  │                          │ │  │ C → rel → D    │ │
+│  │                          │ │  │  📄 report.pdf │ │
+│  └──────────────────────────┘ │  └─────────────────┘ │
+│                               │  ┌ 5. SYNTHESIS ──┐ │
+│                               │  │ 1240 chars     │ │
+│                               │  └─────────────────┘ │
+└───────────────────────────────┴─────────────────────┘
+```
+
+**Toolkit component:** `RagWithTimelineView`
 
 ---
 
