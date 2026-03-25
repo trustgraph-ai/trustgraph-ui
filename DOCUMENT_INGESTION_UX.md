@@ -451,6 +451,73 @@ differently.
 
 ---
 
+## Further Design Considerations
+
+### Flows: hide or expose?
+
+A flow is an infrastructure concept — it encapsulates a blueprint
+choice and model parameters. The question is whether the end user
+ever needs to see it.
+
+**Option: Fully hidden flows.** The system manages flows behind the
+scenes. When the user submits documents for processing, the system
+either reuses a running flow or starts one automatically with
+defaults. The user's only decision is which model to use (if that).
+Blueprint selection and parameter tuning are handled by the system
+or by an admin in a separate settings area.
+
+This simplifies the ingestion flow dramatically — the "ensure flow"
+step disappears entirely. The user goes straight from upload to
+processing. The trade-off is less control for power users, but the
+toolkit can expose flow management as a separate view (see
+Flow Configuration workflow) for those who need it.
+
+**Option: Minimal exposure.** Show the model selector inline during
+processing setup. Everything else (blueprint, chunk size, advanced
+params) uses defaults unless the user explicitly expands an
+"Advanced" section. The flow blueprint metadata already defines
+which parameters are "easy" vs "advanced", so this is
+data-driven.
+
+**Recommendation:** Default to hidden. Expose model selection only
+if the system supports multiple models. Provide a link to flow
+configuration for power users. The ingestion UX should feel like
+"upload and process" — not "configure infrastructure then upload
+then process."
+
+### Collection strategy: shared vs per-document
+
+Collections group knowledge for querying. There are two strategies:
+
+**Shared collections (default).** Multiple documents go into one
+collection. The knowledge graph merges entities across documents.
+Queries search across all documents in the collection. This is
+the natural model for most use cases — a "Sales" collection
+containing all sales-related documents.
+
+**Per-document collections.** Each document gets its own collection,
+automatically named after the document. The user selects a
+document rather than a collection when querying. The knowledge
+graph for each document is isolated.
+
+Per-document is simpler mentally — "I uploaded this document,
+now I can ask questions about it." But it has a significant
+disadvantage: **you can't search across documents.** If two
+documents both mention the same entity, they won't be connected.
+Cross-document reasoning is lost.
+
+Per-document collections might suit use cases where documents
+are truly independent (e.g. analysing individual contracts), but
+for most knowledge graph scenarios, shared collections are
+essential.
+
+**The toolkit should support both.** The `CollectionPicker`
+component could offer "Add to existing collection" and "Create
+new collection for this document" as options. The choice is the
+user's, not the toolkit's.
+
+---
+
 ## Components Needed
 
 ### Hooks (Tier 1)
