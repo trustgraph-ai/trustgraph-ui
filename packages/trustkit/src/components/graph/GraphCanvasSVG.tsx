@@ -3,6 +3,11 @@ import type { DomainKey, Entity, GraphNode, OntologyType, Relationship } from ".
 import { ZoomControls } from "./ZoomControls";
 import { border } from "../../theme";
 
+function truncateLabel(label: string, maxLength = 30): string {
+  if (label.length <= maxLength) return label;
+  return label.slice(0, maxLength - 1) + "…";
+}
+
 interface GraphCanvasSVGProps {
   entities: Entity[];
   relationships: Relationship[];
@@ -412,7 +417,7 @@ export function GraphCanvasSVG({ entities, relationships, ontology, highlightedE
                   fontFamily="'IBM Plex Sans', sans-serif"
                   textAnchor="middle"
                 >
-                  {node.label}
+                  {truncateLabel(node.label)}
                 </text>
               </g>
             );

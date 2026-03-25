@@ -3,6 +3,11 @@ import type { DomainKey, Entity, GraphNode, OntologyType, Relationship } from ".
 import { ZoomControls } from "./ZoomControls";
 import { border } from "../../theme";
 
+function truncateLabel(label: string, maxLength = 30): string {
+  if (label.length <= maxLength) return label;
+  return label.slice(0, maxLength - 1) + "…";
+}
+
 interface GraphCanvasProps {
   entities: Entity[];
   relationships: Relationship[];
@@ -167,7 +172,7 @@ export function GraphCanvas({ entities, relationships, ontology, highlightedEnti
       ctx.font = `${isHighlighted ? "bold " : ""}${isHovered ? 17 : 14}px 'IBM Plex Sans', sans-serif`;
       ctx.fillStyle = `rgba(255,255,255,${alpha * (isHighlighted ? 1 : 0.75)})`;
       ctx.textAlign = "center";
-      ctx.fillText(node.label, node.x, node.y + r + 18);
+      ctx.fillText(truncateLabel(node.label), node.x, node.y + r + 18);
 
       // Update node positions (spring physics + drift) - only if not settled
       if (!settled) {
