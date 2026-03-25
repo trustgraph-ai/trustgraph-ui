@@ -518,6 +518,146 @@ user's, not the toolkit's.
 
 ---
 
+## View E: Data Lineage Diagram
+
+A diagrammatic view showing the relationships between documents,
+processing, flows, and the knowledge artifacts they produce. Instead
+of listing objects in columns, this view draws the connections as a
+flow diagram — the user can trace from any document through its
+processing to the specific stores it populated.
+
+### The Object Model
+
+```
+Document ──→ Processing ──→ Flow (blueprint) ──→ Output Stores
+```
+
+A **document** in the library is a binary file with metadata (title,
+tags, kind).
+
+A **processing** submission links a document to a flow and a
+collection. One document can have multiple processing submissions
+(different flows, different collections, reprocessing).
+
+A **flow** runs a blueprint with specific parameters. The blueprint's
+tags declare which output modes it supports.
+
+The **output stores** depend on the flow's capabilities:
+
+### Output Paths
+
+The flow blueprint determines which storage paths are active. Each
+path has different associated configuration:
+
+| Output Path | Description | Scoped by |
+|-------------|-------------|-----------|
+| **Knowledge Graph (GraphRAG)** | Entities, triples, embeddings extracted by LLM reasoning over the document | Collection |
+| **Knowledge Graph (Ontology)** | Entities and triples structured according to a defined OWL ontology | Collection + Ontology |
+| **Row Store** | Structured records extracted into typed rows matching a schema | Collection + Schema |
+| **Chunk Store (Doc RAG)** | Document chunks with embeddings for similarity search | Collection |
+
+Note: Chunk Store (Doc RAG) is a legacy mode that is rarely preferred
+over GraphRAG.
+
+### Full Lineage Diagram
+
+For a single document with one processing submission using a flow
+that supports all modes:
+
+```
+                                              ┌─ Knowledge Graph (GraphRAG)
+                                              │    collection: "sales"
+                                              │    → entities, triples, embeddings
+                                              │
+                      ┌───────────────┐       ├─ Knowledge Graph (Ontology)
+                      │ Processing    │       │    collection: "sales"
+┌──────────────┐      │               │       │    ontology: "health-insurance"
+│ report.pdf   │─────→│ flow: extract │──────→│    → typed entities, relationships
+│              │      │ coll: sales   │       │
+│ title: Q4    │      └───────────────┘       ├─ Row Store
+│ tags: policy │                              │    collection: "sales"
+└──────────────┘                              │    schema: "claims"
+                                              │    → structured rows
+                                              │
+                                              └─ Chunk Store (Doc RAG)
+                                                   collection: "sales"
+                                                   → chunks, embeddings
+```
+
+### Multiple Processing Runs
+
+A document can be processed multiple times — into different
+collections, with different flows, producing different knowledge:
+
+```
+                      ┌───────────────┐       ┌─ KG (GraphRAG)
+                      │ proc-1        │       │   collection: "sales"
+                 ┌───→│ flow: extract │──────→│
+                 │    │ coll: sales   │       └─ Row Store
+                 │    └───────────────┘           collection: "sales"
+┌──────────────┐ │                                schema: "claims"
+│ report.pdf   │─┤
+└──────────────┘ │    ┌───────────────┐       ┌─ KG (Ontology)
+                 │    │ proc-2        │       │   collection: "research"
+                 └───→│ flow: onto    │──────→│   ontology: "finance"
+                      │ coll: research│       │
+                      └───────────────┘       └─ KG (GraphRAG)
+                                                  collection: "research"
+```
+
+### How Blueprint Tags Map to Output Paths
+
+The flow blueprint declares its capabilities via tags. The UX reads
+these to determine which output paths to show:
+
+| Blueprint Tag | Output Path |
+|---------------|-------------|
+| `knowledge` or `kgcore` | Knowledge Graph (GraphRAG) |
+| `ontology` | Knowledge Graph (Ontology) |
+| `structured` | Row Store |
+| `document` or `chunking` | Chunk Store (Doc RAG) |
+
+A blueprint may support multiple output paths (e.g. a flow that does
+both GraphRAG extraction and row store population).
+
+### UX Implications
+
+**Trace forward:** Starting from a document, the user can see every
+processing run, what flow was used, and what knowledge was produced
+in which stores. "What happened to my document?"
+
+**Trace backward:** Starting from an entity in the graph, a schema
+record, or a chunk, the user can trace back through the collection
+and processing run to the source document. "Where did this data
+come from?"
+
+**Processing decisions become visible:** When the user is about to
+submit a document for processing, the diagram shows what will happen
+— which stores will be populated, what ontology or schema will be
+used. The user understands the consequence of their choices before
+committing.
+
+**Reprocessing is clear:** If a document has been processed before,
+the diagram shows the existing runs. Submitting again adds a new
+processing branch, not replacing the old one. The user can see both
+and compare results.
+
+### Rendering Approach
+
+This could be rendered as:
+- An **SVG flow diagram** similar to the ExplainDAG — nodes for
+  documents, processing, and stores connected by directional edges
+- A **column layout** where each column is a stage in the pipeline
+  and items link visually to the next column
+- A **tree view** expanding from document → processing → outputs
+
+The SVG approach is most flexible and handles the branching
+naturally. The column approach is simpler and works well when there
+are many documents. Both could be toolkit components with the same
+underlying data.
+
+---
+
 ## Components Needed
 
 ### Hooks (Tier 1)
