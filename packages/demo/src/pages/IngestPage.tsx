@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { SectionLabel, LoadingState, text, border, palette, withGlow } from "@trustgraph/trustkit";
-import { useLibrary, useProcessing, useFlowBlueprints, useSchemas, useOntologies } from "@trustgraph/react-state";
+import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useSchemas, useOntologies } from "@trustgraph/react-state";
 
 interface DocumentMetadata {
   id: string;
@@ -85,15 +85,28 @@ const storeConfig: Record<string, { label: string; color: string }> = {
 export function IngestPage() {
   const { documents, isLoading: docsLoading } = useLibrary();
   const { processing, isLoading: procLoading } = useProcessing();
+  const { flows } = useFlows();
   const { flowBlueprints } = useFlowBlueprints();
   const { schemas: rawSchemas } = useSchemas();
   const { ontologies } = useOntologies();
 
   const docs = (documents || []) as DocumentMetadata[];
   const procs = (processing || []) as ProcessingMetadata[];
+  const flowList = (flows || []) as any[];
   const bps = (flowBlueprints || []) as BlueprintDef[];
   const schemaList = (rawSchemas || []) as any[];
   const ontoList = (ontologies || []) as any[];
+
+  // Build flow → blueprint lookup: flow ID → blueprint ID
+  const flowToBlueprintMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const flow of flowList) {
+      const flowId = flow.id || flow["flow-id"];
+      const bpId = flow.blueprint || flow["blueprint-id"];
+      if (flowId && bpId) map.set(flowId, bpId);
+    }
+    return map;
+  }, [flowList]);
 
   // Build blueprint lookup by ID
   const bpMap = useMemo(() => {
@@ -158,7 +171,9 @@ export function IngestPage() {
       const flow = proc.flow || "default";
       const coll = proc.collection || "default";
       const procKey = `${flow}:${coll}`;
-      const bp = bpMap.get(flow);
+      // Resolve flow → blueprint → tags
+      const blueprintId = flowToBlueprintMap.get(flow) || flow;
+      const bp = bpMap.get(blueprintId);
 
       // Create proc node if not seen this (flow, collection) before
       let procId = procNodes.get(procKey);
