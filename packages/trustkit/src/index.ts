@@ -9,6 +9,9 @@ export type { ExplainGraphNode, ExplainGraphEdge } from "./components/graph";
 // Components — knowledge
 export { EntityBadge, EntityProperties, EntityRelationships, GraphExplorer } from "./components/knowledge";
 
+// Components — explain
+export { StreamingResponse, ExplainEventCard, GraphRagView } from "./components/explain";
+
 // Hooks
 export { useGraphData } from "./hooks/useGraphData";
 export { useOntologySchema } from "./hooks/useOntologySchema";
@@ -16,6 +19,11 @@ export type { OntologyClass, OntologyProperty, OntologySchema } from "./hooks/us
 export { useEntityNeighbourhood } from "./hooks/useEntityNeighbourhood";
 export type { EntityNeighbourhood } from "./hooks/useEntityNeighbourhood";
 export { useDomainFilter } from "./hooks/useDomainFilter";
+export { useGraphRag } from "./hooks/useGraphRag";
+export { useExplainSession } from "./hooks/useExplainSession";
+export type { ExplainNode } from "./hooks/useExplainSession";
+export { useExplainEventFetcher } from "./hooks/useExplainEventFetcher";
+export { useExplainGraph } from "./hooks/useExplainGraph";
 export { useToastStore, toast } from "./hooks/toastStore";
 export type { Toast, ToastType } from "./hooks/toastStore";
 

@@ -34,6 +34,7 @@ const workflows: WorkflowCard[] = [
   },
   {
     key: "graph-rag",
+    view: "graph-rag",
     title: "Graph RAG Query",
     icon: "◉",
     color: palette.blue,
