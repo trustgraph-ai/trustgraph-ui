@@ -24,22 +24,10 @@ export function IngestPage() {
       display: "flex",
       height: "calc(100vh - 110px)",
     }}>
-      {/* Left: pipeline area (to be built) */}
-      <div style={{
-        flex: 1,
-        padding: "28px",
-        overflowY: "auto",
-      }}>
-        <SectionLabel marginBottom={20}>DOCUMENT INGESTION</SectionLabel>
-        <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
-          Pipeline area — upload, metadata, processing controls will go here.
-        </div>
-      </div>
-
-      {/* Right: library documents */}
+      {/* Left: library documents */}
       <div style={{
         width: 380,
-        borderLeft: `1px solid ${border.default}`,
+        borderRight: `1px solid ${border.default}`,
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -128,6 +116,18 @@ export function IngestPage() {
               </Card>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Right: pipeline area (to be built) */}
+      <div style={{
+        flex: 1,
+        padding: "28px",
+        overflowY: "auto",
+      }}>
+        <SectionLabel marginBottom={20}>DOCUMENT INGESTION</SectionLabel>
+        <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+          Pipeline area — upload, metadata, processing controls will go here.
         </div>
       </div>
     </div>
