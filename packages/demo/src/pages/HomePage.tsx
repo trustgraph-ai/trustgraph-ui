@@ -51,7 +51,7 @@ export function HomePage() {
       height: "calc(100vh - 110px)",
       overflowY: "auto",
     }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
         {/* Page header */}
         <div style={{ marginBottom: 40 }}>
           <h1 style={{
@@ -79,63 +79,83 @@ export function HomePage() {
         <SectionLabel marginBottom={20}>WORKFLOWS</SectionLabel>
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(480, 1fr))",
+          gridTemplateColumns: "repeat(2, 1fr)",
           gap: 16,
         }}>
           {workflows.map((wf) => (
-            <Card key={wf.key} borderColor={wf.color + "22"}>
+            <Card key={wf.key} borderColor={wf.color + "22"} padding={0}>
+              {/* Screenshot thumbnail */}
               <div style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 16,
+                height: 140,
+                overflow: "hidden",
+                borderRadius: "12px 12px 0 0",
+                position: "relative",
               }}>
-                {/* Icon */}
+                <img
+                  src="/placeholder.png"
+                  alt={wf.title}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    opacity: 0.6,
+                  }}
+                />
                 <div style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 10,
-                  background: wf.color + "15",
-                  border: `1px solid ${wf.color}33`,
+                  position: "absolute",
+                  inset: 0,
+                  background: `linear-gradient(180deg, transparent 0%, ${surface.base} 100%)`,
+                }} />
+                {/* Icon overlay */}
+                <div style={{
+                  position: "absolute",
+                  top: 12,
+                  left: 14,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 8,
+                  background: wf.color + "20",
+                  border: `1px solid ${wf.color}44`,
+                  backdropFilter: "blur(8px)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 20,
-                  flexShrink: 0,
+                  fontSize: 18,
                 }}>
                   {wf.icon}
                 </div>
+              </div>
 
-                {/* Content */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: wf.color,
-                    marginBottom: 6,
-                  }}>
-                    {wf.title}
-                  </div>
+              {/* Content */}
+              <div style={{ padding: "16px 20px 20px" }}>
+                <div style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: wf.color,
+                  marginBottom: 6,
+                }}>
+                  {wf.title}
+                </div>
 
-                  <div style={{
-                    fontSize: 13,
-                    color: text.secondary,
-                    lineHeight: 1.5,
-                    marginBottom: 12,
-                  }}>
-                    {wf.description}
-                  </div>
+                <div style={{
+                  fontSize: 13,
+                  color: text.secondary,
+                  lineHeight: 1.5,
+                  marginBottom: 12,
+                }}>
+                  {wf.description}
+                </div>
 
-                  <div style={{
-                    fontSize: 12,
-                    color: text.subtle,
-                    lineHeight: 1.6,
-                    padding: "12px 14px",
-                    background: surface.card,
-                    borderRadius: 8,
-                    border: `1px solid ${border.subtle}`,
-                  }}>
-                    {wf.detail}
-                  </div>
+                <div style={{
+                  fontSize: 12,
+                  color: text.subtle,
+                  lineHeight: 1.6,
+                  padding: "10px 12px",
+                  background: surface.card,
+                  borderRadius: 6,
+                  border: `1px solid ${border.subtle}`,
+                }}>
+                  {wf.detail}
                 </div>
               </div>
             </Card>
