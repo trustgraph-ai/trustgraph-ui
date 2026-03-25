@@ -1514,6 +1514,144 @@ ProgressBar.
 
 ---
 
+# Part J — Domain: Connections & Settings
+
+Three-tier architecture for managing TrustGraph connections,
+authentication, and user preferences. See CONNECTION_UX.md for the
+full UX design rationale.
+
+## J1. Hooks (Tier 1)
+
+### useConnections `[new]`
+CRUD for saved connections. Persists to localStorage. Manages the
+list of saved connections and which is active.
+
+Returns `{ connections, addConnection, updateConnection,
+deleteConnection, activeConnectionId, setActiveConnection }`.
+
+Each connection is:
+```ts
+interface SavedConnection {
+  id: string;           // Generated unique ID
+  name: string;         // Human label ("Production", "Local Dev")
+  url: string;          // WebSocket URL
+  user: string;         // User identifier
+  apiKey?: string;      // Optional auth token
+  lastUsed?: number;    // Timestamp
+}
+```
+
+### useConnectionTest `[new]`
+Live connection testing. Given connection parameters, attempts to
+connect and reports socket and auth status in real time. Debounced —
+re-tests automatically as parameters change.
+
+| Arg | Type | Purpose |
+|-----|------|---------|
+| `url` | `string` | WebSocket URL |
+| `user` | `string` | Username |
+| `apiKey` | `string` | Optional API key |
+| `enabled` | `boolean` | Whether to attempt (false = idle) |
+
+Returns `{ socketStatus, authStatus, isConnecting, error }`.
+
+`socketStatus`: `"idle" | "connecting" | "connected" | "refused" | "timeout" | "invalid-url"`
+`authStatus`: `"idle" | "authenticating" | "authenticated" | "unauthenticated" | "failed"`
+
+### useConnectionPersistence `[new]`
+Handles localStorage read/write for connection settings, including
+API key masking and optional encryption. Separated from useConnections
+so the storage strategy can be swapped.
+
+Returns `{ load, save, clear }`.
+
+---
+
+## J2. Domain Pieces (Tier 2)
+
+### ConnectionCard `[new]`
+Displays a saved connection with status, masked credentials, and
+actions (edit, connect/disconnect, delete).
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| `connection` | `SavedConnection` | Connection data |
+| `isActive` | `boolean` | Currently connected |
+| `status` | `ConnectionStatus` | Live socket/auth status |
+| `onEdit` | `() => void` | Edit handler |
+| `onConnect` | `() => void` | Activate handler |
+| `onDisconnect` | `() => void` | Deactivate handler |
+| `onDelete` | `() => void` | Delete handler |
+
+Composes Card + StatusIndicator + MaskedField.
+
+### ConnectionForm `[new]`
+Form for creating/editing a connection with live testing. Shows
+real-time socket and auth status as the user types.
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| `connection` | `SavedConnection \| null` | Existing (edit) or null (create) |
+| `onSave` | `(connection: SavedConnection) => void` | Save handler |
+| `onCancel` | `() => void` | Cancel handler |
+
+Composes FormField + TextInput + MaskedField + StatusIndicator.
+Internally uses useConnectionTest for live feedback.
+
+### ConnectionStatusBadge `[new]`
+Compact indicator for the header/status bar. Shows connection name
+and coloured status dot. Click to open settings.
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| `name` | `string` | Connection name |
+| `status` | `ConnectionStatus` | Current status |
+| `onClick` | `() => void` | Open settings |
+
+### MaskedField `[new]`
+Displays a sensitive value masked by default with show/hide toggle
+and copy button.
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| `value` | `string` | The sensitive value |
+| `maskChar` | `string` | Mask character (default `●`) |
+| `visibleChars` | `number` | Chars to show at end (0 = fully masked) |
+| `copyable` | `boolean` | Show copy button |
+
+### ConnectionTestStatus `[new]`
+Displays live connection test results — socket status and auth status
+as coloured indicators with labels.
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| `socketStatus` | `string` | Socket connection state |
+| `authStatus` | `string` | Authentication state |
+
+Composes StatusIndicator.
+
+---
+
+## J3. Composites (Tier 3)
+
+### WelcomeScreen `[new]`
+First-run connection setup. Shown when no connection is configured.
+Clean, focused screen with just the connection form and live status.
+Transitions to the main app on success.
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| `onConnected` | `() => void` | Successful connection |
+
+Wires ConnectionForm + useConnectionTest.
+
+### ConnectionSettings `[new]`
+Full connection management page — list of saved connections with
+add/edit/delete. Wires useConnections + ConnectionCard +
+ConnectionForm.
+
+---
+
 # Summary
 
 ## Component & Hook Counts
@@ -1529,9 +1667,10 @@ ProgressBar.
 | Document Ingestion (G) | 3 | 2 | 1 | 6 |
 | Collections & Flows (H) | 5 | 6 | 2 | 13 |
 | Export & Import (I) | 2 | 2 | 2 | 6 |
-| **Total** | **28** | **58** | **17** | **103** |
+| Connections & Settings (J) | 3 | 5 | 2 | 10 |
+| **Total** | **31** | **63** | **19** | **113** |
 
-Of the 58 domain pieces + generic components: 14 already exist, 44
+Of the 63 domain pieces + generic components: 14 already exist, 49
 are new.
 
 ## Three-Tier Pattern Summary
@@ -1559,14 +1698,18 @@ are new.
 ## Build Order
 
 1. **Generic foundation** — primitives, controls, layout, feedback
-2. **Knowledge Graph hooks** — useGraphData refactor, useEntityNeighbourhood
-3. **Knowledge Graph pieces** — EntityBadge, EntityProperties, EntityRelationships
-4. **Explainability hooks** — useExplainSession, useExplainEvent, useEdgeProvenance
-5. **Explainability pieces** — ExplainEventCard, EdgeDetailCard, ProvenanceChainView
-6. **Search hooks** — useEmbeddingSearch, useDataSearch
-7. **Search pieces** — SearchResultCard, EmbeddingEntityList
-8. **Agent & RAG hooks** — useAgentChat, useGraphRag, useDocumentRag
-9. **Agent & RAG pieces** — StreamingResponse, AgentStatusIndicator
-10. **Ingestion, Collections, Flows, Export** — hooks and pieces
-11. **Tier 3 composites** — wire everything together
-12. **Refactor demo** — rebuild demo pages using composites
+2. **Connections & settings** — useConnections, useConnectionTest,
+   ConnectionForm, ConnectionCard, WelcomeScreen, MaskedField
+3. **TrustGraphProvider + channels** — provider architecture, channel
+   management
+4. **Knowledge Graph hooks** — useGraphData refactor, useEntityNeighbourhood
+5. **Knowledge Graph pieces** — EntityBadge, EntityProperties, EntityRelationships
+6. **Explainability hooks** — useExplainSession, useExplainEvent, useEdgeProvenance
+7. **Explainability pieces** — ExplainEventCard, EdgeDetailCard, ProvenanceChainView
+8. **Search hooks** — useEmbeddingSearch, useDataSearch
+9. **Search pieces** — SearchResultCard, EmbeddingEntityList
+10. **Agent & RAG hooks** — useAgentChat, useGraphRag, useDocumentRag
+11. **Agent & RAG pieces** — StreamingResponse, AgentStatusIndicator
+12. **Ingestion, Collections, Flows, Export** — hooks and pieces
+13. **Tier 3 composites** — wire everything together
+14. **Refactor demo** — rebuild demo pages using composites
