@@ -63,13 +63,14 @@ function truncate(s: string, max: number) {
 }
 
 function blueprintOutputPaths(bp: BlueprintDef | undefined): string[] {
-  if (!bp || !bp.tags) return ["knowledge"];
+  if (!bp || !bp.tags) return ["kg-graphrag"];
   const tags = bp.tags.map(t => t.toLowerCase());
   const paths: string[] = [];
-  if (tags.some(t => t === "knowledge" || t === "kgcore" || t === "graph-rag")) paths.push("kg-graphrag");
-  if (tags.some(t => t === "ontology")) paths.push("kg-ontology");
-  if (tags.some(t => t === "structured" || t === "row-store")) paths.push("row-store");
-  if (tags.some(t => t === "document" || t === "chunking" || t === "doc-rag")) paths.push("chunk-store");
+  if (tags.includes("graph-rag")) paths.push("kg-graphrag");
+  if (tags.includes("onto-rag")) paths.push("kg-ontology");
+  if (tags.includes("structured")) paths.push("row-store");
+  if (tags.includes("document-rag")) paths.push("chunk-store");
+  if (tags.includes("kgcore")) paths.push("kgcore");
   if (paths.length === 0) paths.push("kg-graphrag"); // default
   return paths;
 }
@@ -79,6 +80,7 @@ const storeConfig: Record<string, { label: string; color: string }> = {
   "kg-ontology": { label: "KG (Ontology)", color: palette.emerald },
   "row-store": { label: "Row Store", color: palette.purple },
   "chunk-store": { label: "Chunk Store", color: palette.rose },
+  "kgcore": { label: "KG Core", color: palette.cyan },
 };
 
 export function IngestPage() {
@@ -182,7 +184,7 @@ export function IngestPage() {
 
       for (const path of outputPaths) {
         const storeKey = `${procId}:${path}`;
-        const cfg = storeConfig[path];
+        const cfg = storeConfig[path] || { label: path, color: text.muted };
 
         // Store node (column 3)
         let storeId = storeNodes.get(storeKey);
