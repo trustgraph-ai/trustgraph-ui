@@ -222,7 +222,7 @@ export function IngestPage() {
                         color: text.disabled,
                         marginLeft: "auto",
                       }}>
-                        {new Date(proc.time).toLocaleDateString()}
+                        {new Date(proc.time * 1000).toLocaleDateString()}
                       </span>
                     )}
                   </div>
