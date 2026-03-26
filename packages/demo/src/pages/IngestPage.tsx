@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { SectionLabel, DetailPanel, LoadingState, Badge, text, border, palette, surface, withGlow } from "@trustgraph/trustkit";
-import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useCollections, useSchemas, useOntologies, useChunkedUpload } from "@trustgraph/react-state";
+import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useSchemas, useOntologies, useChunkedUpload } from "@trustgraph/react-state";
+import { SubmitDialog } from "../components/SubmitDialog";
 
 interface DocumentMetadata {
   id: string;
@@ -114,7 +115,6 @@ export function IngestPage() {
   const { processing, isLoading: procLoading, refetch: refetchProcessing } = useProcessing();
   const { flows } = useFlows();
   const { flowBlueprints } = useFlowBlueprints();
-  const { collections } = useCollections();
   const { schemas: rawSchemas } = useSchemas();
   const { ontologies } = useOntologies();
 
@@ -489,8 +489,7 @@ export function IngestPage() {
   const [selectedProcKey, setSelectedProcKey] = useState<string | null>(null);
   const [selectedDestId, setSelectedDestId] = useState<string | null>(null);
   const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
-  const [submitFlowId, setSubmitFlowId] = useState<string>("default");
-  const [submitCollection, setSubmitCollection] = useState<string>("default");
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const selectedDoc = selectedDocId ? docs.find(d => d.id === selectedDocId) : null;
   const selectedDraft = selectedDraftId ? drafts.find(d => d.draftId === selectedDraftId) : null;
@@ -605,41 +604,19 @@ export function IngestPage() {
     }
   }, [drafts, chunkedUpload, uploadTexts, updateDraft, refetchLibrary, selectedDraftId]);
 
-  const handleSubmitForProcessing = useCallback((docId: string) => {
+  const handleSubmitForProcessing = useCallback((docId: string, flowId: string, collection: string) => {
     submitDocuments({
       ids: [docId],
-      flow: submitFlowId,
+      flow: flowId,
       tags: [],
-      collection: submitCollection,
+      collection,
       onSuccess: () => {
         refetchProcessing();
       },
     });
-  }, [submitDocuments, submitFlowId, submitCollection, refetchProcessing]);
+  }, [submitDocuments, refetchProcessing]);
 
-  // Build collections list from collections API + processing submissions
-  const collectionOptions = useMemo(() => {
-    const names = new Set<string>(["default"]);
-    for (const coll of (collections || []) as any[]) {
-      const name = coll.collection || coll.name || coll.id;
-      if (name) names.add(name);
-    }
-    for (const proc of procs) {
-      if (proc.collection) names.add(proc.collection);
-    }
-    return Array.from(names).sort();
-  }, [collections, procs]);
 
-  // Build flow options from running flows
-  const flowOptions = useMemo(() => {
-    const names = new Set<string>();
-    for (const flow of flowList) {
-      const id = flow.id || flow["flow-id"];
-      if (id) names.add(id);
-    }
-    if (names.size === 0) names.add("default");
-    return Array.from(names).sort();
-  }, [flowList]);
 
   if (docsLoading || procLoading) {
     return <LoadingState message="Loading ingestion data..." />;
@@ -1476,75 +1453,8 @@ export function IngestPage() {
 
             {/* Submit for Processing */}
             <div style={{ marginTop: 24 }}>
-              <SectionLabel marginBottom={12}>SUBMIT FOR PROCESSING</SectionLabel>
-
-              {/* Flow selector */}
-              <div style={{ marginBottom: 12 }}>
-                <div style={{
-                  fontSize: 10,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  color: text.faint,
-                  marginBottom: 4,
-                  letterSpacing: "0.05em",
-                }}>
-                  FLOW
-                </div>
-                <select
-                  value={submitFlowId}
-                  onChange={(e) => setSubmitFlowId(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    fontSize: 12,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    color: text.primary,
-                    background: surface.base,
-                    border: `1px solid ${border.medium}`,
-                    borderRadius: 6,
-                    outline: "none",
-                  }}
-                >
-                  {flowOptions.map(f => (
-                    <option key={f} value={f}>{f}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Collection selector */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{
-                  fontSize: 10,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  color: text.faint,
-                  marginBottom: 4,
-                  letterSpacing: "0.05em",
-                }}>
-                  COLLECTION
-                </div>
-                <select
-                  value={submitCollection}
-                  onChange={(e) => setSubmitCollection(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    fontSize: 12,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    color: text.primary,
-                    background: surface.base,
-                    border: `1px solid ${border.medium}`,
-                    borderRadius: 6,
-                    outline: "none",
-                  }}
-                >
-                  {collectionOptions.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Submit button */}
               <button
-                onClick={() => handleSubmitForProcessing(selectedDocId!)}
+                onClick={() => setShowSubmitDialog(true)}
                 disabled={isSubmitting}
                 style={{
                   width: "100%",
@@ -1559,10 +1469,30 @@ export function IngestPage() {
                   opacity: isSubmitting ? 0.5 : 1,
                 }}
               >
-                {isSubmitting ? "Submitting..." : "Submit"}
+                {isSubmitting ? "Submitting..." : "Submit for Processing →"}
               </button>
             </div>
           </DetailPanel>
+        </div>
+      )}
+      {showSubmitDialog && selectedDoc && (
+        <div style={{
+          width: 400,
+          flexShrink: 0,
+          borderLeft: `1px solid ${border.default}`,
+          background: "rgba(12,12,18,0.95)",
+          backdropFilter: "blur(12px)",
+          overflowY: "auto",
+        }}>
+          <SubmitDialog
+            documentTitle={selectedDoc.title || selectedDoc.id}
+            documentId={selectedDoc.id}
+            onSubmit={(flowId, collection) => {
+              handleSubmitForProcessing(selectedDoc.id, flowId, collection);
+              setShowSubmitDialog(false);
+            }}
+            onCancel={() => setShowSubmitDialog(false)}
+          />
         </div>
       )}
       </div>
