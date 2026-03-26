@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { SectionLabel, LoadingState, text, border, palette, withGlow } from "@trustgraph/trustkit";
+import { useState, useMemo } from "react";
+import { SectionLabel, DetailPanel, LoadingState, Badge, text, border, palette, surface, withGlow } from "@trustgraph/trustkit";
 import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useSchemas, useOntologies } from "@trustgraph/react-state";
 
 interface DocumentMetadata {
@@ -427,6 +427,15 @@ export function IngestPage() {
     });
   }, [edges]);
 
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+  const selectedDoc = selectedDocId ? docs.find(d => d.id === selectedDocId) : null;
+
+  // Find processing submissions for the selected document
+  const selectedDocProcs = useMemo(() => {
+    if (!selectedDocId) return [];
+    return procs.filter(p => p["document-id"] === selectedDocId);
+  }, [selectedDocId, procs]);
+
   if (docsLoading || procLoading) {
     return <LoadingState message="Loading ingestion data..." />;
   }
@@ -452,7 +461,8 @@ export function IngestPage() {
         </SectionLabel>
       </div>
 
-      {/* Diagram */}
+      {/* Diagram + Detail panel */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
       <div style={{ flex: 1, overflow: "auto", padding: "0 12px" }}>
         <svg width={svgWidth} height={svgHeight} style={{ display: "block" }}>
           {/* Column headers */}
@@ -501,8 +511,38 @@ export function IngestPage() {
           })}
 
           {/* Nodes */}
-          {nodes.map((node) => (
-            <g key={node.id}>
+          {nodes.map((node) => {
+            const isDocNode = node.column === "doc";
+            const isSelected = isDocNode && selectedDocId && node.id === `doc:${selectedDocId}`;
+            const isConnectedToSelected = selectedDocId && uniqueEdges.some(
+              e => (e.from === `doc:${selectedDocId}` && e.to === node.id) ||
+                   (e.from === node.id && uniqueEdges.some(e2 => e2.from === `doc:${selectedDocId}` && e2.to === node.id))
+            );
+            const dimmed = selectedDocId && !isSelected && !isConnectedToSelected && isDocNode;
+
+            return (
+            <g
+              key={node.id}
+              onClick={isDocNode ? () => {
+                const docId = node.id.replace("doc:", "");
+                setSelectedDocId(selectedDocId === docId ? null : docId);
+              } : undefined}
+              style={{ cursor: isDocNode ? "pointer" : "default" }}
+            >
+              {isSelected && (
+                <rect
+                  x={node.x - 3}
+                  y={node.y - 3}
+                  width={node.w + 6}
+                  height={node.h + 6}
+                  rx={9}
+                  ry={9}
+                  fill="none"
+                  stroke={node.color}
+                  strokeWidth={2}
+                  opacity={0.5}
+                />
+              )}
               <rect
                 x={node.x}
                 y={node.y}
@@ -511,8 +551,9 @@ export function IngestPage() {
                 rx={6}
                 ry={6}
                 fill={withGlow(node.color, 0.08)}
-                stroke={withGlow(node.color, 0.3)}
+                stroke={withGlow(node.color, isSelected ? 0.6 : 0.3)}
                 strokeWidth={1}
+                opacity={dimmed ? 0.3 : 1}
               />
               {node.label.includes("\n") ? (
                 node.label.split("\n").map((line, li) => (
@@ -544,8 +585,145 @@ export function IngestPage() {
                 </text>
               )}
             </g>
-          ))}
+            );
+          })}
         </svg>
+      </div>
+
+      {/* Detail panel */}
+      {selectedDoc && (
+        <div style={{
+          width: 360,
+          flexShrink: 0,
+          borderLeft: `1px solid ${border.default}`,
+          background: "rgba(12,12,18,0.95)",
+          backdropFilter: "blur(12px)",
+          overflowY: "auto",
+        }}>
+          <DetailPanel
+            title={selectedDoc.title || selectedDoc.id}
+            subtitle="DOCUMENT"
+            subtitleColor={palette.cyan}
+            onClose={() => setSelectedDocId(null)}
+          >
+            {/* Metadata */}
+            {selectedDoc.kind && (
+              <div style={{ marginBottom: 12 }}>
+                <span style={{
+                  fontSize: 10,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  color: text.faint,
+                  padding: "2px 6px",
+                  borderRadius: 3,
+                  background: surface.card,
+                  border: `1px solid ${border.subtle}`,
+                }}>
+                  {selectedDoc.kind}
+                </span>
+              </div>
+            )}
+
+            {selectedDoc.comments && (
+              <div style={{
+                fontSize: 13,
+                color: text.secondary,
+                lineHeight: 1.6,
+                marginBottom: 16,
+              }}>
+                {selectedDoc.comments}
+              </div>
+            )}
+
+            {selectedDoc.tags && selectedDoc.tags.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <SectionLabel marginBottom={8}>TAGS</SectionLabel>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {selectedDoc.tags.map((tag, i) => (
+                    <Badge key={i} color={palette.cyan} size="small">{tag}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {selectedDoc.time && (
+              <div style={{ marginBottom: 16 }}>
+                <SectionLabel marginBottom={8}>UPLOADED</SectionLabel>
+                <div style={{
+                  fontSize: 12,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  color: text.subtle,
+                }}>
+                  {new Date(selectedDoc.time * 1000).toLocaleString()}
+                </div>
+              </div>
+            )}
+
+            <div style={{ marginBottom: 16 }}>
+              <SectionLabel marginBottom={8}>DOCUMENT ID</SectionLabel>
+              <div style={{
+                fontSize: 10,
+                fontFamily: "'IBM Plex Mono', monospace",
+                color: text.faint,
+                wordBreak: "break-all",
+              }}>
+                {selectedDoc.id}
+              </div>
+            </div>
+
+            {/* Processing submissions for this document */}
+            <SectionLabel marginBottom={8}>
+              PROCESSING
+              {selectedDocProcs.length > 0 && (
+                <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
+                  {selectedDocProcs.length}
+                </span>
+              )}
+            </SectionLabel>
+            {selectedDocProcs.length === 0 ? (
+              <div style={{ fontSize: 12, color: text.hint, fontStyle: "italic" }}>
+                Not submitted for processing.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {selectedDocProcs.map((proc) => (
+                  <div key={proc.id} style={{
+                    padding: "10px 12px",
+                    borderRadius: 6,
+                    background: withGlow(palette.amber, 0.06),
+                    border: `1px solid ${withGlow(palette.amber, 0.15)}`,
+                  }}>
+                    <div style={{
+                      fontSize: 11,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                    }}>
+                      <span style={{ color: text.faint }}>flow: </span>
+                      <span style={{ color: palette.amber }}>{proc.flow || "default"}</span>
+                    </div>
+                    <div style={{
+                      fontSize: 11,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      marginTop: 2,
+                    }}>
+                      <span style={{ color: text.faint }}>collection: </span>
+                      <span style={{ color: palette.emerald }}>{proc.collection || "default"}</span>
+                    </div>
+                    {proc.time && (
+                      <div style={{
+                        fontSize: 10,
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        color: text.disabled,
+                        marginTop: 4,
+                      }}>
+                        {new Date(proc.time * 1000).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </DetailPanel>
+        </div>
+      )}
       </div>
     </div>
   );
