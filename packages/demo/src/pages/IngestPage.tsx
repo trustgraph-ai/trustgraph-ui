@@ -111,7 +111,7 @@ export function IngestPage() {
       refetchLibrary();
     },
   });
-  const { processing, isLoading: procLoading } = useProcessing();
+  const { processing, isLoading: procLoading, refetch: refetchProcessing } = useProcessing();
   const { flows } = useFlows();
   const { flowBlueprints } = useFlowBlueprints();
   const { collections } = useCollections();
@@ -612,11 +612,10 @@ export function IngestPage() {
       tags: [],
       collection: submitCollection,
       onSuccess: () => {
-        // Refetch processing list to show the new submission
-        // The useProcessing hook will pick this up
+        refetchProcessing();
       },
     });
-  }, [submitDocuments, submitFlowId, submitCollection]);
+  }, [submitDocuments, submitFlowId, submitCollection, refetchProcessing]);
 
   // Build collections list from collections API + processing submissions
   const collectionOptions = useMemo(() => {
