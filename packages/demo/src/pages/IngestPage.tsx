@@ -429,6 +429,7 @@ export function IngestPage() {
 
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [selectedProcKey, setSelectedProcKey] = useState<string | null>(null);
+  const [selectedDestId, setSelectedDestId] = useState<string | null>(null);
   const selectedDoc = selectedDocId ? docs.find(d => d.id === selectedDocId) : null;
 
   // Find processing submissions for the selected document
@@ -492,7 +493,7 @@ export function IngestPage() {
           <text x={COL_X.dest + (COL_WIDTH + 20) / 2} y={24} textAnchor="middle"
             fill={text.faint} fontSize={10} fontFamily="'IBM Plex Mono', monospace"
             fontWeight={600} letterSpacing="0.1em">
-            DESTINATION
+            STORAGE
           </text>
 
           {/* Edges */}
@@ -527,27 +528,35 @@ export function IngestPage() {
           {nodes.map((node) => {
             const isDocNode = node.column === "doc";
             const isProcNode = node.column === "proc";
-            const isClickable = isDocNode || isProcNode;
+            const isDestNode = (node.column as string) === "dest";
             const isSelectedDoc = isDocNode && selectedDocId && node.id === `doc:${selectedDocId}`;
             const isSelectedProc = isProcNode && selectedProcKey && node.id === `proc:${selectedProcKey}`;
-            const isSelected = isSelectedDoc || isSelectedProc;
-            const dimmed = (selectedDocId || selectedProcKey) && !isSelected && (isDocNode || isProcNode);
+            const isSelectedDest = isDestNode && selectedDestId && node.id === selectedDestId;
+            const isSelected = isSelectedDoc || isSelectedProc || isSelectedDest;
+            const hasSelection = selectedDocId || selectedProcKey || selectedDestId;
+            const dimmed = hasSelection && !isSelected;
 
             return (
             <g
               key={node.id}
-              onClick={isClickable ? () => {
+              onClick={() => {
                 if (isDocNode) {
                   const docId = node.id.replace("doc:", "");
                   setSelectedDocId(selectedDocId === docId ? null : docId);
                   setSelectedProcKey(null);
+                  setSelectedDestId(null);
                 } else if (isProcNode) {
                   const procKey = node.id.replace("proc:", "");
                   setSelectedProcKey(selectedProcKey === procKey ? null : procKey);
                   setSelectedDocId(null);
+                  setSelectedDestId(null);
+                } else if (isDestNode) {
+                  setSelectedDestId(selectedDestId === node.id ? null : node.id);
+                  setSelectedDocId(null);
+                  setSelectedProcKey(null);
                 }
-              } : undefined}
-              style={{ cursor: isClickable ? "pointer" : "default" }}
+              }}
+              style={{ cursor: "pointer" }}
             >
               {isSelected && (
                 <rect
@@ -611,6 +620,92 @@ export function IngestPage() {
       </div>
 
       {/* Detail panel */}
+      {selectedDestId && (() => {
+        // Parse dest ID to extract store info
+        // Format: "dest:storetype:collection" or "dest:storetype:collection:onto/schema:name" or "dest:kgcore"
+        const destParts = selectedDestId.replace("dest:", "").split(":");
+        const storeType = destParts[0];
+        const cfg = storeConfig[storeType] || { label: storeType, color: text.muted };
+        const collection = destParts[1] || undefined;
+
+        // Find associated ontology or schema name from parts
+        let extraType: string | undefined;
+        let extraName: string | undefined;
+        if (destParts.includes("onto")) {
+          extraType = "Ontology";
+          extraName = destParts[destParts.indexOf("onto") + 1];
+        } else if (destParts.includes("schema")) {
+          extraType = "Schema";
+          extraName = destParts[destParts.indexOf("schema") + 1];
+        }
+
+        return (
+        <div style={{
+          width: 360,
+          flexShrink: 0,
+          borderLeft: `1px solid ${border.default}`,
+          background: "rgba(12,12,18,0.95)",
+          backdropFilter: "blur(12px)",
+          overflowY: "auto",
+        }}>
+          <DetailPanel
+            title={cfg.label}
+            subtitle="STORAGE"
+            subtitleColor={cfg.color}
+            onClose={() => setSelectedDestId(null)}
+          >
+            {collection && (
+              <div style={{ marginBottom: 16 }}>
+                <SectionLabel marginBottom={8}>COLLECTION</SectionLabel>
+                <div style={{
+                  fontSize: 12,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  color: palette.emerald,
+                }}>
+                  {collection}
+                </div>
+              </div>
+            )}
+
+            {extraType && extraName && (
+              <div style={{ marginBottom: 16 }}>
+                <SectionLabel marginBottom={8}>{extraType.toUpperCase()}</SectionLabel>
+                <div style={{
+                  fontSize: 12,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  color: cfg.color,
+                }}>
+                  {extraName}
+                </div>
+              </div>
+            )}
+
+            <div style={{ marginBottom: 16 }}>
+              <SectionLabel marginBottom={8}>STORE TYPE</SectionLabel>
+              <div style={{
+                fontSize: 12,
+                color: text.subtle,
+                lineHeight: 1.5,
+              }}>
+                {storeType === "kg-graphrag" && "Entities, triples, and embeddings extracted by LLM reasoning."}
+                {storeType === "kg-ontology" && "Entities and triples structured according to a defined OWL ontology."}
+                {storeType === "row-store" && "Structured records extracted into typed rows matching a schema."}
+                {storeType === "chunk-store" && "Document chunks with embeddings for similarity search."}
+                {storeType === "kgcore" && "Knowledge core — persistent storage of triples and graph embeddings."}
+              </div>
+            </div>
+
+            <div style={{
+              fontSize: 12,
+              color: text.hint,
+              fontStyle: "italic",
+            }}>
+              Monitoring and stats will be available here.
+            </div>
+          </DetailPanel>
+        </div>
+        );
+      })()}
       {selectedFlow && (
         <div style={{
           width: 360,
