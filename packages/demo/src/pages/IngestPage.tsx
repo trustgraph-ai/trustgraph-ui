@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { SectionLabel, DetailPanel, LoadingState, Badge, text, border, palette, surface, withGlow } from "@trustgraph/trustkit";
 import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useSchemas, useOntologies } from "@trustgraph/react-state";
 
@@ -25,6 +25,22 @@ interface BlueprintDef {
   description?: string;
   tags?: string[];
 }
+
+interface DraftDocument {
+  draftId: string;
+  title: string;
+  comments: string;
+  mimeType: string;
+  tags: string[];
+  inputMode: "file" | "text";
+  file?: File;
+  textContent?: string;
+  status: "draft" | "uploading" | "complete" | "error";
+  progress?: number;
+  error?: string;
+}
+
+let draftCounter = 0;
 
 // Layout constants
 const COL_WIDTH = 160;
@@ -83,7 +99,7 @@ const storeConfig: Record<string, { label: string; color: string }> = {
 };
 
 export function IngestPage() {
-  const { documents, isLoading: docsLoading } = useLibrary();
+  const { documents, isLoading: docsLoading, uploadFiles, uploadTexts, refetch: refetchLibrary } = useLibrary();
   const { processing, isLoading: procLoading } = useProcessing();
   const { flows } = useFlows();
   const { flowBlueprints } = useFlowBlueprints();
@@ -96,6 +112,9 @@ export function IngestPage() {
   const bps = (flowBlueprints || []) as BlueprintDef[];
   const schemaList = (rawSchemas || []) as any[];
   const ontoList = (ontologies || []) as any[];
+
+  // Draft and selection state — must be before useMemo that depends on them
+  const [drafts, setDrafts] = useState<DraftDocument[]>([]);
 
   // Build flow → blueprint lookup: flow ID → blueprint ID
   const flowToBlueprintMap = useMemo(() => {
@@ -157,6 +176,33 @@ export function IngestPage() {
         w: COL_WIDTH,
         h: NODE_H,
         color: palette.cyan,
+        column: "doc",
+      };
+      nodes.push(node);
+      nodeMap.set(nodeId, node);
+      docY += NODE_H + ROW_GAP;
+    }
+
+    // Draft documents (client-side, not yet uploaded)
+    for (const draft of drafts) {
+      const nodeId = `draft:${draft.draftId}`;
+      const label = draft.title
+        ? truncate(draft.title, 18)
+        : draft.status === "uploading" ? "Uploading..."
+        : draft.status === "complete" ? "Complete"
+        : "New document";
+      const statusColor = draft.status === "uploading" ? palette.amber
+        : draft.status === "complete" ? palette.emerald
+        : draft.status === "error" ? palette.red
+        : palette.cyan;
+      const node: DiagramNode = {
+        id: nodeId,
+        label,
+        x: COL_X.doc,
+        y: docY,
+        w: COL_WIDTH,
+        h: NODE_H,
+        color: statusColor,
         column: "doc",
       };
       nodes.push(node);
@@ -414,7 +460,7 @@ export function IngestPage() {
     const maxX = COL_X.dest + COL_WIDTH + 20 + LEFT_PAD;
 
     return { nodes, edges, svgHeight: Math.max(maxY, 300), svgWidth: Math.max(maxX, 800) };
-  }, [docs, procs, bpMap, schemaNames, ontoNames]);
+  }, [docs, drafts, procs, bpMap, schemaNames, ontoNames]);
 
   // Deduplicate edges
   const uniqueEdges = useMemo(() => {
@@ -430,7 +476,10 @@ export function IngestPage() {
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [selectedProcKey, setSelectedProcKey] = useState<string | null>(null);
   const [selectedDestId, setSelectedDestId] = useState<string | null>(null);
+  const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const selectedDoc = selectedDocId ? docs.find(d => d.id === selectedDocId) : null;
+  const selectedDraft = selectedDraftId ? drafts.find(d => d.draftId === selectedDraftId) : null;
 
   // Find processing submissions for the selected document
   const selectedDocProcs = useMemo(() => {
@@ -450,6 +499,94 @@ export function IngestPage() {
     return { flowId, flow, blueprintId, blueprint: bp, collection, submissions };
   }, [selectedProcKey, flowList, flowToBlueprintMap, bpMap, procs]);
 
+  const clearSelection = useCallback(() => {
+    setSelectedDocId(null);
+    setSelectedProcKey(null);
+    setSelectedDestId(null);
+    setSelectedDraftId(null);
+  }, []);
+
+  const addDraft = useCallback(() => {
+    const draftId = `draft-${++draftCounter}`;
+    const draft: DraftDocument = {
+      draftId,
+      title: "",
+      comments: "",
+      mimeType: "",
+      tags: [],
+      inputMode: "file",
+      status: "draft",
+    };
+    setDrafts(prev => [...prev, draft]);
+    setSelectedDraftId(draftId);
+    setSelectedDocId(null);
+    setSelectedProcKey(null);
+    setSelectedDestId(null);
+  }, []);
+
+  const updateDraft = useCallback((draftId: string, updates: Partial<DraftDocument>) => {
+    setDrafts(prev => prev.map(d => d.draftId === draftId ? { ...d, ...updates } : d));
+  }, []);
+
+  const handleFileSelect = useCallback((draftId: string, file: File) => {
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    const mimeMap: Record<string, string> = {
+      pdf: "application/pdf",
+      txt: "text/plain",
+      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      doc: "application/msword",
+      md: "text/markdown",
+      html: "text/html",
+      csv: "text/csv",
+      json: "application/json",
+    };
+    updateDraft(draftId, {
+      file,
+      title: file.name.replace(/\.[^.]+$/, ""),
+      mimeType: mimeMap[ext] || file.type || "application/octet-stream",
+    });
+  }, [updateDraft]);
+
+  const handleUpload = useCallback((draftId: string) => {
+    const draft = drafts.find(d => d.draftId === draftId);
+    if (!draft) return;
+    if (!draft.title) return;
+
+    updateDraft(draftId, { status: "uploading" });
+
+    const params = {
+      title: draft.title,
+      comments: draft.comments,
+      keywords: draft.tags,
+    };
+
+    const onSuccess = () => {
+      updateDraft(draftId, { status: "complete" });
+      refetchLibrary();
+      // Remove the draft after a short delay so the user sees "complete"
+      setTimeout(() => {
+        setDrafts(prev => prev.filter(d => d.draftId !== draftId));
+        if (selectedDraftId === draftId) setSelectedDraftId(null);
+      }, 2000);
+    };
+
+    if (draft.inputMode === "file" && draft.file) {
+      uploadFiles({
+        files: [draft.file],
+        params,
+        mimeType: draft.mimeType,
+        onSuccess,
+      });
+    } else if (draft.inputMode === "text" && draft.textContent) {
+      uploadTexts({
+        texts: [draft.textContent],
+        params,
+        mimeType: draft.mimeType || "text/plain",
+        onSuccess,
+      });
+    }
+  }, [drafts, uploadFiles, uploadTexts, updateDraft, refetchLibrary, selectedDraftId]);
+
   if (docsLoading || procLoading) {
     return <LoadingState message="Loading ingestion data..." />;
   }
@@ -467,18 +604,38 @@ export function IngestPage() {
         borderBottom: `1px solid ${border.default}`,
         flexShrink: 0,
       }}>
-        <SectionLabel>
-          DATA LINEAGE
-          <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
-            {docs.length} documents · {procs.length} submissions
-          </span>
-        </SectionLabel>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <SectionLabel>
+            DATA LINEAGE
+            <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
+              {docs.length} documents · {procs.length} submissions
+            </span>
+          </SectionLabel>
+          <button
+            onClick={addDraft}
+            style={{
+              padding: "5px 14px",
+              borderRadius: 6,
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontWeight: 600,
+              cursor: "pointer",
+              background: withGlow(palette.cyan, 0.15),
+              border: `1px solid ${withGlow(palette.cyan, 0.4)}`,
+              color: palette.cyan,
+            }}
+          >
+            + Add Document
+          </button>
+        </div>
       </div>
 
       {/* Diagram + Detail panel */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
       <div style={{ flex: 1, overflow: "auto", padding: "0 12px" }}>
-        <svg width={svgWidth} height={svgHeight} style={{ display: "block" }}>
+        <svg width={svgWidth} height={svgHeight} style={{ display: "block" }}
+          onClick={clearSelection}
+        >
           {/* Column headers */}
           <text x={COL_X.doc + COL_WIDTH / 2} y={24} textAnchor="middle"
             fill={text.faint} fontSize={10} fontFamily="'IBM Plex Mono', monospace"
@@ -526,23 +683,33 @@ export function IngestPage() {
 
           {/* Nodes */}
           {nodes.map((node) => {
-            const isDocNode = node.column === "doc";
+            const isDocNode = node.column === "doc" && node.id.startsWith("doc:");
+            const isDraftNode = node.column === "doc" && node.id.startsWith("draft:");
             const isProcNode = node.column === "proc";
             const isDestNode = (node.column as string) === "dest";
             const isSelectedDoc = isDocNode && selectedDocId && node.id === `doc:${selectedDocId}`;
+            const isSelectedDraft = isDraftNode && selectedDraftId && node.id === `draft:${selectedDraftId}`;
             const isSelectedProc = isProcNode && selectedProcKey && node.id === `proc:${selectedProcKey}`;
             const isSelectedDest = isDestNode && selectedDestId && node.id === selectedDestId;
-            const isSelected = isSelectedDoc || isSelectedProc || isSelectedDest;
-            const hasSelection = selectedDocId || selectedProcKey || selectedDestId;
+            const isSelected = isSelectedDoc || isSelectedDraft || isSelectedProc || isSelectedDest;
+            const hasSelection = selectedDocId || selectedDraftId || selectedProcKey || selectedDestId;
             const dimmed = hasSelection && !isSelected;
 
             return (
             <g
               key={node.id}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 if (isDocNode) {
                   const docId = node.id.replace("doc:", "");
                   setSelectedDocId(selectedDocId === docId ? null : docId);
+                  setSelectedProcKey(null);
+                  setSelectedDestId(null);
+                  setSelectedDraftId(null);
+                } else if (isDraftNode) {
+                  const draftId = node.id.replace("draft:", "");
+                  setSelectedDraftId(selectedDraftId === draftId ? null : draftId);
+                  setSelectedDocId(null);
                   setSelectedProcKey(null);
                   setSelectedDestId(null);
                 } else if (isProcNode) {
@@ -550,10 +717,12 @@ export function IngestPage() {
                   setSelectedProcKey(selectedProcKey === procKey ? null : procKey);
                   setSelectedDocId(null);
                   setSelectedDestId(null);
+                  setSelectedDraftId(null);
                 } else if (isDestNode) {
                   setSelectedDestId(selectedDestId === node.id ? null : node.id);
                   setSelectedDocId(null);
                   setSelectedProcKey(null);
+                  setSelectedDraftId(null);
                 }
               }}
               style={{ cursor: "pointer" }}
@@ -582,6 +751,7 @@ export function IngestPage() {
                 fill={withGlow(node.color, 0.08)}
                 stroke={withGlow(node.color, isSelected ? 0.6 : 0.3)}
                 strokeWidth={1}
+                strokeDasharray={isDraftNode ? "4 3" : undefined}
                 opacity={dimmed ? 0.3 : 1}
               />
               {node.label.includes("\n") ? (
@@ -620,6 +790,254 @@ export function IngestPage() {
       </div>
 
       {/* Detail panel */}
+      {selectedDraft && (
+        <div style={{
+          width: 360,
+          flexShrink: 0,
+          borderLeft: `1px solid ${border.default}`,
+          background: "rgba(12,12,18,0.95)",
+          backdropFilter: "blur(12px)",
+          overflowY: "auto",
+        }}>
+          <DetailPanel
+            title={selectedDraft.status === "uploading" ? "Uploading..." : selectedDraft.status === "complete" ? "Upload Complete" : "New Document"}
+            subtitle="UPLOAD"
+            subtitleColor={selectedDraft.status === "complete" ? palette.emerald : palette.cyan}
+            onClose={() => setSelectedDraftId(null)}
+          >
+            {selectedDraft.status === "complete" ? (
+              <div style={{ fontSize: 13, color: palette.emerald }}>
+                Document uploaded successfully.
+              </div>
+            ) : selectedDraft.status === "uploading" ? (
+              <div style={{ fontSize: 13, color: palette.amber }}>
+                Uploading...
+              </div>
+            ) : (
+              <>
+                {/* Input mode toggle */}
+                <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
+                  {(["file", "text"] as const).map(mode => (
+                    <button
+                      key={mode}
+                      onClick={() => updateDraft(selectedDraft.draftId, { inputMode: mode })}
+                      style={{
+                        padding: "5px 14px",
+                        borderRadius: 6,
+                        fontSize: 11,
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        background: selectedDraft.inputMode === mode ? withGlow(palette.cyan, 0.15) : "transparent",
+                        border: `1px solid ${selectedDraft.inputMode === mode ? withGlow(palette.cyan, 0.4) : border.default}`,
+                        color: selectedDraft.inputMode === mode ? palette.cyan : text.muted,
+                      }}
+                    >
+                      {mode === "file" ? "File" : "Text"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* File picker */}
+                {selectedDraft.inputMode === "file" && (
+                  <div style={{ marginBottom: 16 }}>
+                    <SectionLabel marginBottom={8}>FILE</SectionLabel>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileSelect(selectedDraft.draftId, file);
+                      }}
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        borderRadius: 8,
+                        border: `1px dashed ${border.medium}`,
+                        background: "transparent",
+                        color: selectedDraft.file ? text.primary : text.hint,
+                        fontSize: 12,
+                        cursor: "pointer",
+                        textAlign: "center",
+                      }}
+                    >
+                      {selectedDraft.file ? selectedDraft.file.name : "Click to select file..."}
+                    </button>
+                  </div>
+                )}
+
+                {/* Text input */}
+                {selectedDraft.inputMode === "text" && (
+                  <div style={{ marginBottom: 16 }}>
+                    <SectionLabel marginBottom={8}>TEXT CONTENT</SectionLabel>
+                    <textarea
+                      value={selectedDraft.textContent || ""}
+                      onChange={(e) => updateDraft(selectedDraft.draftId, { textContent: e.target.value })}
+                      placeholder="Paste or type text content..."
+                      style={{
+                        width: "100%",
+                        minHeight: 100,
+                        padding: "10px 14px",
+                        fontSize: 12,
+                        fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+                        color: text.primary,
+                        background: "transparent",
+                        border: `1px solid ${border.medium}`,
+                        borderRadius: 8,
+                        outline: "none",
+                        resize: "vertical",
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Title */}
+                <div style={{ marginBottom: 16 }}>
+                  <SectionLabel marginBottom={8}>TITLE</SectionLabel>
+                  <input
+                    type="text"
+                    value={selectedDraft.title}
+                    onChange={(e) => updateDraft(selectedDraft.draftId, { title: e.target.value })}
+                    placeholder="Document title..."
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      fontSize: 13,
+                      fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+                      color: text.primary,
+                      background: "transparent",
+                      border: `1px solid ${border.medium}`,
+                      borderRadius: 6,
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                {/* MIME type */}
+                <div style={{ marginBottom: 16 }}>
+                  <SectionLabel marginBottom={8}>MIME TYPE</SectionLabel>
+                  <input
+                    type="text"
+                    value={selectedDraft.mimeType}
+                    onChange={(e) => updateDraft(selectedDraft.draftId, { mimeType: e.target.value })}
+                    placeholder="e.g. application/pdf"
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      fontSize: 12,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      color: text.secondary,
+                      background: "transparent",
+                      border: `1px solid ${border.medium}`,
+                      borderRadius: 6,
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                {/* Comments */}
+                <div style={{ marginBottom: 16 }}>
+                  <SectionLabel marginBottom={8}>DESCRIPTION</SectionLabel>
+                  <textarea
+                    value={selectedDraft.comments}
+                    onChange={(e) => updateDraft(selectedDraft.draftId, { comments: e.target.value })}
+                    placeholder="Optional description..."
+                    style={{
+                      width: "100%",
+                      minHeight: 60,
+                      padding: "8px 12px",
+                      fontSize: 12,
+                      fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+                      color: text.secondary,
+                      background: "transparent",
+                      border: `1px solid ${border.medium}`,
+                      borderRadius: 6,
+                      outline: "none",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+
+                {/* Tags */}
+                <div style={{ marginBottom: 20 }}>
+                  <SectionLabel marginBottom={8}>TAGS</SectionLabel>
+                  <input
+                    type="text"
+                    placeholder="Add tag and press Enter..."
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const val = (e.target as HTMLInputElement).value.trim();
+                        if (val && !selectedDraft.tags.includes(val)) {
+                          updateDraft(selectedDraft.draftId, { tags: [...selectedDraft.tags, val] });
+                          (e.target as HTMLInputElement).value = "";
+                        }
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      fontSize: 12,
+                      fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+                      color: text.primary,
+                      background: "transparent",
+                      border: `1px solid ${border.medium}`,
+                      borderRadius: 6,
+                      outline: "none",
+                      marginBottom: 6,
+                    }}
+                  />
+                  {selectedDraft.tags.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                      {selectedDraft.tags.map((tag, i) => (
+                        <Badge
+                          key={i}
+                          color={palette.cyan}
+                          size="small"
+                          onClick={() => updateDraft(selectedDraft.draftId, {
+                            tags: selectedDraft.tags.filter((_, j) => j !== i),
+                          })}
+                        >
+                          {tag} ×
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload button */}
+                <button
+                  onClick={() => handleUpload(selectedDraft.draftId)}
+                  disabled={!selectedDraft.title || (selectedDraft.inputMode === "file" ? !selectedDraft.file : !selectedDraft.textContent)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 16px",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: (!selectedDraft.title || (selectedDraft.inputMode === "file" ? !selectedDraft.file : !selectedDraft.textContent)) ? "not-allowed" : "pointer",
+                    background: palette.cyan + "20",
+                    border: `1px solid ${palette.cyan}66`,
+                    color: palette.cyan,
+                    opacity: (!selectedDraft.title || (selectedDraft.inputMode === "file" ? !selectedDraft.file : !selectedDraft.textContent)) ? 0.4 : 1,
+                  }}
+                >
+                  Upload
+                </button>
+
+                {selectedDraft.error && (
+                  <div style={{ fontSize: 12, color: palette.red, marginTop: 8 }}>
+                    {selectedDraft.error}
+                  </div>
+                )}
+              </>
+            )}
+          </DetailPanel>
+        </div>
+      )}
       {selectedDestId && (() => {
         // Parse dest ID to extract store info
         // Format: "dest:storetype:collection" or "dest:storetype:collection:onto/schema:name" or "dest:kgcore"
