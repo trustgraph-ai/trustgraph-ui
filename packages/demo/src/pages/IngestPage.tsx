@@ -428,6 +428,7 @@ export function IngestPage() {
   }, [edges]);
 
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+  const [selectedProcKey, setSelectedProcKey] = useState<string | null>(null);
   const selectedDoc = selectedDocId ? docs.find(d => d.id === selectedDocId) : null;
 
   // Find processing submissions for the selected document
@@ -435,6 +436,18 @@ export function IngestPage() {
     if (!selectedDocId) return [];
     return procs.filter(p => p["document-id"] === selectedDocId);
   }, [selectedDocId, procs]);
+
+  // Find flow data for the selected processing group
+  const selectedFlow = useMemo(() => {
+    if (!selectedProcKey) return null;
+    const [flowId] = selectedProcKey.split(":");
+    const flow = flowList.find((f: any) => (f.id || f["flow-id"]) === flowId);
+    const blueprintId = flowToBlueprintMap.get(flowId) || flowId;
+    const bp = bpMap.get(blueprintId);
+    const collection = selectedProcKey.split(":").slice(1).join(":");
+    const submissions = procs.filter(p => (p.flow || "default") === flowId && (p.collection || "default") === collection);
+    return { flowId, flow, blueprintId, blueprint: bp, collection, submissions };
+  }, [selectedProcKey, flowList, flowToBlueprintMap, bpMap, procs]);
 
   if (docsLoading || procLoading) {
     return <LoadingState message="Loading ingestion data..." />;
@@ -474,7 +487,7 @@ export function IngestPage() {
           <text x={COL_X.proc + COL_WIDTH / 2} y={24} textAnchor="middle"
             fill={text.faint} fontSize={10} fontFamily="'IBM Plex Mono', monospace"
             fontWeight={600} letterSpacing="0.1em">
-            PROCESSING
+            FLOWS
           </text>
           <text x={COL_X.dest + (COL_WIDTH + 20) / 2} y={24} textAnchor="middle"
             fill={text.faint} fontSize={10} fontFamily="'IBM Plex Mono', monospace"
@@ -513,21 +526,28 @@ export function IngestPage() {
           {/* Nodes */}
           {nodes.map((node) => {
             const isDocNode = node.column === "doc";
-            const isSelected = isDocNode && selectedDocId && node.id === `doc:${selectedDocId}`;
-            const isConnectedToSelected = selectedDocId && uniqueEdges.some(
-              e => (e.from === `doc:${selectedDocId}` && e.to === node.id) ||
-                   (e.from === node.id && uniqueEdges.some(e2 => e2.from === `doc:${selectedDocId}` && e2.to === node.id))
-            );
-            const dimmed = selectedDocId && !isSelected && !isConnectedToSelected && isDocNode;
+            const isProcNode = node.column === "proc";
+            const isClickable = isDocNode || isProcNode;
+            const isSelectedDoc = isDocNode && selectedDocId && node.id === `doc:${selectedDocId}`;
+            const isSelectedProc = isProcNode && selectedProcKey && node.id === `proc:${selectedProcKey}`;
+            const isSelected = isSelectedDoc || isSelectedProc;
+            const dimmed = (selectedDocId || selectedProcKey) && !isSelected && (isDocNode || isProcNode);
 
             return (
             <g
               key={node.id}
-              onClick={isDocNode ? () => {
-                const docId = node.id.replace("doc:", "");
-                setSelectedDocId(selectedDocId === docId ? null : docId);
+              onClick={isClickable ? () => {
+                if (isDocNode) {
+                  const docId = node.id.replace("doc:", "");
+                  setSelectedDocId(selectedDocId === docId ? null : docId);
+                  setSelectedProcKey(null);
+                } else if (isProcNode) {
+                  const procKey = node.id.replace("proc:", "");
+                  setSelectedProcKey(selectedProcKey === procKey ? null : procKey);
+                  setSelectedDocId(null);
+                }
               } : undefined}
-              style={{ cursor: isDocNode ? "pointer" : "default" }}
+              style={{ cursor: isClickable ? "pointer" : "default" }}
             >
               {isSelected && (
                 <rect
@@ -591,6 +611,131 @@ export function IngestPage() {
       </div>
 
       {/* Detail panel */}
+      {selectedFlow && (
+        <div style={{
+          width: 360,
+          flexShrink: 0,
+          borderLeft: `1px solid ${border.default}`,
+          background: "rgba(12,12,18,0.95)",
+          backdropFilter: "blur(12px)",
+          overflowY: "auto",
+        }}>
+          <DetailPanel
+            title={selectedFlow.flowId}
+            subtitle="FLOW"
+            subtitleColor={palette.amber}
+            onClose={() => setSelectedProcKey(null)}
+          >
+            {/* Blueprint */}
+            <div style={{ marginBottom: 16 }}>
+              <SectionLabel marginBottom={8}>BLUEPRINT</SectionLabel>
+              <div style={{
+                fontSize: 12,
+                fontFamily: "'IBM Plex Mono', monospace",
+                color: palette.amber,
+              }}>
+                {selectedFlow.blueprintId}
+              </div>
+              {selectedFlow.blueprint?.description && (
+                <div style={{
+                  fontSize: 12,
+                  color: text.subtle,
+                  lineHeight: 1.5,
+                  marginTop: 4,
+                }}>
+                  {selectedFlow.blueprint.description}
+                </div>
+              )}
+            </div>
+
+            {/* Tags */}
+            {selectedFlow.blueprint?.tags && selectedFlow.blueprint.tags.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <SectionLabel marginBottom={8}>TAGS</SectionLabel>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {selectedFlow.blueprint.tags.map((tag: string, i: number) => (
+                    <Badge key={i} color={palette.amber} size="small">{tag}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Collection */}
+            <div style={{ marginBottom: 16 }}>
+              <SectionLabel marginBottom={8}>COLLECTION</SectionLabel>
+              <div style={{
+                fontSize: 12,
+                fontFamily: "'IBM Plex Mono', monospace",
+                color: palette.emerald,
+              }}>
+                {selectedFlow.collection}
+              </div>
+            </div>
+
+            {/* Flow parameters */}
+            {selectedFlow.flow?.parameters && (
+              <div style={{ marginBottom: 16 }}>
+                <SectionLabel marginBottom={8}>PARAMETERS</SectionLabel>
+                {Object.entries(selectedFlow.flow.parameters as Record<string, any>).map(([key, val]) => (
+                  <div key={key} style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "6px 0",
+                    borderBottom: `1px solid ${border.subtle}`,
+                    fontSize: 11,
+                  }}>
+                    <span style={{ color: text.subtle }}>{key}</span>
+                    <span style={{
+                      color: text.primary,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      textAlign: "right",
+                      maxWidth: "60%",
+                      wordBreak: "break-word",
+                    }}>
+                      {typeof val === "object" ? JSON.stringify(val) : String(val)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Submissions in this group */}
+            <SectionLabel marginBottom={8}>
+              SUBMISSIONS
+              <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
+                {selectedFlow.submissions.length}
+              </span>
+            </SectionLabel>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {selectedFlow.submissions.map((proc) => {
+                const docTitle = docs.find(d => d.id === proc["document-id"])?.title || proc["document-id"];
+                return (
+                  <div key={proc.id} style={{
+                    padding: "8px 10px",
+                    borderRadius: 6,
+                    background: withGlow(palette.cyan, 0.06),
+                    border: `1px solid ${withGlow(palette.cyan, 0.15)}`,
+                    fontSize: 11,
+                    color: text.secondary,
+                  }}>
+                    {truncate(docTitle, 30)}
+                    {proc.time && (
+                      <span style={{
+                        color: text.disabled,
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        marginLeft: 8,
+                        fontSize: 10,
+                      }}>
+                        {new Date(proc.time * 1000).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </DetailPanel>
+        </div>
+      )}
       {selectedDoc && (
         <div style={{
           width: 360,
