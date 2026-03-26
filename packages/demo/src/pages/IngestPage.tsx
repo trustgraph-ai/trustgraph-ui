@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { SectionLabel, DetailPanel, LoadingState, Badge, text, border, palette, surface, withGlow } from "@trustgraph/trustkit";
-import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useSchemas, useOntologies } from "@trustgraph/react-state";
+import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useSchemas, useOntologies, useChunkedUpload } from "@trustgraph/react-state";
 
 interface DocumentMetadata {
   id: string;
@@ -99,7 +99,18 @@ const storeConfig: Record<string, { label: string; color: string }> = {
 };
 
 export function IngestPage() {
-  const { documents, isLoading: docsLoading, uploadFiles, uploadTexts, refetch: refetchLibrary } = useLibrary();
+  const { documents, isLoading: docsLoading, uploadTexts, refetch: refetchLibrary } = useLibrary();
+  const chunkedUpload = useChunkedUpload({
+    onProgress: (p) => {
+      // Update the draft's progress
+      setDrafts(prev => prev.map(d =>
+        d.status === "uploading" ? { ...d, progress: p.percentage } : d
+      ));
+    },
+    onComplete: () => {
+      refetchLibrary();
+    },
+  });
   const { processing, isLoading: procLoading } = useProcessing();
   const { flows } = useFlows();
   const { flowBlueprints } = useFlowBlueprints();
@@ -547,45 +558,49 @@ export function IngestPage() {
     });
   }, [updateDraft]);
 
-  const handleUpload = useCallback((draftId: string) => {
+  const handleUpload = useCallback(async (draftId: string) => {
     const draft = drafts.find(d => d.draftId === draftId);
     if (!draft) return;
     if (!draft.title) return;
 
-    updateDraft(draftId, { status: "uploading" });
+    updateDraft(draftId, { status: "uploading", progress: 0 });
 
-    const params = {
-      title: draft.title,
-      comments: draft.comments,
-      keywords: draft.tags,
-    };
-
-    const onSuccess = () => {
-      updateDraft(draftId, { status: "complete" });
-      refetchLibrary();
-      // Remove the draft after a short delay so the user sees "complete"
-      setTimeout(() => {
-        setDrafts(prev => prev.filter(d => d.draftId !== draftId));
-        if (selectedDraftId === draftId) setSelectedDraftId(null);
-      }, 2000);
+    const removeDraft = () => {
+      setDrafts(prev => prev.filter(d => d.draftId !== draftId));
+      if (selectedDraftId === draftId) setSelectedDraftId(null);
     };
 
     if (draft.inputMode === "file" && draft.file) {
-      uploadFiles({
-        files: [draft.file],
-        params,
-        mimeType: draft.mimeType,
-        onSuccess,
+      // Use chunked upload for files — gives us progress
+      const docId = await chunkedUpload.upload({
+        file: draft.file,
+        title: draft.title,
+        comments: draft.comments,
+        tags: draft.tags,
       });
+      if (docId) {
+        removeDraft();
+      } else {
+        updateDraft(draftId, { status: "error", error: "Upload failed" });
+      }
+      chunkedUpload.reset();
     } else if (draft.inputMode === "text" && draft.textContent) {
+      // Text uploads use the simple API (no chunking needed)
       uploadTexts({
         texts: [draft.textContent],
-        params,
+        params: {
+          title: draft.title,
+          comments: draft.comments,
+          keywords: draft.tags,
+        },
         mimeType: draft.mimeType || "text/plain",
-        onSuccess,
+        onSuccess: () => {
+          removeDraft();
+          refetchLibrary();
+        },
       });
     }
-  }, [drafts, uploadFiles, uploadTexts, updateDraft, refetchLibrary, selectedDraftId]);
+  }, [drafts, chunkedUpload, uploadTexts, updateDraft, refetchLibrary, selectedDraftId]);
 
   if (docsLoading || procLoading) {
     return <LoadingState message="Loading ingestion data..." />;
@@ -754,6 +769,25 @@ export function IngestPage() {
                 strokeDasharray={isDraftNode ? "4 3" : undefined}
                 opacity={dimmed ? 0.3 : 1}
               />
+              {/* Upload progress fill — rises from bottom */}
+              {isDraftNode && (() => {
+                const draft = drafts.find(d => `draft:${d.draftId}` === node.id);
+                if (!draft || draft.status !== "uploading") return null;
+                const pct = draft.progress || 0;
+                const fillH = (pct / 100) * node.h;
+                return (
+                  <rect
+                    x={node.x + 1}
+                    y={node.y + node.h - fillH}
+                    width={node.w - 2}
+                    height={fillH}
+                    rx={5}
+                    ry={5}
+                    fill={withGlow(palette.amber, 0.2)}
+                    style={{ transition: "height 0.3s ease, y 0.3s ease" }}
+                  />
+                );
+              })()}
               {node.label.includes("\n") ? (
                 node.label.split("\n").map((line, li) => (
                   <text
@@ -810,8 +844,29 @@ export function IngestPage() {
                 Document uploaded successfully.
               </div>
             ) : selectedDraft.status === "uploading" ? (
-              <div style={{ fontSize: 13, color: palette.amber }}>
-                Uploading...
+              <div>
+                <div style={{
+                  fontSize: 13,
+                  color: palette.amber,
+                  marginBottom: 12,
+                }}>
+                  Uploading... {selectedDraft.progress || 0}%
+                </div>
+                {/* Progress bar */}
+                <div style={{
+                  height: 6,
+                  borderRadius: 3,
+                  background: withGlow(palette.amber, 0.1),
+                  overflow: "hidden",
+                }}>
+                  <div style={{
+                    height: "100%",
+                    width: `${selectedDraft.progress || 0}%`,
+                    borderRadius: 3,
+                    background: palette.amber,
+                    transition: "width 0.3s ease",
+                  }} />
+                </div>
               </div>
             ) : (
               <>
