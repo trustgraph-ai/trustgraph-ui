@@ -769,22 +769,22 @@ export function IngestPage() {
                 strokeDasharray={isDraftNode ? "4 3" : undefined}
                 opacity={dimmed ? 0.3 : 1}
               />
-              {/* Upload progress fill — rises from bottom */}
+              {/* Upload progress fill — left to right */}
               {isDraftNode && (() => {
                 const draft = drafts.find(d => `draft:${d.draftId}` === node.id);
                 if (!draft || draft.status !== "uploading") return null;
                 const pct = draft.progress || 0;
-                const fillH = (pct / 100) * node.h;
+                const fillW = (pct / 100) * (node.w - 2);
                 return (
                   <rect
                     x={node.x + 1}
-                    y={node.y + node.h - fillH}
-                    width={node.w - 2}
-                    height={fillH}
+                    y={node.y + 1}
+                    width={fillW}
+                    height={node.h - 2}
                     rx={5}
                     ry={5}
                     fill={withGlow(palette.amber, 0.2)}
-                    style={{ transition: "height 0.3s ease, y 0.3s ease" }}
+                    style={{ transition: "width 0.3s ease" }}
                   />
                 );
               })()}
