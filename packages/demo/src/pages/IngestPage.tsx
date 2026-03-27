@@ -233,7 +233,7 @@ export function IngestPage() {
       const procKey = `${flow}:${coll}`;
       // Resolve flow → blueprint → tags
       const blueprintId = flowToBlueprintMap.get(flow);
-      const bp = bpMap.get(blueprintId);
+      const bp = blueprintId ? bpMap.get(blueprintId) : undefined;
 
       // Create proc node if not seen this (flow, collection) before
       let procId = procNodes.get(procKey);
@@ -510,8 +510,8 @@ export function IngestPage() {
     if (!selectedProcKey) return null;
     const [flowId] = selectedProcKey.split(":");
     const flow = flowList.find((f: any) => (f.id || f["flow-id"]) === flowId);
-    const blueprintId = flowToBlueprintMap.get(flowId) || flowId;
-    const bp = bpMap.get(blueprintId);
+    const blueprintId = flowToBlueprintMap.get(flowId);
+    const bp = blueprintId ? bpMap.get(blueprintId) : undefined;
     const collection = selectedProcKey.split(":").slice(1).join(":");
     const submissions = procs.filter(p => (p.flow || "default") === flowId && (p.collection || "default") === collection);
     return { flowId, flow, blueprintId, blueprint: bp, collection, submissions };
