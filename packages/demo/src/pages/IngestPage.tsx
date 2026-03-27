@@ -67,25 +67,13 @@ interface DiagramNode {
   w: number;
   h: number;
   color: string;
-  column: "doc" | "proc" | "dest";
-  /** Store type group for dest nodes */
-  storeGroup?: string;
+  column: "doc" | "proc" | "store" | "target";
 }
 
 interface DiagramEdge {
   from: string;
   to: string;
 }
-
-interface StoreGroupHeader {
-  label: string;
-  color: string;
-  y: number;
-}
-
-// Ordered store types for consistent grouping
-const STORE_ORDER = ["kg-graphrag", "kg-ontology", "row-store", "chunk-store", "kgcore"];
-const GROUP_GAP = 20; // Extra gap between store groups
 
 function truncate(s: string, max: number) {
   return s.length > max ? s.slice(0, max - 1) + "…" : s;
@@ -179,13 +167,14 @@ export function IngestPage() {
   }, [ontoList]);
 
   // Build diagram data
-  const { nodes, edges, storeGroupHeaders, svgHeight, svgWidth } = useMemo(() => {
+  const { nodes, edges, svgHeight, svgWidth } = useMemo(() => {
     const nodes: DiagramNode[] = [];
     const edges: DiagramEdge[] = [];
     const nodeMap = new Map<string, DiagramNode>();
 
     let docY = TOP_PAD;
     let procY = TOP_PAD;
+    let destY = TOP_PAD;
 
     // Track deduplicated nodes
     const destNodes = new Map<string, string>(); // "storetype:coll:onto/schema" → nodeId
@@ -273,50 +262,108 @@ export function IngestPage() {
 
         // Output paths from blueprint tags — only once per proc node
         const outputPaths = blueprintOutputPaths(bp);
-        const currentProcId = procId; // TypeScript-safe const reference
 
         for (const path of outputPaths) {
           const cfg = storeConfig[path] || { label: path, color: text.muted };
 
-          // Build destination nodes — grouped by store type
-          const addDestNode = (destKey: string, label: string, storePath: string) => {
-            const existing = destNodes.get(destKey);
-            if (existing) {
-              edges.push({ from: currentProcId, to: existing });
-              return;
-            }
-            const destId = `dest:${destKey}`;
-            const destNode: DiagramNode = {
-              id: destId,
-              label,
-              x: COL_X.dest,
-              y: 0, // assigned later during grouped layout
-              w: COL_WIDTH + 20,
-              h: NODE_H,
-              color: cfg.color,
-              column: "dest",
-              storeGroup: storePath,
-            };
-            nodes.push(destNode);
-            nodeMap.set(destId, destNode);
-            destNodes.set(destKey, destId);
-            edges.push({ from: currentProcId, to: destId });
-          };
-
+          // Build destination nodes — one per unique (store, collection, ontology/schema)
           if (path === "kg-ontology") {
+            // One destination per (collection, ontology) pair
             const ontos = ontoNames.length > 0 ? ontoNames : [{ key: "default", name: "ontology" }];
             for (const onto of ontos) {
-              addDestNode(`kg-ontology:${coll}:${onto.key}`, `${truncate(coll, 14)}, ${truncate(onto.name, 12)}`, path);
+              const destKey = `kg-ontology:${coll}:${onto.key}`;
+              let destId = destNodes.get(destKey);
+              if (!destId) {
+                destId = `dest:${destKey}`;
+                const label = `${cfg.label}\n${truncate(coll, 12)}, ${truncate(onto.name, 12)}`;
+                const destNode: DiagramNode = {
+                  id: destId,
+                  label,
+                  x: COL_X.dest,
+                  y: destY,
+                  w: COL_WIDTH + 20,
+                  h: NODE_H + 14,
+                  color: cfg.color,
+                  column: "dest" as any,
+                };
+                nodes.push(destNode);
+                nodeMap.set(destId, destNode);
+                destNodes.set(destKey, destId);
+                destY += NODE_H + 14 + ROW_GAP;
+              }
+              edges.push({ from: procId, to: destId });
             }
           } else if (path === "row-store") {
+            // One destination per (collection, schema) pair
             const schemas = schemaNames.length > 0 ? schemaNames : [{ key: "default", name: "schema" }];
             for (const schema of schemas) {
-              addDestNode(`row-store:${coll}:${schema.key}`, `${truncate(coll, 14)}, ${truncate(schema.name, 12)}`, path);
+              const destKey = `row-store:${coll}:${schema.key}`;
+              let destId = destNodes.get(destKey);
+              if (!destId) {
+                destId = `dest:${destKey}`;
+                const label = `${cfg.label}\n${truncate(coll, 12)}, ${truncate(schema.name, 12)}`;
+                const destNode: DiagramNode = {
+                  id: destId,
+                  label,
+                  x: COL_X.dest,
+                  y: destY,
+                  w: COL_WIDTH + 20,
+                  h: NODE_H + 14,
+                  color: cfg.color,
+                  column: "dest" as any,
+                };
+                nodes.push(destNode);
+                nodeMap.set(destId, destNode);
+                destNodes.set(destKey, destId);
+                destY += NODE_H + 14 + ROW_GAP;
+              }
+              edges.push({ from: procId, to: destId });
             }
           } else if (path === "kgcore") {
-            addDestNode(`kgcore`, "(global)", path);
+            // KG Core — no collection, just a bucket
+            const destKey = `kgcore`;
+            let destId = destNodes.get(destKey);
+            if (!destId) {
+              destId = `dest:${destKey}`;
+              const destNode: DiagramNode = {
+                id: destId,
+                label: cfg.label,
+                x: COL_X.dest,
+                y: destY,
+                w: COL_WIDTH + 20,
+                h: NODE_H,
+                color: cfg.color,
+                column: "dest" as any,
+              };
+              nodes.push(destNode);
+              nodeMap.set(destId, destNode);
+              destNodes.set(destKey, destId);
+              destY += NODE_H + ROW_GAP;
+            }
+            edges.push({ from: procId, to: destId });
           } else {
-            addDestNode(`${path}:${coll}`, truncate(coll, 18), path);
+            // KG (GraphRAG), Chunk Store — with collection
+            const destKey = `${path}:${coll}`;
+            let destId = destNodes.get(destKey);
+            if (!destId) {
+              destId = `dest:${destKey}`;
+              const label = `${cfg.label}\n${truncate(coll, 16)}`;
+              const destNode: DiagramNode = {
+                id: destId,
+                label,
+                x: COL_X.dest,
+                y: destY,
+                w: COL_WIDTH + 20,
+                h: NODE_H + 14,
+                color: cfg.color,
+                column: "dest" as any,
+              };
+              nodes.push(destNode);
+              nodeMap.set(destId, destNode);
+              destNodes.set(destKey, destId);
+              destY += NODE_H + 14 + ROW_GAP;
+            }
+            edges.push({ from: procId, to: destId });
           }
         }
       }
@@ -401,43 +448,23 @@ export function IngestPage() {
       col.push(...scored.map(s => s.node));
     }
 
-    // Initial sequential layout for doc and proc
+    // Initial sequential layout
     assignSequentialY(columns.doc);
     assignSequentialY(columns.proc);
+    assignSequentialY(columns.dest);
 
-    // Grouped layout for dest — group by storeGroup, ordered by STORE_ORDER
-    const storeGroupHeaders: StoreGroupHeader[] = [];
-    let groupY = TOP_PAD;
-
-    for (const storeType of STORE_ORDER) {
-      const groupNodes = columns.dest.filter(n => n.storeGroup === storeType);
-      if (groupNodes.length === 0) continue;
-
-      const cfg = storeConfig[storeType] || { label: storeType, color: text.muted };
-
-      // Add group header
-      storeGroupHeaders.push({
-        label: cfg.label.toUpperCase(),
-        color: cfg.color,
-        y: groupY,
-      });
-      groupY += 16; // Space for header text
-
-      // Position nodes in this group
-      for (const node of groupNodes) {
-        node.y = groupY;
-        groupY += node.h + ROW_GAP;
-      }
-
-      groupY += GROUP_GAP; // Extra gap between groups
-    }
-
-    // Barycentric ordering for doc and proc (dest stays grouped)
+    // Iterate barycentric ordering (left to right, then right to left)
     for (let iter = 0; iter < 4; iter++) {
+      // Left to right: order proc by doc neighbours, dest by proc neighbours
       orderByBarycenter(columns.proc, leftNeighbours);
+      orderByBarycenter(columns.dest, leftNeighbours);
+      // Right to left: order doc by proc neighbours
       orderByBarycenter(columns.doc, rightNeighbours);
     }
+
+    // Final pass left to right to settle
     orderByBarycenter(columns.proc, leftNeighbours);
+    orderByBarycenter(columns.dest, leftNeighbours);
 
     // ── Compute SVG dimensions ──────────────────────────────
     function colMaxY(col: DiagramNode[]) {
@@ -446,10 +473,10 @@ export function IngestPage() {
       return last.y + last.h + ROW_GAP;
     }
 
-    const maxY = Math.max(colMaxY(columns.doc), colMaxY(columns.proc), groupY) + 20;
+    const maxY = Math.max(colMaxY(columns.doc), colMaxY(columns.proc), colMaxY(columns.dest)) + 20;
     const maxX = COL_X.dest + COL_WIDTH + 20 + LEFT_PAD;
 
-    return { nodes, edges, storeGroupHeaders, svgHeight: Math.max(maxY, 300), svgWidth: Math.max(maxX, 800) };
+    return { nodes, edges, svgHeight: Math.max(maxY, 300), svgWidth: Math.max(maxX, 800) };
   }, [docs, drafts, procs, flowToBlueprintMap, bpMap, schemaNames, ontoNames]);
 
   // Deduplicate edges
@@ -691,22 +718,11 @@ export function IngestPage() {
             fontWeight={600} letterSpacing="0.1em">
             FLOWS
           </text>
-          {/* Store group headers */}
-          {storeGroupHeaders.map((header, i) => (
-            <text
-              key={i}
-              x={COL_X.dest}
-              y={header.y + 10}
-              fill={header.color}
-              fontSize={9}
-              fontFamily="'IBM Plex Mono', monospace"
-              fontWeight={600}
-              letterSpacing="0.08em"
-              opacity={0.6}
-            >
-              {header.label}
-            </text>
-          ))}
+          <text x={COL_X.dest + (COL_WIDTH + 20) / 2} y={24} textAnchor="middle"
+            fill={text.faint} fontSize={10} fontFamily="'IBM Plex Mono', monospace"
+            fontWeight={600} letterSpacing="0.1em">
+            STORAGE
+          </text>
 
           {/* Edges */}
           {uniqueEdges.map((edge, i) => {
