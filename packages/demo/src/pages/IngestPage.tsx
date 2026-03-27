@@ -477,7 +477,7 @@ export function IngestPage() {
     const maxX = COL_X.dest + COL_WIDTH + 20 + LEFT_PAD;
 
     return { nodes, edges, svgHeight: Math.max(maxY, 300), svgWidth: Math.max(maxX, 800) };
-  }, [docs, drafts, procs, bpMap, schemaNames, ontoNames]);
+  }, [docs, drafts, procs, flowToBlueprintMap, bpMap, schemaNames, ontoNames]);
 
   // Deduplicate edges
   const uniqueEdges = useMemo(() => {
