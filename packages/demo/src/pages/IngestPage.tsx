@@ -232,7 +232,7 @@ export function IngestPage() {
       const coll = proc.collection || "default";
       const procKey = `${flow}:${coll}`;
       // Resolve flow → blueprint → tags
-      const blueprintId = flowToBlueprintMap.get(flow) || flow;
+      const blueprintId = flowToBlueprintMap.get(flow);
       const bp = bpMap.get(blueprintId);
 
       // Create proc node if not seen this (flow, collection) before
@@ -240,11 +240,14 @@ export function IngestPage() {
       if (!procId) {
         procId = `proc:${procKey}`;
         const flowLabel = truncate(flow, 14);
-        const bpLabel = truncate(blueprintId, 14);
+        const resolvedBp = flowToBlueprintMap.get(flow);
         const collLabel = truncate(coll, 14);
+        const topLine = resolvedBp && resolvedBp !== flow
+          ? `${flowLabel} (${truncate(resolvedBp, 12)})`
+          : flowLabel;
         const procNode: DiagramNode = {
           id: procId,
-          label: `${flowLabel} (${bpLabel})\n→ ${collLabel}`,
+          label: `${topLine}\n→ ${collLabel}`,
           x: COL_X.proc,
           y: procY,
           w: COL_WIDTH,
@@ -629,7 +632,7 @@ export function IngestPage() {
 
       // Step 2: Create collection if needed
       if (params.newCollection) {
-        (updateCollection as any)({
+        updateCollection({
           collection: params.newCollection!.id,
           name: params.newCollection!.name,
           description: params.newCollection!.description,
