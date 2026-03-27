@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { SectionLabel, DetailPanel, LoadingState, Badge, text, border, palette, surface, withGlow } from "@trustgraph/trustkit";
-import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useSchemas, useOntologies, useChunkedUpload } from "@trustgraph/react-state";
+import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useCollections, useSchemas, useOntologies, useChunkedUpload } from "@trustgraph/react-state";
 import { SubmitDialog } from "../components/SubmitDialog";
+import type { SubmitParams } from "../components/SubmitDialog";
 
 interface DocumentMetadata {
   id: string;
@@ -113,8 +114,9 @@ export function IngestPage() {
     },
   });
   const { processing, isLoading: procLoading, refetch: refetchProcessing } = useProcessing();
-  const { flows } = useFlows();
+  const { flows, startFlow } = useFlows();
   const { flowBlueprints } = useFlowBlueprints();
+  const { updateCollection } = useCollections();
   const { schemas: rawSchemas } = useSchemas();
   const { ontologies } = useOntologies();
 
@@ -604,17 +606,52 @@ export function IngestPage() {
     }
   }, [drafts, chunkedUpload, uploadTexts, updateDraft, refetchLibrary, selectedDraftId]);
 
-  const handleSubmitForProcessing = useCallback((docId: string, flowId: string, collection: string) => {
-    submitDocuments({
-      ids: [docId],
-      flow: flowId,
-      tags: [],
-      collection,
-      onSuccess: () => {
-        refetchProcessing();
-      },
-    });
-  }, [submitDocuments, refetchProcessing]);
+  const handleSubmitForProcessing = useCallback(async (docId: string, params: SubmitParams) => {
+    try {
+      // Step 1: Create flow if needed
+      if (params.newFlow) {
+        const resolvedParams: Record<string, string> = {};
+        Object.entries(params.newFlow.parameters).forEach(([k, v]) => {
+          resolvedParams[k] = String(v ?? "");
+        });
+        await new Promise<void>((resolve) => {
+          startFlow({
+            id: params.newFlow!.id,
+            blueprintName: params.newFlow!.blueprintName,
+            description: params.newFlow!.description,
+            parameters: resolvedParams,
+            onSuccess: () => resolve(),
+          });
+        });
+        // Give the flow a moment to start
+        await new Promise(r => setTimeout(r, 1000));
+      }
+
+      // Step 2: Create collection if needed
+      if (params.newCollection) {
+        (updateCollection as any)({
+          collection: params.newCollection!.id,
+          name: params.newCollection!.name,
+          description: params.newCollection!.description,
+          tags: params.newCollection!.tags,
+        });
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      // Step 3: Submit document for processing
+      submitDocuments({
+        ids: [docId],
+        flow: params.flowId,
+        tags: [],
+        collection: params.collection,
+        onSuccess: () => {
+          refetchProcessing();
+        },
+      });
+    } catch (err) {
+      console.error("Submit for processing failed:", err);
+    }
+  }, [startFlow, updateCollection, submitDocuments, refetchProcessing]);
 
 
 
@@ -1487,8 +1524,8 @@ export function IngestPage() {
           <SubmitDialog
             documentTitle={selectedDoc.title || selectedDoc.id}
             documentId={selectedDoc.id}
-            onSubmit={(flowId, collection) => {
-              handleSubmitForProcessing(selectedDoc.id, flowId, collection);
+            onSubmit={(params) => {
+              handleSubmitForProcessing(selectedDoc.id, params);
               setShowSubmitDialog(false);
             }}
             onCancel={() => setShowSubmitDialog(false)}

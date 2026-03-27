@@ -2,15 +2,28 @@ import { useState, useEffect } from "react";
 import { SectionLabel, Badge, text, border, palette, surface, withGlow } from "@trustgraph/trustkit";
 import { useFlows, useFlowBlueprints, useFlowParameters, useCollections } from "@trustgraph/react-state";
 
+export interface SubmitParams {
+  flowId: string;
+  collection: string;
+  newFlow?: {
+    id: string;
+    blueprintName: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+  newCollection?: {
+    id: string;
+    name: string;
+    description: string;
+    tags: string[];
+  };
+}
+
 interface SubmitDialogProps {
   documentTitle: string;
   documentId: string;
-  onSubmit: (flowId: string, collection: string) => void;
+  onSubmit: (params: SubmitParams) => void;
   onCancel: () => void;
-  /** For creating new flows */
-  onCreateFlow?: (params: { id: string; blueprintName: string; description: string; parameters: Record<string, string> }) => void;
-  /** For creating new collections */
-  onCreateCollection?: (params: { collection: string; name: string; description: string; tags: string[] }) => void;
 }
 
 type Step = "flow" | "collection" | "confirm";
@@ -67,7 +80,46 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
   const handleConfirm = () => {
     const flowId = creatingFlow ? newFlowId : selectedFlowId!;
     const collection = creatingCollection ? newCollId : selectedCollection!;
-    onSubmit(flowId, collection);
+
+    const params: SubmitParams = { flowId, collection };
+
+    if (creatingFlow && newFlowBlueprint) {
+      // Build resolved parameters
+      const resolvedParams: Record<string, unknown> = {};
+      if (parameterMapping) {
+        Object.keys(parameterMapping).forEach(paramName => {
+          let value = newFlowParams[paramName];
+          if (value === undefined || value === "") {
+            const meta = parameterMetadata?.[paramName];
+            if (meta?.["controlled-by"]) {
+              value = newFlowParams[meta["controlled-by"]];
+            }
+          }
+          if (value === undefined || value === "") {
+            const schema = parameterDefinitions?.[parameterMapping[paramName]];
+            value = schema?.default ?? "";
+          }
+          resolvedParams[paramName] = value;
+        });
+      }
+      params.newFlow = {
+        id: newFlowId,
+        blueprintName: newFlowBlueprint,
+        description: newFlowDescription,
+        parameters: resolvedParams,
+      };
+    }
+
+    if (creatingCollection) {
+      params.newCollection = {
+        id: newCollId,
+        name: newCollName,
+        description: newCollDescription,
+        tags: newCollTags,
+      };
+    }
+
+    onSubmit(params);
   };
 
   const stepIndicator = (
