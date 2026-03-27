@@ -42,6 +42,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
   const [newFlowId, setNewFlowId] = useState("");
   const [newFlowDescription, setNewFlowDescription] = useState("");
   const [newFlowParams, setNewFlowParams] = useState<Record<string, unknown>>({});
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Flow parameters for new flow
   const { parameterDefinitions, parameterMapping, parameterMetadata } = useFlowParameters(newFlowBlueprint || undefined);
@@ -269,60 +270,95 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
               <InputField label="FLOW ID" value={newFlowId} onChange={setNewFlowId} placeholder="e.g. my-flow" />
               <InputField label="DESCRIPTION" value={newFlowDescription} onChange={setNewFlowDescription} placeholder="What this flow does..." />
 
-              {/* Parameters — basic only */}
-              {parameterMapping && Object.keys(parameterMapping).length > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <div style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", color: text.faint, marginBottom: 8, letterSpacing: "0.05em" }}>PARAMETERS</div>
-                  {Object.entries(parameterMapping)
-                    .filter(([name]) => !parameterMetadata?.[name]?.advanced)
-                    .sort(([a], [b]) => (parameterMetadata?.[a]?.order || 999) - (parameterMetadata?.[b]?.order || 999))
-                    .map(([flowParamName, defName]) => {
-                      const schema = parameterDefinitions?.[defName];
-                      const meta = parameterMetadata?.[flowParamName];
-                      if (!schema) return null;
+              {/* Parameters */}
+              {parameterMapping && Object.keys(parameterMapping).length > 0 && (() => {
+                const sorted = Object.entries(parameterMapping)
+                  .sort(([a], [b]) => (parameterMetadata?.[a]?.order || 999) - (parameterMetadata?.[b]?.order || 999));
+                const basicParams = sorted.filter(([name]) => !parameterMetadata?.[name]?.advanced);
+                const advancedParams = sorted.filter(([name]) => parameterMetadata?.[name]?.advanced);
 
-                      const label = meta?.description || flowParamName;
-                      const value = newFlowParams[flowParamName] ?? schema.default ?? "";
+                const renderParam = ([flowParamName, defName]: [string, string]) => {
+                  const schema = parameterDefinitions?.[defName];
+                  const meta = parameterMetadata?.[flowParamName];
+                  if (!schema) return null;
 
-                      // Enum → select
-                      if (schema.enum && schema.enum.length > 0) {
-                        return (
-                          <div key={flowParamName} style={{ marginBottom: 10 }}>
-                            <div style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", color: text.faint, marginBottom: 4 }}>{label}</div>
-                            <select
-                              value={String(value)}
-                              onChange={(e) => setNewFlowParams(prev => ({ ...prev, [flowParamName]: e.target.value }))}
-                              style={{
-                                width: "100%", padding: "6px 10px", fontSize: 11,
-                                fontFamily: "'IBM Plex Mono', monospace",
-                                color: text.primary, background: surface.base,
-                                border: `1px solid ${border.medium}`, borderRadius: 6, outline: "none",
-                              }}
-                            >
-                              {(schema.enum as any[]).map((opt: any) => {
-                                const optId = typeof opt === "object" ? opt.id : opt;
-                                const optDesc = typeof opt === "object" ? opt.description : opt;
-                                return <option key={optId} value={optId}>{optDesc}</option>;
-                              })}
-                            </select>
-                          </div>
-                        );
-                      }
+                  const label = meta?.description || flowParamName;
+                  const value = newFlowParams[flowParamName] ?? schema.default ?? "";
+                  const controlledBy = meta?.["controlled-by"];
+                  const isInheriting = controlledBy && (newFlowParams[flowParamName] === undefined || newFlowParams[flowParamName] === "");
 
-                      // Default → text input
-                      return (
-                        <InputField
-                          key={flowParamName}
-                          label={label}
+                  // Enum → select
+                  if (schema.enum && schema.enum.length > 0) {
+                    return (
+                      <div key={flowParamName} style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", color: text.faint, marginBottom: 4 }}>
+                          {label}
+                          {isInheriting && <span style={{ color: text.disabled, marginLeft: 6 }}>(from {controlledBy})</span>}
+                        </div>
+                        <select
                           value={String(value)}
-                          onChange={(v) => setNewFlowParams(prev => ({ ...prev, [flowParamName]: v }))}
-                          placeholder={schema.placeholder || ""}
-                          small
-                        />
-                      );
-                    })}
-                </div>
-              )}
+                          onChange={(e) => setNewFlowParams(prev => ({ ...prev, [flowParamName]: e.target.value }))}
+                          style={{
+                            width: "100%", padding: "6px 10px", fontSize: 11,
+                            fontFamily: "'IBM Plex Mono', monospace",
+                            color: text.primary, background: surface.base,
+                            border: `1px solid ${border.medium}`, borderRadius: 6, outline: "none",
+                          }}
+                        >
+                          {(schema.enum as any[]).map((opt: any) => {
+                            const optId = typeof opt === "object" ? opt.id : opt;
+                            const optDesc = typeof opt === "object" ? opt.description : opt;
+                            return <option key={optId} value={optId}>{optDesc}</option>;
+                          })}
+                        </select>
+                      </div>
+                    );
+                  }
+
+                  // Default → text input
+                  return (
+                    <InputField
+                      key={flowParamName}
+                      label={`${label}${isInheriting ? ` (from ${controlledBy})` : ""}`}
+                      value={String(value)}
+                      onChange={(v) => setNewFlowParams(prev => ({ ...prev, [flowParamName]: v }))}
+                      placeholder={schema.placeholder || ""}
+                      small
+                    />
+                  );
+                };
+
+                return (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", color: text.faint, marginBottom: 8, letterSpacing: "0.05em" }}>PARAMETERS</div>
+                    {basicParams.map(renderParam)}
+
+                    {advancedParams.length > 0 && (
+                      <>
+                        <button
+                          onClick={() => setShowAdvanced(!showAdvanced)}
+                          style={{
+                            background: "none", border: "none", cursor: "pointer",
+                            fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
+                            color: text.muted, padding: "6px 0", marginTop: 4,
+                          }}
+                        >
+                          {showAdvanced ? "▾" : "▸"} Advanced ({advancedParams.length})
+                        </button>
+                        {showAdvanced && (
+                          <div style={{
+                            paddingLeft: 12,
+                            borderLeft: `2px solid ${border.default}`,
+                            marginTop: 4,
+                          }}>
+                            {advancedParams.map(renderParam)}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
 
               <button
                 onClick={() => { setStep("collection"); }}
