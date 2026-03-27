@@ -47,11 +47,14 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
   // Flow parameters for new flow
   const { parameterDefinitions, parameterMapping, parameterMetadata } = useFlowParameters(newFlowBlueprint || undefined);
 
-  // Apply defaults when blueprint changes
+  // Apply defaults when blueprint changes — skip controlled-by params
+  // so they inherit from their controller
   useEffect(() => {
-    if (parameterMapping && parameterDefinitions) {
+    if (parameterMapping && parameterDefinitions && parameterMetadata) {
       const defaults: Record<string, unknown> = {};
       Object.entries(parameterMapping).forEach(([flowParamName, defName]) => {
+        // Skip parameters that are controlled by another — they should inherit
+        if (parameterMetadata[flowParamName]?.["controlled-by"]) return;
         const schema = parameterDefinitions[defName];
         if (schema?.default !== undefined) {
           defaults[flowParamName] = schema.default;
@@ -61,7 +64,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
         setNewFlowParams(prev => ({ ...defaults, ...prev }));
       }
     }
-  }, [parameterDefinitions, parameterMapping]);
+  }, [parameterDefinitions, parameterMapping, parameterMetadata]);
 
   // Collection selection
   const { collections } = useCollections();
