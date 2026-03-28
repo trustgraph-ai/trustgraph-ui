@@ -93,11 +93,11 @@ function blueprintOutputPaths(bp: BlueprintDef | undefined): string[] {
 }
 
 const storeConfig: Record<string, { label: string; color: string }> = {
-  "kg-graphrag": { label: "KG (GraphRAG)", color: palette.blue },
+  "kg-graphrag": { label: "KG (Schemaless)", color: palette.blue },
   "kg-ontology": { label: "KG (Ontology)", color: palette.emerald },
   "row-store": { label: "Row Store", color: palette.purple },
   "chunk-store": { label: "Chunk Store", color: palette.rose },
-  "kgcore": { label: "KG Core", color: palette.cyan },
+  "kgcore": { label: "Context Core", color: palette.cyan },
 };
 
 export function IngestPage() {
