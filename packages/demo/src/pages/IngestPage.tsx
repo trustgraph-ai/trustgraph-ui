@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { SectionLabel, DetailPanel, LoadingState, Badge, text, border, palette, surface, withGlow } from "@trustgraph/trustkit";
-import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useCollections, useSchemas, useOntologies, useChunkedUpload } from "@trustgraph/react-state";
+import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useFlowParameters, useCollections, useSchemas, useOntologies, useChunkedUpload } from "@trustgraph/react-state";
 import { SubmitDialog } from "../components/SubmitDialog";
 import type { SubmitParams } from "../components/SubmitDialog";
 
@@ -516,6 +516,10 @@ export function IngestPage() {
     const submissions = procs.filter(p => (p.flow || "default") === flowId && (p.collection || "default") === collection);
     return { flowId, flow, blueprintId, blueprint: bp, collection, submissions };
   }, [selectedProcKey, flowList, flowToBlueprintMap, bpMap, procs]);
+
+  // Parameter metadata for the selected flow's blueprint
+  const { parameterDefinitions: selectedFlowParamDefs, parameterMetadata: selectedFlowParamMeta } =
+    useFlowParameters(selectedFlow?.blueprintId || undefined);
 
   const clearSelection = useCallback(() => {
     setSelectedDocId(null);
@@ -1300,26 +1304,46 @@ export function IngestPage() {
             {selectedFlow.flow?.parameters && (
               <div style={{ marginBottom: 16 }}>
                 <SectionLabel marginBottom={8}>PARAMETERS</SectionLabel>
-                {Object.entries(selectedFlow.flow.parameters as Record<string, any>).map(([key, val]) => (
-                  <div key={key} style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    padding: "6px 0",
-                    borderBottom: `1px solid ${border.subtle}`,
-                    fontSize: 11,
-                  }}>
-                    <span style={{ color: text.subtle }}>{key}</span>
-                    <span style={{
-                      color: text.primary,
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      textAlign: "right",
-                      maxWidth: "60%",
-                      wordBreak: "break-word",
-                    }}>
-                      {typeof val === "object" ? JSON.stringify(val) : String(val)}
-                    </span>
-                  </div>
-                ))}
+                {Object.entries(selectedFlow.flow.parameters as Record<string, any>)
+                  .sort(([a], [b]) => {
+                    const orderA = selectedFlowParamMeta?.[a]?.order ?? 999;
+                    const orderB = selectedFlowParamMeta?.[b]?.order ?? 999;
+                    return orderA - orderB;
+                  })
+                  .map(([key, val]) => {
+                    const meta = selectedFlowParamMeta?.[key];
+                    const label = meta?.description || key;
+                    // For enum values, try to find the human-readable description
+                    const defName = meta?.type;
+                    const schema = defName ? selectedFlowParamDefs?.[defName] : undefined;
+                    let displayVal = String(val);
+                    if (schema?.enum) {
+                      const opt = (schema.enum as any[]).find((o: any) =>
+                        (typeof o === "object" ? o.id : o) === String(val)
+                      );
+                      if (opt && typeof opt === "object") displayVal = opt.description;
+                    }
+                    return (
+                      <div key={key} style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "6px 0",
+                        borderBottom: `1px solid ${border.subtle}`,
+                        fontSize: 11,
+                      }}>
+                        <span style={{ color: text.subtle }}>{label}</span>
+                        <span style={{
+                          color: text.primary,
+                          fontFamily: "'IBM Plex Mono', monospace",
+                          textAlign: "right",
+                          maxWidth: "60%",
+                          wordBreak: "break-word",
+                        }}>
+                          {displayVal}
+                        </span>
+                      </div>
+                    );
+                  })}
               </div>
             )}
 
