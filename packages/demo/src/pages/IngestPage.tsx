@@ -3,6 +3,7 @@ import { SectionLabel, DetailPanel, LoadingState, Badge, text, border, palette, 
 import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useFlowParameters, useCollections, useSchemas, useOntologies, useChunkedUpload } from "@trustgraph/react-state";
 import { SubmitDialog } from "../components/SubmitDialog";
 import type { SubmitParams } from "../components/SubmitDialog";
+import { useDocumentProgress } from "../hooks/useDocumentProgress";
 
 interface DocumentMetadata {
   id: string;
@@ -499,6 +500,10 @@ export function IngestPage() {
   const selectedDoc = selectedDocId ? docs.find(d => d.id === selectedDocId) : null;
   const selectedDraft = selectedDraftId ? drafts.find(d => d.draftId === selectedDraftId) : null;
 
+  // Document progress — poll for page/chunk counts
+  const docIdsForProgress = useMemo(() => docs.map(d => d.id), [docs]);
+  const documentProgress = useDocumentProgress(docIdsForProgress, "default");
+
   // Find processing submissions for the selected document
   const selectedDocProcs = useMemo(() => {
     if (!selectedDocId) return [];
@@ -877,6 +882,28 @@ export function IngestPage() {
                   {node.label}
                 </text>
               )}
+              {/* Document progress indicator */}
+              {isDocNode && (() => {
+                const docId = node.id.replace("doc:", "");
+                const prog = documentProgress[docId];
+                if (!prog || (prog.pages === 0 && prog.chunks === 0)) return null;
+                const parts: string[] = [];
+                if (prog.pages > 0) parts.push(`${prog.pages}pg`);
+                if (prog.chunks > 0) parts.push(`${prog.chunks}ch`);
+                return (
+                  <text
+                    x={node.x + node.w / 2}
+                    y={node.y + node.h + 10}
+                    textAnchor="middle"
+                    fill={palette.emerald}
+                    fontSize={8}
+                    fontFamily="'IBM Plex Mono', monospace"
+                    opacity={0.7}
+                  >
+                    {parts.join(" · ")}
+                  </text>
+                );
+              })()}
             </g>
             );
           })}
