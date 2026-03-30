@@ -4,6 +4,7 @@ import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useFlowParamete
 import { SubmitDialog } from "../components/SubmitDialog";
 import type { SubmitParams } from "../components/SubmitDialog";
 import { useDocumentProgress } from "../hooks/useDocumentProgress";
+import { StorageContents } from "../components/StorageContents";
 
 interface DocumentMetadata {
   id: string;
@@ -1255,13 +1256,21 @@ export function IngestPage() {
               </div>
             </div>
 
-            <div style={{
-              fontSize: 12,
-              color: text.hint,
-              fontStyle: "italic",
-            }}>
-              Monitoring and stats will be available here.
-            </div>
+            {collection && (storeType === "kg-graphrag" || storeType === "kg-ontology" || storeType === "chunk-store") && (
+              <StorageContents collection={collection} storeColor={cfg.color} />
+            )}
+
+            {storeType === "kgcore" && (
+              <div style={{ fontSize: 12, color: text.hint, fontStyle: "italic" }}>
+                Context core contents available via export.
+              </div>
+            )}
+
+            {storeType === "row-store" && (
+              <div style={{ fontSize: 12, color: text.hint, fontStyle: "italic" }}>
+                Row store contents available via Table Explorer.
+              </div>
+            )}
           </DetailPanel>
         </div>
         );

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSocket } from "@trustgraph/react-provider";
-import { SectionLabel, text, border, palette, surface, withGlow } from "@trustgraph/trustkit";
+import { SectionLabel, text, border, palette, surface } from "@trustgraph/trustkit";
 
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
