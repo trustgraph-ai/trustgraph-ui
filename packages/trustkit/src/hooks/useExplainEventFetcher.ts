@@ -109,6 +109,20 @@ function getEventTypeFromTriples(triples: Triple[]): string {
   for (const [typeUri, displayName] of TYPE_CHECKS) {
     if (types.has(typeUri)) return displayName;
   }
+
+  // Unknown type — derive a readable name from the most specific RDF type URI.
+  // Filter out generic types like prov:Entity, owl:Thing, rdfs:Resource.
+  const GENERIC_TYPES = new Set([
+    "http://www.w3.org/ns/prov#Entity",
+    "http://www.w3.org/ns/prov#Activity",
+    "http://www.w3.org/2002/07/owl#Thing",
+    "http://www.w3.org/2000/01/rdf-schema#Resource",
+  ]);
+  for (const typeUri of types) {
+    if (!GENERIC_TYPES.has(typeUri)) {
+      return shortUri(typeUri).toLowerCase();
+    }
+  }
   return "unknown";
 }
 
@@ -399,6 +413,9 @@ export function useExplainEventFetcher(
   const eventsRef = useRef(events);
   eventsRef.current = events;
 
+  const MAX_EMPTY_RETRIES = 5;
+  const EMPTY_RETRY_DELAYS = [500, 1000, 2000, 4000, 8000];
+
   const fetchNode = useCallback(async (explainId: string) => {
     updateEvent(explainId, { fetching: true });
 
@@ -406,6 +423,12 @@ export function useExplainEventFetcher(
       const api = socket.flow("default");
       const node = eventsRef.current.find(n => n.explainId === explainId);
       if (!node) return;
+
+      // Wait before first fetch to give the backend time to write triples.
+      // Increase delay on each empty retry.
+      const retryIndex = node.emptyRetries;
+      const initialDelay = EMPTY_RETRY_DELAYS[Math.min(retryIndex, EMPTY_RETRY_DELAYS.length - 1)];
+      await new Promise(r => setTimeout(r, initialDelay));
 
       let latestEventType = "unknown";
       let latestBasicData: unknown = {};
@@ -429,7 +452,16 @@ export function useExplainEventFetcher(
       );
 
       if (settledTriples.length === 0) {
-        updateEvent(explainId, { fetched: true, fetching: false });
+        if (retryIndex < MAX_EMPTY_RETRIES) {
+          // Not fetched yet — allow the useEffect to schedule another attempt
+          updateEvent(explainId, {
+            fetching: false,
+            emptyRetries: retryIndex + 1,
+          });
+        } else {
+          // Give up after max retries
+          updateEvent(explainId, { fetched: true, fetching: false });
+        }
         return;
       }
 

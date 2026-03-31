@@ -32,7 +32,7 @@ export interface DAGLayout {
  */
 export function useExplainDAG(events: ExplainNode[]): DAGLayout {
   return useMemo(() => {
-    const fetchedEvents = events.filter(e => e.fetched && e.eventType !== "unknown");
+    const fetchedEvents = events.filter(e => e.fetched);
     if (fetchedEvents.length === 0) {
       return { nodes: [], edges: [], maxDepth: 0, maxColumns: 0 };
     }

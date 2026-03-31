@@ -10,6 +10,8 @@ export interface ExplainNode {
   derivedFrom?: string[];
   fetched: boolean;
   fetching: boolean;
+  /** Number of fetch attempts that returned 0 triples */
+  emptyRetries: number;
   error?: string;
 }
 
@@ -30,6 +32,7 @@ export function useExplainSession() {
         eventType: "unknown",
         fetched: false,
         fetching: false,
+        emptyRetries: 0,
       }];
     });
   }, []);
