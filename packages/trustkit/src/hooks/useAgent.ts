@@ -54,7 +54,7 @@ export function useAgent({
   ) => {
     const acc = accRef.current;
 
-    if (type !== acc.type || acc.type === "") {
+    if (acc.type === "" || type !== acc.type) {
       // New step
       acc.type = type;
       acc.content = chunk;
