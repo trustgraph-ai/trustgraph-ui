@@ -13,6 +13,14 @@ export { GraphRagView } from "./GraphRagView";
 export { RagExplainView } from "./RagExplainView";
 export { RagFullExplainView } from "./RagFullExplainView";
 
+// Tier 3 composites — Agent
+export { AgentStepCard } from "./AgentStepCard";
+export { AgentStepList } from "./AgentStepList";
+export { SimpleAgentView } from "./SimpleAgentView";
+export { AgentWithTimelineView } from "./AgentWithTimelineView";
+export { AgentExplainView } from "./AgentExplainView";
+export { AgentFullExplainView } from "./AgentFullExplainView";
+
 // Tier 3 composites — Document RAG
 export { SimpleDocRagView } from "./SimpleDocRagView";
 export { DocRagExplainView } from "./DocRagExplainView";

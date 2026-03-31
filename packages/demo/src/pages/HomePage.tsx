@@ -45,6 +45,15 @@ const workflows: WorkflowCard[] = [
     screenshot: "/ss-graph-rag.png",
   },
   {
+    key: "agent",
+    view: "agent",
+    title: "Agent Query",
+    icon: "⚡",
+    color: palette.amber,
+    description: "Ask questions answered by a reasoning agent with full provenance.",
+    detail: "Ask a natural language question and watch the agent think, observe, and reason through multiple steps before delivering an answer. Trace every reasoning step and fact back to its source.",
+  },
+  {
     key: "doc-rag",
     view: "doc-rag",
     title: "Document RAG Query",

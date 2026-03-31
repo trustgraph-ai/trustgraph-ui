@@ -10,7 +10,7 @@ export type { ExplainGraphNode, ExplainGraphEdge } from "./components/graph";
 export { EntityBadge, EntityProperties, EntityRelationships, GraphExplorer } from "./components/knowledge";
 
 // Components — explain
-export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, ExplainDAG, SourceLinkBadge, SourcePanel, SimpleRagView, RagWithSourcesView, RagWithTimelineView, GraphRagView, RagExplainView, RagFullExplainView, SimpleDocRagView, DocRagExplainView, DocRagFullExplainView } from "./components/explain";
+export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, ExplainDAG, SourceLinkBadge, SourcePanel, SimpleRagView, RagWithSourcesView, RagWithTimelineView, GraphRagView, RagExplainView, RagFullExplainView, AgentStepCard, AgentStepList, SimpleAgentView, AgentWithTimelineView, AgentExplainView, AgentFullExplainView, SimpleDocRagView, DocRagExplainView, DocRagFullExplainView } from "./components/explain";
 
 // Hooks
 export { useGraphData } from "./hooks/useGraphData";
@@ -20,6 +20,8 @@ export { useEntityNeighbourhood } from "./hooks/useEntityNeighbourhood";
 export type { EntityNeighbourhood } from "./hooks/useEntityNeighbourhood";
 export { useDomainFilter } from "./hooks/useDomainFilter";
 export { useGraphRag } from "./hooks/useGraphRag";
+export { useAgent } from "./hooks/useAgent";
+export type { AgentStep, AgentStepType, AgentState } from "./hooks/useAgent";
 export { useDocumentRag } from "./hooks/useDocumentRag";
 export { useExplainSession } from "./hooks/useExplainSession";
 export type { ExplainNode } from "./hooks/useExplainSession";

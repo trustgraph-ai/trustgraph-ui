@@ -3,6 +3,7 @@ export { IngestPage } from "./IngestPage";
 export { ExploreView } from "./ExploreView";
 export { GraphRagPage } from "./GraphRagPage";
 export { DocRagPage } from "./DocRagPage";
+export { AgentPage } from "./AgentPage";
 export { GraphView } from "./GraphView";
 export { QueryView } from "./QueryView";
 export { ExplainView } from "./ExplainView";
