@@ -10,6 +10,7 @@ export function eventTypeColor(eventType: string): string {
     case "exploration": return palette.blue;
     case "focus": return palette.purple;
     case "analysis": return palette.purple;
+    case "decomposition": return palette.orange;
     case "reflection": return palette.cyan;
     case "synthesis": return palette.emerald;
     case "conclusion": return palette.emerald;
@@ -283,6 +284,29 @@ function ExplainEventData({
           {d.arguments ? <div style={{ marginTop: 2 }}><span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Args:</span> {String(d.arguments)}</div> : null}
         </div>
       );
+
+    case "decomposition": {
+      const goals = (d.goals as string[]) || [];
+      return (
+        <div>
+          <div style={{ fontSize: 11, color: text.subtle, fontFamily: "'IBM Plex Mono', monospace", marginBottom: goals.length > 0 ? 6 : 0 }}>
+            {goals.length} sub-agent thread{goals.length !== 1 ? "s" : ""}
+          </div>
+          {goals.map((goal, i) => (
+            <div key={i} style={{
+              fontSize: 11,
+              color: text.secondary,
+              lineHeight: 1.5,
+              padding: "4px 8px",
+              marginBottom: 4,
+              borderLeft: `2px solid ${withGlow(typeColor, 0.3)}`,
+            }}>
+              {goal}
+            </div>
+          ))}
+        </div>
+      );
+    }
 
     case "conclusion":
     case "reflection":

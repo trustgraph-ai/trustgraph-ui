@@ -23,6 +23,7 @@ const TG_THOUGHT = TG + "thought";
 const TG_OBSERVATION = TG + "observation";
 const TG_DOCUMENT = TG + "document";
 const TG_CONTAINS = TG + "contains";
+const TG_SUBAGENT_GOAL = TG + "subagentGoal";
 const PROV = "http://www.w3.org/ns/prov#";
 const PROV_STARTED_AT_TIME = PROV + "startedAtTime";
 const PROV_WAS_DERIVED_FROM = PROV + "wasDerivedFrom";
@@ -42,6 +43,7 @@ const TYPE_CHECKS: [string, string][] = [
   [TG + "Thought", "reflection"],
   [TG + "Observation", "reflection"],
   [TG + "Analysis", "analysis"],
+  [TG + "Decomposition", "decomposition"],
   [TG + "Conclusion", "conclusion"],
 ];
 
@@ -173,6 +175,16 @@ function parseBasicEventData(eventType: string, triples: Triple[]): unknown {
         if (p === TG_OBSERVATION) data.observationUri = objValue(t);
       }
       return data;
+    }
+    case "decomposition": {
+      const goals: string[] = [];
+      for (const t of triples) {
+        if (predIri(t) === TG_SUBAGENT_GOAL) {
+          const v = objValue(t);
+          if (v) goals.push(v);
+        }
+      }
+      return { goals };
     }
     case "conclusion":
     case "reflection": {
