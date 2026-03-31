@@ -3,15 +3,20 @@ import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
 import { AgentStepList } from "./AgentStepList";
 import { useAgent } from "../../hooks/useAgent";
 import { palette } from "../../theme";
+import { COLLECTION } from "../../config";
+
+interface SimpleAgentViewProps {
+  collection?: string;
+}
 
 /**
  * Simple Agent Query — no explainability.
  * Just a query input and the agent's reasoning steps.
  */
-export function SimpleAgentView() {
+export function SimpleAgentView({ collection = COLLECTION }: SimpleAgentViewProps) {
   const [input, setInput] = useState("");
 
-  const { query, steps, isQuerying, error } = useAgent();
+  const { query, steps, isQuerying, error } = useAgent({ collection });
 
   const handleSubmit = useCallback((q: string) => {
     if (!q.trim() || isQuerying) return;

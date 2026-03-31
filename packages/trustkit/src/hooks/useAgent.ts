@@ -1,10 +1,13 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useInference } from "@trustgraph/react-state";
 import type { ExplainEvent } from "@trustgraph/react-state";
+import { COLLECTION } from "../config";
 
 export type AgentStepType = "thought" | "observation" | "answer";
 
 export interface AgentStep {
+  /** Backend message ID — ties chunks to the same step */
+  messageId: string;
   /** Step type — thought, observation, or answer */
   type: AgentStepType;
   /** Accumulated text content */
@@ -29,12 +32,15 @@ export interface AgentState {
  * and optional explainability events.
  *
  * The agent runs a ReAct-style loop: multiple thought/observation pairs
- * followed by a final answer. Each callback fires per-chunk; a new step
- * is added when the type changes or the previous step was complete.
+ * followed by a final answer. Each chunk carries a `messageId` that ties
+ * it to a specific step, so concurrent/interleaved streams are handled
+ * correctly.
  */
 export function useAgent({
+  collection = COLLECTION,
   onExplain,
 }: {
+  collection?: string;
   onExplain?: (event: ExplainEvent) => void;
 } = {}): AgentState {
   const [steps, setSteps] = useState<AgentStep[]>([]);
@@ -43,42 +49,6 @@ export function useAgent({
 
   const { agent } = useInference({});
 
-  // Track current step accumulation across callbacks within a single query.
-  // Using a ref so the closure captures a stable reference.
-  const accRef = useRef<{ type: string; content: string }>({ type: "", content: "" });
-
-  const appendStep = useCallback((
-    type: AgentStepType,
-    chunk: string,
-    complete?: boolean,
-  ) => {
-    const acc = accRef.current;
-
-    if (acc.type === "" || type !== acc.type) {
-      // New step
-      acc.type = type;
-      acc.content = chunk;
-      setSteps(prev => [...prev, { type, content: chunk, complete: !!complete }]);
-    } else {
-      // Append to current step
-      acc.content += chunk;
-      setSteps(prev => {
-        const updated = [...prev];
-        updated[updated.length - 1] = {
-          type,
-          content: acc.content,
-          complete: !!complete,
-        };
-        return updated;
-      });
-    }
-
-    if (complete) {
-      acc.type = "";
-      acc.content = "";
-    }
-  }, []);
-
   const query = useCallback(async (input: string) => {
     const trimmed = input.trim();
     if (!trimmed || isQuerying) return;
@@ -86,18 +56,54 @@ export function useAgent({
     setIsQuerying(true);
     setSteps([]);
     setError(null);
-    accRef.current = { type: "", content: "" };
+
+    // Per-step content accumulators keyed by messageId.
+    // Local to this invocation — no ref needed.
+    const accumulators = new Map<string, string>();
+
+    const handleChunk = (
+      type: AgentStepType,
+      chunk: string,
+      complete: boolean,
+      messageId?: string,
+    ) => {
+      // Use messageId if provided, otherwise fall back to a synthetic key
+      const id = messageId || `_fallback_${type}_${Date.now()}`;
+
+      const existing = accumulators.get(id);
+      if (existing !== undefined) {
+        // Append to existing step
+        const updated = existing + chunk;
+        accumulators.set(id, updated);
+        setSteps(prev => {
+          const idx = prev.findIndex(s => s.messageId === id);
+          if (idx < 0) return prev;
+          const next = [...prev];
+          next[idx] = { messageId: id, type, content: updated, complete };
+          return next;
+        });
+      } else {
+        // New step
+        accumulators.set(id, chunk);
+        setSteps(prev => [...prev, { messageId: id, type, content: chunk, complete }]);
+      }
+
+      if (complete) {
+        accumulators.delete(id);
+      }
+    };
 
     try {
       await agent({
         input: trimmed,
+        collection,
         callbacks: {
-          onThink: (chunk: string, complete?: boolean) =>
-            appendStep("thought", chunk, complete),
-          onObserve: (chunk: string, complete?: boolean) =>
-            appendStep("observation", chunk, complete),
-          onAnswer: (chunk: string, complete?: boolean) =>
-            appendStep("answer", chunk, complete),
+          onThink: (chunk: string, complete: boolean, messageId?: string) =>
+            handleChunk("thought", chunk, complete, messageId),
+          onObserve: (chunk: string, complete: boolean, messageId?: string) =>
+            handleChunk("observation", chunk, complete, messageId),
+          onAnswer: (chunk: string, complete: boolean, messageId?: string) =>
+            handleChunk("answer", chunk, complete, messageId),
           onExplain,
           onError: (err: string) => setError(err),
         },
@@ -107,7 +113,7 @@ export function useAgent({
     } finally {
       setIsQuerying(false);
     }
-  }, [agent, isQuerying, onExplain, appendStep]);
+  }, [agent, collection, isQuerying, onExplain]);
 
   return { query, steps, isQuerying, error };
 }

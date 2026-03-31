@@ -6,17 +6,23 @@ import { useAgent } from "../../hooks/useAgent";
 import { useExplainSession } from "../../hooks/useExplainSession";
 import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import { palette, border } from "../../theme";
+import { COLLECTION } from "../../config";
+
+interface AgentWithTimelineViewProps {
+  collection?: string;
+}
 
 /**
  * Agent Query with Explain Timeline.
  * Agent reasoning steps on the left, event timeline on the right
  * with document-level sources.
  */
-export function AgentWithTimelineView() {
+export function AgentWithTimelineView({ collection = COLLECTION }: AgentWithTimelineViewProps) {
   const [input, setInput] = useState("");
 
   const explainSession = useExplainSession();
   const { query, steps, isQuerying, error } = useAgent({
+    collection,
     onExplain: explainSession.addEvent,
   });
   useExplainEventFetcher(explainSession.events, explainSession.updateEvent);

@@ -13,13 +13,18 @@ import { useExplainDAG } from "../../hooks/useExplainDAG";
 import { useExplainGraph } from "../../hooks/useExplainGraph";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
 import { text, palette, border } from "../../theme";
+import { COLLECTION } from "../../config";
+
+interface AgentFullExplainViewProps {
+  collection?: string;
+}
 
 /**
  * Agent Query with Full Explainability DAG.
  * The reasoning process as a DAG with click-to-inspect detail panel.
  * DAG on the left with agent steps below, event detail on the right.
  */
-export function AgentFullExplainView() {
+export function AgentFullExplainView({ collection = COLLECTION }: AgentFullExplainViewProps) {
   const [input, setInput] = useState("");
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]);
@@ -27,6 +32,7 @@ export function AgentFullExplainView() {
 
   const explainSession = useExplainSession();
   const { query, steps, isQuerying, error } = useAgent({
+    collection,
     onExplain: explainSession.addEvent,
   });
   useExplainEventFetcher(explainSession.events, explainSession.updateEvent);

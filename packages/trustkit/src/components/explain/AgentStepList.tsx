@@ -50,7 +50,7 @@ export function AgentStepList({ steps, isQuerying, error }: AgentStepListProps) 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {steps.map((step, idx) => (
           <AgentStepCard
-            key={idx}
+            key={step.messageId}
             type={step.type}
             content={step.content}
             streaming={!step.complete && isQuerying}

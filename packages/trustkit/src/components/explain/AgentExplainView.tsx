@@ -11,19 +11,25 @@ import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 import { useExplainGraph } from "../../hooks/useExplainGraph";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
 import { palette, border } from "../../theme";
+import { COLLECTION } from "../../config";
+
+interface AgentExplainViewProps {
+  collection?: string;
+}
 
 /**
  * Agent Query with Provenance Graph.
  * Agent steps + source panel on the left, provenance graph + event
  * timeline with full source chains on the right.
  */
-export function AgentExplainView() {
+export function AgentExplainView({ collection = COLLECTION }: AgentExplainViewProps) {
   const [input, setInput] = useState("");
   const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]);
   const [highlightedEdgeIds, setHighlightedEdgeIds] = useState<string[]>([]);
 
   const explainSession = useExplainSession();
   const { query, steps, isQuerying, error } = useAgent({
+    collection,
     onExplain: explainSession.addEvent,
   });
   useExplainEventFetcher(explainSession.events, explainSession.updateEvent);
