@@ -60,6 +60,10 @@ export function useAgent({
     // Per-step content accumulators keyed by messageId.
     // Local to this invocation — no ref needed.
     const accumulators = new Map<string, string>();
+    // Fallback counter for when backend doesn't send message_id yet.
+    // Incremented only when a step completes, so partial chunks share the same key.
+    let fallbackCounter = 0;
+    let fallbackId = `_fb_${fallbackCounter}`;
 
     const handleChunk = (
       type: AgentStepType,
@@ -67,8 +71,7 @@ export function useAgent({
       complete: boolean,
       messageId?: string,
     ) => {
-      // Use messageId if provided, otherwise fall back to a synthetic key
-      const id = messageId || `_fallback_${type}_${Date.now()}`;
+      const id = messageId || fallbackId;
 
       const existing = accumulators.get(id);
       if (existing !== undefined) {
@@ -90,6 +93,9 @@ export function useAgent({
 
       if (complete) {
         accumulators.delete(id);
+        // Advance fallback ID so the next step gets its own key
+        fallbackCounter++;
+        fallbackId = `_fb_${fallbackCounter}`;
       }
     };
 
