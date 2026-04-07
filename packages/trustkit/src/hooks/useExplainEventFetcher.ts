@@ -29,7 +29,9 @@ const PROV_STARTED_AT_TIME = PROV + "startedAtTime";
 const PROV_WAS_DERIVED_FROM = PROV + "wasDerivedFrom";
 const PROV_WAS_GENERATED_BY = PROV + "wasGeneratedBy";
 
-// Type checks — first match wins
+// Type checks — first match wins.
+// Unrecognised types still work: the DAG renders them with a name
+// derived from the RDF type URI.
 const TYPE_CHECKS: [string, string][] = [
   [TG + "GraphRagQuestion", "question"],
   [TG + "DocRagQuestion", "question"],
@@ -71,7 +73,10 @@ function objQuotedTriple(triple: Triple): { s: string; p: string; o: string } | 
   return null;
 }
 
-const RDFS_LABEL_URI = "http://www.w3.org/2000/01/rdf-schema#label";
+function shortUri(uri: string): string {
+  const pos = Math.max(uri.lastIndexOf("#"), uri.lastIndexOf("/"));
+  return pos >= 0 ? uri.slice(pos + 1) : uri;
+}
 
 /**
  * Extract derivation links (prov:wasDerivedFrom, prov:wasGeneratedBy)
@@ -88,17 +93,12 @@ function extractDerivationInfo(triples: Triple[]): { derivedFrom: string[]; labe
       derivedFrom.push(val);
     } else if (p === PROV_WAS_GENERATED_BY && val) {
       derivedFrom.push(val);
-    } else if (p === RDFS_LABEL_URI && val) {
+    } else if (p === RDFS_LABEL && val) {
       label = val;
     }
   }
 
   return { derivedFrom, label };
-}
-
-function shortUri(uri: string): string {
-  const pos = Math.max(uri.lastIndexOf("#"), uri.lastIndexOf("/"));
-  return pos >= 0 ? uri.slice(pos + 1) : uri;
 }
 
 function getEventTypeFromTriples(triples: Triple[]): string {
@@ -111,7 +111,6 @@ function getEventTypeFromTriples(triples: Triple[]): string {
   }
 
   // Unknown type — derive a readable name from the most specific RDF type URI.
-  // Filter out generic types like prov:Entity, owl:Thing, rdfs:Resource.
   const GENERIC_TYPES = new Set([
     "http://www.w3.org/ns/prov#Entity",
     "http://www.w3.org/ns/prov#Activity",
@@ -213,40 +212,7 @@ function parseBasicEventData(eventType: string, triples: Triple[]): unknown {
   }
 }
 
-async function queryTriplesUntilSettled(
-  api: ReturnType<BaseApi["flow"]>,
-  subject: string,
-  onUpdate: (triples: Triple[]) => void,
-  limit = 100,
-  collection = COLLECTION,
-  graph?: string,
-  maxTries = 6,
-): Promise<Triple[]> {
-  let prevCount = -1;
-  let settled: Triple[] = [];
-  let delay = 50;
-  const s: Term = { t: "i", i: subject };
-
-  for (let attempt = 0; attempt < maxTries; attempt++) {
-    const triples = await api.triplesQuery(s, undefined, undefined, limit, collection, graph);
-
-    if (triples.length !== prevCount) {
-      settled = triples;
-      onUpdate(triples);
-    } else {
-      return settled;
-    }
-
-    prevCount = triples.length;
-
-    if (attempt < maxTries - 1) {
-      await new Promise(r => setTimeout(r, delay));
-      delay = Math.min(delay * 3, 1500);
-    }
-  }
-
-  return settled;
-}
+// --- Enrichment (resolves labels for entities referenced in triples) ---
 
 async function resolveLabel(
   api: ReturnType<BaseApi["flow"]>,
@@ -401,8 +367,11 @@ async function enrichEventData(
 }
 
 /**
- * Automatically fetches and parses explain events as they arrive.
- * Watches the events list and fetches data for any unfetched events.
+ * Parses explain events from their inline triples and optionally
+ * enriches them (resolving entity labels for exploration/focus events).
+ *
+ * Triples are delivered inline in the streaming response — no graph
+ * round-trip is needed for the core parse.
  */
 export function useExplainEventFetcher(
   events: ExplainNode[],
@@ -413,47 +382,17 @@ export function useExplainEventFetcher(
   const eventsRef = useRef(events);
   eventsRef.current = events;
 
-  const MAX_EMPTY_RETRIES = 5;
-  const EMPTY_RETRY_DELAYS = [500, 1000, 2000, 4000, 8000];
-
-  const fetchNode = useCallback(async (explainId: string) => {
+  const processNode = useCallback(async (explainId: string) => {
     updateEvent(explainId, { fetching: true });
 
     try {
-      const api = socket.flow("default");
       const node = eventsRef.current.find(n => n.explainId === explainId);
-      if (!node) return;
-
-      let triples: Triple[];
-
-      if (node.inlineTriples && node.inlineTriples.length > 0) {
-        // Use inline triples — no graph round-trip needed
-        triples = node.inlineTriples;
-      } else {
-        // Fall back to querying the graph (older backends)
-        const retryIndex = node.emptyRetries;
-        const initialDelay = EMPTY_RETRY_DELAYS[Math.min(retryIndex, EMPTY_RETRY_DELAYS.length - 1)];
-        await new Promise(r => setTimeout(r, initialDelay));
-
-        triples = await queryTriplesUntilSettled(
-          api, node.explainId,
-          () => {}, // progress updates handled below
-          100, COLLECTION, node.explainGraph,
-        );
-
-        if (triples.length === 0) {
-          if (retryIndex < MAX_EMPTY_RETRIES) {
-            updateEvent(explainId, {
-              fetching: false,
-              emptyRetries: retryIndex + 1,
-            });
-          } else {
-            updateEvent(explainId, { fetched: true, fetching: false });
-          }
-          return;
-        }
+      if (!node || !node.inlineTriples || node.inlineTriples.length === 0) {
+        updateEvent(explainId, { fetched: true, fetching: false });
+        return;
       }
 
+      const triples = node.inlineTriples;
       const eventType = getEventTypeFromTriples(triples);
       const basicData = parseBasicEventData(eventType, triples);
       const { derivedFrom, label } = extractDerivationInfo(triples);
@@ -467,6 +406,8 @@ export function useExplainEventFetcher(
         fetching: false,
       });
 
+      // Enrich with external label resolution where needed
+      const api = socket.flow("default");
       const enriched = await enrichEventData(
         api, eventType, basicData, labelCacheRef.current, node.explainGraph,
       );
@@ -484,10 +425,10 @@ export function useExplainEventFetcher(
   useEffect(() => {
     for (const node of events) {
       if (!node.fetched && !node.fetching && !node.error) {
-        fetchNode(node.explainId);
+        processNode(node.explainId);
       }
     }
-  }, [events, fetchNode]);
+  }, [events, processNode]);
 
   return { labelCache: labelCacheRef };
 }

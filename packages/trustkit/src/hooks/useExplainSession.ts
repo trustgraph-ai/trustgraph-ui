@@ -13,8 +13,6 @@ export interface ExplainNode {
   inlineTriples?: Triple[];
   fetched: boolean;
   fetching: boolean;
-  /** Number of fetch attempts that returned 0 triples */
-  emptyRetries: number;
   error?: string;
 }
 
@@ -36,7 +34,6 @@ export function useExplainSession() {
         inlineTriples: event.explainTriples,
         fetched: false,
         fetching: false,
-        emptyRetries: 0,
       }];
     });
   }, []);
