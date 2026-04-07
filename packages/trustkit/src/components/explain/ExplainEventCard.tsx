@@ -283,7 +283,9 @@ function ExplainEventData({
     case "synthesis":
       return (
         <div style={{ fontSize: 11, color: text.subtle, fontFamily: "'IBM Plex Mono', monospace" }}>
-          Content: {String(d.contentLength || 0)} chars
+          {d.contentLength ? `Content: ${String(d.contentLength)} chars` : null}
+          {d.documentUri ? `Answer document: ${String(d.documentUri).split(/[/#:]/).pop()}` : null}
+          {!d.contentLength && !d.documentUri ? "Synthesis complete" : null}
         </div>
       );
 

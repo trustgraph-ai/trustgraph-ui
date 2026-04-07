@@ -175,10 +175,14 @@ function parseBasicEventData(eventType: string, triples: Triple[]): unknown {
       return { edgeSelections: edgeSelUris.map(uri => ({ edgeUri: uri })) };
     }
     case "synthesis": {
-      const data: { contentLength?: number } = {};
+      const data: { contentLength?: number; documentUri?: string } = {};
       for (const t of triples) {
-        if (predIri(t) === TG_CONTENT) {
+        const p = predIri(t);
+        if (p === TG_CONTENT) {
           data.contentLength = objValue(t).length;
+        }
+        if (p === TG_DOCUMENT) {
+          data.documentUri = objValue(t);
         }
       }
       return data;
@@ -401,6 +405,7 @@ export function useExplainEventFetcher(
         triples = node.inlineTriples;
       } else {
         // Fallback: query the graph for triples (backends not yet sending inline)
+        console.warn(`[explain] No inline triples for ${explainId}, falling back to graph query`);
         const s: Term = { t: "i", i: node.explainId };
         triples = await api.triplesQuery(s, undefined, undefined, 100, COLLECTION, node.explainGraph);
         if (triples.length === 0) {
