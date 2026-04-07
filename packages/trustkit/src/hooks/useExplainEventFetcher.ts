@@ -424,51 +424,53 @@ export function useExplainEventFetcher(
       const node = eventsRef.current.find(n => n.explainId === explainId);
       if (!node) return;
 
-      // Wait before first fetch to give the backend time to write triples.
-      // Increase delay on each empty retry.
-      const retryIndex = node.emptyRetries;
-      const initialDelay = EMPTY_RETRY_DELAYS[Math.min(retryIndex, EMPTY_RETRY_DELAYS.length - 1)];
-      await new Promise(r => setTimeout(r, initialDelay));
+      let triples: Triple[];
 
-      let latestEventType = "unknown";
-      let latestBasicData: unknown = {};
+      if (node.inlineTriples && node.inlineTriples.length > 0) {
+        // Use inline triples — no graph round-trip needed
+        triples = node.inlineTriples;
+      } else {
+        // Fall back to querying the graph (older backends)
+        const retryIndex = node.emptyRetries;
+        const initialDelay = EMPTY_RETRY_DELAYS[Math.min(retryIndex, EMPTY_RETRY_DELAYS.length - 1)];
+        await new Promise(r => setTimeout(r, initialDelay));
 
-      const settledTriples = await queryTriplesUntilSettled(
-        api, node.explainId,
-        (triples) => {
-          latestEventType = getEventTypeFromTriples(triples);
-          latestBasicData = parseBasicEventData(latestEventType, triples);
-          const { derivedFrom, label } = extractDerivationInfo(triples);
-          updateEvent(explainId, {
-            eventType: latestEventType,
-            label,
-            data: latestBasicData,
-            derivedFrom: derivedFrom.length > 0 ? derivedFrom : undefined,
-            fetched: true,
-            fetching: false,
-          });
-        },
-        100, COLLECTION, node.explainGraph,
-      );
+        triples = await queryTriplesUntilSettled(
+          api, node.explainId,
+          () => {}, // progress updates handled below
+          100, COLLECTION, node.explainGraph,
+        );
 
-      if (settledTriples.length === 0) {
-        if (retryIndex < MAX_EMPTY_RETRIES) {
-          // Not fetched yet — allow the useEffect to schedule another attempt
-          updateEvent(explainId, {
-            fetching: false,
-            emptyRetries: retryIndex + 1,
-          });
-        } else {
-          // Give up after max retries
-          updateEvent(explainId, { fetched: true, fetching: false });
+        if (triples.length === 0) {
+          if (retryIndex < MAX_EMPTY_RETRIES) {
+            updateEvent(explainId, {
+              fetching: false,
+              emptyRetries: retryIndex + 1,
+            });
+          } else {
+            updateEvent(explainId, { fetched: true, fetching: false });
+          }
+          return;
         }
-        return;
       }
 
+      const eventType = getEventTypeFromTriples(triples);
+      const basicData = parseBasicEventData(eventType, triples);
+      const { derivedFrom, label } = extractDerivationInfo(triples);
+
+      updateEvent(explainId, {
+        eventType,
+        label,
+        data: basicData,
+        derivedFrom: derivedFrom.length > 0 ? derivedFrom : undefined,
+        fetched: true,
+        fetching: false,
+      });
+
       const enriched = await enrichEventData(
-        api, latestEventType, latestBasicData, labelCacheRef.current, node.explainGraph,
+        api, eventType, basicData, labelCacheRef.current, node.explainGraph,
       );
-      if (enriched !== latestBasicData) {
+      if (enriched !== basicData) {
         updateEvent(explainId, { data: enriched });
       }
     } catch (err) {

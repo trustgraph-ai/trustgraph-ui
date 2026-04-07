@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import type { Triple } from "@trustgraph/react-state";
 
 export interface ExplainNode {
   explainId: string;
@@ -8,6 +9,8 @@ export interface ExplainNode {
   data?: unknown;
   /** URIs this event was derived from (prov:wasDerivedFrom + prov:wasGeneratedBy) */
   derivedFrom?: string[];
+  /** Inline triples delivered with the explain event (avoids graph round-trip) */
+  inlineTriples?: Triple[];
   fetched: boolean;
   fetching: boolean;
   /** Number of fetch attempts that returned 0 triples */
@@ -23,13 +26,14 @@ export function useExplainSession() {
   const [events, setEvents] = useState<ExplainNode[]>([]);
   const [isActive, setIsActive] = useState(false);
 
-  const addEvent = useCallback((event: { explainId: string; explainGraph: string }) => {
+  const addEvent = useCallback((event: { explainId: string; explainGraph: string; explainTriples?: Triple[] }) => {
     setEvents(prev => {
       if (prev.some(n => n.explainId === event.explainId)) return prev;
       return [...prev, {
         explainId: event.explainId,
         explainGraph: event.explainGraph,
         eventType: "unknown",
+        inlineTriples: event.explainTriples,
         fetched: false,
         fetching: false,
         emptyRetries: 0,
