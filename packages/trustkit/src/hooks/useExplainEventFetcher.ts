@@ -23,6 +23,7 @@ const TG_THOUGHT = TG + "thought";
 const TG_OBSERVATION = TG + "observation";
 const TG_DOCUMENT = TG + "document";
 const TG_CONTAINS = TG + "contains";
+const TG_SELECTED_CHUNK = TG + "selectedChunk";
 const TG_SUBAGENT_GOAL = TG + "subagentGoal";
 const PROV = "http://www.w3.org/ns/prov#";
 const PROV_STARTED_AT_TIME = PROV + "startedAtTime";
@@ -147,7 +148,7 @@ function parseBasicEventData(eventType: string, triples: Triple[]): unknown {
       return { concepts };
     }
     case "exploration": {
-      const data: { entities: string[]; edgeCount?: string; chunkCount?: string } = { entities: [] };
+      const data: { entities: string[]; chunks: string[]; edgeCount?: string; chunkCount?: string } = { entities: [], chunks: [] };
       for (const t of triples) {
         const p = predIri(t);
         if (p === TG_EDGE_COUNT) data.edgeCount = objValue(t);
@@ -155,6 +156,10 @@ function parseBasicEventData(eventType: string, triples: Triple[]): unknown {
         if (p === TG_ENTITY) {
           const uri = objValue(t);
           if (uri) data.entities.push(uri);
+        }
+        if (p === TG_SELECTED_CHUNK) {
+          const uri = objValue(t);
+          if (uri) data.chunks.push(uri);
         }
       }
       return data;
@@ -386,13 +391,28 @@ export function useExplainEventFetcher(
     updateEvent(explainId, { fetching: true });
 
     try {
+      const api = socket.flow("default");
       const node = eventsRef.current.find(n => n.explainId === explainId);
-      if (!node || !node.inlineTriples || node.inlineTriples.length === 0) {
-        updateEvent(explainId, { fetched: true, fetching: false });
-        return;
-      }
+      if (!node) return;
 
-      const triples = node.inlineTriples;
+      let triples: Triple[];
+
+      if (node.inlineTriples && node.inlineTriples.length > 0) {
+        triples = node.inlineTriples;
+      } else {
+        // Fallback: query the graph for triples (backends not yet sending inline)
+        const s: Term = { t: "i", i: node.explainId };
+        triples = await api.triplesQuery(s, undefined, undefined, 100, COLLECTION, node.explainGraph);
+        if (triples.length === 0) {
+          // Retry once after a short delay
+          await new Promise(r => setTimeout(r, 1000));
+          triples = await api.triplesQuery(s, undefined, undefined, 100, COLLECTION, node.explainGraph);
+        }
+        if (triples.length === 0) {
+          updateEvent(explainId, { fetched: true, fetching: false });
+          return;
+        }
+      }
       const eventType = getEventTypeFromTriples(triples);
       const basicData = parseBasicEventData(eventType, triples);
       const { derivedFrom, label } = extractDerivationInfo(triples);
@@ -407,7 +427,6 @@ export function useExplainEventFetcher(
       });
 
       // Enrich with external label resolution where needed
-      const api = socket.flow("default");
       const enriched = await enrichEventData(
         api, eventType, basicData, labelCacheRef.current, node.explainGraph,
       );

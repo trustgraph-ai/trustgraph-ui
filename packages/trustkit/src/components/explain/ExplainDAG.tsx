@@ -4,9 +4,12 @@ import { text, withGlow } from "../../theme";
 
 const NODE_W = 140;
 const NODE_H = 40;
-const H_GAP = 40;
+const H_GAP = 60;
 const V_GAP = 60;
 const PADDING = 40;
+
+// Switch to horizontal layout when the DAG is mostly a linear chain
+const LINEAR_THRESHOLD = 2; // maxColumns <= this → horizontal
 
 interface ExplainDAGProps {
   /** DAG layout data from useExplainDAG */
@@ -25,36 +28,60 @@ interface ExplainDAGProps {
 export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGProps) {
   const { nodes, edges, maxDepth, maxColumns } = layout;
 
+  const horizontal = maxColumns <= LINEAR_THRESHOLD;
+
   // Compute positions
   const positions = useMemo(() => {
     const pos = new Map<string, { x: number; y: number }>();
 
-    // Group by depth to center columns within each row
+    // Group by depth to center nodes within each depth level
     const byDepth = new Map<number, typeof nodes>();
     for (const node of nodes) {
       if (!byDepth.has(node.depth)) byDepth.set(node.depth, []);
       byDepth.get(node.depth)!.push(node);
     }
 
-    for (let d = 0; d <= maxDepth; d++) {
-      const row = byDepth.get(d) || [];
-      const rowWidth = row.length * NODE_W + (row.length - 1) * H_GAP;
-      const totalWidth = maxColumns * NODE_W + (maxColumns - 1) * H_GAP;
-      const offsetX = (totalWidth - rowWidth) / 2;
+    if (horizontal) {
+      // Horizontal layout: depth increases left-to-right, siblings stack vertically
+      for (let d = 0; d <= maxDepth; d++) {
+        const col = byDepth.get(d) || [];
+        const colHeight = col.length * NODE_H + (col.length - 1) * V_GAP;
+        const totalHeight = maxColumns * NODE_H + (maxColumns - 1) * V_GAP;
+        const offsetY = (totalHeight - colHeight) / 2;
 
-      row.forEach((node, i) => {
-        pos.set(node.id, {
-          x: PADDING + offsetX + i * (NODE_W + H_GAP),
-          y: PADDING + d * (NODE_H + V_GAP),
+        col.forEach((node, i) => {
+          pos.set(node.id, {
+            x: PADDING + d * (NODE_W + H_GAP),
+            y: PADDING + offsetY + i * (NODE_H + V_GAP),
+          });
         });
-      });
+      }
+    } else {
+      // Vertical layout: depth increases top-to-bottom, siblings spread horizontally
+      for (let d = 0; d <= maxDepth; d++) {
+        const row = byDepth.get(d) || [];
+        const rowWidth = row.length * NODE_W + (row.length - 1) * H_GAP;
+        const totalWidth = maxColumns * NODE_W + (maxColumns - 1) * H_GAP;
+        const offsetX = (totalWidth - rowWidth) / 2;
+
+        row.forEach((node, i) => {
+          pos.set(node.id, {
+            x: PADDING + offsetX + i * (NODE_W + H_GAP),
+            y: PADDING + d * (NODE_H + V_GAP),
+          });
+        });
+      }
     }
 
     return pos;
-  }, [nodes, maxDepth, maxColumns]);
+  }, [nodes, maxDepth, maxColumns, horizontal]);
 
-  const svgWidth = maxColumns * NODE_W + (maxColumns - 1) * H_GAP + PADDING * 2;
-  const svgHeight = (maxDepth + 1) * (NODE_H + V_GAP) - V_GAP + PADDING * 2;
+  const svgWidth = horizontal
+    ? (maxDepth + 1) * (NODE_W + H_GAP) - H_GAP + PADDING * 2
+    : maxColumns * NODE_W + (maxColumns - 1) * H_GAP + PADDING * 2;
+  const svgHeight = horizontal
+    ? maxColumns * NODE_H + (maxColumns - 1) * V_GAP + PADDING * 2
+    : (maxDepth + 1) * (NODE_H + V_GAP) - V_GAP + PADDING * 2;
 
   if (nodes.length === 0) {
     return (
@@ -86,25 +113,40 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
           const to = positions.get(edge.to);
           if (!from || !to) return null;
 
-          const x1 = from.x + NODE_W / 2;
-          const y1 = from.y + NODE_H;
-          const x2 = to.x + NODE_W / 2;
-          const y2 = to.y;
+          let x1: number, y1: number, x2: number, y2: number;
+          let pathD: string;
+          let arrowPoints: string;
 
-          // Curved path
-          const midY = (y1 + y2) / 2;
+          if (horizontal) {
+            // Left-to-right edges
+            x1 = from.x + NODE_W;
+            y1 = from.y + NODE_H / 2;
+            x2 = to.x;
+            y2 = to.y + NODE_H / 2;
+            const midX = (x1 + x2) / 2;
+            pathD = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
+            arrowPoints = `${x2},${y2} ${x2 - 6},${y2 - 4} ${x2 - 6},${y2 + 4}`;
+          } else {
+            // Top-to-bottom edges
+            x1 = from.x + NODE_W / 2;
+            y1 = from.y + NODE_H;
+            x2 = to.x + NODE_W / 2;
+            y2 = to.y;
+            const midY = (y1 + y2) / 2;
+            pathD = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
+            arrowPoints = `${x2},${y2} ${x2 - 4},${y2 - 6} ${x2 + 4},${y2 - 6}`;
+          }
 
           return (
             <g key={i}>
               <path
-                d={`M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`}
+                d={pathD}
                 fill="none"
                 stroke="rgba(255,255,255,0.15)"
                 strokeWidth={1.5}
               />
-              {/* Arrow head */}
               <polygon
-                points={`${x2},${y2} ${x2 - 4},${y2 - 6} ${x2 + 4},${y2 - 6}`}
+                points={arrowPoints}
                 fill="rgba(255,255,255,0.15)"
               />
             </g>

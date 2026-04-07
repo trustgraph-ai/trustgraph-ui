@@ -170,6 +170,7 @@ function ExplainEventData({
     case "exploration": {
       const entities = (d.entities as string[]) || [];
       const entityLabels = (d.entityLabels as string[]) || [];
+      const chunks = (d.chunks as string[]) || [];
       const edgeCount = d.edgeCount as string | undefined;
       const chunkCount = d.chunkCount as string | undefined;
       return (
@@ -195,6 +196,15 @@ function ExplainEventData({
                 onClick={onEntityClick ? () => onEntityClick(uri) : undefined}
               >
                 {entityLabels[i] || uri.split(/[/#]/).pop() || uri}
+              </Badge>
+            ))}
+            {chunks.map((uri) => (
+              <Badge
+                key={uri}
+                color={typeColor}
+                size="small"
+              >
+                {uri.split(/[/#:]/).pop() || uri}
               </Badge>
             ))}
           </div>
