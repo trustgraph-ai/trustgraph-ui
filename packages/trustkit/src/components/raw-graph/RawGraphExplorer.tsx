@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { useRawGraphData, getNeighbourhood } from "../../hooks/useRawGraphData";
+import { useRawGraphData } from "../../hooks/useRawGraphData";
 import type { RawNode } from "../../hooks/useRawGraphData";
 import { RawGraphCanvas } from "./RawGraphCanvas";
 import { RawNodeDetailPanel } from "./RawNodeDetailPanel";
@@ -8,42 +8,43 @@ import type { FilterItem } from "../common";
 import { text, palette, border } from "../../theme";
 
 interface RawGraphExplorerProps {
-  /** Neighbourhood depth from center node (default 2) */
-  depth?: number;
+  /** Initial URI to centre on (optional — will prompt to search if not set) */
+  startUri?: string;
   /** Callback when a node is selected */
   onNodeSelect?: (node: RawNode | null) => void;
 }
 
-export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerProps) {
-  const { nodes, edges, predicates, startNode, isLoading, isError, error } = useRawGraphData();
+export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerProps) {
+  const { nodes, edges, predicates, isFetching, isError, error, fetchNeighbourhood, resetCache } = useRawGraphData();
 
-  // Explored URIs — the graph grows as you navigate
-  const [exploredUris, setExploredUris] = useState<string[]>([]);
+  const [centerUri, setCenterUri] = useState<string | null>(startUri || null);
   const [selectedNode, setSelectedNode] = useState<RawNode | null>(null);
   const [activePredicate, setActivePredicate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const searchRef = useRef<HTMLInputElement>(null);
+  const fetchedInitial = useRef(false);
 
-  // Set initial seed when data loads
+  // Fetch initial neighbourhood
   useEffect(() => {
-    if (startNode && exploredUris.length === 0) {
-      setExploredUris([startNode]);
+    if (fetchedInitial.current) return;
+    fetchedInitial.current = true;
+
+    if (startUri) {
+      fetchNeighbourhood(startUri).then(() => setInitialLoading(false));
+    } else {
+      // No start URI — show search immediately
+      setInitialLoading(false);
+      setShowSearch(true);
     }
-  }, [startNode, exploredUris.length]);
+  }, [startUri, fetchNeighbourhood]);
 
-  // The most recently explored URI (for centering the canvas)
-  const centerUri = exploredUris.length > 0 ? exploredUris[exploredUris.length - 1] : null;
+  // Visible nodes and edges are just everything in the cache
+  const visibleNodes = useMemo(() => Array.from(nodes.values()), [nodes]);
+  const visibleEdges = edges;
 
-  // Compute visible neighbourhood — union of all explored seeds
-  const { visibleNodes, visibleEdges } = useMemo(() => {
-    if (exploredUris.length === 0 || nodes.size === 0) {
-      return { visibleNodes: [], visibleEdges: [] };
-    }
-    return getNeighbourhood(exploredUris, nodes, edges, depth);
-  }, [exploredUris, nodes, edges, depth]);
-
-  // Compute highlighted nodes (selected + its direct connections)
+  // Highlighted nodes (selected + direct connections)
   const highlightedNodes = useMemo(() => {
     if (!selectedNode) return [];
     const ids = [selectedNode.id];
@@ -75,7 +76,7 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
     return items.sort((a, b) => a.label.localeCompare(b.label));
   }, [visibleEdges, predicates]);
 
-  // Search results
+  // Search within fetched nodes
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
@@ -89,22 +90,37 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
     return results;
   }, [searchQuery, nodes]);
 
-  // Stats
   const stats = `${visibleNodes.length} nodes · ${visibleEdges.length} edges`;
 
-  // Handlers
+  // Pending selection — set when navigating, resolved when data arrives
+  const [pendingSelectUri, setPendingSelectUri] = useState<string | null>(null);
+
+  // Navigate to a node: fetch its neighbourhood, mark it for selection
+  const handleNodeNavigate = useCallback((uri: string) => {
+    setCenterUri(uri);
+    setPendingSelectUri(uri);
+    fetchNeighbourhood(uri);
+  }, [fetchNeighbourhood]);
+
+  // Resolve pending selection and keep selectedNode fresh after fetches
+  useEffect(() => {
+    if (pendingSelectUri && nodes.has(pendingSelectUri)) {
+      const node = nodes.get(pendingSelectUri)!;
+      setSelectedNode(node);
+      onNodeSelect?.(node);
+      setPendingSelectUri(null);
+    } else if (selectedNode && nodes.has(selectedNode.id)) {
+      const updated = nodes.get(selectedNode.id)!;
+      if (updated !== selectedNode) {
+        setSelectedNode(updated);
+      }
+    }
+  }, [nodes, pendingSelectUri, selectedNode, onNodeSelect]);
+
   const handleNodeClick = useCallback((node: RawNode) => {
     setSelectedNode(prev => prev?.id === node.id ? null : node);
     onNodeSelect?.(node);
   }, [onNodeSelect]);
-
-  const handleNodeNavigate = useCallback((uri: string) => {
-    // Add to explored set (graph grows), select the target node
-    setExploredUris(prev => prev.includes(uri) ? prev : [...prev, uri]);
-    const targetNode = nodes.get(uri) || null;
-    setSelectedNode(targetNode);
-    onNodeSelect?.(targetNode);
-  }, [onNodeSelect, nodes]);
 
   const handleClose = useCallback(() => {
     setSelectedNode(null);
@@ -116,35 +132,47 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
   }, []);
 
   const handleSearchSelect = useCallback((node: RawNode) => {
-    // Search is a deliberate "go somewhere new" — reset explored set
-    setExploredUris([node.id]);
+    resetCache();
+    setCenterUri(node.id);
     setSelectedNode(null);
     setActivePredicate(null);
     setSearchQuery("");
     setShowSearch(false);
-  }, []);
+    fetchNeighbourhood(node.id);
+  }, [resetCache, fetchNeighbourhood]);
 
-  // Focus search on toggle
+  const handleSearchSubmit = useCallback(() => {
+    const q = searchQuery.trim();
+    if (!q) return;
+    if (q.startsWith("http://") || q.startsWith("https://")) {
+      resetCache();
+      setCenterUri(q);
+      setSelectedNode(null);
+      setActivePredicate(null);
+      setSearchQuery("");
+      setShowSearch(false);
+      fetchNeighbourhood(q);
+    }
+  }, [searchQuery, resetCache, fetchNeighbourhood]);
+
   useEffect(() => {
     if (showSearch && searchRef.current) {
       searchRef.current.focus();
     }
   }, [showSearch]);
 
-  if (isLoading) return <LoadingState />;
+  if (initialLoading) return <LoadingState />;
   if (isError) return <LoadingState variant="error" message={error?.message || "Failed to load graph"} />;
-  if (nodes.size === 0) return <LoadingState variant="error" message="No triples found in the graph" />;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)" }}>
-      {/* Toolbar: centre node info + search + predicate filters */}
+      {/* Toolbar */}
       <div style={{
         padding: "10px 28px",
         borderBottom: `1px solid ${border.default}`,
         display: "flex",
         alignItems: "center",
         gap: 12,
-        flexWrap: "wrap",
       }}>
         {/* Current node + reset */}
         {centerUri && (() => {
@@ -161,10 +189,13 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
               }}>
                 {n.label}
               </span>
-              {exploredUris.length > 1 && (
+              {visibleNodes.length > 0 && (
                 <button
                   onClick={() => {
-                    setExploredUris([centerUri]);
+                    resetCache();
+                    if (centerUri) {
+                      fetchNeighbourhood(centerUri);
+                    }
                     setSelectedNode(null);
                     setActivePredicate(null);
                     onNodeSelect?.(null);
@@ -187,6 +218,17 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
           );
         })()}
 
+        {/* Loading indicator */}
+        {isFetching && (
+          <span style={{
+            fontSize: 10,
+            fontFamily: "'IBM Plex Mono', monospace",
+            color: palette.amber,
+          }}>
+            loading...
+          </span>
+        )}
+
         {/* Search toggle */}
         <div style={{ position: "relative" }}>
           <button
@@ -206,7 +248,6 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
             ⌕ Search
           </button>
 
-          {/* Search dropdown */}
           {showSearch && (
             <div style={{
               position: "absolute",
@@ -227,7 +268,10 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search nodes by label or URI..."
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSearchSubmit();
+                  }}
+                  placeholder="Search loaded nodes, or paste a URI..."
                   style={{
                     width: "100%",
                     padding: "8px 0",
@@ -292,20 +336,11 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
                   fontStyle: "italic",
                   textAlign: "center",
                 }}>
-                  No nodes found
+                  {searchQuery.startsWith("http") ? "Press Enter to navigate to this URI" : "No loaded nodes match"}
                 </div>
               )}
             </div>
           )}
-        </div>
-
-        {/* Depth indicator */}
-        <div style={{
-          fontSize: 10,
-          fontFamily: "'IBM Plex Mono', monospace",
-          color: text.hint,
-        }}>
-          depth {depth}
         </div>
 
         {/* Predicate filters */}
@@ -338,15 +373,29 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
           />
         ) : null}
       >
-        <RawGraphCanvas
-          nodes={visibleNodes}
-          edges={visibleEdges}
-          centerUri={centerUri}
-          highlightedNodes={highlightedNodes}
-          activePredicate={activePredicate}
-          onNodeClick={handleNodeClick}
-          onNodeNavigate={handleNodeNavigate}
-        />
+        {visibleNodes.length > 0 ? (
+          <RawGraphCanvas
+            nodes={visibleNodes}
+            edges={visibleEdges}
+            centerUri={centerUri}
+            highlightedNodes={highlightedNodes}
+            activePredicate={activePredicate}
+            onNodeClick={handleNodeClick}
+            onNodeNavigate={handleNodeNavigate}
+          />
+        ) : (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+            color: text.hint,
+            fontSize: 13,
+            fontStyle: "italic",
+          }}>
+            Use search to find a starting node
+          </div>
+        )}
       </SplitPane>
     </div>
   );

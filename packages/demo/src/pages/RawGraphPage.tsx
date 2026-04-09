@@ -3,15 +3,15 @@ import { DevPanel } from "../components/DevPanel";
 
 /**
  * Schema-Free Graph Navigator — explores raw triple graphs without
- * ontology assumptions. Uses neighbourhood-based exploration with
- * force-directed layout.
+ * ontology assumptions. Fetches neighbourhood data on demand as the
+ * user navigates, with force-directed layout.
  */
 export function RawGraphPage() {
   return (
     <>
       <RawGraphExplorer />
       <DevPanel
-        explanation="This view uses the RawGraphExplorer composite to navigate graphs that have no OWL schema. It discovers nodes from raw triples, assigns colours by URI hash, uses force-directed layout, and supports neighbourhood-based exploration — double-click any node to re-centre the graph on it."
+        explanation="This view uses the RawGraphExplorer composite to navigate graphs that have no OWL schema. It fetches triple data on demand as you explore — double-click a node or click a relationship in the detail panel to expand its neighbourhood. The graph grows incrementally as you navigate."
         codeSamples={[
           {
             label: "Minimal integration",
@@ -22,18 +22,16 @@ function MyRawGraphPage() {
 }`,
           },
           {
-            label: "Custom depth and selection callback",
+            label: "With a starting URI",
             code: `import { RawGraphExplorer } from "@trustgraph/trustkit";
 
 function MyRawGraphPage() {
-  const handleSelect = (node) => {
-    console.log("Selected:", node?.label);
-  };
-
   return (
     <RawGraphExplorer
-      depth={3}
-      onNodeSelect={handleSelect}
+      startUri="http://example.org/entity/123"
+      onNodeSelect={(node) => {
+        console.log("Selected:", node?.label);
+      }}
     />
   );
 }`,
@@ -42,31 +40,32 @@ function MyRawGraphPage() {
             label: "Custom view using Tier 1 + Tier 2",
             code: `import {
   useRawGraphData,
-  getNeighbourhood,
   RawGraphCanvas,
-  RawNodeDetailPanel,
 } from "@trustgraph/trustkit";
+import { useEffect, useState } from "react";
 
 function CustomRawGraph() {
   const [center, setCenter] = useState(null);
-  const [selected, setSelected] = useState(null);
-  const { nodes, edges, startNode } = useRawGraphData();
+  const { nodes, edges, fetchNeighbourhood }
+    = useRawGraphData();
 
-  const centerUri = center || startNode;
-  const { visibleNodes, visibleEdges } =
-    getNeighbourhood(centerUri, nodes, edges, 2);
+  useEffect(() => {
+    fetchNeighbourhood("http://example.org/start");
+    setCenter("http://example.org/start");
+  }, []);
 
   return (
     <RawGraphCanvas
-      nodes={visibleNodes}
-      edges={visibleEdges}
-      centerUri={centerUri}
-      highlightedNodes={
-        selected ? [selected.id] : []
-      }
+      nodes={Array.from(nodes.values())}
+      edges={edges}
+      centerUri={center}
+      highlightedNodes={[]}
       activePredicate={null}
-      onNodeClick={setSelected}
-      onNodeNavigate={setCenter}
+      onNodeClick={(n) => console.log(n)}
+      onNodeNavigate={async (uri) => {
+        await fetchNeighbourhood(uri);
+        setCenter(uri);
+      }}
     />
   );
 }`,
@@ -80,8 +79,7 @@ function CustomRawGraph() {
           { name: "SplitPane", tier: "2", description: "Main content + side panel layout" },
         ]}
         hooks={[
-          { name: "useRawGraphData", tier: "1", description: "Fetches triples and builds node/edge index without schema assumptions" },
-          { name: "getNeighbourhood", tier: "1", description: "Extracts visible nodes/edges by BFS from a centre node" },
+          { name: "useRawGraphData", tier: "1", description: "On-demand triple fetcher with incremental cache" },
         ]}
       />
     </>

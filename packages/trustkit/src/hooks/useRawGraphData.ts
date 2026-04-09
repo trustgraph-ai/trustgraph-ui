@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useSocket } from "@trustgraph/react-provider";
 import type { Triple } from "@trustgraph/react-state";
 import { COLLECTION } from "../config";
@@ -67,215 +67,213 @@ function predicateLabel(uri: string): string {
   return name.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
 }
 
+function makeIriTerm(uri: string) {
+  return { t: "i" as const, i: uri };
+}
+
+// ── Process triples into nodes and edges ─────────────────────────
+
+function processTriples(
+  triples: Triple[],
+  nodeMap: Map<string, RawNode>,
+  edgeSet: Set<string>,
+  edgeList: RawEdge[],
+  predMap: Map<string, PredicateInfo>,
+) {
+  // First pass: collect labels and descriptions from these triples
+  const labels = new Map<string, string>();
+  const descriptions = new Map<string, string>();
+  for (const triple of triples) {
+    const pred = getTermValue(triple.p);
+    if (pred === RDFS_LABEL) {
+      labels.set(getTermValue(triple.s), getTermValue(triple.o));
+    } else if (pred === RDFS_COMMENT) {
+      descriptions.set(getTermValue(triple.s), getTermValue(triple.o));
+    }
+  }
+
+  // Update existing nodes with any newly discovered labels/descriptions
+  for (const [uri, label] of labels) {
+    const existing = nodeMap.get(uri);
+    if (existing && existing.label === getLocalName(uri)) {
+      existing.label = label;
+    }
+  }
+  for (const [uri, desc] of descriptions) {
+    const existing = nodeMap.get(uri);
+    if (existing && !existing.description) {
+      existing.description = desc;
+    }
+  }
+
+  function ensureNode(uri: string): void {
+    if (nodeMap.has(uri)) return;
+    const { color, glow } = colorForUri(uri);
+    nodeMap.set(uri, {
+      id: uri,
+      label: labels.get(uri) || getLocalName(uri),
+      description: descriptions.get(uri) || "",
+      color,
+      glow,
+      properties: {},
+      outDegree: 0,
+      inDegree: 0,
+    });
+  }
+
+  // Second pass: build edges and properties
+  for (const triple of triples) {
+    const subUri = getTermValue(triple.s);
+    const predUri = getTermValue(triple.p);
+    const objValue = getTermValue(triple.o);
+
+    if (predUri === RDFS_LABEL || predUri === RDFS_COMMENT) continue;
+
+    if (isUri(triple.s) && isUri(triple.o)) {
+      ensureNode(subUri);
+      ensureNode(objValue);
+
+      // Deduplicate edges
+      const edgeKey = `${subUri}|${predUri}|${objValue}`;
+      if (edgeSet.has(edgeKey)) continue;
+      edgeSet.add(edgeKey);
+
+      const predName = predicateLabel(predUri);
+
+      if (!predMap.has(predUri)) {
+        const { color } = colorForUri(predUri);
+        predMap.set(predUri, { uri: predUri, label: predName, color, count: 0 });
+      }
+      predMap.get(predUri)!.count++;
+
+      edgeList.push({
+        from: subUri,
+        to: objValue,
+        predicate: predName,
+        predicateUri: predUri,
+        color: predMap.get(predUri)!.color,
+      });
+
+      // Update degrees
+      const fromNode = nodeMap.get(subUri)!;
+      const toNode = nodeMap.get(objValue)!;
+      fromNode.outDegree++;
+      toNode.inDegree++;
+
+    } else if (isUri(triple.s) && !isUri(triple.o)) {
+      ensureNode(subUri);
+      const node = nodeMap.get(subUri)!;
+      const propKey = predicateLabel(predUri);
+      if (!node.properties[propKey]) node.properties[propKey] = [];
+      if (!node.properties[propKey].includes(objValue)) {
+        node.properties[propKey].push(objValue);
+      }
+    }
+  }
+}
+
 // ── Hook ─────────────────────────────────────────────────────────
 
 export function useRawGraphData() {
   const socket = useSocket();
-  const [triples, setTriples] = useState<Triple[] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // Shared mutable cache — refs so fetches don't re-render until we snapshot
+  const nodeMapRef = useRef(new Map<string, RawNode>());
+  const edgeListRef = useRef<RawEdge[]>([]);
+  const edgeSetRef = useRef(new Set<string>());
+  const predMapRef = useRef(new Map<string, PredicateInfo>());
+  const fetchedRef = useRef(new Set<string>());
+
+  // Snapshot state that triggers re-renders
+  const [nodes, setNodes] = useState(new Map<string, RawNode>());
+  const [edges, setEdges] = useState<RawEdge[]>([]);
+  const [predicates, setPredicates] = useState(new Map<string, PredicateInfo>());
+  const [isFetching, setIsFetching] = useState(false);
   const [isError, setIsError] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  // Fetch neighbourhood for a single URI — returns the new nodes found
+  const fetchNeighbourhood = useCallback(async (uri: string): Promise<string[]> => {
+    if (fetchedRef.current.has(uri)) return [];
+    fetchedRef.current.add(uri);
 
-    (async () => {
-      try {
-        setIsLoading(true);
-        setIsError(false);
-        setError(null);
+    setIsFetching(true);
+    setIsError(false);
+    setError(null);
 
-        const api = socket.flow("default");
-        const result = await api.triplesQuery(
-          undefined, undefined, undefined,
-          10000, COLLECTION, "",
-        );
+    try {
+      const api = socket.flow("default");
 
-        if (!cancelled) {
-          setTriples(result);
-          setIsLoading(false);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setIsError(true);
-          setError(err instanceof Error ? err : new Error(String(err)));
-          setIsLoading(false);
+      // Fetch outgoing and incoming triples in parallel
+      const [outgoing, incoming] = await Promise.all([
+        api.triplesQuery(makeIriTerm(uri), undefined, undefined, 500, COLLECTION, ""),
+        api.triplesQuery(undefined, undefined, makeIriTerm(uri), 500, COLLECTION, ""),
+      ]);
+
+      const allTriples = [...outgoing, ...incoming];
+
+      // Also fetch labels for any newly discovered URIs
+      const newUris = new Set<string>();
+      for (const triple of allTriples) {
+        if (isUri(triple.s)) newUris.add(getTermValue(triple.s));
+        if (isUri(triple.o)) newUris.add(getTermValue(triple.o));
+      }
+
+      // Fetch labels for new URIs we haven't seen
+      const labelFetches: Promise<Triple[]>[] = [];
+      for (const u of newUris) {
+        if (!nodeMapRef.current.has(u)) {
+          labelFetches.push(
+            api.triplesQuery(makeIriTerm(u), makeIriTerm(RDFS_LABEL), undefined, 1, COLLECTION, ""),
+            api.triplesQuery(makeIriTerm(u), makeIriTerm(RDFS_COMMENT), undefined, 1, COLLECTION, ""),
+          );
         }
       }
-    })();
 
-    return () => { cancelled = true; };
+      const labelResults = await Promise.all(labelFetches);
+      const labelTriples = labelResults.flat();
+
+      // Process everything into the cache
+      processTriples(
+        [...allTriples, ...labelTriples],
+        nodeMapRef.current,
+        edgeSetRef.current,
+        edgeListRef.current,
+        predMapRef.current,
+      );
+
+      // Snapshot to trigger re-render
+      setNodes(new Map(nodeMapRef.current));
+      setEdges([...edgeListRef.current]);
+      setPredicates(new Map(predMapRef.current));
+      setIsFetching(false);
+
+      // Return newly discovered node URIs
+      const newNodes: string[] = [];
+      for (const u of newUris) {
+        if (nodeMapRef.current.has(u)) newNodes.push(u);
+      }
+      return newNodes;
+
+    } catch (err) {
+      setIsError(true);
+      setError(err instanceof Error ? err : new Error(String(err)));
+      setIsFetching(false);
+      return [];
+    }
   }, [socket]);
 
-  const { nodes, edges, predicates, startNode } = useMemo(() => {
-    const empty = {
-      nodes: new Map<string, RawNode>(),
-      edges: [] as RawEdge[],
-      predicates: new Map<string, PredicateInfo>(),
-      startNode: null as string | null,
-    };
+  // Reset the cache (for search "go somewhere new")
+  const resetCache = useCallback(() => {
+    nodeMapRef.current = new Map();
+    edgeListRef.current = [];
+    edgeSetRef.current = new Set();
+    predMapRef.current = new Map();
+    fetchedRef.current = new Set();
+    setNodes(new Map());
+    setEdges([]);
+    setPredicates(new Map());
+  }, []);
 
-    if (isLoading || !triples) return empty;
-
-    // Pass 1: collect labels and descriptions
-    const labels = new Map<string, string>();
-    const descriptions = new Map<string, string>();
-    for (const triple of triples) {
-      const pred = getTermValue(triple.p);
-      if (pred === RDFS_LABEL) {
-        labels.set(getTermValue(triple.s), getTermValue(triple.o));
-      } else if (pred === RDFS_COMMENT) {
-        descriptions.set(getTermValue(triple.s), getTermValue(triple.o));
-      }
-    }
-
-    // Pass 2: build node index and edges
-    const nodeMap = new Map<string, RawNode>();
-    const edgeList: RawEdge[] = [];
-    const predMap = new Map<string, PredicateInfo>();
-    const outDegrees = new Map<string, number>();
-    const inDegrees = new Map<string, number>();
-    const nodeProps = new Map<string, Record<string, string[]>>();
-
-    function ensureNode(uri: string): void {
-      if (nodeMap.has(uri)) return;
-      const { color, glow } = colorForUri(uri);
-      nodeMap.set(uri, {
-        id: uri,
-        label: labels.get(uri) || getLocalName(uri),
-        description: descriptions.get(uri) || "",
-        color,
-        glow,
-        properties: {},
-        outDegree: 0,
-        inDegree: 0,
-      });
-    }
-
-    for (const triple of triples) {
-      const subUri = getTermValue(triple.s);
-      const predUri = getTermValue(triple.p);
-      const objValue = getTermValue(triple.o);
-
-      // Skip label and description triples — they're first-class fields
-      if (predUri === RDFS_LABEL || predUri === RDFS_COMMENT) continue;
-
-      if (isUri(triple.s) && isUri(triple.o)) {
-        // URI-to-URI: this is an edge
-        ensureNode(subUri);
-        ensureNode(objValue);
-
-        const predName = predicateLabel(predUri);
-
-        // Track predicate info
-        if (!predMap.has(predUri)) {
-          const { color } = colorForUri(predUri);
-          predMap.set(predUri, {
-            uri: predUri,
-            label: predName,
-            color,
-            count: 0,
-          });
-        }
-        predMap.get(predUri)!.count++;
-
-        edgeList.push({
-          from: subUri,
-          to: objValue,
-          predicate: predName,
-          predicateUri: predUri,
-          color: predMap.get(predUri)!.color,
-        });
-
-        outDegrees.set(subUri, (outDegrees.get(subUri) || 0) + 1);
-        inDegrees.set(objValue, (inDegrees.get(objValue) || 0) + 1);
-
-      } else if (isUri(triple.s) && !isUri(triple.o)) {
-        // URI-to-literal: this is a property
-        ensureNode(subUri);
-        const propKey = predicateLabel(predUri);
-        if (!nodeProps.has(subUri)) nodeProps.set(subUri, {});
-        const props = nodeProps.get(subUri)!;
-        if (!props[propKey]) props[propKey] = [];
-        props[propKey].push(objValue);
-      }
-    }
-
-    // Apply degrees and properties to nodes
-    for (const [uri, node] of nodeMap) {
-      node.outDegree = outDegrees.get(uri) || 0;
-      node.inDegree = inDegrees.get(uri) || 0;
-      node.properties = nodeProps.get(uri) || {};
-    }
-
-    // Find most connected node as default start
-    let bestUri: string | null = null;
-    let bestDegree = -1;
-    for (const [uri, node] of nodeMap) {
-      const degree = node.outDegree + node.inDegree;
-      if (degree > bestDegree) {
-        bestDegree = degree;
-        bestUri = uri;
-      }
-    }
-
-    return {
-      nodes: nodeMap,
-      edges: edgeList,
-      predicates: predMap,
-      startNode: bestUri,
-    };
-  }, [isLoading, triples]);
-
-  return { nodes, edges, predicates, startNode, isLoading, isError, error };
-}
-
-// ── Neighbourhood extraction ─────────────────────────────────────
-
-export function getNeighbourhood(
-  centerUris: string | string[],
-  nodes: Map<string, RawNode>,
-  edges: RawEdge[],
-  depth: number = 2,
-): { visibleNodes: RawNode[]; visibleEdges: RawEdge[] } {
-  const seeds = Array.isArray(centerUris) ? centerUris : [centerUris];
-  const visited = new Set<string>(seeds);
-
-  // Build adjacency for BFS
-  const adjacency = new Map<string, Set<string>>();
-  for (const edge of edges) {
-    if (!adjacency.has(edge.from)) adjacency.set(edge.from, new Set());
-    if (!adjacency.has(edge.to)) adjacency.set(edge.to, new Set());
-    adjacency.get(edge.from)!.add(edge.to);
-    adjacency.get(edge.to)!.add(edge.from);
-  }
-
-  // BFS from every seed independently to the given depth
-  let frontier = [...seeds];
-  for (let d = 0; d < depth; d++) {
-    const nextFrontier: string[] = [];
-    for (const uri of frontier) {
-      const neighbours = adjacency.get(uri);
-      if (!neighbours) continue;
-      for (const n of neighbours) {
-        if (!visited.has(n)) {
-          visited.add(n);
-          nextFrontier.push(n);
-        }
-      }
-    }
-    frontier = nextFrontier;
-  }
-
-  const visibleNodes: RawNode[] = [];
-  for (const uri of visited) {
-    const node = nodes.get(uri);
-    if (node) visibleNodes.push(node);
-  }
-
-  const visibleEdges = edges.filter(
-    e => visited.has(e.from) && visited.has(e.to)
-  );
-
-  return { visibleNodes, visibleEdges };
+  return { nodes, edges, predicates, isFetching, isError, error, fetchNeighbourhood, resetCache };
 }
