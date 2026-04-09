@@ -155,7 +155,8 @@ function project(
   // Perspective projection
   const d = PERSPECTIVE_DISTANCE * camera.zoom;
   const depth = z2;
-  const scale = d / (d + z2 + 400); // +400 offset so nothing goes behind camera
+  const offset = 150 * camera.zoom;
+  const scale = d / (d + z2 + offset);
 
   const sx = cx + x * scale + camera.panX;
   const sy = cy + y * scale + camera.panY;
@@ -383,7 +384,7 @@ export function RawGraphCanvas3D({
     } else if (isDraggingRef.current === "zoom") {
       setCamera(c => ({
         ...c,
-        zoom: clamp(c.zoom - dy * 0.005, 0.3, 5),
+        zoom: clamp(c.zoom - dy * 0.01, 0.02, 8),
       }));
     }
   }, []);
@@ -394,10 +395,10 @@ export function RawGraphCanvas3D({
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? 1.06 : 0.94;
+    const delta = e.deltaY > 0 ? 1.12 : 0.88;
     setCamera(c => ({
       ...c,
-      zoom: clamp(c.zoom * delta, 0.3, 5),
+      zoom: clamp(c.zoom * delta, 0.02, 8),
     }));
   }, []);
 
@@ -581,8 +582,8 @@ export function RawGraphCanvas3D({
 
       <ZoomControls
         zoom={1 / camera.zoom}
-        onZoomIn={() => setCamera(c => ({ ...c, zoom: clamp(c.zoom * 0.85, 0.3, 5) }))}
-        onZoomOut={() => setCamera(c => ({ ...c, zoom: clamp(c.zoom * 1.15, 0.3, 5) }))}
+        onZoomIn={() => setCamera(c => ({ ...c, zoom: clamp(c.zoom * 0.8, 0.02, 8) }))}
+        onZoomOut={() => setCamera(c => ({ ...c, zoom: clamp(c.zoom * 1.2, 0.02, 8) }))}
         onReset={handleResetView}
       />
 
