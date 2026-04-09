@@ -403,8 +403,10 @@ export function RawGraphCanvas({
               const pulse = isHighlighted ? Math.sin(time * 4) * 0.15 : 0;
               const alpha = Math.min(1, baseAlpha + pulse);
 
-              // Particle on highlighted edges
-              const t = (time * 0.6) % 1;
+              // Particle on highlighted edges: travel for half the cycle, pause for the other half
+              const cycle = (time * 0.6) % 2; // 0→1 travel, 1→2 pause
+              const showParticle = cycle < 1;
+              const t = showParticle ? cycle : 1;
               const px = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * mx + t * t * x2;
               const py = (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * my + t * t * y2;
 
@@ -431,7 +433,7 @@ export function RawGraphCanvas({
                       >
                         {edge.predicate}
                       </text>
-                      <circle cx={px} cy={py} r={1.5} fill="#fff" />
+                      {showParticle && <circle cx={px} cy={py} r={1.5} fill="#fff" />}
                     </>
                   )}
                 </g>
