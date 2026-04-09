@@ -17,27 +17,31 @@ interface RawGraphExplorerProps {
 export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerProps) {
   const { nodes, edges, predicates, startNode, isLoading, isError, error } = useRawGraphData();
 
-  const [centerUri, setCenterUri] = useState<string | null>(null);
+  // Explored URIs — the graph grows as you navigate
+  const [exploredUris, setExploredUris] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<RawNode | null>(null);
   const [activePredicate, setActivePredicate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Set initial center when data loads
+  // Set initial seed when data loads
   useEffect(() => {
-    if (startNode && !centerUri) {
-      setCenterUri(startNode);
+    if (startNode && exploredUris.length === 0) {
+      setExploredUris([startNode]);
     }
-  }, [startNode, centerUri]);
+  }, [startNode, exploredUris.length]);
 
-  // Compute visible neighbourhood
+  // The most recently explored URI (for centering the canvas)
+  const centerUri = exploredUris.length > 0 ? exploredUris[exploredUris.length - 1] : null;
+
+  // Compute visible neighbourhood — union of all explored seeds
   const { visibleNodes, visibleEdges } = useMemo(() => {
-    if (!centerUri || nodes.size === 0) {
+    if (exploredUris.length === 0 || nodes.size === 0) {
       return { visibleNodes: [], visibleEdges: [] };
     }
-    return getNeighbourhood(centerUri, nodes, edges, depth);
-  }, [centerUri, nodes, edges, depth]);
+    return getNeighbourhood(exploredUris, nodes, edges, depth);
+  }, [exploredUris, nodes, edges, depth]);
 
   // Compute highlighted nodes (selected + its direct connections)
   const highlightedNodes = useMemo(() => {
@@ -95,11 +99,12 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
   }, [onNodeSelect]);
 
   const handleNodeNavigate = useCallback((uri: string) => {
-    setCenterUri(uri);
-    setSelectedNode(null);
-    setActivePredicate(null);
-    onNodeSelect?.(null);
-  }, [onNodeSelect]);
+    // Add to explored set (graph grows), select the target node
+    setExploredUris(prev => prev.includes(uri) ? prev : [...prev, uri]);
+    const targetNode = nodes.get(uri) || null;
+    setSelectedNode(targetNode);
+    onNodeSelect?.(targetNode);
+  }, [onNodeSelect, nodes]);
 
   const handleClose = useCallback(() => {
     setSelectedNode(null);
@@ -111,7 +116,8 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
   }, []);
 
   const handleSearchSelect = useCallback((node: RawNode) => {
-    setCenterUri(node.id);
+    // Search is a deliberate "go somewhere new" — reset explored set
+    setExploredUris([node.id]);
     setSelectedNode(null);
     setActivePredicate(null);
     setSearchQuery("");
@@ -129,8 +135,6 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
   if (isError) return <LoadingState variant="error" message={error?.message || "Failed to load graph"} />;
   if (nodes.size === 0) return <LoadingState variant="error" message="No triples found in the graph" />;
 
-  const centerNode = centerUri ? nodes.get(centerUri) : null;
-
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)" }}>
       {/* Toolbar: centre node info + search + predicate filters */}
@@ -142,30 +146,82 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
         gap: 12,
         flexWrap: "wrap",
       }}>
-        {/* Centre node indicator */}
-        {centerNode && (
+        {/* Exploration trail */}
+        {exploredUris.length > 0 && (
           <div style={{
             display: "flex",
             alignItems: "center",
-            gap: 8,
+            gap: 6,
             marginRight: 8,
+            overflow: "hidden",
           }}>
             <div style={{
               fontSize: 10,
               fontFamily: "'IBM Plex Mono', monospace",
               color: text.faint,
               letterSpacing: "0.1em",
+              flexShrink: 0,
             }}>
-              CENTRE:
+              TRAIL:
             </div>
-            <div style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: centerNode.color,
-              fontFamily: "'IBM Plex Sans', sans-serif",
-            }}>
-              {centerNode.label}
-            </div>
+            {exploredUris.slice(-4).map((uri, i, arr) => {
+              const n = nodes.get(uri);
+              if (!n) return null;
+              const isLast = i === arr.length - 1;
+              return (
+                <span key={uri} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {i > 0 && <span style={{ color: text.hint, fontSize: 10 }}>→</span>}
+                  <button
+                    onClick={() => {
+                      const targetNode = nodes.get(uri) || null;
+                      setSelectedNode(targetNode);
+                      onNodeSelect?.(targetNode);
+                    }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: "2px 6px",
+                      borderRadius: 4,
+                      fontSize: 11,
+                      fontWeight: isLast ? 600 : 400,
+                      color: isLast ? n.color : text.subtle,
+                      fontFamily: "'IBM Plex Sans', sans-serif",
+                      cursor: "pointer",
+                      transition: "color 0.15s",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {n.label}
+                  </button>
+                </span>
+              );
+            })}
+            {exploredUris.length > 1 && (
+              <button
+                onClick={() => {
+                  if (exploredUris.length > 0) {
+                    setExploredUris([exploredUris[exploredUris.length - 1]]);
+                    setSelectedNode(null);
+                    setActivePredicate(null);
+                    onNodeSelect?.(null);
+                  }
+                }}
+                style={{
+                  background: "none",
+                  border: `1px solid ${border.default}`,
+                  borderRadius: 4,
+                  padding: "2px 8px",
+                  fontSize: 10,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  color: text.faint,
+                  cursor: "pointer",
+                  flexShrink: 0,
+                  marginLeft: 4,
+                }}
+              >
+                Reset
+              </button>
+            )}
           </div>
         )}
 

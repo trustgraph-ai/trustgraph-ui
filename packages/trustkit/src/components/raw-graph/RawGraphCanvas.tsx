@@ -45,34 +45,6 @@ const MAX_VELOCITY = 8;
 const SETTLE_THRESHOLD = 0.3;
 const WARM_UP_STEPS = 80;
 
-function initPositions(
-  nodes: RawNode[],
-  centerUri: string | null,
-  width: number,
-  height: number,
-): RawGraphNode[] {
-  const cx = width / 2;
-  const cy = height / 2;
-
-  return nodes.map((node, i) => {
-    const isCenter = node.id === centerUri;
-    if (isCenter) {
-      return { ...node, x: cx, y: cy, vx: 0, vy: 0, r: 12 };
-    }
-    // Arrange others in a circle around center
-    const angle = (Math.PI * 2 * i) / nodes.length;
-    const radius = Math.min(width, height) * 0.2;
-    return {
-      ...node,
-      x: cx + Math.cos(angle) * radius + (Math.random() - 0.5) * 30,
-      y: cy + Math.sin(angle) * radius + (Math.random() - 0.5) * 30,
-      vx: 0,
-      vy: 0,
-      r: 9,
-    };
-  });
-}
-
 function stepSimulation(
   graphNodes: RawGraphNode[],
   edges: RawEdge[],
@@ -186,24 +158,77 @@ export function RawGraphCanvas({
     return () => resizeObserver.disconnect();
   }, []);
 
+  // Track previous node positions so we can preserve them across updates
+  const prevPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+
   // Initialize positions and run warm-up when nodes change
   useEffect(() => {
     if (containerSize.width === 0 || nodes.length === 0) return;
 
-    let gn = initPositions(nodes, centerUri, containerSize.width, containerSize.height);
+    const prevPositions = prevPositionsRef.current;
     const cx = containerSize.width / 2;
     const cy = containerSize.height / 2;
 
-    // Run warm-up steps synchronously (fast, not animated)
-    for (let i = 0; i < WARM_UP_STEPS; i++) {
+    // Build new graph nodes, preserving positions for nodes that already exist
+    let gn: RawGraphNode[] = nodes.map((node, i) => {
+      const existing = prevPositions.get(node.id);
+      if (existing) {
+        // Keep existing position, just update data
+        return { ...node, x: existing.x, y: existing.y, vx: 0, vy: 0, r: node.id === centerUri ? 12 : 9 };
+      }
+      // New node: place near a connected existing node, or in a ring
+      const connectedExisting = edges
+        .filter(e => e.from === node.id || e.to === node.id)
+        .map(e => e.from === node.id ? e.to : e.from)
+        .find(id => prevPositions.has(id));
+
+      if (connectedExisting) {
+        const anchor = prevPositions.get(connectedExisting)!;
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 50 + Math.random() * 40;
+        return {
+          ...node,
+          x: anchor.x + Math.cos(angle) * dist,
+          y: anchor.y + Math.sin(angle) * dist,
+          vx: 0, vy: 0,
+          r: node.id === centerUri ? 12 : 9,
+        };
+      }
+
+      // Fallback: ring around centre
+      const angle = (Math.PI * 2 * i) / nodes.length;
+      const radius = Math.min(containerSize.width, containerSize.height) * 0.2;
+      return {
+        ...node,
+        x: cx + Math.cos(angle) * radius + (Math.random() - 0.5) * 30,
+        y: cy + Math.sin(angle) * radius + (Math.random() - 0.5) * 30,
+        vx: 0, vy: 0,
+        r: node.id === centerUri ? 12 : 9,
+      };
+    });
+
+    const isIncremental = prevPositions.size > 0;
+    const warmUpSteps = isIncremental ? 40 : WARM_UP_STEPS;
+
+    // Run warm-up steps synchronously
+    for (let i = 0; i < warmUpSteps; i++) {
       const result = stepSimulation(gn, edges, cx, cy);
       gn = result.nodes;
     }
 
+    // Save positions for next update
+    const newPositions = new Map<string, { x: number; y: number }>();
+    for (const n of gn) newPositions.set(n.id, { x: n.x, y: n.y });
+    prevPositionsRef.current = newPositions;
+
     setGraphNodes(gn);
     setSettled(false);
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
+
+    // Only reset zoom/pan on fresh starts, not incremental exploration
+    if (!isIncremental) {
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+    }
   }, [nodes, edges, centerUri, containerSize]);
 
   // Animated settling phase
@@ -220,6 +245,10 @@ export function RawGraphCanvas({
         const { nodes: updated, totalMovement } = stepSimulation(prev, edges, cx, cy);
         if (totalMovement < SETTLE_THRESHOLD * prev.length || frameCount > 300) {
           setSettled(true);
+          // Save settled positions for next incremental update
+          const pos = new Map<string, { x: number; y: number }>();
+          for (const n of updated) pos.set(n.id, { x: n.x, y: n.y });
+          prevPositionsRef.current = pos;
         }
         return updated;
       });

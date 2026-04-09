@@ -227,14 +227,13 @@ export function useRawGraphData() {
 // ── Neighbourhood extraction ─────────────────────────────────────
 
 export function getNeighbourhood(
-  centerUri: string,
+  centerUris: string | string[],
   nodes: Map<string, RawNode>,
   edges: RawEdge[],
   depth: number = 2,
 ): { visibleNodes: RawNode[]; visibleEdges: RawEdge[] } {
-  const visited = new Set<string>();
-  const frontier = [centerUri];
-  visited.add(centerUri);
+  const seeds = Array.isArray(centerUris) ? centerUris : [centerUris];
+  const visited = new Set<string>(seeds);
 
   // Build adjacency for BFS
   const adjacency = new Map<string, Set<string>>();
@@ -245,6 +244,8 @@ export function getNeighbourhood(
     adjacency.get(edge.to)!.add(edge.from);
   }
 
+  // BFS from every seed independently to the given depth
+  let frontier = [...seeds];
   for (let d = 0; d < depth; d++) {
     const nextFrontier: string[] = [];
     for (const uri of frontier) {
@@ -257,8 +258,7 @@ export function getNeighbourhood(
         }
       }
     }
-    frontier.length = 0;
-    frontier.push(...nextFrontier);
+    frontier = nextFrontier;
   }
 
   const visibleNodes: RawNode[] = [];
