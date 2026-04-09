@@ -372,7 +372,7 @@ export function RawGraphCanvas3D({
     if (isDraggingRef.current === "rotate") {
       setCamera(c => ({
         ...c,
-        rotY: c.rotY + dx * 0.005,
+        rotY: c.rotY - dx * 0.005,
         rotX: clamp(c.rotX + dy * 0.005, -Math.PI / 2, Math.PI / 2),
       }));
     } else if (isDraggingRef.current === "pan") {
