@@ -404,7 +404,7 @@ export function RawGraphCanvas({
               const alpha = Math.min(1, baseAlpha + pulse);
 
               // Particle on highlighted edges
-              const t = (time * 2) % 1;
+              const t = (time * 0.6) % 1;
               const px = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * mx + t * t * x2;
               const py = (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * my + t * t * y2;
 
