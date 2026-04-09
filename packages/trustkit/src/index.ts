@@ -13,6 +13,9 @@ export { EntityBadge, EntityProperties, EntityRelationships, GraphExplorer } fro
 export { RawGraphCanvas, RawGraphCanvas3D, RawNodeDetailPanel, RawNodeSearch, SimpleRawGraphView, RawGraphWithDetail, RawGraphWithSearch, RawGraphExplorer, RawGraphExplorer3D } from "./components/raw-graph";
 export type { RawGraphNode } from "./components/raw-graph";
 
+// Components — prompt
+export { PromptList, PromptEditor, PromptTestPanel, PromptBrowser, PromptWorkbench } from "./components/prompt";
+
 // Components — explain
 export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, ExplainDAG, SourceLinkBadge, SourcePanel, SimpleRagView, RagWithSourcesView, RagWithTimelineView, GraphRagView, RagExplainView, RagFullExplainView, AgentStepCard, AgentStepList, SimpleAgentView, AgentWithTimelineView, AgentExplainView, AgentFullExplainView, SimpleDocRagView, DocRagExplainView, DocRagFullExplainView } from "./components/explain";
 
