@@ -311,47 +311,85 @@ export function useRawGraphData() {
   }, [socket]);
 
   // Search for nodes by label across the whole graph
-  const labelsRef = useRef<Map<string, string> | null>(null);
-  const labelsFetchingRef = useRef(false);
+  const entityLabelsRef = useRef<Map<string, string> | null>(null);
+  const entityLabelsFetchingRef = useRef(false);
 
   const searchNodes = useCallback(async (query: string): Promise<RawNode[]> => {
     if (!query.trim()) return [];
 
-    // Fetch all labels once and cache them
-    if (!labelsRef.current && !labelsFetchingRef.current) {
-      labelsFetchingRef.current = true;
+    // Build entity label index once: fetch all data triples to find entity URIs,
+    // then fetch their labels
+    if (!entityLabelsRef.current && !entityLabelsFetchingRef.current) {
+      entityLabelsFetchingRef.current = true;
       try {
         const api = socket.flow("default");
-        const labelTriples = await api.triplesQuery(
-          undefined, makeIriTerm(RDFS_LABEL), undefined,
+
+        // Fetch a large sample of triples to discover entity URIs
+        const sample = await api.triplesQuery(
+          undefined, undefined, undefined,
           10000, COLLECTION, "",
         );
+
+        // Collect URIs that appear as subjects (entities), and URIs used as predicates
+        const subjectUris = new Set<string>();
+        const predicateUris = new Set<string>();
+        for (const triple of sample) {
+          if (isUri(triple.p)) predicateUris.add(getTermValue(triple.p));
+          if (isUri(triple.s)) subjectUris.add(getTermValue(triple.s));
+        }
+
+        // Entity URIs = subjects that are not also used as predicates,
+        // and not in schema namespaces
+        const schemaNamespaces = [
+          "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          "http://www.w3.org/2000/01/rdf-schema#",
+          "http://www.w3.org/2002/07/owl#",
+        ];
+        const entityUris = new Set<string>();
+        for (const uri of subjectUris) {
+          if (predicateUris.has(uri)) continue;
+          if (schemaNamespaces.some(ns => uri.startsWith(ns))) continue;
+          entityUris.add(uri);
+        }
+
+        // Build label map from label triples in the sample
         const labels = new Map<string, string>();
-        for (const triple of labelTriples) {
-          if (isUri(triple.s)) {
-            labels.set(getTermValue(triple.s), getTermValue(triple.o));
+        for (const triple of sample) {
+          const pred = getTermValue(triple.p);
+          if (pred === RDFS_LABEL && isUri(triple.s)) {
+            const uri = getTermValue(triple.s);
+            if (entityUris.has(uri)) {
+              labels.set(uri, getTermValue(triple.o));
+            }
           }
         }
-        labelsRef.current = labels;
+
+        // For entities without labels, use the local name
+        for (const uri of entityUris) {
+          if (!labels.has(uri)) {
+            labels.set(uri, getLocalName(uri));
+          }
+        }
+
+        entityLabelsRef.current = labels;
       } catch {
-        labelsFetchingRef.current = false;
+        entityLabelsFetchingRef.current = false;
         return [];
       }
     }
 
-    // Wait for labels if another call is fetching them
-    while (labelsFetchingRef.current && !labelsRef.current) {
+    // Wait if another call is building the index
+    while (entityLabelsFetchingRef.current && !entityLabelsRef.current) {
       await new Promise(r => setTimeout(r, 50));
     }
 
-    const labels = labelsRef.current;
+    const labels = entityLabelsRef.current;
     if (!labels) return [];
 
     const q = query.toLowerCase();
     const results: RawNode[] = [];
     for (const [uri, label] of labels) {
       if (label.toLowerCase().includes(q)) {
-        // Return a lightweight node for display — full data fetched on select
         const { color, glow } = colorForUri(uri);
         results.push({
           id: uri,

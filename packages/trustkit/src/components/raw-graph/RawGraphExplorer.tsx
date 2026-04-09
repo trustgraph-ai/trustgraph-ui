@@ -26,10 +26,10 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<RawNode[]>([]);
   const [showSearch, setShowSearch] = useState(false);
+  const [searchReady, setSearchReady] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const searchRef = useRef<HTMLInputElement>(null);
   const fetchedInitial = useRef(false);
-  const searchTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Fetch initial neighbourhood
   useEffect(() => {
@@ -82,21 +82,24 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
     return items.sort((a, b) => a.label.localeCompare(b.label));
   }, [visibleEdges, predicates]);
 
-  // Debounced search — queries the full graph via API
-  const handleSearchChange = useCallback((query: string) => {
-    setSearchQuery(query);
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+  // Build search index when search opens, then filter synchronously
+  useEffect(() => {
+    if (showSearch && !searchReady) {
+      // Trigger index build with empty query — the hook will cache the index
+      searchNodes("").then(() => setSearchReady(true));
+    }
+  }, [showSearch, searchReady, searchNodes]);
 
-    if (!query.trim()) {
+  // Update results when query changes (synchronous after index is built)
+  useEffect(() => {
+    if (!searchQuery.trim()) {
       setSearchResults([]);
       return;
     }
+    if (!searchReady) return;
 
-    searchTimeout.current = setTimeout(async () => {
-      const results = await searchNodes(query);
-      setSearchResults(results);
-    }, 200);
-  }, [searchNodes]);
+    searchNodes(searchQuery).then(setSearchResults);
+  }, [searchQuery, searchReady, searchNodes]);
 
   const stats = `${visibleNodes.length} nodes · ${visibleEdges.length} edges`;
 
@@ -261,7 +264,7 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
                   ref={searchRef}
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleSearchSubmit();
                     if (e.key === "Escape") setShowSearch(false);
