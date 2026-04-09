@@ -36,8 +36,6 @@ export interface PredicateInfo {
 // ── Helpers ──────────────────────────────────────────────────────
 
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
-const RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment";
-const SKOS_DEFINITION = "http://www.w3.org/2004/02/skos/core#definition";
 
 function getTermValue(term: { t: string; i?: string; v?: string }): string {
   if (term.t === "i") return term.i || "";
@@ -81,29 +79,19 @@ function processTriples(
   edgeList: RawEdge[],
   predMap: Map<string, PredicateInfo>,
 ) {
-  // First pass: collect labels and descriptions from these triples
+  // First pass: collect labels
   const labels = new Map<string, string>();
-  const descriptions = new Map<string, string>();
   for (const triple of triples) {
-    const pred = getTermValue(triple.p);
-    if (pred === RDFS_LABEL) {
+    if (getTermValue(triple.p) === RDFS_LABEL) {
       labels.set(getTermValue(triple.s), getTermValue(triple.o));
-    } else if (pred === RDFS_COMMENT || pred === SKOS_DEFINITION) {
-      descriptions.set(getTermValue(triple.s), getTermValue(triple.o));
     }
   }
 
-  // Update existing nodes with any newly discovered labels/descriptions
+  // Update existing nodes with newly discovered labels
   for (const [uri, label] of labels) {
     const existing = nodeMap.get(uri);
     if (existing && existing.label === getLocalName(uri)) {
       existing.label = label;
-    }
-  }
-  for (const [uri, desc] of descriptions) {
-    const existing = nodeMap.get(uri);
-    if (existing) {
-      existing.description = desc;
     }
   }
 
@@ -113,7 +101,7 @@ function processTriples(
     nodeMap.set(uri, {
       id: uri,
       label: labels.get(uri) || getLocalName(uri),
-      description: descriptions.get(uri) || "",
+      description: "",
       color,
       glow,
       properties: {},
@@ -128,7 +116,7 @@ function processTriples(
     const predUri = getTermValue(triple.p);
     const objValue = getTermValue(triple.o);
 
-    if (predUri === RDFS_LABEL || predUri === RDFS_COMMENT) continue;
+    if (predUri === RDFS_LABEL) continue;
 
     if (isUri(triple.s) && isUri(triple.o)) {
       ensureNode(subUri);
@@ -226,8 +214,6 @@ export function useRawGraphData() {
         if (!nodeMapRef.current.has(u)) {
           labelFetches.push(
             api.triplesQuery(makeIriTerm(u), makeIriTerm(RDFS_LABEL), undefined, 1, COLLECTION, ""),
-            api.triplesQuery(makeIriTerm(u), makeIriTerm(RDFS_COMMENT), undefined, 1, COLLECTION, ""),
-            api.triplesQuery(makeIriTerm(u), makeIriTerm(SKOS_DEFINITION), undefined, 1, COLLECTION, ""),
           );
         }
       }
@@ -312,21 +298,9 @@ export function useRawGraphData() {
     }
   }, [socket]);
 
-  // Search index: all labelled URIs
+  // Search index: every URI with an rdfs:label
   const labelsRef = useRef<Map<string, string> | null>(null);
   const labelsBuildingRef = useRef(false);
-
-  // Build the search index: fetch labels, exclude schema URIs
-  const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-  const SCHEMA_TYPES = new Set([
-    "http://www.w3.org/2002/07/owl#Class",
-    "http://www.w3.org/2002/07/owl#ObjectProperty",
-    "http://www.w3.org/2002/07/owl#DatatypeProperty",
-    "http://www.w3.org/2002/07/owl#AnnotationProperty",
-    "http://www.w3.org/2002/07/owl#Ontology",
-    "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property",
-    "http://www.w3.org/2000/01/rdf-schema#Class",
-  ]);
 
   const buildSearchIndex = useCallback(async () => {
     if (labelsRef.current || labelsBuildingRef.current) return;
@@ -334,31 +308,15 @@ export function useRawGraphData() {
 
     try {
       const api = socket.flow("default");
+      const labelTriples = await api.triplesQuery(
+        undefined, makeIriTerm(RDFS_LABEL), undefined,
+        10000, COLLECTION, "",
+      );
 
-      // Fetch labels and rdf:type triples in parallel
-      const [labelTriples, typeTriples] = await Promise.all([
-        api.triplesQuery(undefined, makeIriTerm(RDFS_LABEL), undefined, 10000, COLLECTION, ""),
-        api.triplesQuery(undefined, makeIriTerm(RDF_TYPE), undefined, 10000, COLLECTION, ""),
-      ]);
-
-      // Identify schema URIs: anything typed as a class, property, or ontology
-      const schemaUris = new Set<string>();
-      for (const triple of typeTriples) {
-        if (isUri(triple.s) && isUri(triple.o)) {
-          if (SCHEMA_TYPES.has(getTermValue(triple.o))) {
-            schemaUris.add(getTermValue(triple.s));
-          }
-        }
-      }
-
-      // Build label index excluding schema URIs
       const labels = new Map<string, string>();
       for (const triple of labelTriples) {
         if (isUri(triple.s)) {
-          const uri = getTermValue(triple.s);
-          if (!schemaUris.has(uri)) {
-            labels.set(uri, getTermValue(triple.o));
-          }
+          labels.set(getTermValue(triple.s), getTermValue(triple.o));
         }
       }
 
