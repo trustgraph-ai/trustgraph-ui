@@ -5,8 +5,8 @@ import { text, border, surface } from "../../theme";
 interface RawNodeDetailPanelProps {
   uri: string;
   nodeColor: string;
-  onClose: () => void;
-  onNodeNavigate: (uri: string) => void;
+  onClose?: () => void;
+  onNodeNavigate?: (uri: string) => void;
 }
 
 export function RawNodeDetailPanel({
@@ -36,20 +36,22 @@ export function RawNodeDetailPanel({
         }}>
           NODE
         </div>
-        <button
-          onClick={onClose}
-          style={{
-            background: "none",
-            border: "none",
-            color: text.faint,
-            cursor: "pointer",
-            fontSize: 18,
-            padding: 0,
-            lineHeight: 1,
-          }}
-        >
-          ×
-        </button>
+        {onClose && (
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              color: text.faint,
+              cursor: "pointer",
+              fontSize: 18,
+              padding: 0,
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {/* Node label */}
@@ -173,7 +175,7 @@ function RelationshipGroup({
   onNavigate,
 }: {
   rel: NodeRelationship;
-  onNavigate: (uri: string) => void;
+  onNavigate?: (uri: string) => void;
 }) {
   const arrow = rel.direction === "outgoing" ? "→" : "←";
   return (
@@ -189,7 +191,7 @@ function RelationshipGroup({
       {rel.targets.map((target) => (
         <button
           key={target.uri}
-          onClick={() => onNavigate(target.uri)}
+          onClick={() => onNavigate?.(target.uri)}
           style={{
             display: "block",
             width: "100%",

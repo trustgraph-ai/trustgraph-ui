@@ -2,26 +2,24 @@ import { useState } from "react";
 import { useRawGraphState } from "../../hooks/useRawGraphState";
 import type { RawNode } from "../../hooks/useRawGraphData";
 import { RawGraphCanvas } from "./RawGraphCanvas";
-import { RawNodeDetailPanel } from "./RawNodeDetailPanel";
 import { RawNodeSearch } from "./RawNodeSearch";
 import { SplitPane, LoadingState } from "../common";
 import { text, palette, border } from "../../theme";
 
-interface RawGraphExplorerProps {
+interface RawGraphWithSearchProps {
   startUri?: string;
   onNodeSelect?: (node: RawNode | null) => void;
 }
 
 /**
- * Full raw graph explorer — search panel on the left, detail panel
- * on the right, force-directed canvas in the middle. This is the
- * "all included" Tier 3 composite.
+ * Raw graph with a search panel on the left. Search for entities
+ * and add them to the graph. No detail panel.
  */
-export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerProps) {
+export function RawGraphWithSearch({ startUri, onNodeSelect }: RawGraphWithSearchProps) {
   const {
-    visibleNodes, visibleEdges, centerUri, selectedNode, highlightedNodes, stats,
+    visibleNodes, visibleEdges, centerUri, highlightedNodes, stats,
     initialLoading, isError, error, isFetching, searchNodes,
-    handleNodeClick, handleNodeNavigate, handleSearchSelect, handleClose, handleReset,
+    handleNodeClick, handleNodeNavigate, handleSearchSelect, handleReset,
   } = useRawGraphState({ startUri, onNodeSelect });
 
   const [showSearch, setShowSearch] = useState(false);
@@ -39,18 +37,8 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
     />
   ) : null;
 
-  const detailPanel = selectedNode ? (
-    <RawNodeDetailPanel
-      uri={selectedNode.id}
-      nodeColor={selectedNode.color}
-      onClose={handleClose}
-      onNodeNavigate={handleNodeNavigate}
-    />
-  ) : null;
-
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)" }}>
-      {/* Toolbar */}
       <div style={{
         padding: "10px 28px",
         borderBottom: `1px solid ${border.default}`,
@@ -93,16 +81,6 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
           </button>
         )}
 
-        {isFetching && !showSearch && (
-          <span style={{
-            fontSize: 10,
-            fontFamily: "'IBM Plex Mono', monospace",
-            color: palette.amber,
-          }}>
-            loading...
-          </span>
-        )}
-
         <div style={{ flex: 1 }} />
 
         <span style={{
@@ -114,43 +92,21 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
         </span>
       </div>
 
-      {/* Graph + side panels */}
       <SplitPane
         height="calc(100vh - 160px)"
         panelSide="left"
         panelBorder
         panel={searchPanel}
       >
-        <SplitPane
-          height="100%"
-          panelSide="right"
-          panelBorder
-          panel={detailPanel}
-        >
-          {visibleNodes.length > 0 ? (
-            <RawGraphCanvas
-              nodes={visibleNodes}
-              edges={visibleEdges}
-              centerUri={centerUri}
-              highlightedNodes={highlightedNodes}
-              activePredicate={null}
-              onNodeClick={handleNodeClick}
-              onNodeNavigate={handleNodeNavigate}
-            />
-          ) : (
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              color: text.hint,
-              fontSize: 13,
-              fontStyle: "italic",
-            }}>
-              Open search to find entities
-            </div>
-          )}
-        </SplitPane>
+        <RawGraphCanvas
+          nodes={visibleNodes}
+          edges={visibleEdges}
+          centerUri={centerUri}
+          highlightedNodes={highlightedNodes}
+          activePredicate={null}
+          onNodeClick={handleNodeClick}
+          onNodeNavigate={handleNodeNavigate}
+        />
       </SplitPane>
     </div>
   );

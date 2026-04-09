@@ -10,7 +10,7 @@ export type { ExplainGraphNode, ExplainGraphEdge } from "./components/graph";
 export { EntityBadge, EntityProperties, EntityRelationships, GraphExplorer } from "./components/knowledge";
 
 // Components — raw graph
-export { RawGraphCanvas, RawNodeDetailPanel, RawGraphExplorer } from "./components/raw-graph";
+export { RawGraphCanvas, RawNodeDetailPanel, RawNodeSearch, SimpleRawGraphView, RawGraphWithDetail, RawGraphWithSearch, RawGraphExplorer } from "./components/raw-graph";
 export type { RawGraphNode } from "./components/raw-graph";
 
 // Components — explain
@@ -20,6 +20,7 @@ export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, E
 export { useGraphData } from "./hooks/useGraphData";
 export { useRawGraphData } from "./hooks/useRawGraphData";
 export type { RawNode, RawEdge, PredicateInfo } from "./hooks/useRawGraphData";
+export { useRawGraphState } from "./hooks/useRawGraphState";
 export { useNodeDetail } from "./hooks/useNodeDetail";
 export type { NodeDetail, NodeProperty, NodeRelationship } from "./hooks/useNodeDetail";
 export { useOntologySchema } from "./hooks/useOntologySchema";
