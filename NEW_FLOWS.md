@@ -192,3 +192,145 @@ in isolation — you have to run a full query and hope for the best.
 - Is there a concept of agent "profiles" or "presets" — named
   combinations of patterns, types, and tool sets that can be
   switched between?
+
+---
+
+## 4. Schema Management & Debugging
+
+### Problem
+
+TrustGraph supports structured data extraction using schemas — definitions
+that tell the system what fields to extract from documents and how to
+organise the resulting data. Schemas drive the Table Explorer workflow
+and feed into the structured data search.
+
+There is currently no UX for defining, editing, or testing schemas.
+Users who want to create a new schema, adjust field definitions, or
+understand why extraction produced unexpected results have no way to
+do this through the interface. Like prompt management, the gap is both
+in configuration (defining what to extract) and in feedback (seeing
+whether the definition works).
+
+### What the user needs
+
+- **Browse schemas** — see all defined schemas, what fields each one
+  contains, which collections or flows use them, and basic stats
+  (record counts, last extraction run).
+
+- **Define and edit schemas** — create new schemas and modify existing
+  ones. Each schema has fields with names, types, and descriptions.
+  The editing experience should make the structure clear — probably
+  a form-based editor rather than raw JSON, though a raw view should
+  be available for power users.
+
+- **Test schema extraction** — take a schema definition and run it
+  against a sample document or text passage. See what gets extracted:
+  which fields were populated, what values were found, what was
+  missed. This is the core debugging loop: define → extract → inspect
+  → refine.
+
+- **Preview results** — after a test extraction, show the results in
+  the same tabular format the Table Explorer uses. The user should
+  see their schema's output exactly as it will appear downstream.
+
+- **Diagnose extraction issues** — when a field comes back empty or
+  wrong, the user needs to understand why. This might mean showing
+  the prompt that was generated for extraction (linking to the Prompt
+  Management workflow), the source text that was considered, and what
+  the LLM returned before it was parsed into structured data.
+
+### What already exists
+
+- Schema storage and processing exist in the backend.
+- The Table Explorer / Data Search workflow already renders schema-based
+  results — the display components exist.
+- Prompt management (workflow 2) covers the extraction prompts
+  themselves — this workflow covers the schema definitions that
+  parameterise those prompts.
+
+### Open questions
+
+- What is the schema definition format? Field types, constraints,
+  nesting — the UI design depends on the schema model.
+- Can extraction be run against a single passage/chunk, or only against
+  full documents? Fine-grained testing needs a lightweight invocation
+  path.
+- Is there a validation step — can the system check a schema definition
+  for issues before running extraction?
+- How do schemas relate to flows? Is a schema bound to a flow, selected
+  at processing time, or applied post-hoc?
+
+---
+
+## 5. Ontology Management & Debugging
+
+### Problem
+
+TrustGraph uses OWL ontologies to type and organise knowledge graph
+entities — classes, properties, relationships, and their hierarchies.
+The existing Ontology Viewer workflow lets users *see* the ontology that
+was extracted, but there is no way to *define* or *edit* an ontology,
+invoke ontology processing, or debug why entities were classified the
+way they were.
+
+For users who want to guide knowledge extraction — specifying what
+classes should exist, what properties they should have, how they relate
+— there is no authoring or testing path through the interface.
+
+### What the user needs
+
+- **Browse ontologies** — see all ontology definitions available in the
+  system. Show classes, properties (datatype and object), class
+  hierarchies, and relationship domains/ranges. This overlaps with the
+  existing Ontology Viewer but shifts the framing from "inspect what
+  was extracted" to "manage what is defined".
+
+- **Define and edit ontologies** — create new ontology definitions or
+  modify existing ones. Add/remove/rename classes, define properties
+  and their types, set up relationships between classes (domain →
+  predicate → range). The editor should make the structure navigable
+  — class hierarchy on one side, properties and relationships for the
+  selected class on the other.
+
+- **Test ontology processing** — take an ontology definition and run
+  it against sample data to see how entities get classified. Given a
+  set of triples or a document passage, show: which entities were
+  found, what class each was assigned to, what properties were
+  extracted, and what relationships were identified.
+
+- **Compare with and without ontology** — a useful debugging angle is
+  seeing what the extraction produces with no ontology guidance
+  (schema-free) versus with a specific ontology. This helps users
+  understand whether their ontology is helping or constraining the
+  extraction.
+
+- **Diagnose classification issues** — when an entity ends up in the
+  wrong class or a relationship is missed, the user needs to trace
+  back to why. Show the extraction prompt (linking to Prompt
+  Management), the source text, and the LLM's raw output before
+  it was parsed into triples.
+
+### What already exists
+
+- The Ontology Viewer (`OntologyView.tsx`) already renders classes,
+  properties, instances, and relationships with domain colouring.
+- `useOntologySchema` hook fetches and parses OWL class/property data.
+- `useGraphData` performs ontology discovery from triples.
+- The design language for ontology display (coloured class cards,
+  property badges, relationship arrows) is established.
+
+### Open questions
+
+- What is the ontology authoring format? Can users define ontologies
+  as OWL directly, or is there an intermediate representation?
+- Is ontology processing a separate pipeline step, or part of the
+  main ingestion flow? This affects whether test runs are lightweight
+  or require full document processing.
+- Should editing be visual (drag-and-drop class hierarchy, form-based
+  property editing) or text-based (OWL/Turtle editor with syntax
+  support)? Probably both, but which is primary?
+- How do ontologies relate to collections and flows? Can different
+  collections use different ontologies?
+- Is there a merge/diff concept — if an ontology is updated, what
+  happens to existing entities that were classified under the old
+  version?
