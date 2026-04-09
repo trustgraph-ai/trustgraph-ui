@@ -14,7 +14,7 @@ import { border } from "../../theme";
  * variable substitution.
  */
 export function PromptWorkbench() {
-  const { prompts, isLoading, error } = usePromptList();
+  const { prompts, isLoading, error, create } = usePromptList();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data, isLoading: detailLoading, save, isSaving, saveError } = usePromptDetail(selectedId);
   const { result, run, reset } = usePromptTest();
@@ -41,6 +41,7 @@ export function PromptWorkbench() {
             setSelectedId(id);
             reset();
           }}
+          onCreate={create}
         />
       </div>
 

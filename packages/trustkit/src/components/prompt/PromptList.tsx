@@ -1,10 +1,12 @@
+import { useState, useRef } from "react";
 import type { PromptListItem } from "../../hooks/usePromptList";
-import { text, surface, palette } from "../../theme";
+import { text, border, surface, palette } from "../../theme";
 
 interface PromptListProps {
   prompts: PromptListItem[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onCreate?: (name: string) => Promise<string | null>;
   isLoading?: boolean;
   error?: string | null;
 }
@@ -13,24 +15,113 @@ export function PromptList({
   prompts,
   selectedId,
   onSelect,
+  onCreate,
   isLoading,
   error,
 }: PromptListProps) {
   const systemPrompts = prompts.filter(p => p.isSystem);
   const templates = prompts.filter(p => !p.isSystem);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleCreate = async () => {
+    if (!newName.trim() || !onCreate) return;
+    setCreating(true);
+    const newId = await onCreate(newName);
+    setCreating(false);
+    setNewName("");
+    setShowCreate(false);
+    if (newId) onSelect(newId);
+  };
 
   return (
     <div style={{ padding: 16, height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={{
-        fontSize: 10,
-        fontFamily: "'IBM Plex Mono', monospace",
-        fontWeight: 600,
-        color: text.faint,
-        letterSpacing: "0.1em",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
         marginBottom: 12,
       }}>
-        PROMPTS
+        <div style={{
+          fontSize: 10,
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontWeight: 600,
+          color: text.faint,
+          letterSpacing: "0.1em",
+        }}>
+          PROMPTS
+        </div>
+
+        {onCreate && (
+          <button
+            onClick={() => {
+              setShowCreate(!showCreate);
+              setTimeout(() => inputRef.current?.focus(), 50);
+            }}
+            style={{
+              padding: "3px 8px",
+              borderRadius: 4,
+              border: `1px solid ${showCreate ? palette.emerald + "44" : border.default}`,
+              background: showCreate ? `${palette.emerald}1a` : "transparent",
+              color: showCreate ? palette.emerald : text.faint,
+              fontSize: 10,
+              fontFamily: "'IBM Plex Mono', monospace",
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+          >
+            + New
+          </button>
+        )}
       </div>
+
+      {/* New prompt input */}
+      {showCreate && (
+        <div style={{ marginBottom: 12, display: "flex", gap: 6 }}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleCreate();
+              if (e.key === "Escape") { setShowCreate(false); setNewName(""); }
+            }}
+            placeholder="prompt-name"
+            disabled={creating}
+            style={{
+              flex: 1,
+              padding: "5px 8px",
+              borderRadius: 4,
+              border: `1px solid ${border.default}`,
+              background: surface.card,
+              color: text.primary,
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              outline: "none",
+            }}
+          />
+          <button
+            onClick={handleCreate}
+            disabled={creating || !newName.trim()}
+            style={{
+              padding: "5px 10px",
+              borderRadius: 4,
+              border: `1px solid ${palette.emerald}44`,
+              background: `${palette.emerald}1a`,
+              color: !newName.trim() ? text.disabled : palette.emerald,
+              fontSize: 10,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontWeight: 600,
+              cursor: creating ? "wait" : "pointer",
+            }}
+          >
+            {creating ? "..." : "Create"}
+          </button>
+        </div>
+      )}
 
       {isLoading && (
         <div style={{

@@ -58,5 +58,52 @@ export function usePromptList() {
     load();
   }, [load]);
 
-  return { prompts, isLoading, error, reload: load };
+  // Create a new prompt template
+  const create = useCallback(async (name: string): Promise<string | null> => {
+    try {
+      const config = socket.config();
+      const id = name.trim().toLowerCase().replace(/\s+/g, "-");
+      const key = `template.${id}`;
+
+      // Create the prompt with empty template
+      await config.putConfig([
+        {
+          type: "prompt",
+          key,
+          value: JSON.stringify({
+            prompt: "",
+            "response-type": "text",
+          }),
+        },
+      ]);
+
+      // Update template-index to include the new ID
+      const indexResult = await config.getConfig([
+        { type: "prompt", key: "template-index" },
+      ]) as any;
+
+      let templateIds: string[] = [];
+      const values = indexResult?.values || [];
+      if (values.length > 0 && values[0]?.value) {
+        try { templateIds = JSON.parse(values[0].value); } catch { /* empty */ }
+      }
+
+      if (!templateIds.includes(id)) {
+        templateIds.push(id);
+        await config.putConfig([
+          { type: "prompt", key: "template-index", value: JSON.stringify(templateIds) },
+        ]);
+      }
+
+      // Reload the list
+      await load();
+
+      return key;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      return null;
+    }
+  }, [socket, load]);
+
+  return { prompts, isLoading, error, reload: load, create };
 }
