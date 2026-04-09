@@ -275,5 +275,40 @@ export function useRawGraphData() {
     setPredicates(new Map());
   }, []);
 
-  return { nodes, edges, predicates, isFetching, isError, error, fetchNeighbourhood, resetCache };
+  // Find a starting node by fetching a small sample of triples
+  const findStartNode = useCallback(async (): Promise<string | null> => {
+    try {
+      const api = socket.flow("default");
+      const sample = await api.triplesQuery(undefined, undefined, undefined, 100, COLLECTION, "");
+
+      // Count URI occurrences to find the most connected
+      const counts = new Map<string, number>();
+      for (const triple of sample) {
+        if (isUri(triple.s)) {
+          const uri = getTermValue(triple.s);
+          counts.set(uri, (counts.get(uri) || 0) + 1);
+        }
+        if (isUri(triple.o)) {
+          const uri = getTermValue(triple.o);
+          counts.set(uri, (counts.get(uri) || 0) + 1);
+        }
+      }
+
+      // Pick the most frequent URI
+      let bestUri: string | null = null;
+      let bestCount = 0;
+      for (const [uri, count] of counts) {
+        if (count > bestCount) {
+          bestCount = count;
+          bestUri = uri;
+        }
+      }
+
+      return bestUri;
+    } catch {
+      return null;
+    }
+  }, [socket]);
+
+  return { nodes, edges, predicates, isFetching, isError, error, fetchNeighbourhood, resetCache, findStartNode };
 }

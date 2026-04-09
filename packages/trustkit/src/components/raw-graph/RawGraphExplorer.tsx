@@ -15,7 +15,7 @@ interface RawGraphExplorerProps {
 }
 
 export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerProps) {
-  const { nodes, edges, predicates, isFetching, isError, error, fetchNeighbourhood, resetCache } = useRawGraphData();
+  const { nodes, edges, predicates, isFetching, isError, error, fetchNeighbourhood, resetCache, findStartNode } = useRawGraphData();
 
   const [centerUri, setCenterUri] = useState<string | null>(startUri || null);
   const [selectedNode, setSelectedNode] = useState<RawNode | null>(null);
@@ -31,14 +31,15 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
     if (fetchedInitial.current) return;
     fetchedInitial.current = true;
 
-    if (startUri) {
-      fetchNeighbourhood(startUri).then(() => setInitialLoading(false));
-    } else {
-      // No start URI — show search immediately
+    (async () => {
+      const uri = startUri || await findStartNode();
+      if (uri) {
+        setCenterUri(uri);
+        await fetchNeighbourhood(uri);
+      }
       setInitialLoading(false);
-      setShowSearch(true);
-    }
-  }, [startUri, fetchNeighbourhood]);
+    })();
+  }, [startUri, fetchNeighbourhood, findStartNode]);
 
   // Visible nodes and edges are just everything in the cache
   const visibleNodes = useMemo(() => Array.from(nodes.values()), [nodes]);
