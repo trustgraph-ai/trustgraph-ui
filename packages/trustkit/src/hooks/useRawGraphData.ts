@@ -37,6 +37,7 @@ export interface PredicateInfo {
 
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
 const RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment";
+const SKOS_DEFINITION = "http://www.w3.org/2004/02/skos/core#definition";
 
 function getTermValue(term: { t: string; i?: string; v?: string }): string {
   if (term.t === "i") return term.i || "";
@@ -87,7 +88,7 @@ function processTriples(
     const pred = getTermValue(triple.p);
     if (pred === RDFS_LABEL) {
       labels.set(getTermValue(triple.s), getTermValue(triple.o));
-    } else if (pred === RDFS_COMMENT) {
+    } else if (pred === RDFS_COMMENT || pred === SKOS_DEFINITION) {
       descriptions.set(getTermValue(triple.s), getTermValue(triple.o));
     }
   }
@@ -127,7 +128,7 @@ function processTriples(
     const predUri = getTermValue(triple.p);
     const objValue = getTermValue(triple.o);
 
-    if (predUri === RDFS_LABEL || predUri === RDFS_COMMENT) continue;
+    if (predUri === RDFS_LABEL || predUri === RDFS_COMMENT || predUri === SKOS_DEFINITION) continue;
 
     if (isUri(triple.s) && isUri(triple.o)) {
       ensureNode(subUri);
@@ -226,6 +227,7 @@ export function useRawGraphData() {
           labelFetches.push(
             api.triplesQuery(makeIriTerm(u), makeIriTerm(RDFS_LABEL), undefined, 1, COLLECTION, ""),
             api.triplesQuery(makeIriTerm(u), makeIriTerm(RDFS_COMMENT), undefined, 1, COLLECTION, ""),
+            api.triplesQuery(makeIriTerm(u), makeIriTerm(SKOS_DEFINITION), undefined, 1, COLLECTION, ""),
           );
         }
       }
