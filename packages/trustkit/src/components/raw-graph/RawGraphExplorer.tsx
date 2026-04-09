@@ -3,33 +3,33 @@ import { useRawGraphData } from "../../hooks/useRawGraphData";
 import type { RawNode } from "../../hooks/useRawGraphData";
 import { RawGraphCanvas } from "./RawGraphCanvas";
 import { RawNodeDetailPanel } from "./RawNodeDetailPanel";
-import { LoadingState, SplitPane, FilterBar } from "../common";
-import type { FilterItem } from "../common";
-import { text, palette, border } from "../../theme";
+import { SplitPane, LoadingState } from "../common";
+import { text, palette, border, surface } from "../../theme";
 
 interface RawGraphExplorerProps {
-  /** Initial URI to centre on (optional — auto-discovers a start node) */
   startUri?: string;
-  /** Callback when a node is selected */
   onNodeSelect?: (node: RawNode | null) => void;
 }
 
 export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerProps) {
   const {
-    nodes, edges, predicates, isFetching, isError, error,
+    nodes, edges, isFetching, isError, error,
     fetchNeighbourhood, resetCache, findStartNode, searchNodes,
   } = useRawGraphData();
 
   const [centerUri, setCenterUri] = useState<string | null>(startUri || null);
   const [selectedNode, setSelectedNode] = useState<RawNode | null>(null);
-  const [activePredicate, setActivePredicate] = useState<string | null>(null);
+  const [activePredicate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<RawNode[]>([]);
   const [showSearch, setShowSearch] = useState(false);
   const [searchReady, setSearchReady] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-  const searchRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const fetchedInitial = useRef(false);
+
+  // Pending selection — set when navigating, resolved when data arrives
+  const [pendingSelectUri, setPendingSelectUri] = useState<string | null>(null);
 
   // Fetch initial neighbourhood
   useEffect(() => {
@@ -46,11 +46,33 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
     })();
   }, [startUri, fetchNeighbourhood, findStartNode]);
 
-  // Visible nodes and edges are everything in the cache
+  // Build search index when search panel opens
+  useEffect(() => {
+    if (showSearch && !searchReady) {
+      searchNodes("").then(() => setSearchReady(true));
+    }
+  }, [showSearch, searchReady, searchNodes]);
+
+  // Update results when query changes
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    if (!searchReady) return;
+    searchNodes(searchQuery).then(setSearchResults);
+  }, [searchQuery, searchReady, searchNodes]);
+
+  // Focus search input when panel opens
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    }
+  }, [showSearch]);
+
   const visibleNodes = useMemo(() => Array.from(nodes.values()), [nodes]);
   const visibleEdges = edges;
 
-  // Highlighted nodes (selected + direct connections)
   const highlightedNodes = useMemo(() => {
     if (!selectedNode) return [];
     const ids = [selectedNode.id];
@@ -61,59 +83,16 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
     return ids;
   }, [selectedNode, visibleEdges]);
 
-  // Predicate filter items
-  const predicateFilters: FilterItem[] = useMemo(() => {
-    const predCounts = new Map<string, number>();
-    for (const edge of visibleEdges) {
-      predCounts.set(edge.predicateUri, (predCounts.get(edge.predicateUri) || 0) + 1);
-    }
-
-    const items: FilterItem[] = [];
-    for (const [uri, count] of predCounts) {
-      const info = predicates.get(uri);
-      if (info) {
-        items.push({
-          key: uri,
-          label: `${info.label} (${count})`,
-          color: info.color,
-        });
-      }
-    }
-    return items.sort((a, b) => a.label.localeCompare(b.label));
-  }, [visibleEdges, predicates]);
-
-  // Build search index when search opens, then filter synchronously
-  useEffect(() => {
-    if (showSearch && !searchReady) {
-      // Trigger index build with empty query — the hook will cache the index
-      searchNodes("").then(() => setSearchReady(true));
-    }
-  }, [showSearch, searchReady, searchNodes]);
-
-  // Update results when query changes (synchronous after index is built)
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-    if (!searchReady) return;
-
-    searchNodes(searchQuery).then(setSearchResults);
-  }, [searchQuery, searchReady, searchNodes]);
-
   const stats = `${visibleNodes.length} nodes · ${visibleEdges.length} edges`;
 
-  // Pending selection — set when navigating, resolved when data arrives
-  const [pendingSelectUri, setPendingSelectUri] = useState<string | null>(null);
-
-  // Navigate to a node: fetch its neighbourhood, mark it for selection
+  // Navigate to a node
   const handleNodeNavigate = useCallback((uri: string) => {
     setCenterUri(uri);
     setPendingSelectUri(uri);
     fetchNeighbourhood(uri);
   }, [fetchNeighbourhood]);
 
-  // Resolve pending selection and keep selectedNode fresh after fetches
+  // Resolve pending selection after fetches
   useEffect(() => {
     if (pendingSelectUri && nodes.has(pendingSelectUri)) {
       const node = nodes.get(pendingSelectUri)!;
@@ -138,30 +117,20 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
     onNodeSelect?.(null);
   }, [onNodeSelect]);
 
-  const handlePredicateFilter = useCallback((key: string | null) => {
-    setActivePredicate(prev => prev === key ? null : key);
-  }, []);
-
-  // Search select: add node to the graph (don't reset)
+  // Search select: add node to graph, keep panel open
   const handleSearchSelect = useCallback((node: RawNode) => {
     setCenterUri(node.id);
     setPendingSelectUri(node.id);
-    setSearchQuery("");
-    setSearchResults([]);
-    setShowSearch(false);
     fetchNeighbourhood(node.id);
   }, [fetchNeighbourhood]);
 
-  // URI paste: add to graph
+  // URI paste
   const handleSearchSubmit = useCallback(() => {
     const q = searchQuery.trim();
     if (!q) return;
     if (q.startsWith("http://") || q.startsWith("https://")) {
       setCenterUri(q);
       setPendingSelectUri(q);
-      setSearchQuery("");
-      setSearchResults([]);
-      setShowSearch(false);
       fetchNeighbourhood(q);
     }
   }, [searchQuery, fetchNeighbourhood]);
@@ -171,23 +140,142 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
     resetCache();
     setCenterUri(null);
     setSelectedNode(null);
-    setActivePredicate(null);
     setPendingSelectUri(null);
     onNodeSelect?.(null);
   }, [resetCache, onNodeSelect]);
 
-  useEffect(() => {
-    if (showSearch && searchRef.current) {
-      searchRef.current.focus();
-    }
-  }, [showSearch]);
-
   if (initialLoading) return <LoadingState />;
   if (isError) return <LoadingState variant="error" message={error?.message || "Failed to load graph"} />;
 
+  // The search panel content
+  const searchPanel = showSearch ? (
+    <div style={{ padding: 16, height: "100%", display: "flex", flexDirection: "column" }}>
+      {/* Search input */}
+      <div style={{ marginBottom: 12 }}>
+        <input
+          ref={searchInputRef}
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSearchSubmit();
+            if (e.key === "Escape") setShowSearch(false);
+          }}
+          placeholder="Search..."
+          style={{
+            width: "100%",
+            padding: "8px 12px",
+            borderRadius: 6,
+            border: `1px solid ${border.default}`,
+            background: surface.card,
+            color: text.primary,
+            fontSize: 13,
+            fontFamily: "'IBM Plex Sans', sans-serif",
+            outline: "none",
+          }}
+        />
+      </div>
+
+      {/* Stats */}
+      <div style={{
+        fontSize: 10,
+        fontFamily: "'IBM Plex Mono', monospace",
+        color: text.hint,
+        marginBottom: 12,
+        padding: "0 2px",
+      }}>
+        {stats}
+      </div>
+
+      {/* Loading indicator */}
+      {(isFetching || (!searchReady && searchQuery)) && (
+        <div style={{
+          fontSize: 11,
+          fontFamily: "'IBM Plex Mono', monospace",
+          color: palette.amber,
+          marginBottom: 8,
+          padding: "0 2px",
+        }}>
+          loading...
+        </div>
+      )}
+
+      {/* Results */}
+      <div style={{ flex: 1, overflowY: "auto", margin: "0 -16px", padding: "0 16px" }}>
+        {searchResults.map((node) => (
+          <button
+            key={node.id}
+            onClick={() => handleSearchSelect(node)}
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              padding: "8px 10px",
+              marginBottom: 2,
+              borderRadius: 6,
+              border: "1px solid transparent",
+              background: "transparent",
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = surface.cardHover;
+              e.currentTarget.style.borderColor = `${node.color}44`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.borderColor = "transparent";
+            }}
+          >
+            <div style={{
+              fontSize: 12,
+              color: node.color,
+              fontWeight: 600,
+              fontFamily: "'IBM Plex Sans', sans-serif",
+            }}>
+              {node.label}
+            </div>
+          </button>
+        ))}
+        {searchQuery && searchReady && searchResults.length === 0 && (
+          <div style={{
+            padding: "20px 4px",
+            fontSize: 12,
+            color: text.hint,
+            fontStyle: "italic",
+          }}>
+            {searchQuery.startsWith("http") ? "Press Enter to navigate to this URI" : "No matches"}
+          </div>
+        )}
+        {!searchQuery && (
+          <div style={{
+            padding: "20px 4px",
+            fontSize: 12,
+            color: text.hint,
+            fontStyle: "italic",
+            lineHeight: 1.6,
+          }}>
+            Type to search for entities in the graph
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null;
+
+  // The detail panel content (only when search is closed)
+  const detailPanel = !showSearch && selectedNode ? (
+    <RawNodeDetailPanel
+      node={selectedNode}
+      edges={visibleEdges}
+      nodes={nodes}
+      onClose={handleClose}
+      onNodeNavigate={handleNodeNavigate}
+    />
+  ) : null;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)" }}>
-      {/* Toolbar */}
+      {/* Minimal toolbar: just the search toggle */}
       <div style={{
         padding: "10px 28px",
         borderBottom: `1px solid ${border.default}`,
@@ -195,28 +283,42 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
         alignItems: "center",
         gap: 12,
       }}>
-        {/* Reset button */}
+        <button
+          onClick={() => setShowSearch(!showSearch)}
+          style={{
+            padding: "5px 12px",
+            borderRadius: 6,
+            border: `1px solid ${showSearch ? palette.cyan + "44" : border.default}`,
+            background: showSearch ? `${palette.cyan}1a` : "transparent",
+            color: showSearch ? palette.cyan : text.subtle,
+            fontSize: 11,
+            fontFamily: "'IBM Plex Mono', monospace",
+            cursor: "pointer",
+            transition: "all 0.2s",
+          }}
+        >
+          ⌕ Search
+        </button>
+
         {visibleNodes.length > 0 && (
           <button
             onClick={handleReset}
             style={{
-              background: "none",
+              padding: "5px 12px",
+              borderRadius: 6,
               border: `1px solid ${border.default}`,
-              borderRadius: 4,
-              padding: "4px 10px",
-              fontSize: 10,
-              fontFamily: "'IBM Plex Mono', monospace",
+              background: "transparent",
               color: text.faint,
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
               cursor: "pointer",
-              flexShrink: 0,
             }}
           >
             Clear
           </button>
         )}
 
-        {/* Loading indicator */}
-        {isFetching && (
+        {isFetching && !showSearch && (
           <span style={{
             fontSize: 10,
             fontFamily: "'IBM Plex Mono', monospace",
@@ -226,140 +328,23 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
           </span>
         )}
 
-        {/* Search */}
-        <div style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            style={{
-              padding: "5px 12px",
-              borderRadius: 6,
-              border: `1px solid ${showSearch ? palette.cyan + "44" : border.default}`,
-              background: showSearch ? `${palette.cyan}1a` : "transparent",
-              color: showSearch ? palette.cyan : text.subtle,
-              fontSize: 11,
-              fontFamily: "'IBM Plex Mono', monospace",
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
-          >
-            ⌕ Search
-          </button>
+        <div style={{ flex: 1 }} />
 
-          {showSearch && (
-            <div style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              marginTop: 4,
-              width: 360,
-              background: "rgba(12,12,18,0.98)",
-              border: `1px solid ${border.medium}`,
-              borderRadius: 8,
-              backdropFilter: "blur(12px)",
-              zIndex: 100,
-              overflow: "hidden",
-            }}>
-              <div style={{ padding: "8px 12px", borderBottom: `1px solid ${border.subtle}` }}>
-                <input
-                  ref={searchRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSearchSubmit();
-                    if (e.key === "Escape") setShowSearch(false);
-                  }}
-                  placeholder="Search the graph..."
-                  style={{
-                    width: "100%",
-                    padding: "8px 0",
-                    border: "none",
-                    outline: "none",
-                    background: "transparent",
-                    color: text.primary,
-                    fontSize: 13,
-                    fontFamily: "'IBM Plex Sans', sans-serif",
-                  }}
-                />
-              </div>
-              {searchResults.length > 0 && (
-                <div style={{ maxHeight: 300, overflowY: "auto" }}>
-                  {searchResults.map((node) => (
-                    <button
-                      key={node.id}
-                      onClick={() => handleSearchSelect(node)}
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "8px 12px",
-                        border: "none",
-                        background: "transparent",
-                        cursor: "pointer",
-                        transition: "background 0.15s",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
-                      }}
-                    >
-                      <div style={{
-                        fontSize: 12,
-                        color: node.color,
-                        fontWeight: 600,
-                      }}>
-                        {node.label}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-              {searchQuery && searchResults.length === 0 && (
-                <div style={{
-                  padding: "16px 12px",
-                  fontSize: 12,
-                  color: text.hint,
-                  fontStyle: "italic",
-                  textAlign: "center",
-                }}>
-                  {searchQuery.startsWith("http") ? "Press Enter to navigate to this URI" : "No matches"}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Predicate filters */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-          <FilterBar
-            items={predicateFilters}
-            selectedKey={activePredicate}
-            onSelect={handlePredicateFilter}
-            stats={stats}
-            showAll
-            allLabel="All predicates"
-            emptyMessage=""
-            maxItems={8}
-          />
-        </div>
+        <span style={{
+          fontSize: 10,
+          fontFamily: "'IBM Plex Mono', monospace",
+          color: text.hint,
+        }}>
+          {stats}
+        </span>
       </div>
 
-      {/* Graph + detail panel */}
+      {/* Graph + side panel (search or detail) */}
       <SplitPane
         height="calc(100vh - 160px)"
-        panelSide="right"
+        panelSide="left"
         panelBorder
-        panel={selectedNode ? (
-          <RawNodeDetailPanel
-            node={selectedNode}
-            edges={visibleEdges}
-            nodes={nodes}
-            onClose={handleClose}
-            onNodeNavigate={handleNodeNavigate}
-          />
-        ) : null}
+        panel={searchPanel || detailPanel}
       >
         {visibleNodes.length > 0 ? (
           <RawGraphCanvas
@@ -381,7 +366,7 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
             fontSize: 13,
             fontStyle: "italic",
           }}>
-            Use search to find a starting node
+            Open search to find entities
           </div>
         )}
       </SplitPane>
