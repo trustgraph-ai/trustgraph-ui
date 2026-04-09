@@ -316,22 +316,49 @@ export function useRawGraphData() {
   const labelsRef = useRef<Map<string, string> | null>(null);
   const labelsBuildingRef = useRef(false);
 
-  // Build the search index: fetch all rdfs:label triples
+  // Build the search index: fetch labels, exclude schema URIs
+  const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+  const SCHEMA_TYPES = new Set([
+    "http://www.w3.org/2002/07/owl#Class",
+    "http://www.w3.org/2002/07/owl#ObjectProperty",
+    "http://www.w3.org/2002/07/owl#DatatypeProperty",
+    "http://www.w3.org/2002/07/owl#AnnotationProperty",
+    "http://www.w3.org/2002/07/owl#Ontology",
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property",
+    "http://www.w3.org/2000/01/rdf-schema#Class",
+  ]);
+
   const buildSearchIndex = useCallback(async () => {
     if (labelsRef.current || labelsBuildingRef.current) return;
     labelsBuildingRef.current = true;
 
     try {
       const api = socket.flow("default");
-      const labelTriples = await api.triplesQuery(
-        undefined, makeIriTerm(RDFS_LABEL), undefined,
-        10000, COLLECTION, "",
-      );
 
+      // Fetch labels and rdf:type triples in parallel
+      const [labelTriples, typeTriples] = await Promise.all([
+        api.triplesQuery(undefined, makeIriTerm(RDFS_LABEL), undefined, 10000, COLLECTION, ""),
+        api.triplesQuery(undefined, makeIriTerm(RDF_TYPE), undefined, 10000, COLLECTION, ""),
+      ]);
+
+      // Identify schema URIs: anything typed as a class, property, or ontology
+      const schemaUris = new Set<string>();
+      for (const triple of typeTriples) {
+        if (isUri(triple.s) && isUri(triple.o)) {
+          if (SCHEMA_TYPES.has(getTermValue(triple.o))) {
+            schemaUris.add(getTermValue(triple.s));
+          }
+        }
+      }
+
+      // Build label index excluding schema URIs
       const labels = new Map<string, string>();
       for (const triple of labelTriples) {
         if (isUri(triple.s)) {
-          labels.set(getTermValue(triple.s), getTermValue(triple.o));
+          const uri = getTermValue(triple.s);
+          if (!schemaUris.has(uri)) {
+            labels.set(uri, getTermValue(triple.o));
+          }
         }
       }
 
