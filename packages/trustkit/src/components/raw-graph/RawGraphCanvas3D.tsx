@@ -45,10 +45,10 @@ function clamp(val: number, min: number, max: number): number {
 
 // ── 3D Force simulation ──────────────────────────────────────────
 
-const REPULSION = 4000;
-const ATTRACTION = 0.012;
-const IDEAL_LENGTH = 250;
-const CENTER_GRAVITY = 0.003;
+const REPULSION = 5000;
+const ATTRACTION = 0.01;
+const IDEAL_LENGTH = 350;
+const CENTER_GRAVITY = 0.002;
 const DAMPING = 0.85;
 const MAX_VELOCITY = 10;
 const SETTLE_THRESHOLD = 0.3;
