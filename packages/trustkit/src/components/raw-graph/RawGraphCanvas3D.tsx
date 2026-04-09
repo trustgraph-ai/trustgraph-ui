@@ -45,15 +45,15 @@ function clamp(val: number, min: number, max: number): number {
 
 // ── 3D Force simulation ──────────────────────────────────────────
 
-const REPULSION = 5000;
-const ATTRACTION = 0.01;
-const IDEAL_LENGTH = 350;
-const CENTER_GRAVITY = 0.002;
+const REPULSION = 6500;
+const ATTRACTION = 0.008;
+const IDEAL_LENGTH = 500;
+const CENTER_GRAVITY = 0.0015;
 const DAMPING = 0.85;
 const MAX_VELOCITY = 10;
 const SETTLE_THRESHOLD = 0.3;
 const WARM_UP_STEPS = 120;
-const PERSPECTIVE_DISTANCE = 800;
+const PERSPECTIVE_DISTANCE = 1600;
 const BASE_NODE_RADIUS = 9;
 
 function stepSimulation3D(
@@ -245,7 +245,7 @@ export function RawGraphCanvas3D({
       // Fallback: sphere distribution
       const phi = Math.acos(2 * ((i / nodes.length) - 0.5));
       const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-      const radius = 200 + Math.random() * 60;
+      const radius = 500 + Math.random() * 150;
       return {
         ...node,
         x: radius * Math.sin(phi) * Math.cos(theta),
