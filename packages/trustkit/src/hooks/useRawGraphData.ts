@@ -230,6 +230,29 @@ export function useRawGraphData() {
         predMapRef.current,
       );
 
+      // Ensure the fetched node itself exists, even if it has no edges
+      if (!nodeMapRef.current.has(uri)) {
+        const { color, glow } = colorForUri(uri);
+        // Check if we got a label from the outgoing triples
+        let label = getLocalName(uri);
+        for (const t of outgoing) {
+          if (getTermValue(t.p) === RDFS_LABEL) {
+            label = getTermValue(t.o);
+            break;
+          }
+        }
+        nodeMapRef.current.set(uri, {
+          id: uri,
+          label,
+          description: "",
+          color,
+          glow,
+          properties: {},
+          outDegree: 0,
+          inDegree: 0,
+        });
+      }
+
       // Snapshot to trigger re-render
       setNodes(new Map(nodeMapRef.current));
       setEdges([...edgeListRef.current]);
