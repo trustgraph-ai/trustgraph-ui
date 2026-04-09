@@ -36,14 +36,14 @@ function clamp(val: number, min: number, max: number): number {
 
 // ── Force simulation ─────────────────────────────────────────────
 
-const REPULSION = 800;
-const ATTRACTION = 0.03;
-const IDEAL_LENGTH = 120;
-const CENTER_GRAVITY = 0.01;
-const DAMPING = 0.88;
-const MAX_VELOCITY = 8;
+const REPULSION = 3000;
+const ATTRACTION = 0.015;
+const IDEAL_LENGTH = 220;
+const CENTER_GRAVITY = 0.003;
+const DAMPING = 0.85;
+const MAX_VELOCITY = 10;
 const SETTLE_THRESHOLD = 0.3;
-const WARM_UP_STEPS = 80;
+const WARM_UP_STEPS = 120;
 
 function stepSimulation(
   graphNodes: RawGraphNode[],
@@ -197,7 +197,7 @@ export function RawGraphCanvas({
 
       // Fallback: ring around centre
       const angle = (Math.PI * 2 * i) / nodes.length;
-      const radius = Math.min(containerSize.width, containerSize.height) * 0.2;
+      const radius = Math.min(containerSize.width, containerSize.height) * 0.35;
       return {
         ...node,
         x: cx + Math.cos(angle) * radius + (Math.random() - 0.5) * 30,
