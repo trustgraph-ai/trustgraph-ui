@@ -20,6 +20,8 @@ export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, E
 export { useGraphData } from "./hooks/useGraphData";
 export { useRawGraphData } from "./hooks/useRawGraphData";
 export type { RawNode, RawEdge, PredicateInfo } from "./hooks/useRawGraphData";
+export { useNodeDetail } from "./hooks/useNodeDetail";
+export type { NodeDetail, NodeProperty, NodeRelationship } from "./hooks/useNodeDetail";
 export { useOntologySchema } from "./hooks/useOntologySchema";
 export type { OntologyClass, OntologyProperty, OntologySchema } from "./hooks/useOntologySchema";
 export { useEntityNeighbourhood } from "./hooks/useEntityNeighbourhood";

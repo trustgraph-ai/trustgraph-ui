@@ -102,7 +102,7 @@ function processTriples(
   }
   for (const [uri, desc] of descriptions) {
     const existing = nodeMap.get(uri);
-    if (existing && !existing.description) {
+    if (existing) {
       existing.description = desc;
     }
   }
@@ -128,7 +128,7 @@ function processTriples(
     const predUri = getTermValue(triple.p);
     const objValue = getTermValue(triple.o);
 
-    if (predUri === RDFS_LABEL || predUri === RDFS_COMMENT || predUri === SKOS_DEFINITION) continue;
+    if (predUri === RDFS_LABEL || predUri === RDFS_COMMENT) continue;
 
     if (isUri(triple.s) && isUri(triple.o)) {
       ensureNode(subUri);

@@ -267,9 +267,8 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
   // The detail panel content
   const detailPanel = selectedNode ? (
     <RawNodeDetailPanel
-      node={selectedNode}
-      edges={visibleEdges}
-      nodes={nodes}
+      uri={selectedNode.id}
+      nodeColor={selectedNode.color}
       onClose={handleClose}
       onNodeNavigate={handleNodeNavigate}
     />

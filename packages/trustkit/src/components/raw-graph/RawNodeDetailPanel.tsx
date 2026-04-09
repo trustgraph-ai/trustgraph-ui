@@ -1,45 +1,23 @@
-import type { RawNode, RawEdge } from "../../hooks/useRawGraphData";
+import { useNodeDetail } from "../../hooks/useNodeDetail";
+import type { NodeRelationship } from "../../hooks/useNodeDetail";
 import { text, border, surface } from "../../theme";
 
 interface RawNodeDetailPanelProps {
-  node: RawNode;
-  edges: RawEdge[];
-  nodes: Map<string, RawNode>;
+  uri: string;
+  nodeColor: string;
   onClose: () => void;
   onNodeNavigate: (uri: string) => void;
 }
 
 export function RawNodeDetailPanel({
-  node,
-  edges,
-  nodes,
+  uri,
+  nodeColor,
   onClose,
   onNodeNavigate,
 }: RawNodeDetailPanelProps) {
-  const outgoing = edges.filter(e => e.from === node.id);
-  const incoming = edges.filter(e => e.to === node.id);
+  const detail = useNodeDetail(uri);
 
-  // Group outgoing by predicate
-  const outByPred = new Map<string, { predicate: string; color: string; targets: RawNode[] }>();
-  for (const edge of outgoing) {
-    if (!outByPred.has(edge.predicateUri)) {
-      outByPred.set(edge.predicateUri, { predicate: edge.predicate, color: edge.color, targets: [] });
-    }
-    const target = nodes.get(edge.to);
-    if (target) outByPred.get(edge.predicateUri)!.targets.push(target);
-  }
-
-  // Group incoming by predicate
-  const inByPred = new Map<string, { predicate: string; color: string; sources: RawNode[] }>();
-  for (const edge of incoming) {
-    if (!inByPred.has(edge.predicateUri)) {
-      inByPred.set(edge.predicateUri, { predicate: edge.predicate, color: edge.color, sources: [] });
-    }
-    const source = nodes.get(edge.from);
-    if (source) inByPred.get(edge.predicateUri)!.sources.push(source);
-  }
-
-  const hasProperties = Object.keys(node.properties).length > 0;
+  if (!detail) return null;
 
   return (
     <div style={{ padding: 24 }}>
@@ -51,7 +29,7 @@ export function RawNodeDetailPanel({
         marginBottom: 16,
       }}>
         <div style={{
-          color: node.color,
+          color: nodeColor,
           fontSize: 11,
           fontFamily: "'IBM Plex Mono', monospace",
           fontWeight: 600,
@@ -81,30 +59,46 @@ export function RawNodeDetailPanel({
         color: "#fff",
         marginBottom: 8,
       }}>
-        {node.label}
+        {detail.label}
       </div>
 
-      {/* Description */}
-      {node.description && (
+      {/* Loading */}
+      {detail.isLoading && (
         <div style={{
-          fontSize: 13,
-          color: text.secondary,
-          lineHeight: 1.6,
+          fontSize: 11,
+          fontFamily: "'IBM Plex Mono', monospace",
+          color: text.hint,
           marginBottom: 12,
         }}>
-          {node.description}
+          loading...
         </div>
       )}
 
-      {/* Spacer before sections */}
-      <div style={{ marginBottom: 20 }} />
+      {/* Descriptions */}
+      {detail.descriptions.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          {detail.descriptions.map((desc, i) => (
+            <div
+              key={i}
+              style={{
+                fontSize: 13,
+                color: text.secondary,
+                lineHeight: 1.6,
+                marginBottom: i < detail.descriptions.length - 1 ? 8 : 0,
+              }}
+            >
+              {desc}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Properties */}
-      {hasProperties && (
+      {detail.properties.length > 0 && (
         <>
           <SectionHeader>PROPERTIES</SectionHeader>
           <div style={{ marginBottom: 20 }}>
-            {Object.entries(node.properties).map(([key, values]) => (
+            {detail.properties.map(({ key, values }) => (
               <div
                 key={key}
                 style={{
@@ -141,17 +135,14 @@ export function RawNodeDetailPanel({
       )}
 
       {/* Outgoing relationships */}
-      {outByPred.size > 0 && (
+      {detail.relationships.filter(r => r.direction === "outgoing").length > 0 && (
         <>
           <SectionHeader>OUTGOING</SectionHeader>
           <div style={{ marginBottom: 20 }}>
-            {Array.from(outByPred.values()).map(({ predicate, color, targets }) => (
-              <PredicateGroup
-                key={predicate}
-                predicate={predicate}
-                color={color}
-                direction="→"
-                entities={targets}
+            {detail.relationships.filter(r => r.direction === "outgoing").map((rel) => (
+              <RelationshipGroup
+                key={rel.predicateUri}
+                rel={rel}
                 onNavigate={onNodeNavigate}
               />
             ))}
@@ -160,17 +151,14 @@ export function RawNodeDetailPanel({
       )}
 
       {/* Incoming relationships */}
-      {inByPred.size > 0 && (
+      {detail.relationships.filter(r => r.direction === "incoming").length > 0 && (
         <>
           <SectionHeader>INCOMING</SectionHeader>
-          <div>
-            {Array.from(inByPred.values()).map(({ predicate, color, sources }) => (
-              <PredicateGroup
-                key={predicate}
-                predicate={predicate}
-                color={color}
-                direction="←"
-                entities={sources}
+          <div style={{ marginBottom: 20 }}>
+            {detail.relationships.filter(r => r.direction === "incoming").map((rel) => (
+              <RelationshipGroup
+                key={rel.predicateUri}
+                rel={rel}
                 onNavigate={onNodeNavigate}
               />
             ))}
@@ -181,14 +169,14 @@ export function RawNodeDetailPanel({
       {/* Navigate button */}
       <div style={{ marginTop: 24 }}>
         <button
-          onClick={() => onNodeNavigate(node.id)}
+          onClick={() => onNodeNavigate(uri)}
           style={{
             width: "100%",
             padding: "10px 16px",
             borderRadius: 8,
-            border: `1px solid ${node.color}44`,
-            background: `${node.color}1a`,
-            color: node.color,
+            border: `1px solid ${nodeColor}44`,
+            background: `${nodeColor}1a`,
+            color: nodeColor,
             fontSize: 12,
             fontFamily: "'IBM Plex Mono', monospace",
             fontWeight: 600,
@@ -220,34 +208,28 @@ function SectionHeader({ children }: { children: string }) {
   );
 }
 
-function PredicateGroup({
-  predicate,
-  color,
-  direction,
-  entities,
+function RelationshipGroup({
+  rel,
   onNavigate,
 }: {
-  predicate: string;
-  color: string;
-  direction: "→" | "←";
-  entities: RawNode[];
+  rel: NodeRelationship;
   onNavigate: (uri: string) => void;
 }) {
+  const arrow = rel.direction === "outgoing" ? "→" : "←";
   return (
     <div style={{ marginBottom: 12 }}>
       <div style={{
         fontSize: 10,
         fontFamily: "'IBM Plex Mono', monospace",
-        color: color,
+        color: text.subtle,
         marginBottom: 4,
-        opacity: 0.8,
       }}>
-        {direction} {predicate}
+        {arrow} {rel.predicate}
       </div>
-      {entities.map((entity) => (
+      {rel.targets.map((target) => (
         <button
-          key={entity.id}
-          onClick={() => onNavigate(entity.id)}
+          key={target.uri}
+          onClick={() => onNavigate(target.uri)}
           style={{
             display: "block",
             width: "100%",
@@ -255,16 +237,16 @@ function PredicateGroup({
             padding: "6px 10px",
             marginBottom: 2,
             borderRadius: 6,
-            border: `1px solid transparent`,
+            border: "1px solid transparent",
             background: surface.card,
-            color: entity.color,
+            color: target.color,
             fontSize: 12,
             fontFamily: "'IBM Plex Sans', sans-serif",
             cursor: "pointer",
             transition: "all 0.2s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = `${entity.color}44`;
+            e.currentTarget.style.borderColor = `${target.color}44`;
             e.currentTarget.style.background = surface.cardHover;
           }}
           onMouseLeave={(e) => {
@@ -272,7 +254,7 @@ function PredicateGroup({
             e.currentTarget.style.background = surface.card;
           }}
         >
-          {entity.label}
+          {target.label}
         </button>
       ))}
     </div>
