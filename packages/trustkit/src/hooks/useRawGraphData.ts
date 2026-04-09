@@ -310,5 +310,64 @@ export function useRawGraphData() {
     }
   }, [socket]);
 
-  return { nodes, edges, predicates, isFetching, isError, error, fetchNeighbourhood, resetCache, findStartNode };
+  // Search for nodes by label across the whole graph
+  const labelsRef = useRef<Map<string, string> | null>(null);
+  const labelsFetchingRef = useRef(false);
+
+  const searchNodes = useCallback(async (query: string): Promise<RawNode[]> => {
+    if (!query.trim()) return [];
+
+    // Fetch all labels once and cache them
+    if (!labelsRef.current && !labelsFetchingRef.current) {
+      labelsFetchingRef.current = true;
+      try {
+        const api = socket.flow("default");
+        const labelTriples = await api.triplesQuery(
+          undefined, makeIriTerm(RDFS_LABEL), undefined,
+          10000, COLLECTION, "",
+        );
+        const labels = new Map<string, string>();
+        for (const triple of labelTriples) {
+          if (isUri(triple.s)) {
+            labels.set(getTermValue(triple.s), getTermValue(triple.o));
+          }
+        }
+        labelsRef.current = labels;
+      } catch {
+        labelsFetchingRef.current = false;
+        return [];
+      }
+    }
+
+    // Wait for labels if another call is fetching them
+    while (labelsFetchingRef.current && !labelsRef.current) {
+      await new Promise(r => setTimeout(r, 50));
+    }
+
+    const labels = labelsRef.current;
+    if (!labels) return [];
+
+    const q = query.toLowerCase();
+    const results: RawNode[] = [];
+    for (const [uri, label] of labels) {
+      if (label.toLowerCase().includes(q)) {
+        // Return a lightweight node for display — full data fetched on select
+        const { color, glow } = colorForUri(uri);
+        results.push({
+          id: uri,
+          label,
+          description: "",
+          color,
+          glow,
+          properties: {},
+          outDegree: 0,
+          inDegree: 0,
+        });
+        if (results.length >= 20) break;
+      }
+    }
+    return results;
+  }, [socket]);
+
+  return { nodes, edges, predicates, isFetching, isError, error, fetchNeighbourhood, resetCache, findStartNode, searchNodes };
 }
