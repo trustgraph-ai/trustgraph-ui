@@ -471,6 +471,25 @@ export function RawGraphCanvas3D({
         onMouseMove={handleMouseMove}
         onContextMenu={handleContextMenu}
       >
+        {/* Bloom filters */}
+        <defs>
+          {/* Soft bloom for nodes */}
+          <filter id="bloom-soft" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+          {/* Strong bloom for highlighted/hovered nodes */}
+          <filter id="bloom-strong" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+          {/* Edge glow */}
+          <filter id="bloom-edge" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
         {/* Grid */}
         <g>{gridLines}</g>
 
@@ -505,7 +524,7 @@ export function RawGraphCanvas3D({
             const py = (1 - t) * (1 - t) * fromP.sy + 2 * (1 - t) * t * my + t * t * toP.sy;
 
             return (
-              <g key={`${edge.from}-${edge.predicate}-${edge.to}-${i}`}>
+              <g key={`${edge.from}-${edge.predicate}-${edge.to}-${i}`} filter={isHighlighted ? "url(#bloom-edge)" : undefined}>
                 <path
                   d={path}
                   stroke={edge.color}
@@ -546,10 +565,15 @@ export function RawGraphCanvas3D({
             const r = BASE_NODE_RADIUS * scale * (isCenter ? 1.3 : isHighlighted || isHovered ? 1.3 : 1);
             const pulseR = isHighlighted && !settled ? Math.sin(time * 3) * 1.5 * scale : 0;
 
+            const bloomFilter = (isHighlighted || isHovered || isCenter)
+              ? "url(#bloom-strong)"
+              : !isDimmed ? "url(#bloom-soft)" : undefined;
+
             return (
               <g
                 key={node.id}
                 style={{ cursor: "pointer" }}
+                filter={bloomFilter}
                 onMouseDown={handleNodeMouseDown}
                 onMouseUp={(e) => handleNodeMouseUp(node, e)}
                 onDoubleClick={(e) => handleNodeDblClick(node.id, e)}
