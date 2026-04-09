@@ -1,5 +1,5 @@
 import type { PromptListItem } from "../../hooks/usePromptList";
-import { text, border, surface, palette } from "../../theme";
+import { text, surface, palette } from "../../theme";
 
 interface PromptListProps {
   prompts: PromptListItem[];

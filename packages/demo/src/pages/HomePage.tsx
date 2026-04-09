@@ -72,6 +72,15 @@ const workflows: WorkflowCard[] = [
     description: "Explore any graph visually — no schema required.",
     detail: "Navigate raw triple graphs with force-directed layout. Start from the most connected node, search for any entity, and explore outward by double-clicking. Filter by predicate type to focus on specific relationship patterns.",
   },
+  {
+    key: "prompts",
+    view: "prompts",
+    title: "Prompt Management",
+    icon: "✎",
+    color: palette.amber,
+    description: "Browse, edit, and test LLM prompt templates.",
+    detail: "View all prompt templates used across the TrustGraph pipeline. Edit templates with syntax-highlighted Jinja markup, test with real variable substitution, and see streaming LLM responses with token counts.",
+  },
 ];
 
 export function HomePage({ onNavigate }: HomePageProps) {
