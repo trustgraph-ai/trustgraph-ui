@@ -1,4 +1,4 @@
-import { Card, SectionLabel, text, surface, border, palette } from "@trustgraph/trustkit";
+import { Card, text, surface, palette } from "@trustgraph/trustkit";
 
 interface WorkflowCard {
   key: string;
@@ -7,7 +7,6 @@ interface WorkflowCard {
   icon: string;
   color: string;
   description: string;
-  detail: string;
   screenshot?: string;
 }
 
@@ -22,8 +21,7 @@ const workflows: WorkflowCard[] = [
     title: "Document Ingestion",
     icon: "⬆",
     color: palette.amber,
-    description: "Load documents into TrustGraph and process them into knowledge.",
-    detail: "Select files, add metadata, upload with progress tracking, then process through a flow to extract entities, triples, and embeddings. Verify results in the graph.",
+    description: "Load documents and process them into knowledge.",
   },
   {
     key: "explore",
@@ -31,8 +29,7 @@ const workflows: WorkflowCard[] = [
     title: "Knowledge Explorer",
     icon: "◈",
     color: palette.emerald,
-    description: "Explore the knowledge graph visually and drill into entities.",
-    detail: "Browse the full entity graph with zoom and pan. Click nodes to see properties and relationships. Follow connections to navigate through the knowledge structure.",
+    description: "Explore the knowledge graph visually.",
   },
   {
     key: "graph-rag",
@@ -40,8 +37,7 @@ const workflows: WorkflowCard[] = [
     title: "Graph RAG Query",
     icon: "◉",
     color: palette.blue,
-    description: "Ask questions answered from the knowledge graph with full provenance.",
-    detail: "Ask a natural language question and watch TrustGraph retrieve relevant entities and edges, select evidence, and synthesise an answer. Trace every fact back to its source.",
+    description: "Ask questions with knowledge graph provenance.",
     screenshot: "/ss-graph-rag.png",
   },
   {
@@ -50,8 +46,7 @@ const workflows: WorkflowCard[] = [
     title: "Agent Query",
     icon: "⚡",
     color: palette.amber,
-    description: "Ask questions answered by a reasoning agent with full provenance.",
-    detail: "Ask a natural language question and watch the agent think, observe, and reason through multiple steps before delivering an answer. Trace every reasoning step and fact back to its source.",
+    description: "Multi-step reasoning agent with provenance.",
   },
   {
     key: "doc-rag",
@@ -59,8 +54,7 @@ const workflows: WorkflowCard[] = [
     title: "Document RAG Query",
     icon: "◉",
     color: palette.purple,
-    description: "Search documents by semantic similarity and get grounded answers.",
-    detail: "Ask a question and find the most relevant document chunks by embedding similarity. The LLM generates an answer grounded in the retrieved content, with source references.",
+    description: "Semantic document search with grounded answers.",
     screenshot: "/ss-doc-rag.png",
   },
   {
@@ -69,8 +63,7 @@ const workflows: WorkflowCard[] = [
     title: "Graph Navigator",
     icon: "◎",
     color: palette.cyan,
-    description: "Explore any graph visually — no schema required.",
-    detail: "Navigate raw triple graphs with force-directed layout. Start from the most connected node, search for any entity, and explore outward by double-clicking. Filter by predicate type to focus on specific relationship patterns.",
+    description: "Explore any graph — no schema required.",
   },
   {
     key: "prompts",
@@ -79,7 +72,6 @@ const workflows: WorkflowCard[] = [
     icon: "✎",
     color: palette.amber,
     description: "Browse, edit, and test LLM prompt templates.",
-    detail: "View all prompt templates used across the TrustGraph pipeline. Edit templates with syntax-highlighted Jinja markup, test with real variable substitution, and see streaming LLM responses with token counts.",
   },
 ];
 
@@ -90,36 +82,32 @@ export function HomePage({ onNavigate }: HomePageProps) {
       height: "calc(100vh - 110px)",
       overflowY: "auto",
     }}>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
         {/* Page header */}
-        <div style={{ marginBottom: 40 }}>
+        <div style={{ marginBottom: 32 }}>
           <h1 style={{
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: 700,
             color: "#fff",
-            marginBottom: 8,
+            marginBottom: 6,
             fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
           }}>
             TrustGraph Workflows
           </h1>
           <p style={{
-            fontSize: 14,
+            fontSize: 13,
             color: text.muted,
-            lineHeight: 1.6,
-            maxWidth: 600,
+            lineHeight: 1.5,
           }}>
-            Complete workflows for building and querying knowledge graphs.
-            Each workflow demonstrates how trustkit components compose to
-            create a full experience.
+            Each workflow demonstrates how trustkit components compose to create a full experience.
           </p>
         </div>
 
-        {/* Workflow grid */}
-        <SectionLabel marginBottom={20}>WORKFLOWS</SectionLabel>
+        {/* Workflow grid — 3 columns */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
-          gap: 16,
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 12,
         }}>
           {workflows.map((wf) => (
             <Card
@@ -128,9 +116,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
               padding={0}
               onClick={wf.view && onNavigate ? () => onNavigate(wf.view!) : undefined}
             >
-              {/* Screenshot thumbnail */}
+              {/* Screenshot thumbnail — compact */}
               <div style={{
-                height: 140,
+                height: 80,
                 overflow: "hidden",
                 borderRadius: "12px 12px 0 0",
                 position: "relative",
@@ -142,7 +130,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
-                    opacity: 0.6,
+                    opacity: 0.5,
                   }}
                 />
                 <div style={{
@@ -153,53 +141,39 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 {/* Icon overlay */}
                 <div style={{
                   position: "absolute",
-                  top: 12,
-                  left: 14,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 8,
+                  top: 8,
+                  left: 10,
+                  width: 28,
+                  height: 28,
+                  borderRadius: 6,
                   background: wf.color + "20",
                   border: `1px solid ${wf.color}44`,
                   backdropFilter: "blur(8px)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 18,
+                  fontSize: 14,
                 }}>
                   {wf.icon}
                 </div>
               </div>
 
               {/* Content */}
-              <div style={{ padding: "16px 20px 20px" }}>
+              <div style={{ padding: "10px 14px 14px" }}>
                 <div style={{
-                  fontSize: 15,
+                  fontSize: 13,
                   fontWeight: 700,
                   color: wf.color,
-                  marginBottom: 6,
+                  marginBottom: 3,
                 }}>
                   {wf.title}
                 </div>
-
                 <div style={{
-                  fontSize: 13,
-                  color: text.secondary,
-                  lineHeight: 1.5,
-                  marginBottom: 12,
+                  fontSize: 11,
+                  color: text.subtle,
+                  lineHeight: 1.4,
                 }}>
                   {wf.description}
-                </div>
-
-                <div style={{
-                  fontSize: 12,
-                  color: text.subtle,
-                  lineHeight: 1.6,
-                  padding: "10px 12px",
-                  background: surface.card,
-                  borderRadius: 6,
-                  border: `1px solid ${border.subtle}`,
-                }}>
-                  {wf.detail}
                 </div>
               </div>
             </Card>
