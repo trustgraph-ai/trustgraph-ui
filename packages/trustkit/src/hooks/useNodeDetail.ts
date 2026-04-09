@@ -21,7 +21,6 @@ export interface NodeRelationship {
 export interface NodeDetail {
   uri: string;
   label: string;
-  descriptions: string[];
   properties: NodeProperty[];
   relationships: NodeRelationship[];
   isLoading: boolean;
@@ -30,10 +29,6 @@ export interface NodeDetail {
 // ── Helpers ──────────────────────────────────────────────────────
 
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
-const RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment";
-const SKOS_DEFINITION = "http://www.w3.org/2004/02/skos/core#definition";
-const DESCRIPTION_PREDICATES = new Set([RDFS_COMMENT, SKOS_DEFINITION]);
-const SKIP_PREDICATES = new Set([RDFS_LABEL, RDFS_COMMENT, SKOS_DEFINITION]);
 
 function getTermValue(term: { t: string; i?: string; v?: string }): string {
   if (term.t === "i") return term.i || "";
@@ -85,7 +80,6 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
       setDetail({
         uri,
         label: getLocalName(uri),
-        descriptions: [],
         properties: [],
         relationships: [],
         isLoading: true,
@@ -129,7 +123,6 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
 
         // Parse outgoing triples
         let label = getLocalName(uri);
-        const descriptions: string[] = [];
         const propMap = new Map<string, string[]>();
         const outRelMap = new Map<string, { predicate: string; predicateUri: string; targets: Set<string> }>();
 
@@ -139,11 +132,6 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
 
           if (pred === RDFS_LABEL) {
             label = obj;
-            continue;
-          }
-
-          if (DESCRIPTION_PREDICATES.has(pred)) {
-            if (!descriptions.includes(obj)) descriptions.push(obj);
             continue;
           }
 
@@ -169,7 +157,7 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
           const pred = getTermValue(triple.p);
           const sub = getTermValue(triple.s);
 
-          if (SKIP_PREDICATES.has(pred)) continue;
+          if (pred === RDFS_LABEL) continue;
 
           if (isUri(triple.s)) {
             if (!inRelMap.has(pred)) {
@@ -211,7 +199,6 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
           setDetail({
             uri,
             label,
-            descriptions,
             properties,
             relationships,
             isLoading: false,

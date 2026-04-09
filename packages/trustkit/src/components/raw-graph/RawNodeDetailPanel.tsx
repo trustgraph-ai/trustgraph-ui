@@ -74,25 +74,6 @@ export function RawNodeDetailPanel({
         </div>
       )}
 
-      {/* Descriptions */}
-      {detail.descriptions.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          {detail.descriptions.map((desc, i) => (
-            <div
-              key={i}
-              style={{
-                fontSize: 13,
-                color: text.secondary,
-                lineHeight: 1.6,
-                marginBottom: i < detail.descriptions.length - 1 ? 8 : 0,
-              }}
-            >
-              {desc}
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Properties */}
       {detail.properties.length > 0 && (
         <>
