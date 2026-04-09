@@ -312,57 +312,32 @@ export function useRawGraphData() {
     }
   }, [socket]);
 
-  // Search index: entity URIs → labels
-  const entityLabelsRef = useRef<Map<string, string> | null>(null);
-  const entityLabelsBuildingRef = useRef(false);
+  // Search index: all labelled URIs
+  const labelsRef = useRef<Map<string, string> | null>(null);
+  const labelsBuildingRef = useRef(false);
 
-  const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-
-  // Build the search index (call with any query — index is built once)
+  // Build the search index: fetch all rdfs:label triples
   const buildSearchIndex = useCallback(async () => {
-    if (entityLabelsRef.current || entityLabelsBuildingRef.current) return;
-    entityLabelsBuildingRef.current = true;
+    if (labelsRef.current || labelsBuildingRef.current) return;
+    labelsBuildingRef.current = true;
 
     try {
       const api = socket.flow("default");
-      const sample = await api.triplesQuery(
-        undefined, undefined, undefined,
+      const labelTriples = await api.triplesQuery(
+        undefined, makeIriTerm(RDFS_LABEL), undefined,
         10000, COLLECTION, "",
       );
 
-      // An entity is a URI that participates in at least one data edge
-      // (URI-to-URI triple where the predicate is not rdf:type/rdfs:label/rdfs:comment)
-      const metaPredicates = new Set([RDF_TYPE, RDFS_LABEL, RDFS_COMMENT]);
-      const entityUris = new Set<string>();
       const labels = new Map<string, string>();
-
-      for (const triple of sample) {
-        const pred = getTermValue(triple.p);
-
-        // Collect labels for later
-        if (pred === RDFS_LABEL && isUri(triple.s)) {
+      for (const triple of labelTriples) {
+        if (isUri(triple.s)) {
           labels.set(getTermValue(triple.s), getTermValue(triple.o));
         }
-
-        // Skip metadata predicates — these don't count as data edges
-        if (metaPredicates.has(pred)) continue;
-
-        // A data edge: both subject and object are URIs
-        if (isUri(triple.s) && isUri(triple.o)) {
-          entityUris.add(getTermValue(triple.s));
-          entityUris.add(getTermValue(triple.o));
-        }
       }
 
-      // Build the final search index: entity URI → label
-      const entityLabels = new Map<string, string>();
-      for (const uri of entityUris) {
-        entityLabels.set(uri, labels.get(uri) || getLocalName(uri));
-      }
-
-      entityLabelsRef.current = entityLabels;
+      labelsRef.current = labels;
     } catch {
-      entityLabelsBuildingRef.current = false;
+      labelsBuildingRef.current = false;
     }
   }, [socket]);
 
@@ -370,7 +345,7 @@ export function useRawGraphData() {
   const searchNodes = useCallback(async (query: string): Promise<RawNode[]> => {
     await buildSearchIndex();
 
-    const labels = entityLabelsRef.current;
+    const labels = labelsRef.current;
     if (!labels) return [];
     if (!query.trim()) return [];
 
