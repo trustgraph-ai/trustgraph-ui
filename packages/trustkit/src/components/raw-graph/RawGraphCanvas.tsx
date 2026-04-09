@@ -555,34 +555,20 @@ export function RawGraphCanvas({
               fontWeight: 700,
               fontSize: 12,
               fontFamily: "'IBM Plex Sans', sans-serif",
-              marginBottom: 4,
+              marginBottom: node.description ? 4 : 4,
             }}>
               {node.label}
             </div>
-            <div style={{
-              color: text.subtle,
-              fontSize: 10,
-              fontFamily: "'IBM Plex Mono', monospace",
-              wordBreak: "break-all",
-              marginBottom: 6,
-            }}>
-              {node.id}
-            </div>
-            <div style={{
-              fontSize: 10,
-              fontFamily: "'IBM Plex Mono', monospace",
-              color: text.faint,
-            }}>
-              {node.outDegree} outgoing · {node.inDegree} incoming
-            </div>
-            {Object.keys(node.properties).length > 0 && (
-              <div style={{ marginTop: 6, borderTop: `1px solid ${border.subtle}`, paddingTop: 6 }}>
-                {Object.entries(node.properties).slice(0, 4).map(([k, vals]) => (
-                  <div key={k} style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace" }}>
-                    <span style={{ color: text.faint }}>{k}:</span>{" "}
-                    <span style={{ color: text.secondary }}>{vals[0]}</span>
-                  </div>
-                ))}
+            {node.description && (
+              <div style={{
+                color: text.secondary,
+                fontSize: 11,
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                lineHeight: 1.4,
+              }}>
+                {node.description.length > 120
+                  ? node.description.slice(0, 120) + "…"
+                  : node.description}
               </div>
             )}
           </div>

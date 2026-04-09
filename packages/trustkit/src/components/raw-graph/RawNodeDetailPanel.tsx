@@ -84,30 +84,20 @@ export function RawNodeDetailPanel({
         {node.label}
       </div>
 
-      {/* URI */}
-      <div style={{
-        fontSize: 10,
-        fontFamily: "'IBM Plex Mono', monospace",
-        color: text.subtle,
-        wordBreak: "break-all",
-        marginBottom: 6,
-        padding: "8px 10px",
-        background: surface.card,
-        borderRadius: 6,
-        border: `1px solid ${border.subtle}`,
-      }}>
-        {node.id}
-      </div>
+      {/* Description */}
+      {node.description && (
+        <div style={{
+          fontSize: 13,
+          color: text.secondary,
+          lineHeight: 1.6,
+          marginBottom: 12,
+        }}>
+          {node.description}
+        </div>
+      )}
 
-      {/* Degree stats */}
-      <div style={{
-        fontSize: 10,
-        fontFamily: "'IBM Plex Mono', monospace",
-        color: text.faint,
-        marginBottom: 20,
-      }}>
-        {node.outDegree} outgoing · {node.inDegree} incoming
-      </div>
+      {/* Spacer before sections */}
+      <div style={{ marginBottom: 20 }} />
 
       {/* Properties */}
       {hasProperties && (

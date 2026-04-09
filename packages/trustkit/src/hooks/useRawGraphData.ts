@@ -10,6 +10,7 @@ import { getLocalName } from "../utils/uri";
 export interface RawNode {
   id: string;
   label: string;
+  description: string;
   color: string;
   glow: string;
   properties: Record<string, string[]>;
@@ -35,6 +36,7 @@ export interface PredicateInfo {
 // ── Helpers ──────────────────────────────────────────────────────
 
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
+const RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment";
 
 function getTermValue(term: { t: string; i?: string; v?: string }): string {
   if (term.t === "i") return term.i || "";
@@ -115,12 +117,15 @@ export function useRawGraphData() {
 
     if (isLoading || !triples) return empty;
 
-    // Pass 1: collect labels
+    // Pass 1: collect labels and descriptions
     const labels = new Map<string, string>();
+    const descriptions = new Map<string, string>();
     for (const triple of triples) {
       const pred = getTermValue(triple.p);
       if (pred === RDFS_LABEL) {
         labels.set(getTermValue(triple.s), getTermValue(triple.o));
+      } else if (pred === RDFS_COMMENT) {
+        descriptions.set(getTermValue(triple.s), getTermValue(triple.o));
       }
     }
 
@@ -138,6 +143,7 @@ export function useRawGraphData() {
       nodeMap.set(uri, {
         id: uri,
         label: labels.get(uri) || getLocalName(uri),
+        description: descriptions.get(uri) || "",
         color,
         glow,
         properties: {},
@@ -151,8 +157,8 @@ export function useRawGraphData() {
       const predUri = getTermValue(triple.p);
       const objValue = getTermValue(triple.o);
 
-      // Skip label triples from the edge list
-      if (predUri === RDFS_LABEL) continue;
+      // Skip label and description triples — they're first-class fields
+      if (predUri === RDFS_LABEL || predUri === RDFS_COMMENT) continue;
 
       if (isUri(triple.s) && isUri(triple.o)) {
         // URI-to-URI: this is an edge
