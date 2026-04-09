@@ -108,9 +108,11 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
   }, [nodes, pendingSelectUri, selectedNode, onNodeSelect]);
 
   const handleNodeClick = useCallback((node: RawNode) => {
-    setSelectedNode(prev => prev?.id === node.id ? null : node);
-    onNodeSelect?.(node);
-  }, [onNodeSelect]);
+    // Always look up from the nodes map for the freshest data
+    const fresh = nodes.get(node.id) || node;
+    setSelectedNode(prev => prev?.id === node.id ? null : fresh);
+    onNodeSelect?.(fresh);
+  }, [onNodeSelect, nodes]);
 
   const handleClose = useCallback(() => {
     setSelectedNode(null);
@@ -262,8 +264,8 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
     </div>
   ) : null;
 
-  // The detail panel content (only when search is closed)
-  const detailPanel = !showSearch && selectedNode ? (
+  // The detail panel content
+  const detailPanel = selectedNode ? (
     <RawNodeDetailPanel
       node={selectedNode}
       edges={visibleEdges}
@@ -339,36 +341,43 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
         </span>
       </div>
 
-      {/* Graph + side panel (search or detail) */}
+      {/* Graph + side panels */}
       <SplitPane
         height="calc(100vh - 160px)"
         panelSide="left"
         panelBorder
-        panel={searchPanel || detailPanel}
+        panel={searchPanel}
       >
-        {visibleNodes.length > 0 ? (
-          <RawGraphCanvas
-            nodes={visibleNodes}
-            edges={visibleEdges}
-            centerUri={centerUri}
-            highlightedNodes={highlightedNodes}
-            activePredicate={activePredicate}
-            onNodeClick={handleNodeClick}
-            onNodeNavigate={handleNodeNavigate}
-          />
-        ) : (
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            color: text.hint,
-            fontSize: 13,
-            fontStyle: "italic",
-          }}>
-            Open search to find entities
-          </div>
-        )}
+        <SplitPane
+          height="100%"
+          panelSide="right"
+          panelBorder
+          panel={detailPanel}
+        >
+          {visibleNodes.length > 0 ? (
+            <RawGraphCanvas
+              nodes={visibleNodes}
+              edges={visibleEdges}
+              centerUri={centerUri}
+              highlightedNodes={highlightedNodes}
+              activePredicate={activePredicate}
+              onNodeClick={handleNodeClick}
+              onNodeNavigate={handleNodeNavigate}
+            />
+          ) : (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              color: text.hint,
+              fontSize: 13,
+              fontStyle: "italic",
+            }}>
+              Open search to find entities
+            </div>
+          )}
+        </SplitPane>
       </SplitPane>
     </div>
   );
