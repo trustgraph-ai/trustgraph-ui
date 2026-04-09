@@ -146,84 +146,46 @@ export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerPr
         gap: 12,
         flexWrap: "wrap",
       }}>
-        {/* Exploration trail */}
-        {exploredUris.length > 0 && (
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            marginRight: 8,
-            overflow: "hidden",
-          }}>
-            <div style={{
-              fontSize: 10,
-              fontFamily: "'IBM Plex Mono', monospace",
-              color: text.faint,
-              letterSpacing: "0.1em",
-              flexShrink: 0,
-            }}>
-              TRAIL:
-            </div>
-            {exploredUris.slice(-4).map((uri, i, arr) => {
-              const n = nodes.get(uri);
-              if (!n) return null;
-              const isLast = i === arr.length - 1;
-              return (
-                <span key={uri} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  {i > 0 && <span style={{ color: text.hint, fontSize: 10 }}>→</span>}
-                  <button
-                    onClick={() => {
-                      const targetNode = nodes.get(uri) || null;
-                      setSelectedNode(targetNode);
-                      onNodeSelect?.(targetNode);
-                    }}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      padding: "2px 6px",
-                      borderRadius: 4,
-                      fontSize: 11,
-                      fontWeight: isLast ? 600 : 400,
-                      color: isLast ? n.color : text.subtle,
-                      fontFamily: "'IBM Plex Sans', sans-serif",
-                      cursor: "pointer",
-                      transition: "color 0.15s",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {n.label}
-                  </button>
-                </span>
-              );
-            })}
-            {exploredUris.length > 1 && (
-              <button
-                onClick={() => {
-                  if (exploredUris.length > 0) {
-                    setExploredUris([exploredUris[exploredUris.length - 1]]);
+        {/* Current node + reset */}
+        {centerUri && (() => {
+          const n = nodes.get(centerUri);
+          if (!n) return null;
+          return (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              <span style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: n.color,
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                whiteSpace: "nowrap",
+              }}>
+                {n.label}
+              </span>
+              {exploredUris.length > 1 && (
+                <button
+                  onClick={() => {
+                    setExploredUris([centerUri]);
                     setSelectedNode(null);
                     setActivePredicate(null);
                     onNodeSelect?.(null);
-                  }
-                }}
-                style={{
-                  background: "none",
-                  border: `1px solid ${border.default}`,
-                  borderRadius: 4,
-                  padding: "2px 8px",
-                  fontSize: 10,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  color: text.faint,
-                  cursor: "pointer",
-                  flexShrink: 0,
-                  marginLeft: 4,
-                }}
-              >
-                Reset
-              </button>
-            )}
-          </div>
-        )}
+                  }}
+                  style={{
+                    background: "none",
+                    border: `1px solid ${border.default}`,
+                    borderRadius: 4,
+                    padding: "2px 8px",
+                    fontSize: 10,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    color: text.faint,
+                    cursor: "pointer",
+                  }}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Search toggle */}
         <div style={{ position: "relative" }}>
