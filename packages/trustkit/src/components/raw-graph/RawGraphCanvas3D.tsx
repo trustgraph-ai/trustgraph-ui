@@ -124,12 +124,40 @@ function stepSimulation3D(
 
 // ── Camera & projection ──────────────────────────────────────────
 
+// 3x3 rotation matrix stored as flat array [row-major]
+type Mat3 = [number, number, number, number, number, number, number, number, number];
+
+function mat3Multiply(a: Mat3, b: Mat3): Mat3 {
+  return [
+    a[0]*b[0] + a[1]*b[3] + a[2]*b[6], a[0]*b[1] + a[1]*b[4] + a[2]*b[7], a[0]*b[2] + a[1]*b[5] + a[2]*b[8],
+    a[3]*b[0] + a[4]*b[3] + a[5]*b[6], a[3]*b[1] + a[4]*b[4] + a[5]*b[7], a[3]*b[2] + a[4]*b[5] + a[5]*b[8],
+    a[6]*b[0] + a[7]*b[3] + a[8]*b[6], a[6]*b[1] + a[7]*b[4] + a[8]*b[7], a[6]*b[2] + a[7]*b[5] + a[8]*b[8],
+  ];
+}
+
+function mat3RotX(angle: number): Mat3 {
+  const c = Math.cos(angle), s = Math.sin(angle);
+  return [1, 0, 0, 0, c, -s, 0, s, c];
+}
+
+function mat3RotY(angle: number): Mat3 {
+  const c = Math.cos(angle), s = Math.sin(angle);
+  return [c, 0, s, 0, 1, 0, -s, 0, c];
+}
+
+function mat3Apply(m: Mat3, x: number, y: number, z: number): [number, number, number] {
+  return [
+    m[0]*x + m[1]*y + m[2]*z,
+    m[3]*x + m[4]*y + m[5]*z,
+    m[6]*x + m[7]*y + m[8]*z,
+  ];
+}
+
 interface Camera {
-  rotX: number;  // pitch (radians)
-  rotY: number;  // yaw (radians)
+  rot: Mat3;     // accumulated rotation matrix
   panX: number;
   panY: number;
-  zoom: number;  // distance multiplier
+  zoom: number;
 }
 
 function project(
@@ -138,19 +166,8 @@ function project(
   cx: number,
   cy: number,
 ): Projected {
-  // Rotate around Y axis (yaw)
-  const cosY = Math.cos(camera.rotY);
-  const sinY = Math.sin(camera.rotY);
-  let x = node.x * cosY + node.z * sinY;
-  const z1 = -node.x * sinY + node.z * cosY;
-  let y = node.y;
-
-  // Rotate around X axis (pitch)
-  const cosX = Math.cos(camera.rotX);
-  const sinX = Math.sin(camera.rotX);
-  const y2 = y * cosX - z1 * sinX;
-  const z2 = y * sinX + z1 * cosX;
-  y = y2;
+  // Apply rotation matrix
+  const [x, y, z2] = mat3Apply(camera.rot, node.x, node.y, node.z);
 
   // Perspective projection
   const d = PERSPECTIVE_DISTANCE * camera.zoom;
@@ -184,14 +201,13 @@ export function RawGraphCanvas3D({
   const [time, setTime] = useState(0);
   const animRef = useRef<number>(0);
 
-  // Camera state
-  const [camera, setCamera] = useState<Camera>({
-    rotX: 0.3,
-    rotY: 0.5,
+  // Camera state — start with a slight tilt so you see depth immediately
+  const [camera, setCamera] = useState<Camera>(() => ({
+    rot: mat3Multiply(mat3RotX(0.3), mat3RotY(0.5)),
     panX: 0,
     panY: 0,
     zoom: 1,
-  });
+  }));
   const isDraggingRef = useRef<false | "rotate" | "pan" | "zoom">(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
 
@@ -370,11 +386,14 @@ export function RawGraphCanvas3D({
     lastMouseRef.current = { x: e.clientX, y: e.clientY };
 
     if (isDraggingRef.current === "rotate") {
-      setCamera(c => ({
-        ...c,
-        rotY: c.rotY - dx * 0.005,
-        rotX: clamp(c.rotX + dy * 0.005, -Math.PI / 2, Math.PI / 2),
-      }));
+      // Apply incremental rotations in screen space:
+      // horizontal drag = rotate around screen Y axis
+      // vertical drag = rotate around screen X axis
+      setCamera(c => {
+        const incY = mat3RotY(-dx * 0.005);
+        const incX = mat3RotX(dy * 0.005);
+        return { ...c, rot: mat3Multiply(mat3Multiply(incX, incY), c.rot) };
+      });
     } else if (isDraggingRef.current === "pan") {
       setCamera(c => ({
         ...c,
@@ -407,7 +426,7 @@ export function RawGraphCanvas3D({
   }, []);
 
   const handleResetView = useCallback(() => {
-    setCamera({ rotX: 0.3, rotY: 0.5, panX: 0, panY: 0, zoom: 1 });
+    setCamera({ rot: mat3Multiply(mat3RotX(0.3), mat3RotY(0.5)), panX: 0, panY: 0, zoom: 1 });
   }, []);
 
   // ── Node click (needs to not fire on drag) ─────────────────────
