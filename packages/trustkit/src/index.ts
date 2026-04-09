@@ -9,11 +9,17 @@ export type { ExplainGraphNode, ExplainGraphEdge } from "./components/graph";
 // Components — knowledge
 export { EntityBadge, EntityProperties, EntityRelationships, GraphExplorer } from "./components/knowledge";
 
+// Components — raw graph
+export { RawGraphCanvas, RawNodeDetailPanel, RawGraphExplorer } from "./components/raw-graph";
+export type { RawGraphNode } from "./components/raw-graph";
+
 // Components — explain
 export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, ExplainDAG, SourceLinkBadge, SourcePanel, SimpleRagView, RagWithSourcesView, RagWithTimelineView, GraphRagView, RagExplainView, RagFullExplainView, AgentStepCard, AgentStepList, SimpleAgentView, AgentWithTimelineView, AgentExplainView, AgentFullExplainView, SimpleDocRagView, DocRagExplainView, DocRagFullExplainView } from "./components/explain";
 
 // Hooks
 export { useGraphData } from "./hooks/useGraphData";
+export { useRawGraphData, getNeighbourhood } from "./hooks/useRawGraphData";
+export type { RawNode, RawEdge, PredicateInfo } from "./hooks/useRawGraphData";
 export { useOntologySchema } from "./hooks/useOntologySchema";
 export type { OntologyClass, OntologyProperty, OntologySchema } from "./hooks/useOntologySchema";
 export { useEntityNeighbourhood } from "./hooks/useEntityNeighbourhood";

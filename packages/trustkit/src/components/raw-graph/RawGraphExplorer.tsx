@@ -1,0 +1,335 @@
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useRawGraphData, getNeighbourhood } from "../../hooks/useRawGraphData";
+import type { RawNode } from "../../hooks/useRawGraphData";
+import { RawGraphCanvas } from "./RawGraphCanvas";
+import { RawNodeDetailPanel } from "./RawNodeDetailPanel";
+import { LoadingState, SplitPane, FilterBar } from "../common";
+import type { FilterItem } from "../common";
+import { text, palette, border } from "../../theme";
+
+interface RawGraphExplorerProps {
+  /** Neighbourhood depth from center node (default 2) */
+  depth?: number;
+  /** Callback when a node is selected */
+  onNodeSelect?: (node: RawNode | null) => void;
+}
+
+export function RawGraphExplorer({ depth = 2, onNodeSelect }: RawGraphExplorerProps) {
+  const { nodes, edges, predicates, startNode, isLoading, isError, error } = useRawGraphData();
+
+  const [centerUri, setCenterUri] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<RawNode | null>(null);
+  const [activePredicate, setActivePredicate] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Set initial center when data loads
+  useEffect(() => {
+    if (startNode && !centerUri) {
+      setCenterUri(startNode);
+    }
+  }, [startNode, centerUri]);
+
+  // Compute visible neighbourhood
+  const { visibleNodes, visibleEdges } = useMemo(() => {
+    if (!centerUri || nodes.size === 0) {
+      return { visibleNodes: [], visibleEdges: [] };
+    }
+    return getNeighbourhood(centerUri, nodes, edges, depth);
+  }, [centerUri, nodes, edges, depth]);
+
+  // Compute highlighted nodes (selected + its direct connections)
+  const highlightedNodes = useMemo(() => {
+    if (!selectedNode) return [];
+    const ids = [selectedNode.id];
+    for (const edge of visibleEdges) {
+      if (edge.from === selectedNode.id) ids.push(edge.to);
+      if (edge.to === selectedNode.id) ids.push(edge.from);
+    }
+    return ids;
+  }, [selectedNode, visibleEdges]);
+
+  // Predicate filter items from visible edges
+  const predicateFilters: FilterItem[] = useMemo(() => {
+    const predCounts = new Map<string, number>();
+    for (const edge of visibleEdges) {
+      predCounts.set(edge.predicateUri, (predCounts.get(edge.predicateUri) || 0) + 1);
+    }
+
+    const items: FilterItem[] = [];
+    for (const [uri, count] of predCounts) {
+      const info = predicates.get(uri);
+      if (info) {
+        items.push({
+          key: uri,
+          label: `${info.label} (${count})`,
+          color: info.color,
+        });
+      }
+    }
+    return items.sort((a, b) => a.label.localeCompare(b.label));
+  }, [visibleEdges, predicates]);
+
+  // Search results
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    const results: RawNode[] = [];
+    for (const [, node] of nodes) {
+      if (node.label.toLowerCase().includes(q) || node.id.toLowerCase().includes(q)) {
+        results.push(node);
+        if (results.length >= 20) break;
+      }
+    }
+    return results;
+  }, [searchQuery, nodes]);
+
+  // Stats
+  const stats = `${visibleNodes.length} nodes · ${visibleEdges.length} edges`;
+
+  // Handlers
+  const handleNodeClick = useCallback((node: RawNode) => {
+    setSelectedNode(prev => prev?.id === node.id ? null : node);
+    onNodeSelect?.(node);
+  }, [onNodeSelect]);
+
+  const handleNodeNavigate = useCallback((uri: string) => {
+    setCenterUri(uri);
+    setSelectedNode(null);
+    setActivePredicate(null);
+    onNodeSelect?.(null);
+  }, [onNodeSelect]);
+
+  const handleClose = useCallback(() => {
+    setSelectedNode(null);
+    onNodeSelect?.(null);
+  }, [onNodeSelect]);
+
+  const handlePredicateFilter = useCallback((key: string | null) => {
+    setActivePredicate(prev => prev === key ? null : key);
+  }, []);
+
+  const handleSearchSelect = useCallback((node: RawNode) => {
+    setCenterUri(node.id);
+    setSelectedNode(null);
+    setActivePredicate(null);
+    setSearchQuery("");
+    setShowSearch(false);
+  }, []);
+
+  // Focus search on toggle
+  useEffect(() => {
+    if (showSearch && searchRef.current) {
+      searchRef.current.focus();
+    }
+  }, [showSearch]);
+
+  if (isLoading) return <LoadingState />;
+  if (isError) return <LoadingState variant="error" message={error?.message || "Failed to load graph"} />;
+  if (nodes.size === 0) return <LoadingState variant="error" message="No triples found in the graph" />;
+
+  const centerNode = centerUri ? nodes.get(centerUri) : null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)" }}>
+      {/* Toolbar: centre node info + search + predicate filters */}
+      <div style={{
+        padding: "10px 28px",
+        borderBottom: `1px solid ${border.default}`,
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        flexWrap: "wrap",
+      }}>
+        {/* Centre node indicator */}
+        {centerNode && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginRight: 8,
+          }}>
+            <div style={{
+              fontSize: 10,
+              fontFamily: "'IBM Plex Mono', monospace",
+              color: text.faint,
+              letterSpacing: "0.1em",
+            }}>
+              CENTRE:
+            </div>
+            <div style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: centerNode.color,
+              fontFamily: "'IBM Plex Sans', sans-serif",
+            }}>
+              {centerNode.label}
+            </div>
+          </div>
+        )}
+
+        {/* Search toggle */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            style={{
+              padding: "5px 12px",
+              borderRadius: 6,
+              border: `1px solid ${showSearch ? palette.cyan + "44" : border.default}`,
+              background: showSearch ? `${palette.cyan}1a` : "transparent",
+              color: showSearch ? palette.cyan : text.subtle,
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            ⌕ Search
+          </button>
+
+          {/* Search dropdown */}
+          {showSearch && (
+            <div style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              marginTop: 4,
+              width: 360,
+              background: "rgba(12,12,18,0.98)",
+              border: `1px solid ${border.medium}`,
+              borderRadius: 8,
+              backdropFilter: "blur(12px)",
+              zIndex: 100,
+              overflow: "hidden",
+            }}>
+              <div style={{ padding: "8px 12px", borderBottom: `1px solid ${border.subtle}` }}>
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search nodes by label or URI..."
+                  style={{
+                    width: "100%",
+                    padding: "8px 0",
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    color: text.primary,
+                    fontSize: 13,
+                    fontFamily: "'IBM Plex Sans', sans-serif",
+                  }}
+                />
+              </div>
+              {searchResults.length > 0 && (
+                <div style={{ maxHeight: 300, overflowY: "auto" }}>
+                  {searchResults.map((node) => (
+                    <button
+                      key={node.id}
+                      onClick={() => handleSearchSelect(node)}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "8px 12px",
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
+                        transition: "background 0.15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      <div style={{
+                        fontSize: 12,
+                        color: node.color,
+                        fontWeight: 600,
+                      }}>
+                        {node.label}
+                      </div>
+                      <div style={{
+                        fontSize: 10,
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        color: text.hint,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}>
+                        {node.id}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {searchQuery && searchResults.length === 0 && (
+                <div style={{
+                  padding: "16px 12px",
+                  fontSize: 12,
+                  color: text.hint,
+                  fontStyle: "italic",
+                  textAlign: "center",
+                }}>
+                  No nodes found
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Depth indicator */}
+        <div style={{
+          fontSize: 10,
+          fontFamily: "'IBM Plex Mono', monospace",
+          color: text.hint,
+        }}>
+          depth {depth}
+        </div>
+
+        {/* Predicate filters */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+          <FilterBar
+            items={predicateFilters}
+            selectedKey={activePredicate}
+            onSelect={handlePredicateFilter}
+            stats={stats}
+            showAll
+            allLabel="All predicates"
+            emptyMessage=""
+            maxItems={8}
+          />
+        </div>
+      </div>
+
+      {/* Graph + detail panel */}
+      <SplitPane
+        height="calc(100vh - 160px)"
+        panelSide="right"
+        panelBorder
+        panel={selectedNode ? (
+          <RawNodeDetailPanel
+            node={selectedNode}
+            edges={visibleEdges}
+            nodes={nodes}
+            onClose={handleClose}
+            onNodeNavigate={handleNodeNavigate}
+          />
+        ) : null}
+      >
+        <RawGraphCanvas
+          nodes={visibleNodes}
+          edges={visibleEdges}
+          centerUri={centerUri}
+          highlightedNodes={highlightedNodes}
+          activePredicate={activePredicate}
+          onNodeClick={handleNodeClick}
+          onNodeNavigate={handleNodeNavigate}
+        />
+      </SplitPane>
+    </div>
+  );
+}

@@ -63,6 +63,15 @@ const workflows: WorkflowCard[] = [
     detail: "Ask a question and find the most relevant document chunks by embedding similarity. The LLM generates an answer grounded in the retrieved content, with source references.",
     screenshot: "/ss-doc-rag.png",
   },
+  {
+    key: "raw-graph",
+    view: "raw-graph",
+    title: "Graph Navigator",
+    icon: "◎",
+    color: palette.cyan,
+    description: "Explore any graph visually — no schema required.",
+    detail: "Navigate raw triple graphs with force-directed layout. Start from the most connected node, search for any entity, and explore outward by double-clicking. Filter by predicate type to focus on specific relationship patterns.",
+  },
 ];
 
 export function HomePage({ onNavigate }: HomePageProps) {
