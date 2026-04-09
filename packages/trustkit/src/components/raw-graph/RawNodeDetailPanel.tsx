@@ -147,27 +147,6 @@ export function RawNodeDetailPanel({
         </>
       )}
 
-      {/* Navigate button */}
-      <div style={{ marginTop: 24 }}>
-        <button
-          onClick={() => onNodeNavigate(uri)}
-          style={{
-            width: "100%",
-            padding: "10px 16px",
-            borderRadius: 8,
-            border: `1px solid ${nodeColor}44`,
-            background: `${nodeColor}1a`,
-            color: nodeColor,
-            fontSize: 12,
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "all 0.2s",
-          }}
-        >
-          Centre graph on this node →
-        </button>
-      </div>
     </div>
   );
 }
