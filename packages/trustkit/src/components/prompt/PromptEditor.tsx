@@ -42,9 +42,17 @@ export function PromptEditor({
     setSchemaError(null);
   }, [data]);
 
+  const originalSchema =
+    data.responseType === "json" && data.schema
+      ? JSON.stringify(data.schema, null, 2)
+      : data.responseType === "jsonl" && data.objectSchema
+      ? JSON.stringify(data.objectSchema, null, 2)
+      : "";
+
   const isDirty =
     promptText !== data.prompt ||
-    responseType !== data.responseType;
+    responseType !== data.responseType ||
+    schemaText !== originalSchema;
 
   const handleSave = () => {
     let schema: object | undefined;
