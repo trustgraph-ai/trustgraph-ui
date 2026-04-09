@@ -10,7 +10,7 @@ export type { ExplainGraphNode, ExplainGraphEdge } from "./components/graph";
 export { EntityBadge, EntityProperties, EntityRelationships, GraphExplorer } from "./components/knowledge";
 
 // Components — raw graph
-export { RawGraphCanvas, RawNodeDetailPanel, RawNodeSearch, SimpleRawGraphView, RawGraphWithDetail, RawGraphWithSearch, RawGraphExplorer } from "./components/raw-graph";
+export { RawGraphCanvas, RawGraphCanvas3D, RawNodeDetailPanel, RawNodeSearch, SimpleRawGraphView, RawGraphWithDetail, RawGraphWithSearch, RawGraphExplorer, RawGraphExplorer3D } from "./components/raw-graph";
 export type { RawGraphNode } from "./components/raw-graph";
 
 // Components — explain

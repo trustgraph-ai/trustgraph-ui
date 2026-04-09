@@ -4,6 +4,7 @@ import {
   RawGraphWithDetail,
   RawGraphWithSearch,
   RawGraphExplorer,
+  RawGraphExplorer3D,
   ModeSelector,
   SectionLabel,
   text,
@@ -12,13 +13,14 @@ import {
 } from "@trustgraph/trustkit";
 import { DevPanel } from "../components/DevPanel";
 
-type GraphMode = "simple" | "detail" | "search" | "full";
+type GraphMode = "simple" | "detail" | "search" | "full" | "3d";
 
 const modes = [
   { key: "simple", label: "Simple" },
   { key: "detail", label: "Detail Panel" },
   { key: "search", label: "Search" },
   { key: "full", label: "Full Explorer" },
+  { key: "3d", label: "3D" },
 ];
 
 const modeDescriptions: Record<GraphMode, string> = {
@@ -26,6 +28,7 @@ const modeDescriptions: Record<GraphMode, string> = {
   detail: "Graph with a detail panel for inspecting node properties.",
   search: "Graph with search to find and add entities.",
   full: "Full explorer with search, detail panel, and toolbar.",
+  "3d": "3D force-directed graph with perspective projection.",
 };
 
 /**
@@ -66,6 +69,7 @@ export function RawGraphPage() {
       {mode === "detail" && <RawGraphWithDetail />}
       {mode === "search" && <RawGraphWithSearch />}
       {mode === "full" && <RawGraphExplorer />}
+      {mode === "3d" && <RawGraphExplorer3D />}
 
       <DevPanel
         explanation="This page demonstrates 4 levels of composition for schema-free graph navigation. All use the same Tier 1 hooks — the difference is which Tier 2 pieces they include. Use the selector above to switch."
@@ -95,6 +99,12 @@ export function RawGraphPage() {
             code: `import { RawGraphExplorer } from "@trustgraph/trustkit";
 
 <RawGraphExplorer />`,
+          },
+          {
+            label: "Option 5: 3D explorer",
+            code: `import { RawGraphExplorer3D } from "@trustgraph/trustkit";
+
+<RawGraphExplorer3D />`,
           },
           {
             label: "Custom: Tier 1 + Tier 2",
@@ -140,11 +150,13 @@ function MyGraph() {
           },
         ]}
         components={[
+          { name: "RawGraphExplorer3D", tier: "3", description: "Full 3D explorer: search + 3D canvas + detail" },
           { name: "RawGraphExplorer", tier: "3", description: "Full explorer: search + canvas + detail" },
           { name: "RawGraphWithSearch", tier: "3", description: "Canvas + search panel" },
           { name: "RawGraphWithDetail", tier: "3", description: "Canvas + detail panel" },
           { name: "SimpleRawGraphView", tier: "3", description: "Just the canvas" },
-          { name: "RawGraphCanvas", tier: "2", description: "Force-directed SVG graph renderer" },
+          { name: "RawGraphCanvas", tier: "2", description: "2D force-directed SVG graph renderer" },
+          { name: "RawGraphCanvas3D", tier: "2", description: "3D force-directed graph with perspective projection" },
           { name: "RawNodeDetailPanel", tier: "2", description: "Node properties and relationships" },
           { name: "RawNodeSearch", tier: "2", description: "Entity search panel" },
         ]}
