@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useConfigItem } from "../../hooks/useConfigItem";
 import { useConfigItems } from "../../hooks/useConfigItems";
+import { useMcpToolInvoke } from "../../hooks/useMcpToolInvoke";
 import type { SelectedItem, AgentPattern, AgentTaskType, AgentTool, McpTool, ToolService } from "./types";
 import { LoadingState } from "../common";
 import { text, border, surface, palette } from "../../theme";
@@ -79,7 +80,7 @@ function Editor({ selected }: { selected: SelectedItem }) {
         <ToolFields data={data as AgentTool} onSave={save} isSaving={isSaving} saveError={saveError} />
       )}
       {selected.kind === "mcp" && (
-        <McpToolFields data={data as McpTool} onSave={save} isSaving={isSaving} saveError={saveError} />
+        <McpToolFields data={data as McpTool} onSave={save} isSaving={isSaving} saveError={saveError} itemKey={selected.key} />
       )}
       {selected.kind === "tool-service" && (
         <ToolServiceFields data={data as ToolService} onSave={save} isSaving={isSaving} saveError={saveError} />
@@ -458,7 +459,7 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
 
 // ── MCP Tool fields ──────────────────────────────────────────────
 
-function McpToolFields({ data, onSave, isSaving, saveError }: FieldsProps<McpTool>) {
+function McpToolFields({ data, onSave, isSaving, saveError, itemKey }: FieldsProps<McpTool> & { itemKey: string }) {
   const [remoteName, setRemoteName] = useState(data["remote-name"] || "");
   const [url, setUrl] = useState(data.url || "");
   const [authToken, setAuthToken] = useState(data["auth-token"] || "");
@@ -485,7 +486,142 @@ function McpToolFields({ data, onSave, isSaving, saveError }: FieldsProps<McpToo
         isSaving={isSaving}
         saveError={saveError}
       />
+
+      {/* Test panel */}
+      <McpToolTester toolKey={itemKey} />
     </>
+  );
+}
+
+function McpToolTester({ toolKey }: { toolKey: string }) {
+  const [paramsJson, setParamsJson] = useState("{}");
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  const { response, error, isInvoking, invoke, reset } = useMcpToolInvoke();
+
+  const handleRun = () => {
+    try {
+      const parsed = JSON.parse(paramsJson);
+      setJsonError(null);
+      invoke(toolKey, parsed);
+    } catch {
+      setJsonError("Invalid JSON");
+    }
+  };
+
+  return (
+    <div style={{
+      marginTop: 32,
+      paddingTop: 20,
+      borderTop: `1px solid ${border.default}`,
+    }}>
+      <div style={{
+        fontSize: 10,
+        fontFamily: "'IBM Plex Mono', monospace",
+        fontWeight: 600,
+        color: text.faint,
+        letterSpacing: "0.1em",
+        marginBottom: 12,
+      }}>
+        TEST
+      </div>
+
+      <Field label="Parameters (JSON)">
+        <textarea
+          value={paramsJson}
+          onChange={(e) => { setParamsJson(e.target.value); setJsonError(null); }}
+          spellCheck={false}
+          placeholder='{"query": "weather in london"}'
+          style={{
+            width: "100%",
+            height: 90,
+            padding: 10,
+            borderRadius: 6,
+            border: `1px solid ${jsonError ? palette.red + "44" : border.default}`,
+            background: surface.card,
+            color: text.primary,
+            fontSize: 11,
+            fontFamily: "'IBM Plex Mono', monospace",
+            lineHeight: 1.5,
+            outline: "none",
+            resize: "vertical",
+          }}
+        />
+        {jsonError && (
+          <div style={{ fontSize: 10, color: palette.red, marginTop: 4 }}>{jsonError}</div>
+        )}
+      </Field>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <button
+          onClick={handleRun}
+          disabled={isInvoking}
+          style={{
+            padding: "6px 14px",
+            borderRadius: 6,
+            border: `1px solid ${palette.purple}44`,
+            background: isInvoking ? "transparent" : `${palette.purple}1a`,
+            color: isInvoking ? text.disabled : palette.purple,
+            fontSize: 11,
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontWeight: 600,
+            cursor: isInvoking ? "wait" : "pointer",
+          }}
+        >
+          {isInvoking ? "Running..." : "Run"}
+        </button>
+        {(response || error) && (
+          <button
+            onClick={reset}
+            style={{
+              padding: "6px 12px",
+              borderRadius: 6,
+              border: `1px solid ${border.default}`,
+              background: "transparent",
+              color: text.faint,
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              cursor: "pointer",
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Result */}
+      {(response || error || isInvoking) && (
+        <div style={{
+          padding: 12,
+          borderRadius: 6,
+          border: `1px solid ${border.default}`,
+          background: surface.card,
+          minHeight: 80,
+        }}>
+          {error && (
+            <div style={{
+              fontSize: 11,
+              color: palette.red,
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}>
+              {error}
+            </div>
+          )}
+          {response !== null && response !== undefined && (
+            <pre style={{
+              margin: 0,
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              color: text.primary,
+              lineHeight: 1.5,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}>
+              {typeof response === "string" ? response : JSON.stringify(response, null, 2)}
+            </pre>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
