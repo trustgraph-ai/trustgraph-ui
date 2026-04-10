@@ -1,17 +1,14 @@
 import { useState, useCallback } from "react";
 import { useAgent } from "../../hooks/useAgent";
+import { useExplainSession } from "../../hooks/useExplainSession";
+import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import type { ExplainEvent } from "@trustgraph/react-state";
 import { AgentStepCard } from "../explain/AgentStepCard";
+import { ExplainEventCard } from "../explain/ExplainEventCard";
 import { text, border, surface, palette } from "../../theme";
 
 interface AgentTestStripProps {
   height?: number;
-}
-
-interface DebugEvent {
-  id: string;
-  graph: string;
-  receivedAt: number;
 }
 
 /**
@@ -21,27 +18,31 @@ interface DebugEvent {
  */
 export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
   const [question, setQuestion] = useState("");
-  const [debugEvents, setDebugEvents] = useState<DebugEvent[]>([]);
+  const [selectedEventIdx, setSelectedEventIdx] = useState<number | null>(null);
+
+  const explainSession = useExplainSession();
+  useExplainEventFetcher(explainSession.events, explainSession.updateEvent);
 
   const handleExplain = useCallback((event: ExplainEvent) => {
-    setDebugEvents(prev => {
-      if (prev.some(e => e.id === event.explainId)) return prev;
-      return [...prev, {
-        id: event.explainId,
-        graph: event.explainGraph,
-        receivedAt: Date.now(),
-      }];
+    explainSession.addEvent({
+      explainId: event.explainId,
+      explainGraph: event.explainGraph,
+      explainTriples: (event as any).explainTriples,
     });
-  }, []);
+  }, [explainSession]);
 
   const { query, steps, isQuerying, error } = useAgent({ onExplain: handleExplain });
 
   const handleRun = () => {
     const q = question.trim();
     if (!q || isQuerying) return;
-    setDebugEvents([]);
+    explainSession.reset();
+    setSelectedEventIdx(null);
     query(q);
   };
+
+  const events = explainSession.events;
+  const selectedEvent = selectedEventIdx !== null ? events[selectedEventIdx] : null;
 
   return (
     <div style={{
@@ -171,9 +172,9 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
           ))}
         </div>
 
-        {/* Debug events */}
+        {/* Explain events list */}
         <div style={{
-          width: 320,
+          width: 220,
           flexShrink: 0,
           borderLeft: `1px solid ${border.default}`,
           display: "flex",
@@ -201,64 +202,80 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
               fontFamily: "'IBM Plex Mono', monospace",
               color: text.hint,
             }}>
-              {debugEvents.length}
+              {events.length}
             </span>
           </div>
           <div style={{
             flex: 1,
             overflowY: "auto",
-            padding: "8px 14px",
+            padding: "8px 10px",
           }}>
-            {debugEvents.length === 0 && (
+            {events.length === 0 && (
               <div style={{
                 fontSize: 10,
                 color: text.hint,
                 fontStyle: "italic",
               }}>
-                Debug events will appear here as the agent runs.
+                Events appear as the agent runs.
               </div>
             )}
-            {debugEvents.map((evt, i) => (
-              <div
-                key={evt.id}
-                style={{
-                  marginBottom: 4,
-                  padding: "5px 8px",
-                  borderRadius: 4,
-                  background: surface.card,
-                  border: `1px solid ${border.subtle}`,
-                  fontSize: 10,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  color: text.secondary,
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
-                  <span style={{ color: palette.cyan }}>#{i + 1}</span>
-                  <span style={{
-                    color: text.faint,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    flex: 1,
-                    textAlign: "right",
-                  }}>
-                    {evt.id.slice(-12)}
-                  </span>
-                </div>
-                <div style={{
-                  fontSize: 9,
-                  color: text.hint,
-                  marginTop: 2,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}>
-                  {evt.graph}
-                </div>
-              </div>
-            ))}
+            {events.map((evt, i) => {
+              const isSelected = selectedEventIdx === i;
+              return (
+                <button
+                  key={evt.explainId}
+                  onClick={() => setSelectedEventIdx(i)}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    textAlign: "left",
+                    marginBottom: 3,
+                    padding: "5px 8px",
+                    borderRadius: 4,
+                    background: isSelected ? `${palette.cyan}1a` : surface.card,
+                    border: `1px solid ${isSelected ? palette.cyan + "44" : border.subtle}`,
+                    fontSize: 10,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    color: text.secondary,
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
+                    <span style={{ color: isSelected ? palette.cyan : text.faint }}>
+                      #{i + 1}
+                    </span>
+                    <span style={{
+                      color: evt.fetched ? palette.emerald : text.hint,
+                      fontSize: 9,
+                    }}>
+                      {evt.eventType}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
+
+        {/* Selected event detail */}
+        {selectedEvent && (
+          <div style={{
+            width: 360,
+            flexShrink: 0,
+            borderLeft: `1px solid ${border.default}`,
+            overflowY: "auto",
+            padding: "12px 16px",
+          }}>
+            <ExplainEventCard
+              eventType={selectedEvent.eventType}
+              data={selectedEvent.data}
+              loading={selectedEvent.fetching}
+              error={selectedEvent.error}
+              index={selectedEventIdx ?? 0}
+              sourceLevel="full"
+            />
+          </div>
+        )}
       </div>
     </div>
   );
