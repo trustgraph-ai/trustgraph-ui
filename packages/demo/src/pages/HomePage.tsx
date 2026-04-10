@@ -26,10 +26,10 @@ const workflows: WorkflowCard[] = [
   {
     key: "explore",
     view: "explore",
-    title: "Knowledge Explorer",
+    title: "Context Graph Explorer",
     icon: "◈",
     color: palette.emerald,
-    description: "Explore the knowledge graph visually.",
+    description: "Explore the context graph visually.",
   },
   {
     key: "graph-rag",
