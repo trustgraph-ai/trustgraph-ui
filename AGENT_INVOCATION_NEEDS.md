@@ -68,32 +68,49 @@ Walk the DAG explicitly via these edges:
 
 ## Sources
 
-Three websocket traces were analysed, one per agent pattern:
+Five websocket traces were analysed, covering three agent patterns
+plus the two non-agent retrieval services that share the same
+explainability model:
 
-| File | Pattern | Question |
-|------|---------|----------|
-| `agent-react.json` | `react` | Who is the document author? |
-| `agent-plan-exec.json` | `plan-then-execute` | Who is the author of the document and what is their credentials in authoring the doc. Carefully plan and execute an answer |
-| `agent-supervisor.json` | `supervisor` | Assess the security risks of intelligence agencies sharing data with private contractors in a globalised environment |
+| File | Service | Pattern | Question |
+|------|---------|---------|----------|
+| `agent-react.json` | agent | `react` | Who is the document author? |
+| `agent-plan-exec.json` | agent | `plan-then-execute` | Who is the author of the document and what is their credentials in authoring the doc. Carefully plan and execute an answer |
+| `agent-supervisor.json` | agent | `supervisor` | Assess the security risks of intelligence agencies sharing data with private contractors in a globalised environment |
+| `graph-rag.json` | graph-rag | n/a | What is the document about? |
+| `document-rag.json` | document-rag | n/a | What is the document about? |
 
-These are **examples of what was emitted in three specific runs**, not
+These are **examples of what was emitted in five specific runs**, not
 a structural specification of all runs. The principles above govern
 how we interpret them.
+
+The graph-rag and document-rag traces serve as a useful cross-check:
+they exercise the same explain event vocabulary as the agent service
+but with no agent-specific facets. Every type and predicate that
+appeared in any of the five traces is defined in
+`provenance/namespaces.py` — confirming the unified explainability
+model.
 
 ---
 
 ## Stream shape (observed)
 
-Chunk types and counts in each trace. The mix varies a lot by run.
+Counts in each trace. Note that the **discriminator field name varies
+by service**: the agent service uses `chunk_type`; graph-rag and
+document-rag use `message_type`. A renderer needs to handle both.
 
-| Pattern | total | explain | thought | observation | answer |
-|---------|-------|---------|---------|-------------|--------|
-| react | 119 | 9 | 104 | 1 | 5 |
-| plan-exec | 105 | 9 | 3 | 1 | 92 |
-| supervisor | 1045 | 51 | 14 | 8 | 972 |
+| Service | Pattern | total | explain | thought | observation | answer | chunk |
+|---------|---------|-------|---------|---------|-------------|--------|-------|
+| agent | react | 119 | 9 | 104 | 1 | 5 | — |
+| agent | plan-exec | 105 | 9 | 3 | 1 | 92 | — |
+| agent | supervisor | 1045 | 51 | 14 | 8 | 972 | — |
+| graph-rag | — | 52 | 5 | — | — | — | 47 |
+| document-rag | — | 203 | 4 | — | — | — | 198 |
 
-Most volume is streaming text (`thought`, `answer`, `observation`).
-Structured debugging information lives in the `explain` chunks.
+Most volume is streaming text (`thought` / `answer` for the agent;
+`chunk` for the RAG services). Structured debugging information lives
+in the `explain` messages, which are shaped identically across all
+services.
 
 ---
 
