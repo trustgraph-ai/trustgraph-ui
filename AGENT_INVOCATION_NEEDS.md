@@ -185,13 +185,20 @@ A renderer walking the DAG should follow both.
 - `prov:wasAssociatedWith`
 
 ### Property predicates — TrustGraph (query-time / agent)
+
+Predicates marked **multi-valued** may appear several times on a
+single event.
+
 - `tg:query` — question text
-- `tg:concept` — extracted concept
-- `tg:entity` — an entity URI (multi-valued on `Exploration`)
-- `tg:edgeCount` — count of candidate edges
-- `tg:selectedEdge` — a chosen edge URI (multi-valued on `Focus`)
+- `tg:concept` — an extracted concept (**multi-valued**; e.g.
+  DocRag's Grounding had three concepts on one event)
+- `tg:entity` — an entity URI (**multi-valued**, on GraphRAG `Exploration`)
+- `tg:edgeCount` — count of candidate edges (GraphRAG `Exploration`)
+- `tg:selectedEdge` — a chosen edge URI (**multi-valued**, on GraphRAG `Focus`)
 - `tg:edge` — an edge content reference
-- `tg:reasoning` — per-edge reasoning text (multi-valued on `Focus`)
+- `tg:reasoning` — per-edge reasoning text (**multi-valued**, on GraphRAG `Focus`)
+- `tg:chunkCount` — count of candidate chunks (DocRag `Exploration`)
+- `tg:selectedChunk` — a chosen chunk URI (**multi-valued**, on DocRag `Exploration`)
 - `tg:document` — librarian document URI (note: this is a **document
   reference**, not raw text — the renderer needs to resolve it via
   the librarian)
@@ -200,9 +207,15 @@ A renderer walking the DAG should follow both.
 - `tg:thought` — links an iteration to its thought sub-entity (this
   is the **predicate**; the type with the same local name is `tg:Thought`)
 - `tg:observation` — links an iteration to its observation sub-entity
-- `tg:subagentGoal` — sub-goal text (multi-valued on `Decomposition`)
-- `tg:planStep` — plan step text (multi-valued on `Plan`)
-- `tg:chunkCount`, `tg:selectedChunk` — DocumentRAG-specific
+- `tg:subagentGoal` — sub-goal text (**multi-valued** on `Decomposition`)
+- `tg:planStep` — plan step text (**multi-valued** on `Plan`)
+
+Note that GraphRAG and DocRag use **different exploration predicates**
+for the same conceptual stage: GraphRAG selects from edges
+(`edgeCount`/`selectedEdge`), DocRag selects from chunks
+(`chunkCount`/`selectedChunk`). Per principle 2, a renderer should
+handle each predicate independently rather than treating "Exploration"
+as a fixed shape.
 
 ### Named graphs
 
@@ -483,6 +496,26 @@ draft of this doc:
 - **The DAG has two edge types.** Both `prov:wasDerivedFrom` and
   `prov:wasGeneratedBy` are used. A walker should follow both.
 
+- **The vocabulary is shared across services.** The graph-rag and
+  document-rag services emit the same explain event vocabulary as
+  the agent service. Every type and predicate seen in the agent
+  traces is also defined in `namespaces.py` for use elsewhere. A
+  predicate-driven facet renderer that handles agent traces will
+  also handle GraphRAG and DocRag explain events without
+  modification — they're a strict subset.
+
+- **Stages aren't fixed shapes.** DocRag has no `Focus` event; it
+  goes `Question → Grounding → Exploration → Synthesis`. GraphRAG
+  has all four. A renderer must not assume any particular sequence
+  exists for a given service. The DAG and the present facets are
+  the truth.
+
+- **The chunk discriminator field name varies by service.** The
+  agent service uses `chunk_type` on the response envelope; graph-rag
+  and document-rag use `message_type`. The explain content itself is
+  shaped identically; only the envelope differs. The renderer should
+  read both keys.
+
 ## Remaining open questions for the backend team
 
 1. **Tool candidates** — are these available anywhere internally,
@@ -499,3 +532,6 @@ draft of this doc:
 5. **Vocabulary publication** — is there (or should there be) a
    stable, machine-readable export of `namespaces.py` that the UI
    can consume so it stays in sync with the backend vocabulary?
+6. **Envelope field naming** — agent responses use `chunk_type`;
+   graph-rag and doc-rag use `message_type`. Should these be
+   unified, or is there a reason for the difference?
