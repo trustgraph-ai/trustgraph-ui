@@ -47,13 +47,18 @@ The type vocabulary is **open and extensible**. New types will appear:
 - Never silently drop unknown types.
 - Never guess what an unknown type means.
 
-### 4. DAG via `wasDerivedFrom` only
+### 4. DAG via PROV-O relationships only
 
 The only relationship structure between explain events is the DAG
-formed by `prov:wasDerivedFrom` edges:
+formed by PROV-O relationship predicates:
 
-- Walk the DAG explicitly via these edges.
-- Multiple `wasDerivedFrom` links are valid (fan-in).
+- `prov:wasDerivedFrom` — primary derivation edge
+- `prov:wasGeneratedBy` — also used in extraction provenance and some
+  paths
+
+Walk the DAG explicitly via these edges:
+
+- Multiple incoming edges are valid (fan-in).
 - Don't infer parent/child from URIs, naming, ordering, or pattern
   conventions.
 - Whether an event is "the final answer" depends on its position in
@@ -92,42 +97,119 @@ Structured debugging information lives in the `explain` chunks.
 
 ---
 
-## Observed types and predicates
+## Canonical vocabulary
 
-Across the three traces, the following types appeared. **This is
-not an exhaustive list**, just what was seen — new types may appear at
-any time.
+The vocabulary is defined in
+`trustgraph/trustgraph-base/trustgraph/provenance/namespaces.py`.
+Renderers should refer to this file as the source of truth — what
+follows is a snapshot at the time of writing.
 
-### Types observed
-- `prov:Entity` (universal — every event)
-- `Question`, `AgentQuestion`, `GraphRagQuestion`
-- `Analysis`, `ToolUse`, `Reflection`, `Thought`
-- `Observation`
-- `Grounding`, `Exploration`, `Focus`, `Synthesis`
-- `Answer`
-- `Conclusion`
-- `Plan`, `StepResult`
-- `Decomposition`, `Finding`
+The vocabulary is **open**: new types and predicates may be added
+without breaking renderers that follow the principles above.
 
-### Predicates observed
-- `rdf:type` (always multiple)
-- `rdfs:label` (human-readable label)
-- `prov:wasDerivedFrom` (DAG edges, may be multiple)
-- `prov:startedAtTime` (timestamp)
-- `query` (a question string)
-- `action` (a tool name)
-- `arguments` (JSON-encoded tool arguments)
-- `thought` (LLM reasoning text)
-- `concept` (an extracted concept)
-- `entity` (an entity URI; may appear multiple times on one event)
-- `edgeCount` (number of edges considered)
-- `selectedEdge` (an edge URI; may appear multiple times)
-- `edge` (was empty in the observed data)
-- `reasoning` (per-edge reasoning text)
-- `document` (final text content)
-- `planStep` (a plan step description; may appear multiple times)
-- `subagentGoal` (a sub-agent goal description; may appear multiple
-  times)
+### Namespaces
+- `PROV` = `http://www.w3.org/ns/prov#` — W3C Provenance Ontology
+- `RDF` = `http://www.w3.org/1999/02/22-rdf-syntax-ns#`
+- `RDFS` = `http://www.w3.org/2000/01/rdf-schema#`
+- `SKOS` = `http://www.w3.org/2004/02/skos/core#`
+- `SCHEMA` = `https://schema.org/`
+- `DC` = `http://purl.org/dc/elements/1.1/`
+- `TG` = `https://trustgraph.ai/ns/` — TrustGraph custom predicates
+  and types
+
+### Types — PROV-O
+- `prov:Entity` (universal on all explain events)
+- `prov:Activity`
+- `prov:Agent`
+
+### Types — TrustGraph explainability (shared)
+- `tg:Question` — base question type
+  - `tg:GraphRagQuestion` — sub-RAG retrieval question
+  - `tg:DocRagQuestion`
+  - `tg:AgentQuestion` — agent root question
+- `tg:Grounding`
+- `tg:Exploration`
+- `tg:Focus`
+- `tg:Synthesis`
+- `tg:Analysis`
+- `tg:Conclusion`
+
+### Types — orchestrator
+- `tg:Decomposition` — supervisor split into sub-goals
+- `tg:Finding` — sub-agent result
+- `tg:Plan` — plan-then-execute plan
+- `tg:StepResult` — plan step result
+
+### Types — unifying mixins (intentional, always paired)
+
+These are the canonical mixin types. The `vocabulary.py` source comments
+spell out which concrete types they're paired with:
+
+- `tg:Answer` — pairs with `Synthesis`, `Conclusion`, `Finding`, `StepResult` (any of the "final answer" types)
+- `tg:Reflection` — pairs with `Thought`, `Observation` (intermediate commentary)
+- `tg:Thought` — agent reasoning
+- `tg:Observation` — agent tool result
+- `tg:ToolUse` — pairs with `Analysis` (when an analysis is a tool use specifically)
+
+Per principle 2, a renderer must still treat these as independent
+facets: `Synthesis + Answer` is rendered as both, not as a fused
+"SynthesisAnswer". The mixins exist so that other code can ask "is
+this an answer?" without enumerating every concrete type.
+
+### Relationship predicates (DAG edges)
+- `prov:wasDerivedFrom`
+- `prov:wasGeneratedBy`
+
+A renderer walking the DAG should follow both.
+
+### Property predicates — PROV-O
+- `prov:startedAtTime` — ISO timestamp
+- `prov:used`
+- `prov:wasAssociatedWith`
+
+### Property predicates — TrustGraph (query-time / agent)
+- `tg:query` — question text
+- `tg:concept` — extracted concept
+- `tg:entity` — an entity URI (multi-valued on `Exploration`)
+- `tg:edgeCount` — count of candidate edges
+- `tg:selectedEdge` — a chosen edge URI (multi-valued on `Focus`)
+- `tg:edge` — an edge content reference
+- `tg:reasoning` — per-edge reasoning text (multi-valued on `Focus`)
+- `tg:document` — librarian document URI (note: this is a **document
+  reference**, not raw text — the renderer needs to resolve it via
+  the librarian)
+- `tg:action` — tool name (on `Analysis`/`ToolUse`)
+- `tg:arguments` — JSON-encoded tool arguments
+- `tg:thought` — links an iteration to its thought sub-entity (this
+  is the **predicate**; the type with the same local name is `tg:Thought`)
+- `tg:observation` — links an iteration to its observation sub-entity
+- `tg:subagentGoal` — sub-goal text (multi-valued on `Decomposition`)
+- `tg:planStep` — plan step text (multi-valued on `Plan`)
+- `tg:chunkCount`, `tg:selectedChunk` — DocumentRAG-specific
+
+### Named graphs
+
+The provenance system uses RDF named graphs to separate kinds of data:
+- `""` (default) — core knowledge facts
+- `urn:graph:source` — extraction provenance (which document/chunk
+  produced a triple)
+- `urn:graph:retrieval` — query-time explainability (the explain
+  events analysed in this document)
+
+A debug renderer for the agent console only needs `urn:graph:retrieval`.
+
+### Cross-checking with the trace observations
+
+All types and predicates that appeared in the three traces match
+entries in `namespaces.py`. The local names I used in the earlier
+draft (`action`, `arguments`, `thought`, etc.) are accurate but the
+canonical references are the full IRIs above.
+
+One subtlety: there is **both a `tg:thought` predicate and a
+`tg:Thought` type**. The predicate links an iteration entity to its
+thought sub-entity. The type classifies that sub-entity. They have
+the same local name but live in different roles. Same for
+`tg:observation` (predicate) and `tg:Observation` (type).
 
 ---
 
@@ -352,21 +434,51 @@ metrics. Out of scope for the agent console.
 
 ---
 
-## Open questions for the backend team
+## Cross-referenced — items resolved by checking the source
 
-1. Are tool candidates available anywhere internally, even if not
-   currently in the explain stream? Adding them to `Analysis`
-   events would be the highest-impact single change.
-2. What would it take to add `in_token` / `out_token` on events
-   that involved LLM calls?
-3. Is there a notion of "termination reason" available at the
-   agent service level that could be added to terminal events?
-4. When a supervisor spawns sub-agents (or any pattern delegates
-   work), is there an explicit `wasDerivedFrom` link in the DAG
-   from the spawned events back to the spawning event? If not,
-   should there be?
-5. The traces contained several events with `Synthesis + Answer`
-   or `Conclusion + Answer` types. Are these mixin combinations
-   guaranteed or coincidental? Per principle 2, the renderer
-   shouldn't assume — but it's worth knowing the backend's intent
-   so we can spot drift.
+Checking against `provenance/namespaces.py`, `provenance/agent.py`, and
+`provenance/vocabulary.py` resolved several questions from the earlier
+draft of this doc:
+
+- **Sub-agent linkage exists.** `agent_session_triples` accepts a
+  `parent_uri` and adds `prov:wasDerivedFrom` to it. Supervisor
+  sub-agents and other delegated sessions are linked back into the
+  DAG explicitly. A DAG walk via `wasDerivedFrom` will find them
+  without needing any URI inference.
+
+- **Mixin combinations are intentional.** `tg:Answer` is documented
+  as the unifying type for `Synthesis | Conclusion | Finding |
+  StepResult`. `tg:Reflection` is the unifying type for `Thought |
+  Observation`. `tg:ToolUse` mixes with `Analysis`. The renderer
+  must still treat these as independent facets per principle 2,
+  but the pairings aren't accidental.
+
+- **There's a separate `tg:Thought` predicate AND type.** The
+  predicate (`tg:thought`) links an iteration to its thought
+  sub-entity. The type (`tg:Thought`) classifies that sub-entity.
+  Same pattern for `tg:observation` / `tg:Observation`. Renderers
+  must keep them straight.
+
+- **Document references go through the librarian.** Values of the
+  `tg:document` predicate are URIs, not raw text. The renderer
+  needs a librarian fetch step to display the actual content.
+
+- **The DAG has two edge types.** Both `prov:wasDerivedFrom` and
+  `prov:wasGeneratedBy` are used. A walker should follow both.
+
+## Remaining open questions for the backend team
+
+1. **Tool candidates** — are these available anywhere internally,
+   even if not currently in the explain stream? Adding them to
+   `Analysis` events would be the highest-impact single change for
+   tool description tuning.
+2. **Token counts** — what would it take to add `in_token` /
+   `out_token` predicates on events that involved LLM calls?
+3. **Termination reason** — is there a notion of "why did the loop
+   stop" available at the agent service level that could become a
+   predicate on terminal events?
+4. **Tool errors** — does a failure produce an explain event today?
+   The observed traces had no failures.
+5. **Vocabulary publication** — is there (or should there be) a
+   stable, machine-readable export of `namespaces.py` that the UI
+   can consume so it stays in sync with the backend vocabulary?
