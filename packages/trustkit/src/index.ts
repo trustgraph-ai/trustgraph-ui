@@ -16,6 +16,10 @@ export type { RawGraphNode } from "./components/raw-graph";
 // Components — prompt
 export { PromptList, PromptEditor, PromptTestPanel, PromptBrowser, PromptWorkbench } from "./components/prompt";
 
+// Components — agent config
+export { ConfigSidebar, ConfigEditor, AgentTestStrip, AgentConsole } from "./components/agent-config";
+export type { AgentPattern, AgentTaskType, AgentTool, ToolArgument, McpTool, ToolService, ToolServiceParam, ConfigKind, SelectedItem } from "./components/agent-config";
+
 // Components — explain
 export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, ExplainDAG, SourceLinkBadge, SourcePanel, SimpleRagView, RagWithSourcesView, RagWithTimelineView, GraphRagView, RagExplainView, RagFullExplainView, AgentStepCard, AgentStepList, SimpleAgentView, AgentWithTimelineView, AgentExplainView, AgentFullExplainView, SimpleDocRagView, DocRagExplainView, DocRagFullExplainView } from "./components/explain";
 
@@ -31,6 +35,8 @@ export { usePromptDetail } from "./hooks/usePromptDetail";
 export type { PromptData } from "./hooks/usePromptDetail";
 export { usePromptTest } from "./hooks/usePromptTest";
 export type { PromptTestResult } from "./hooks/usePromptTest";
+export { useConfigItems } from "./hooks/useConfigItems";
+export { useConfigItem } from "./hooks/useConfigItem";
 export type { NodeDetail, NodeProperty, NodeRelationship } from "./hooks/useNodeDetail";
 export { useOntologySchema } from "./hooks/useOntologySchema";
 export type { OntologyClass, OntologyProperty, OntologySchema } from "./hooks/useOntologySchema";

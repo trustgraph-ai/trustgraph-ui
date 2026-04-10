@@ -7,6 +7,7 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', '@tanstack/react-query'],
   },
   server: {
+    host: true,
     proxy: {
       "/api/socket": {
         target: "ws://localhost:8088/",

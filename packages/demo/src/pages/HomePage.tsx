@@ -73,6 +73,14 @@ const workflows: WorkflowCard[] = [
     color: palette.amber,
     description: "Browse, edit, and test LLM prompt templates.",
   },
+  {
+    key: "agent-config",
+    view: "agent-config",
+    title: "Agent Console",
+    icon: "⚙",
+    color: palette.cyan,
+    description: "Configure agent patterns, task types, and tools.",
+  },
 ];
 
 export function HomePage({ onNavigate }: HomePageProps) {
