@@ -104,12 +104,12 @@ export function useAgent({
         input: trimmed,
         collection,
         callbacks: {
-          onThink: (chunk: string, complete: boolean, messageId?: string) =>
-            handleChunk("thought", chunk, complete, messageId),
-          onObserve: (chunk: string, complete: boolean, messageId?: string) =>
-            handleChunk("observation", chunk, complete, messageId),
-          onAnswer: (chunk: string, complete: boolean, messageId?: string) =>
-            handleChunk("answer", chunk, complete, messageId),
+          onThink: (chunk: string, complete?: boolean, messageId?: string) =>
+            handleChunk("thought", chunk, complete ?? false, messageId),
+          onObserve: (chunk: string, complete?: boolean, messageId?: string) =>
+            handleChunk("observation", chunk, complete ?? false, messageId),
+          onAnswer: (chunk: string, complete?: boolean, messageId?: string) =>
+            handleChunk("answer", chunk, complete ?? false, messageId),
           onExplain,
           onError: (err: string) => setError(err),
         },
