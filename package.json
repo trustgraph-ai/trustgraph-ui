@@ -1,6 +1,7 @@
 {
   "name": "trustgraph-ux",
   "private": true,
+  "type": "module",
   "workspaces": ["packages/*"],
   "scripts": {
     "dev": "npm -w @trustgraph/demo run dev",
