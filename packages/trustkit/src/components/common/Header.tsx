@@ -28,28 +28,18 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
         </div>
       </div>
       <div style={{ display: "flex", gap: 6, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}>
-        {(["home", "data", "ontology"] as const).map((tab) => {
-          const labels: Record<typeof tab, string> = {
-            home: "⌂ Workflows",
-            data: "▤ Table Explorer",
-            ontology: "◇ Ontology",
-          };
-          return (
-            <button
-              key={tab}
-              onClick={() => onTabChange(tab)}
-              style={{
-                padding: "7px 16px", borderRadius: 6, border: "none", cursor: "pointer",
-                background: activeTab === tab ? "rgba(255,255,255,0.1)" : "transparent",
-                color: activeTab === tab ? "#fff" : "#666",
-                fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, fontWeight: activeTab === tab ? 600 : 400,
-                transition: "all 0.2s",
-              }}
-            >
-              {labels[tab]}
-            </button>
-          );
-        })}
+        <button
+          onClick={() => onTabChange("home" as TabKey)}
+          style={{
+            padding: "7px 16px", borderRadius: 6, border: "none", cursor: "pointer",
+            background: activeTab === "home" ? "rgba(255,255,255,0.1)" : "transparent",
+            color: activeTab === "home" ? "#fff" : "#666",
+            fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, fontWeight: activeTab === "home" ? 600 : 400,
+            transition: "all 0.2s",
+          }}
+        >
+          ⌂ Workflows
+        </button>
       </div>
     </div>
   );

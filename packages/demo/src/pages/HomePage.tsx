@@ -22,6 +22,7 @@ const workflows: WorkflowCard[] = [
     icon: "⬆",
     color: palette.amber,
     description: "Load documents and process them into knowledge.",
+    screenshot: "/ss-ingest.png",
   },
   {
     key: "explore",
