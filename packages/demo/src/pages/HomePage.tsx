@@ -74,6 +74,7 @@ const workflows: WorkflowCard[] = [
     icon: "✎",
     color: palette.amber,
     description: "Browse, edit, and test LLM prompt templates.",
+    screenshot: "/ss-prompts.png",
   },
   {
     key: "agent-config",
@@ -82,6 +83,7 @@ const workflows: WorkflowCard[] = [
     icon: "⚙",
     color: palette.cyan,
     description: "Configure agent patterns, task types, and tools.",
+    screenshot: "/ss-agent-console.png",
   },
   {
     key: "data",
