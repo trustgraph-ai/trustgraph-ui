@@ -64,6 +64,7 @@ const workflows: WorkflowCard[] = [
     icon: "◎",
     color: palette.cyan,
     description: "Explore any graph — no schema required.",
+    screenshot: "/ss-raw-graph.png",
   },
   {
     key: "prompts",
@@ -80,6 +81,22 @@ const workflows: WorkflowCard[] = [
     icon: "⚙",
     color: palette.cyan,
     description: "Configure agent patterns, task types, and tools.",
+  },
+  {
+    key: "data",
+    view: "data",
+    title: "Table Explorer",
+    icon: "▤",
+    color: palette.blue,
+    description: "Search structured data across schemas.",
+  },
+  {
+    key: "ontology",
+    view: "ontology",
+    title: "Ontology Viewer",
+    icon: "◇",
+    color: palette.purple,
+    description: "Browse classes, properties, and relationships.",
   },
 ];
 
