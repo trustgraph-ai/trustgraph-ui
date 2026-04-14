@@ -1,7 +1,8 @@
 // Tier 2 — Domain pieces
 export { ConfigSidebar } from "./ConfigSidebar";
 export { ConfigEditor } from "./ConfigEditor";
-export { AgentTestStrip } from "./AgentTestStrip";
+export { AgentDebugPanel } from "./AgentDebugPanel";
+export { ExplainFacetCard } from "./ExplainFacetCard";
 
 // Tier 3 — Composite
 export { AgentConsole } from "./AgentConsole";

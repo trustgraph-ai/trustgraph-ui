@@ -17,7 +17,7 @@ export type { RawGraphNode } from "./components/raw-graph";
 export { PromptList, PromptEditor, PromptTestPanel, PromptBrowser, PromptWorkbench } from "./components/prompt";
 
 // Components — agent config
-export { ConfigSidebar, ConfigEditor, AgentTestStrip, AgentConsole } from "./components/agent-config";
+export { ConfigSidebar, ConfigEditor, AgentDebugPanel, ExplainFacetCard, AgentConsole } from "./components/agent-config";
 export type { AgentPattern, AgentTaskType, AgentTool, ToolArgument, McpTool, ToolService, ToolServiceParam, ConfigKind, SelectedItem } from "./components/agent-config";
 
 // Components — explain
@@ -67,6 +67,8 @@ export * from "./types";
 
 // Utils
 export { getLocalName } from "./utils/uri";
+export { parseExplainEvent } from "./utils/explainParse";
+export type { ParsedExplainEvent } from "./utils/explainParse";
 
 // Config
 export { COLLECTION } from "./config";
