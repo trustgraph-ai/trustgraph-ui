@@ -1,0 +1,196 @@
+import { Term, IriTerm, LiteralTerm, FlowApi, EntityMatch } from "@trustgraph/client";
+import { RDFS_LABEL, SKOS_DEFINITION } from "./knowledge-graph";
+// @ts-ignore - compute-cosine-similarity is a CommonJS module with no types
+import similarity from "compute-cosine-similarity";
+
+export interface Row {
+  uri: string;
+  label?: string;
+  description?: string;
+  embeddings?: number[];
+  target?: number[];
+  similarity?: number;
+}
+
+// Take the embedding vector, and lookup entities using graph
+// embeddings, add embedding to each entity row, just an easy
+// place to put it
+export const getGraphEmbeddings = (
+  socket: FlowApi,
+  add: (s: string) => void,
+  remove: (s: string) => void,
+  limit?: number,
+  collection?: string
+) => {
+  // Take the embedding, and lookup entities using graph
+  // embeddings, add embedding to each entity row
+  return (vec: number[]): Promise<Row[]> => {
+    const act = "Graph embedding search";
+    add(act);
+
+    return socket
+      .graphEmbeddingsQuery(vec, limit ? limit : 10, collection)
+      .then((matches: EntityMatch[]): Row[] => {
+        remove(act);
+        return matches
+          .filter((m): m is EntityMatch & { entity: IriTerm } =>
+            m.entity !== null && m.entity.t === "i")
+          .map((m) => {
+            return { uri: m.entity.i, target: vec };
+          });
+      })
+      .catch((err) => {
+        remove(act);
+        throw err;
+      });
+  };
+};
+
+// For entities, lookup labels
+export const addRowLabels =
+  (
+    socket: FlowApi,
+    add: (s: string) => void,
+    remove: (s: string) => void,
+    collection?: string
+  ) =>
+  (entities: Row[]): Promise<Row[]> => {
+    return Promise.all<Row>(
+      entities.map((ent: Row) => {
+        const act = "Label " + ent.uri;
+        add(act);
+        return socket
+          .triplesQuery(
+            { t: "i", i: ent.uri },
+            { t: "i", i: RDFS_LABEL },
+            undefined,
+            1,
+            collection
+          )
+          .then((t): Row => {
+            if (t.length < 1) {
+              remove(act);
+              return {
+                uri: ent.uri,
+                label: "",
+                target: ent.target,
+              };
+            } else {
+              remove(act);
+              const obj = t[0].o as LiteralTerm;
+              return {
+                uri: ent.uri,
+                label: obj.v,
+                target: ent.target,
+              };
+            }
+          })
+          .catch((err) => {
+            remove(act);
+            throw err;
+          });
+      })
+    );
+  };
+
+// For entities, lookup definitions
+export const addRowDefinitions =
+  (
+    socket: FlowApi,
+    add: (s: string) => void,
+    remove: (s: string) => void,
+    collection?: string
+  ) =>
+  // For entities, lookup labels
+  (entities: Row[]) => {
+    return Promise.all<Row>(
+      entities.map((ent) => {
+        const act = "Description " + ent.uri;
+        add(act);
+        return socket
+          .triplesQuery(
+            { t: "i", i: ent.uri },
+            { t: "i", i: SKOS_DEFINITION },
+            undefined,
+            1,
+            collection
+          )
+          .then((t) => {
+            if (t.length < 1) {
+              remove(act);
+              return { ...ent, description: "" };
+            } else {
+              remove(act);
+              const obj = t[0].o as LiteralTerm;
+              return {
+                ...ent,
+                description: obj.v,
+              };
+            }
+          })
+          .catch((err) => {
+            remove(act);
+            throw err;
+          });
+      })
+    );
+  };
+
+// Compute an embedding for each entity based on its definition or label
+export const addRowEmbeddings =
+  (socket: FlowApi, add: (s: string) => void, remove: (s: string) => void) =>
+  (entities: Row[]) => {
+    return Promise.all<Row>(
+      entities.map((ent) => {
+        let text: string = "";
+        if (ent.description && ent.description != "") text = ent.description;
+        else text = ent.label!;
+
+        const act = "Embeddings " + text.substring(0, 20);
+        add(act);
+
+        return socket
+          .embeddings([text])
+          .then((x) => {
+            if (x && x.length > 0) {
+              remove(act);
+              return {
+                ...ent,
+                embeddings: x[0],
+              };
+            } else {
+              remove(act);
+              return {
+                ...ent,
+                embeddings: [],
+              };
+            }
+          })
+          .catch((err) => {
+            remove(act);
+            throw err;
+          });
+      })
+    );
+  };
+
+// Rest of the procecess is not async, so not adding progress
+
+export const computeCosineSimilarity =
+  () =>
+  (entities: Row[]): Row[] =>
+    entities.map((ent) => {
+      const sim = similarity(ent.target!, ent.embeddings!);
+      return {
+        uri: ent.uri,
+        label: ent.label,
+        description: ent.description,
+        similarity: sim ? sim : -1,
+      };
+    });
+
+export const sortSimilarity = () => (entities: Row[]) => {
+  const arr = Array.from(entities);
+  arr.sort((a, b) => b.similarity! - a.similarity!);
+  return arr;
+};
