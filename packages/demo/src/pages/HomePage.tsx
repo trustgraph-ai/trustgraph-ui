@@ -92,6 +92,7 @@ const workflows: WorkflowCard[] = [
     icon: "▤",
     color: palette.blue,
     description: "Search structured data across schemas.",
+    screenshot: "/ss-data.png",
   },
   {
     key: "ontology",
