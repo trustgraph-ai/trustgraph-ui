@@ -24,8 +24,7 @@
     "test:ui": "vitest --ui",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "prettify": "prettier --write .",
-    "prepare": "npm run build"
+    "prettify": "prettier --write ."
   },
   "keywords": [
     "trustgraph",

@@ -21,8 +21,8 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "@trustgraph/react-provider": "^1.4.0",
-    "@trustgraph/react-state": "^1.4.6",
+    "@trustgraph/react-provider": "*",
+    "@trustgraph/react-state": "*",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

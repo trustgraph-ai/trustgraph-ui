@@ -23,8 +23,7 @@
     "test:watch": "vitest",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "prettify": "prettier --write --print-width 79 .",
-    "prepare": "npm run build"
+    "prettify": "prettier --write --print-width 79 ."
   },
   "keywords": [
     "trustgraph",
@@ -35,7 +34,7 @@
   "author": "KnowNext Limited",
   "license": "Apache-2.0",
   "peerDependencies": {
-    "@trustgraph/client": "^1.4.0",
+    "@trustgraph/client": "*",
     "react": "^18.0.0 || ^19.0.0"
   },
   "devDependencies": {

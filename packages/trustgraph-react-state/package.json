@@ -23,8 +23,7 @@
     "test:watch": "vitest",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "prettify": "prettier --write .",
-    "prepare": "npm run build"
+    "prettify": "prettier --write ."
   },
   "keywords": [
     "trustgraph",
@@ -40,7 +39,8 @@
     "url": "https://github.com/trustgraph-ai/trustgraph-react-state"
   },
   "dependencies": {
-    "@trustgraph/react-provider": "^1.4.0",
+    "@trustgraph/client": "*",
+    "@trustgraph/react-provider": "*",
     "compute-cosine-similarity": "^1.1.0",
     "uuid": "^11.0.3"
   },
