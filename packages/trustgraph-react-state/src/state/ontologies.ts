@@ -65,8 +65,7 @@ export const useOntologies = () => {
 
   // Only enable queries when socket is connected and ready
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   const ontologiesQuery = useQuery({
     queryKey: ["ontologies"],

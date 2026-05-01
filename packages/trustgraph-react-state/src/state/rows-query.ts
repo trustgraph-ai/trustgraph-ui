@@ -32,8 +32,7 @@ export const useRowsQuery = ({ flow }: { flow?: string } = {}) => {
 
   // Only enable operations when socket is connected and ready
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   // Mutation for executing GraphQL rows queries
   const rowsQueryMutation = useMutation({

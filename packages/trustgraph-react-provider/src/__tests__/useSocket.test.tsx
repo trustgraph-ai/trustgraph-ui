@@ -25,7 +25,7 @@ vi.mock("@trustgraph/client", () => ({
 describe("useSocket", () => {
   it("should return socket instance when used within SocketProvider", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <SocketProvider user="test-user">{children}</SocketProvider>
+      <SocketProvider token="test-jwt">{children}</SocketProvider>
     );
 
     const { result } = renderHook(() => useSocket(), { wrapper });
@@ -34,7 +34,6 @@ describe("useSocket", () => {
   });
 
   it("should throw error when used outside SocketProvider", () => {
-    // Suppress console.error for this test
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     expect(() => {
@@ -46,7 +45,7 @@ describe("useSocket", () => {
 
   it("should provide all socket methods", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <SocketProvider user="test-user">{children}</SocketProvider>
+      <SocketProvider token="test-jwt">{children}</SocketProvider>
     );
 
     const { result } = renderHook(() => useSocket(), { wrapper });
@@ -73,7 +72,7 @@ describe("useSocket", () => {
 
   it("should maintain reference stability across renders", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <SocketProvider user="test-user">{children}</SocketProvider>
+      <SocketProvider token="test-jwt">{children}</SocketProvider>
     );
 
     const { result, rerender } = renderHook(() => useSocket(), { wrapper });

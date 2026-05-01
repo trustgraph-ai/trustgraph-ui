@@ -11,10 +11,10 @@ export function StatusBar() {
     switch (connectionState.status) {
       case "authenticated":
         return { color: semantic.success, text: "Authenticated" };
-      case "connected":
-        return { color: semantic.success, text: "Connected" };
-      case "unauthenticated":
-        return { color: semantic.info, text: "Connected" };
+      case "authenticating":
+        return { color: palette.amber, text: "Authenticating..." };
+      case "auth-failed":
+        return { color: semantic.error, text: "Auth failed" };
       case "connecting":
         return { color: palette.amber, text: "Connecting..." };
       case "reconnecting":

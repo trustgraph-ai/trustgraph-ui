@@ -1,11 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { SocketProvider } from '@trustgraph/react-provider'
 import { NotificationProvider, NotificationHandler } from '@trustgraph/react-state'
 import { toast } from '@trustgraph/trustkit'
 import './index.css'
-import App from './App'
+import { AuthGate } from './AuthGate'
 
 const queryClient = new QueryClient()
 
@@ -20,9 +19,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <NotificationProvider handler={notificationHandler}>
-        <SocketProvider user="trustgraph">
-          <App />
-        </SocketProvider>
+        <AuthGate />
       </NotificationProvider>
     </QueryClientProvider>
   </StrictMode>,

@@ -38,8 +38,7 @@ export const useDocumentMetadata = (
   const connectionState = useConnectionState();
 
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   const query = useQuery({
     queryKey: ["document-metadata", documentId],
@@ -68,8 +67,7 @@ export const useDocumentsMetadata = (documentIds: string[] = []) => {
   const queryClient = useQueryClient();
 
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   const query = useQuery({
     queryKey: ["documents-metadata", documentIds],

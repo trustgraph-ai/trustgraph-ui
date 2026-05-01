@@ -31,8 +31,7 @@ export const useStructuredQuery = () => {
 
   // Only enable operations when socket is connected and ready
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   // Mutation for executing structured queries from natural language
   const structuredQueryMutation = useMutation({

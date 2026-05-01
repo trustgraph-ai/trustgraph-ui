@@ -219,8 +219,9 @@ export interface ConnectionState {
     | "connected"
     | "reconnecting"
     | "failed"
+    | "authenticating"
     | "authenticated"
-    | "unauthenticated";
+    | "auth-failed";
   hasApiKey: boolean;
   reconnectAttempt?: number;
   maxAttempts?: number;
@@ -232,8 +233,13 @@ export class BaseApi {
   ws?: WebSocket; // WebSocket connection instance
   tag: string; // Unique client identifier
   id: number; // Counter for generating unique message IDs
-  token?: string; // Optional authentication token
-  user: string; // User identifier for API requests
+  token: string; // Authentication token (JWT or API key)
+  // Legacy honour-system field. The gateway now derives identity from the
+  // authenticated token; this is retained as an empty string so the
+  // existing request-builder code paths that read `api.user` keep
+  // compiling. It will be removed when the request payloads are cleaned
+  // up.
+  user: string = "";
   socketUrl: string; // WebSocket URL
   inflight: { [key: string]: ServiceCall } = {}; // Track active requests by
   // message ID
@@ -242,25 +248,35 @@ export class BaseApi {
   reconnectTimer?: number; // Timer for reconnection attempts
   reconnectionState: "idle" | "reconnecting" | "failed" = "idle"; // Connection state
 
+  // Auth-handshake state for the current socket. Reset on each open.
+  private authState: "pending" | "ok" | "failed" = "pending";
+
   // Connection state tracking for UI
   private connectionStateListeners: ((state: ConnectionState) => void)[] = [];
   private lastError?: string;
 
-  constructor(user: string, token?: string, socketUrl?: string) {
+  constructor(token: string, socketUrl?: string) {
     this.tag = makeid(16); // Generate unique client tag
     this.id = 1; // Start message ID counter
-    this.token = token; // Store authentication token
-    this.user = user; // Store user identifier
+    this.token = token;
     this.socketUrl = socketUrl || SOCKET_URL; // Use provided URL or default
 
-    console.log(
-      "SOCKET: opening socket...",
-      token ? "with auth" : "without auth",
-      "user:",
-      user,
-    );
+    console.log("SOCKET: opening socket...");
     this.openSocket(); // Establish WebSocket connection
     console.log("SOCKET: socket opened");
+  }
+
+  /**
+   * True once the WebSocket is OPEN and the first-frame auth handshake
+   * has been accepted by the gateway. ServiceCall consults this before
+   * sending request frames.
+   */
+  isAuthReady() {
+    return (
+      !!this.ws &&
+      this.ws.readyState === WebSocket.OPEN &&
+      this.authState === "ok"
+    );
   }
 
   /**
@@ -286,7 +302,8 @@ export class BaseApi {
   private getConnectionState(): ConnectionState {
     const hasApiKey = !!this.token;
 
-    // Determine status based on WebSocket state and reconnection state
+    // Determine status based on WebSocket state, auth handshake state, and
+    // reconnection state.
     let status: ConnectionState["status"];
 
     if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
@@ -300,7 +317,9 @@ export class BaseApi {
     } else if (this.ws.readyState === WebSocket.CONNECTING) {
       status = "connecting";
     } else if (this.ws.readyState === WebSocket.OPEN) {
-      status = hasApiKey ? "authenticated" : "unauthenticated";
+      if (this.authState === "ok") status = "authenticated";
+      else if (this.authState === "failed") status = "auth-failed";
+      else status = "authenticating";
     } else {
       status = "connecting";
     }
@@ -356,16 +375,13 @@ export class BaseApi {
       this.ws = undefined;
     }
 
+    // Reset the auth handshake state for the new connection. The token
+    // is sent as the first frame after onOpen, never on the URL.
+    this.authState = "pending";
+
     try {
-      // Build WebSocket URL with optional token parameter
-      const wsUrl = this.token
-        ? `${this.socketUrl}?token=${this.token}`
-        : this.socketUrl;
-      console.log(
-        "SOCKET: connecting to",
-        wsUrl.replace(/token=[^&]*/, "token=***"),
-      );
-      this.ws = new WebSocket(wsUrl);
+      console.log("SOCKET: connecting to", this.socketUrl);
+      this.ws = new WebSocket(this.socketUrl);
     } catch (e) {
       console.error("[socket creation error]", e);
       this.scheduleReconnect();
@@ -391,6 +407,35 @@ export class BaseApi {
 
     try {
       const obj = JSON.parse(message.data);
+
+      // Auth handshake frames are addressed by `type`, not by request id.
+      if (obj.type === "auth-ok") {
+        console.log("[socket] auth-ok", obj.workspace ?? "");
+        this.authState = "ok";
+        this.lastError = undefined;
+        this.notifyStateChange();
+        // Auth complete — release any requests that were waiting for the
+        // socket to become usable.
+        for (const mid in this.inflight) {
+          this.inflight[mid].retryNow();
+        }
+        return;
+      }
+      if (obj.type === "auth-failed") {
+        console.warn("[socket] auth-failed", obj.error);
+        this.authState = "failed";
+        this.lastError = obj.error || "auth failure";
+        this.notifyStateChange();
+        // Per the IAM spec the server keeps the socket open so the client
+        // can re-authenticate without reconnecting. Don't auto-close.
+        // Surface the failure to any inflight requests so they don't sit
+        // forever — callers should clear the token and reauth.
+        for (const mid in this.inflight) {
+          this.inflight[mid].error(new Error("auth failure"));
+        }
+        this.inflight = {};
+        return;
+      }
 
       // Skip messages without ID (can't route them)
       if (!obj.id) return;
@@ -427,13 +472,21 @@ export class BaseApi {
       this.reconnectTimer = undefined;
     }
 
-    // Notify UI of successful connection
-    this.notifyStateChange();
-
-    // Immediately retry any pending requests that were waiting for connection
-    for (const mid in this.inflight) {
-      this.inflight[mid].retryNow();
+    // Send the auth frame as the first message. The server rejects all
+    // non-auth messages until it sends back auth-ok, so we hold off
+    // releasing inflight requests here — that happens in onMessage when
+    // auth-ok arrives.
+    this.authState = "pending";
+    try {
+      this.ws?.send(
+        JSON.stringify({ type: "auth", token: this.token }),
+      );
+    } catch (e) {
+      console.error("[socket] failed to send auth frame", e);
     }
+
+    // Notify UI that we're now in the authenticating phase.
+    this.notifyStateChange();
   }
 
   // Handle socket errors
@@ -2348,16 +2401,17 @@ export class CollectionManagementApi {
 }
 
 /**
- * Factory function to create a new TrustGraph WebSocket connection
- * This is the main entry point for using the TrustGraph API
- * @param user - User identifier for API requests
- * @param token - Optional authentication token for secure connections
- * @param socketUrl - Optional WebSocket URL (defaults to /api/socket for browser, provide full URL for Node.js)
+ * Factory function to create a new TrustGraph WebSocket connection.
+ * The token (JWT or API key) is sent as the first frame after connect;
+ * the gateway derives the user identity and workspace from it.
+ *
+ * @param token - Bearer token (JWT from /auth/login or an API key)
+ * @param socketUrl - Optional WebSocket URL (defaults to /api/socket
+ *   for browser, provide full URL for Node.js)
  */
 export const createTrustGraphSocket = (
-  user: string,
-  token?: string,
+  token: string,
   socketUrl?: string,
 ): BaseApi => {
-  return new BaseApi(user, token, socketUrl);
+  return new BaseApi(token, socketUrl);
 };

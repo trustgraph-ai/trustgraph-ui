@@ -12,6 +12,10 @@ interface Socket {
   reopen: () => void;
   getNextId?: () => string;
   user?: string;
+  // True when the socket is OPEN *and* the auth handshake has completed
+  // successfully. Frames sent before this is true are rejected by the
+  // server.
+  isAuthReady?: () => boolean;
 }
 
 /**
@@ -204,8 +208,16 @@ export class ServiceCall {
       return; // Exit early - no more attempts
     }
 
-    // Check if WebSocket connection is available and ready
-    if (this.socket.ws && this.socket.ws.readyState === WebSocket.OPEN) {
+    // Check if WebSocket connection is available, open, and authenticated.
+    // The IAM gateway rejects all non-auth frames until the first-frame
+    // auth handshake has completed, so sends gated only on readyState
+    // would race the auth response.
+    const authReady = this.socket.isAuthReady?.() ?? true;
+    if (
+      this.socket.ws &&
+      this.socket.ws.readyState === WebSocket.OPEN &&
+      authReady
+    ) {
       try {
         // Attempt to send the message as JSON
         this.socket.ws.send(JSON.stringify(this.msg));

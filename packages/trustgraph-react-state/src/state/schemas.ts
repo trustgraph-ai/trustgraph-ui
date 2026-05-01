@@ -13,8 +13,7 @@ export const useSchemas = () => {
 
   // Only enable queries when socket is connected and ready
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   const schemasQuery = useQuery({
     queryKey: ["schemas"],

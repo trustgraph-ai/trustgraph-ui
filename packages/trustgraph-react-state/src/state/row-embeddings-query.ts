@@ -21,8 +21,7 @@ export const useRowEmbeddingsQuery = ({ flow }: { flow?: string } = {}) => {
   const effectiveFlow = flow ?? sessionFlowId;
 
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   const mutation = useMutation({
     mutationFn: async ({

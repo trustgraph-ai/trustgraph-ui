@@ -24,8 +24,7 @@ export const useTokenCosts = () => {
 
   // Only enable queries when socket is connected and ready
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   /**
    * Query for fetching all token costs

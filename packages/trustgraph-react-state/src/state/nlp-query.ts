@@ -40,8 +40,7 @@ export const useNlpQuery = ({ flow }: { flow?: string } = {}): {
 
   // Only enable operations when socket is connected and ready
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   // Mutation for converting natural language to GraphQL
   const nlpQueryMutation = useMutation({

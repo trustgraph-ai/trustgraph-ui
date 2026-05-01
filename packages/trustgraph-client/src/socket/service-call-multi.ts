@@ -12,6 +12,7 @@ interface Socket {
   reopen: () => void;
   getNextId?: () => string;
   user?: string;
+  isAuthReady?: () => boolean;
 }
 
 export class ServiceCallMulti {
@@ -124,8 +125,13 @@ export class ServiceCallMulti {
       return; // Exit early - no more attempts
     }
 
-    // Check if WebSocket connection is available and ready
-    if (this.socket.ws && this.socket.ws.readyState === WebSocket.OPEN) {
+    // Check if WebSocket connection is available, open, and authenticated.
+    const authReady = this.socket.isAuthReady?.() ?? true;
+    if (
+      this.socket.ws &&
+      this.socket.ws.readyState === WebSocket.OPEN &&
+      authReady
+    ) {
       try {
         this.socket.ws.send(JSON.stringify(this.msg));
         this.timeoutId = setTimeout(this.onTimeout.bind(this), this.timeout);

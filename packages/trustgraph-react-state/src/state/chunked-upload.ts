@@ -232,8 +232,7 @@ export const useChunkedUpload = (options: ChunkedUploadOptions = {}) => {
 
       // Validate connection
       if (
-        connectionState?.status !== "authenticated" &&
-        connectionState?.status !== "unauthenticated"
+        connectionState?.status !== "authenticated"
       ) {
         const error = "Not connected to server";
         updateProgress({ status: "error", error });
@@ -345,8 +344,7 @@ export const useChunkedUpload = (options: ChunkedUploadOptions = {}) => {
 
       // Validate connection
       if (
-        connectionState?.status !== "authenticated" &&
-        connectionState?.status !== "unauthenticated"
+        connectionState?.status !== "authenticated"
       ) {
         const error = "Not connected to server";
         updateProgress({ status: "error", error });

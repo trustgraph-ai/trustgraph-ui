@@ -19,8 +19,7 @@ export const useEmbeddings = ({ flow, term }) => {
 
   // Only enable queries when socket is connected and ready
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   // Hook for displaying user notifications
   const notify = useNotification();

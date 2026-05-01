@@ -49,8 +49,7 @@ export const useFlowBlueprints = () => {
 
   // Only enable queries when socket is connected and ready
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   /**
    * Query for fetching all flow blueprintes

@@ -40,35 +40,19 @@ describe("SocketProvider", () => {
     vi.clearAllMocks();
   });
 
-  it("should create socket with user and no apiKey", () => {
+  it("should create socket with token", () => {
     render(
-      <SocketProvider user="test-user">
+      <SocketProvider token="test-jwt">
         <TestComponent />
       </SocketProvider>,
     );
 
-    expect(mockCreateTrustGraphSocket).toHaveBeenCalledWith(
-      "test-user",
-      undefined,
-    );
-  });
-
-  it("should create socket with user and apiKey", () => {
-    render(
-      <SocketProvider user="test-user" apiKey="test-key">
-        <TestComponent />
-      </SocketProvider>,
-    );
-
-    expect(mockCreateTrustGraphSocket).toHaveBeenCalledWith(
-      "test-user",
-      "test-key",
-    );
+    expect(mockCreateTrustGraphSocket).toHaveBeenCalledWith("test-jwt");
   });
 
   it("should provide socket to children via useSocket hook", () => {
     render(
-      <SocketProvider user="test-user">
+      <SocketProvider token="test-jwt">
         <TestComponent />
       </SocketProvider>,
     );
@@ -78,7 +62,7 @@ describe("SocketProvider", () => {
 
   it("should subscribe to connection state changes", () => {
     render(
-      <SocketProvider user="test-user">
+      <SocketProvider token="test-jwt">
         <TestComponent />
       </SocketProvider>,
     );
@@ -89,17 +73,14 @@ describe("SocketProvider", () => {
   it("should render loading component when provided and not ready", () => {
     const LoadingComponent = <div data-testid="loading">Loading...</div>;
 
-    // Mock to prevent socket from being ready immediately
     const { rerender } = render(
-      <SocketProvider user="test-user" loadingComponent={LoadingComponent}>
+      <SocketProvider token="test-jwt" loadingComponent={LoadingComponent}>
         <TestComponent />
       </SocketProvider>,
     );
 
-    // Note: Due to the implementation, the socket becomes ready immediately
-    // In a real scenario with async operations, you'd see the loading component
     rerender(
-      <SocketProvider user="test-user" loadingComponent={LoadingComponent}>
+      <SocketProvider token="test-jwt" loadingComponent={LoadingComponent}>
         <TestComponent />
       </SocketProvider>,
     );
@@ -109,7 +90,7 @@ describe("SocketProvider", () => {
     const onSocketReady = vi.fn();
 
     render(
-      <SocketProvider user="test-user" onSocketReady={onSocketReady}>
+      <SocketProvider token="test-jwt" onSocketReady={onSocketReady}>
         <TestComponent />
       </SocketProvider>,
     );
@@ -132,15 +113,14 @@ describe("SocketProvider", () => {
 
     render(
       <SocketProvider
-        user="test-user"
+        token="test-jwt"
         onConnectionStateChange={onConnectionStateChange}
       >
         <TestComponent />
       </SocketProvider>,
     );
 
-    // Simulate connection state change
-    const newState = { status: "connected", authenticated: true };
+    const newState = { status: "authenticated", hasApiKey: true };
     if (capturedCallback) {
       (capturedCallback as (state: unknown) => void)(newState);
     }
@@ -150,7 +130,7 @@ describe("SocketProvider", () => {
 
   it("should close socket on unmount", () => {
     const { unmount } = render(
-      <SocketProvider user="test-user">
+      <SocketProvider token="test-jwt">
         <TestComponent />
       </SocketProvider>,
     );
@@ -160,55 +140,23 @@ describe("SocketProvider", () => {
     expect(mockSocket.close).toHaveBeenCalled();
   });
 
-  it("should recreate socket when user changes", () => {
+  it("should recreate socket when token changes", () => {
     const { rerender } = render(
-      <SocketProvider user="user1">
+      <SocketProvider token="jwt-1">
         <TestComponent />
       </SocketProvider>,
     );
 
-    expect(mockCreateTrustGraphSocket).toHaveBeenCalledWith(
-      "user1",
-      undefined,
-    );
+    expect(mockCreateTrustGraphSocket).toHaveBeenCalledWith("jwt-1");
 
     rerender(
-      <SocketProvider user="user2">
-        <TestComponent />
-      </SocketProvider>,
-    );
-
-    // Socket should be closed and recreated
-    expect(mockSocket.close).toHaveBeenCalled();
-    expect(mockCreateTrustGraphSocket).toHaveBeenCalledWith(
-      "user2",
-      undefined,
-    );
-  });
-
-  it("should recreate socket when apiKey changes", () => {
-    const { rerender } = render(
-      <SocketProvider user="test-user" apiKey="key1">
-        <TestComponent />
-      </SocketProvider>,
-    );
-
-    expect(mockCreateTrustGraphSocket).toHaveBeenCalledWith(
-      "test-user",
-      "key1",
-    );
-
-    rerender(
-      <SocketProvider user="test-user" apiKey="key2">
+      <SocketProvider token="jwt-2">
         <TestComponent />
       </SocketProvider>,
     );
 
     expect(mockSocket.close).toHaveBeenCalled();
-    expect(mockCreateTrustGraphSocket).toHaveBeenCalledWith(
-      "test-user",
-      "key2",
-    );
+    expect(mockCreateTrustGraphSocket).toHaveBeenCalledWith("jwt-2");
   });
 
   it("should unsubscribe from connection state on unmount", () => {
@@ -216,7 +164,7 @@ describe("SocketProvider", () => {
     mockSocket.onConnectionStateChange.mockReturnValue(unsubscribe);
 
     const { unmount } = render(
-      <SocketProvider user="test-user">
+      <SocketProvider token="test-jwt">
         <TestComponent />
       </SocketProvider>,
     );

@@ -76,6 +76,25 @@ export type { LoadState } from "./state/load";
 export { useSearchStateStore } from "./state/search";
 export type { SearchState } from "./state/search";
 
+// Auth — login/logout, bootstrap-status, token store. Token is held in
+// sessionStorage; the SocketProvider mounts only once a token exists.
+export {
+  useAuthStore,
+  useAuth,
+  useLogin,
+  useLogout,
+  useBootstrapStatus,
+  configureAuthApi,
+} from "./state/auth";
+export type {
+  AuthStatus,
+  BootstrapPhase,
+  AuthStoreState,
+  UseAuthResult,
+  UseLoginResult,
+  UseBootstrapStatusResult,
+} from "./state/auth";
+
 // TanStack Query hooks
 export { useSettings } from "./state/settings";
 export { useFlows } from "./state/flows";

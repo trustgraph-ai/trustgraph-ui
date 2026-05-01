@@ -8,11 +8,9 @@ export interface SocketProviderProps {
   /** Child components that will have access to the socket context */
   children: ReactNode;
 
-  /** TrustGraph user identifier */
-  user: string;
-
-  /** Optional API key for authentication */
-  apiKey?: string;
+  /** Bearer token (JWT or API key). The provider creates the socket
+   *  only when a token is supplied; pass undefined/null before login. */
+  token: string;
 
   /** Optional custom loading component to show while socket is initializing */
   loadingComponent?: ReactNode;

@@ -48,8 +48,7 @@ export const useFlowParameters = (flowBlueprintName?: string) => {
   const connectionState = useConnectionState();
 
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   /**
    * Query for fetching parameter definitions for a flow blueprint

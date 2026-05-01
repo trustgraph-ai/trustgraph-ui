@@ -18,7 +18,7 @@ vi.mock("@trustgraph/client", () => ({
 describe("useConnectionState", () => {
   it("should return null initially", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <SocketProvider user="test-user">{children}</SocketProvider>
+      <SocketProvider token="test-jwt">{children}</SocketProvider>
     );
 
     const { result } = renderHook(() => useConnectionState(), { wrapper });
@@ -27,7 +27,6 @@ describe("useConnectionState", () => {
   });
 
   it("should throw error when used outside SocketProvider", () => {
-    // Suppress console.error for this test
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     expect(() => {
@@ -48,15 +47,14 @@ describe("useConnectionState", () => {
     );
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <SocketProvider user="test-user">{children}</SocketProvider>
+      <SocketProvider token="test-jwt">{children}</SocketProvider>
     );
 
     const { result } = renderHook(() => useConnectionState(), { wrapper });
 
     expect(result.current).toBeNull();
 
-    // Simulate connection state change
-    const newState = { status: "connected", authenticated: true };
+    const newState = { status: "authenticated", hasApiKey: true };
     act(() => {
       if (capturedCallback) {
         capturedCallback(newState);
@@ -68,7 +66,7 @@ describe("useConnectionState", () => {
 
   it("should maintain reference stability when state doesn't change", () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <SocketProvider user="test-user">{children}</SocketProvider>
+      <SocketProvider token="test-jwt">{children}</SocketProvider>
     );
 
     const { result, rerender } = renderHook(() => useConnectionState(), {
@@ -93,50 +91,47 @@ describe("useConnectionState", () => {
     );
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <SocketProvider user="test-user">{children}</SocketProvider>
+      <SocketProvider token="test-jwt">{children}</SocketProvider>
     );
 
     const { result } = renderHook(() => useConnectionState(), { wrapper });
 
-    // Test connecting state
     act(() => {
       if (capturedCallback) {
-        capturedCallback({ status: "connecting", authenticated: false });
+        capturedCallback({ status: "connecting", hasApiKey: true });
       }
     });
 
     expect(result.current).toEqual({
       status: "connecting",
-      authenticated: false,
+      hasApiKey: true,
     });
 
-    // Test connected state
     act(() => {
       if (capturedCallback) {
-        capturedCallback({ status: "connected", authenticated: true });
+        capturedCallback({ status: "authenticated", hasApiKey: true });
       }
     });
 
     expect(result.current).toEqual({
-      status: "connected",
-      authenticated: true,
+      status: "authenticated",
+      hasApiKey: true,
     });
 
-    // Test error state
     act(() => {
       if (capturedCallback) {
         capturedCallback({
-          status: "error",
-          authenticated: false,
-          error: "Connection failed",
+          status: "auth-failed",
+          hasApiKey: true,
+          lastError: "auth failure",
         });
       }
     });
 
     expect(result.current).toEqual({
-      status: "error",
-      authenticated: false,
-      error: "Connection failed",
+      status: "auth-failed",
+      hasApiKey: true,
+      lastError: "auth failure",
     });
   });
 });

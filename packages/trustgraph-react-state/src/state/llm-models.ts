@@ -12,8 +12,7 @@ export const useLLMModels = () => {
   const notify = useNotification();
 
   const isSocketReady =
-    connectionState?.status === "authenticated" ||
-    connectionState?.status === "unauthenticated";
+    connectionState?.status === "authenticated";
 
   // Fetch the llm-model parameter type
   const paramTypesQuery = useQuery({

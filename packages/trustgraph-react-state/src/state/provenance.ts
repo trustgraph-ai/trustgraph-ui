@@ -59,8 +59,7 @@ export const useProvenance = (options: UseProvenanceOptions = {}): UseProvenance
    */
   const isConnected = useCallback(() => {
     return (
-      connectionState?.status === "authenticated" ||
-      connectionState?.status === "unauthenticated"
+      connectionState?.status === "authenticated"
     );
   }, [connectionState]);
 
