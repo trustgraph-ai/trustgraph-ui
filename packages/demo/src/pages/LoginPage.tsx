@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLogin, useAuthStore } from "@trustgraph/react-state";
+import { useLogin, useAuth, useAuthStore } from "@trustgraph/react-state";
 
 type Mode = "credentials" | "api-key";
 
@@ -21,8 +21,8 @@ export function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
   const { login, isLoading, error } = useLogin();
+  const { error: authError } = useAuth();
   const setToken = useAuthStore((s) => s.setToken);
 
   const handleCredentials = async (e: React.FormEvent) => {
@@ -35,11 +35,10 @@ export function LoginPage() {
     e.preventDefault();
     const key = apiKey.trim();
     if (!key) return;
-    setApiKeyError(null);
     setToken(key);
   };
 
-  const displayError = mode === "credentials" ? error : apiKeyError;
+  const displayError = mode === "credentials" ? error : authError;
 
   return (
     <div style={{

@@ -1,5 +1,7 @@
-import { useAuth, useBootstrapStatus } from "@trustgraph/react-state";
+import { useEffect } from "react";
+import { useAuth, useAuthStore, useBootstrapStatus } from "@trustgraph/react-state";
 import { SocketProvider } from "@trustgraph/react-provider";
+import { useConnectionState } from "@trustgraph/react-provider";
 import { LoginPage } from "./pages/LoginPage";
 import App from "./App";
 
@@ -48,9 +50,27 @@ export function AuthGate() {
 
   return (
     <SocketProvider token={token}>
-      <App />
+      <AuthFailedGuard>
+        <App />
+      </AuthFailedGuard>
     </SocketProvider>
   );
+}
+
+function AuthFailedGuard({ children }: { children: React.ReactNode }) {
+  const connectionState = useConnectionState();
+  const clearToken = useAuthStore((s) => s.clearToken);
+  const setStatus = useAuthStore((s) => s.setStatus);
+
+  useEffect(() => {
+    if (connectionState?.status === "auth-failed") {
+      const error = connectionState.lastError || "auth failure";
+      clearToken();
+      setStatus("auth-failed", error);
+    }
+  }, [connectionState?.status, connectionState?.lastError, clearToken, setStatus]);
+
+  return <>{children}</>;
 }
 
 function CenteredMessage({ children }: { children: React.ReactNode }) {
