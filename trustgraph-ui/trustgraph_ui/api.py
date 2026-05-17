@@ -34,8 +34,10 @@ class Api:
         self.app.add_routes([web.get("/api/socket", self.socket)])
         self.app.add_routes([web.get("/api/export-core", self.export_core)])
         self.app.add_routes([web.post("/api/import-core", self.import_core)])
-        self.app.add_routes([web.post("/api/v1/auth", self.auth)])
-        self.app.add_routes([web.get("/api/v1/auth", self.auth)])
+        self.app.add_routes([
+            web.route("*", "/api/v1/auth/{tail:.*}", self.auth),
+            web.route("*", "/api/v1/auth", self.auth),
+        ])
 
         self.app.add_routes([web.get("/{tail:.*}", self.everything)])
 
@@ -122,7 +124,7 @@ class Api:
 
     async def auth(self, request):
 
-        url = self.gateway + "api/v1/auth"
+        url = self.gateway + request.path.lstrip("/")
 
         if request.query_string:
             url += "?" + request.query_string
