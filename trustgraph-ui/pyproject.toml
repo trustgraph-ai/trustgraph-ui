@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trustgraph-ui"
+version = "0.0.0"
+description = "UI for trustgraph.ai"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "GPL-3.0-or-later"
+authors = [
+    { name = "trustgraph.ai", email = "security@trustgraph.ai" },
+]
+urls = { Homepage = "https://github.com/trustgraph-ai/trustgraph-ui" }
+dependencies = [
+    "aiohttp",
+    "prometheus-client",
+    "websockets",
+]
+
+[project.scripts]
+service = "trustgraph_ui.service:run"
+
+[tool.setuptools.packages.find]
+where = ["./"]
+
+[tool.setuptools.package-data]
+"*" = ["ui/**"]
