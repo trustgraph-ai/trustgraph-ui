@@ -10,7 +10,7 @@ ui:
 	cp -r packages/demo/dist/ trustgraph-ui/trustgraph_ui/ui/
 
 service-package: ui update-package-versions
-	cd trustgraph-ui && python3 -m build --sdist --outdir ../pkgs/
+	cd trustgraph-ui && pip wheel -w ../pkgs/ --no-deps .
 
 update-package-versions:
 	sed -i 's/^version = .*/version = "${PACKAGE_VERSION}"/' trustgraph-ui/pyproject.toml
