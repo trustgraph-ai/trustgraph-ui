@@ -10,10 +10,10 @@ ui:
 	cp -r packages/demo/dist/ trustgraph-ui/trustgraph_ui/ui/
 
 service-package: ui update-package-versions
-	cd trustgraph-ui && python3 setup.py sdist --dist-dir ../pkgs/
+	cd trustgraph-ui && python3 -m build --sdist --outdir ../pkgs/
 
 update-package-versions:
-	echo __version__ = \"${PACKAGE_VERSION}\" > trustgraph-ui/trustgraph_ui/version.py
+	sed -i 's/^version = .*/version = "${PACKAGE_VERSION}"/' trustgraph-ui/pyproject.toml
 
 CONTAINER=docker.io/trustgraph/trustgraph-ui
 DOCKER=podman
