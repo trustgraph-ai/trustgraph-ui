@@ -1,0 +1,81 @@
+{
+  "name": "@trustgraph/react-state",
+  "version": "1.7.3",
+  "description": "React state management hooks for TrustGraph applications",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "prettify": "prettier --write ."
+  },
+  "keywords": [
+    "trustgraph",
+    "react",
+    "state",
+    "hooks",
+    "tanstack-query"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trustgraph-ai/trustgraph-react-state"
+  },
+  "dependencies": {
+    "@trustgraph/client": "*",
+    "@trustgraph/react-provider": "*",
+    "compute-cosine-similarity": "^1.1.0",
+    "uuid": "^11.0.3"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "zustand": "^4.0.0 || ^5.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@tanstack/react-query": "^5.0.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.0",
+    "@trustgraph/client": "^1.7.2",
+    "@trustgraph/react-provider": "^1.4.0",
+    "@types/react": "^18.0.0 || ^19.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vitest/ui": "^3.2.4",
+    "eslint": "^8.57.1",
+    "globals": "^16.4.0",
+    "happy-dom": "^20.0.10",
+    "jiti": "^2.6.1",
+    "prettier": "^3.6.2",
+    "react": "^18.3.1 || ^19.0.0",
+    "react-dom": "^18.3.1 || ^19.0.0",
+    "rollup": "^4.9.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.46.0",
+    "uuid": "^11.0.3",
+    "vitest": "^3.2.4",
+    "zustand": "^5.0.2"
+  }
+}

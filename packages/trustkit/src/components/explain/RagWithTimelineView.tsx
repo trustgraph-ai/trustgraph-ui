@@ -1,0 +1,83 @@
+import { useState, useCallback, useRef, useEffect } from "react";
+import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
+import { StreamingResponse } from "./StreamingResponse";
+import { ExplainTimeline } from "./ExplainTimeline";
+import { useGraphRag } from "../../hooks/useGraphRag";
+import { useExplainSession } from "../../hooks/useExplainSession";
+import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
+import { palette, border } from "../../theme";
+import { COLLECTION } from "../../config";
+
+interface RagWithTimelineViewProps {
+  collection?: string;
+}
+
+/**
+ * Option 3: Explain Timeline with Document Sources.
+ * Response on the left, event timeline on the right with
+ * document-level sources (no chunks, collapsed to documents).
+ */
+export function RagWithTimelineView({ collection = COLLECTION }: RagWithTimelineViewProps) {
+  const [input, setInput] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const explainSession = useExplainSession();
+  const { query, response, isQuerying, error } = useGraphRag({
+    collection,
+    onExplain: explainSession.addEvent,
+  });
+  useExplainEventFetcher(explainSession.events, explainSession.updateEvent);
+
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [response]);
+
+  const handleSubmit = useCallback((q: string) => {
+    if (!q.trim() || isQuerying) return;
+    explainSession.reset();
+    setInput("");
+    query(q);
+  }, [query, isQuerying, explainSession]);
+
+  return (
+    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+      {/* Left: Query + Response */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
+        <Toolbar>
+          <SectionLabel marginBottom={12}>GRAPH RAG QUERY</SectionLabel>
+          <SearchInput
+            value={input}
+            onChange={setInput}
+            onSubmit={() => handleSubmit(input)}
+            placeholder="Ask a question..."
+            buttonText="Query"
+            isLoading={isQuerying}
+            buttonColor={palette.cyan}
+          />
+        </Toolbar>
+
+        <div style={{ flex: 1, padding: "24px 28px", overflowY: "auto" }}>
+          {!response && !isQuerying && !error && (
+            <EmptyState message="Ask a question to see Graph RAG with live explainability." />
+          )}
+
+          <StreamingResponse
+            text={response}
+            isStreaming={isQuerying}
+            error={error}
+          />
+          <div ref={scrollRef} />
+        </div>
+      </div>
+
+      {/* Right: Event Timeline */}
+      <div style={{ width: "40%", display: "flex", flexDirection: "column" }}>
+        <ExplainTimeline
+          events={explainSession.events}
+          isQuerying={isQuerying}
+          sourceLevel="document"
+        />
+      </div>
+    </div>
+  );
+}
