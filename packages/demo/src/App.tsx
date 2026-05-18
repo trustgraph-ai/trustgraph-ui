@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import type { DomainKey, Entity } from "@trustgraph/trustkit";
 import { Header, StatusBar, Toaster, useGraphData, toast } from "@trustgraph/trustkit";
 import { useLogout } from "@trustgraph/react-state";
-import { HomePage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage } from "./pages";
+import { HomePage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage } from "./pages";
 
-type View = "home" | "ingest" | "explore" | "graph-rag" | "doc-rag" | "agent" | "graph" | "query" | "explain" | "data" | "ontology" | "raw-graph" | "prompts" | "agent-config";
+type View = "home" | "ingest" | "explore" | "graph-rag" | "doc-rag" | "agent" | "graph" | "query" | "explain" | "data" | "ontology" | "raw-graph" | "prompts" | "agent-config" | "ontology-manage" | "schemas";
 
 export default function App() {
   const [activeView, setActiveView] = useState<View>("home");
@@ -82,6 +82,10 @@ export default function App() {
       {activeView === "prompts" && <PromptPage />}
 
       {activeView === "agent-config" && <AgentConfigPage />}
+
+      {activeView === "ontology-manage" && <OntologyManagePage />}
+
+      {activeView === "schemas" && <SchemaPage />}
 
       <StatusBar />
       <Toaster />

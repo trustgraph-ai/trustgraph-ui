@@ -12,3 +12,5 @@ export { OntologyView } from "./OntologyView";
 export { RawGraphPage } from "./RawGraphPage";
 export { PromptPage } from "./PromptPage";
 export { AgentConfigPage } from "./AgentConfigPage";
+export { OntologyManagePage } from "./OntologyManagePage";
+export { SchemaPage } from "./SchemaPage";

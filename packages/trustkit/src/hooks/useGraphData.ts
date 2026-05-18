@@ -20,7 +20,7 @@ function getTermValue(term: { t: string; i?: string; v?: string }): string {
 }
 
 // Helper to create a short ID from a URI
-function uriToId(uri: string): string {
+export function uriToId(uri: string): string {
   const hashIndex = uri.lastIndexOf("#");
   const slashIndex = uri.lastIndexOf("/");
   const index = Math.max(hashIndex, slashIndex);
@@ -33,7 +33,7 @@ function getClassIcon(_classUri: string): string {
 }
 
 // Helper to extract predicate name from URI
-function predicateToName(uri: string): string {
+export function predicateToName(uri: string): string {
   const hashIndex = uri.lastIndexOf("#");
   const slashIndex = uri.lastIndexOf("/");
   const index = Math.max(hashIndex, slashIndex);

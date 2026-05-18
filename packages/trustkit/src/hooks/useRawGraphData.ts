@@ -37,17 +37,17 @@ export interface PredicateInfo {
 
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
 
-function getTermValue(term: { t: string; i?: string; v?: string }): string {
+export function getTermValue(term: { t: string; i?: string; v?: string }): string {
   if (term.t === "i") return term.i || "";
   if (term.t === "l") return term.v || "";
   return "";
 }
 
-function isUri(term: { t: string }): boolean {
+export function isUri(term: { t: string }): boolean {
   return term.t === "i";
 }
 
-function hashString(s: string): number {
+export function hashString(s: string): number {
   let hash = 0;
   for (let i = 0; i < s.length; i++) {
     hash = ((hash << 5) - hash) + s.charCodeAt(i);
@@ -56,12 +56,12 @@ function hashString(s: string): number {
   return Math.abs(hash);
 }
 
-function colorForUri(uri: string): { color: string; glow: string } {
+export function colorForUri(uri: string): { color: string; glow: string } {
   const idx = hashString(uri) % domainColors.length;
   return domainColors[idx];
 }
 
-function predicateLabel(uri: string): string {
+export function predicateLabel(uri: string): string {
   const name = getLocalName(uri);
   return name.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
 }
@@ -72,7 +72,7 @@ function makeIriTerm(uri: string) {
 
 // ── Process triples into nodes and edges ─────────────────────────
 
-function processTriples(
+export function processTriples(
   triples: Triple[],
   nodeMap: Map<string, RawNode>,
   edgeSet: Set<string>,
