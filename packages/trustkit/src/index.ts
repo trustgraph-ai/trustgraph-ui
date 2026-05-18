@@ -16,6 +16,12 @@ export type { RawGraphNode } from "./components/raw-graph";
 // Components — prompt
 export { PromptList, PromptEditor, PromptTestPanel, PromptBrowser, PromptWorkbench } from "./components/prompt";
 
+// Components — ontology
+export { OntologyList, OntologyClassTree, OntologyPropertyTree, OntologyClassEditor, OntologyPropertyEditor, OntologyMetadataEditor, OntologyValidationPanel, OntologyWorkbench } from "./components/ontology";
+
+// Components — schema
+export { useSchemaForm, SchemaFieldEditor, SchemaFieldsList, SchemaBasicInfo, SchemaIndexesSection, SchemaValidationErrors, SchemaEditor, SchemaWorkbench } from "./components/schema";
+
 // Components — agent config
 export { ConfigSidebar, ConfigEditor, AgentDebugPanel, ExplainFacetCard, AgentConsole } from "./components/agent-config";
 export type { AgentPattern, AgentTaskType, AgentTool, ToolArgument, McpTool, ToolService, ToolServiceParam, ConfigKind, SelectedItem } from "./components/agent-config";
@@ -69,6 +75,14 @@ export * from "./types";
 export { getLocalName } from "./utils/uri";
 export { parseExplainEvent } from "./utils/explainParse";
 export type { ParsedExplainEvent } from "./utils/explainParse";
+export { OntologyValidator } from "./utils/ontology-validator";
+export type { ValidationIssue, ValidationResult } from "./utils/ontology-validator";
+export { OntologyExporter } from "./utils/ontology-exporter";
+export type { ExportOptions } from "./utils/ontology-exporter";
+export { OntologyImporter } from "./utils/ontology-importer";
+export type { ImportResult } from "./utils/ontology-importer";
+export { validateSchema, SCHEMA_TYPE_OPTIONS, DEFAULT_FIELD } from "./utils/schema-validation";
+export type { SchemaField, Schema, SchemaTableRow, SchemaTypeOption } from "./utils/schema-validation";
 
 // Config
 export { COLLECTION } from "./config";

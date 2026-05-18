@@ -7,7 +7,7 @@
     "dev": "npm -w @trustgraph/demo run dev",
     "build": "npm -w @trustgraph/client run build && npm -w @trustgraph/react-provider run build && npm -w @trustgraph/react-state run build && npm -w @trustgraph/trustkit run build && npm -w @trustgraph/demo run build",
     "lint": "eslint .",
-    "test": "npm -w @trustgraph/client -w @trustgraph/react-provider -w @trustgraph/react-state run test"
+    "test": "npm -w @trustgraph/client -w @trustgraph/react-provider -w @trustgraph/react-state -w @trustgraph/trustkit run test"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

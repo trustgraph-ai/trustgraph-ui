@@ -22,7 +22,7 @@ const workflows: WorkflowCard[] = [
     icon: "⬆",
     color: palette.amber,
     description: "Load documents and process them into knowledge.",
-    screenshot: "/ss-ingest.png",
+    screenshot: "/doc-ingest.jpg",
   },
   {
     key: "explore",
@@ -31,6 +31,7 @@ const workflows: WorkflowCard[] = [
     icon: "◈",
     color: palette.emerald,
     description: "Explore the context graph visually.",
+    screenshot: "/ctxt-graph.jpg",
   },
   {
     key: "graph-rag",
@@ -39,7 +40,7 @@ const workflows: WorkflowCard[] = [
     icon: "◉",
     color: palette.blue,
     description: "Ask questions with knowledge graph provenance.",
-    screenshot: "/ss-graph-rag.png",
+    screenshot: "/graph-rag.jpg",
   },
   {
     key: "agent",
@@ -48,6 +49,7 @@ const workflows: WorkflowCard[] = [
     icon: "⚡",
     color: palette.amber,
     description: "Multi-step reasoning agent with provenance.",
+    screenshot: "/agent-retrieval.jpg",
   },
   {
     key: "doc-rag",
@@ -56,7 +58,7 @@ const workflows: WorkflowCard[] = [
     icon: "◉",
     color: palette.purple,
     description: "Semantic document search with grounded answers.",
-    screenshot: "/ss-doc-rag.png",
+    screenshot: "/doc-rag.jpg",
   },
   {
     key: "raw-graph",
@@ -74,7 +76,7 @@ const workflows: WorkflowCard[] = [
     icon: "✎",
     color: palette.amber,
     description: "Browse, edit, and test LLM prompt templates.",
-    screenshot: "/ss-prompts.png",
+    screenshot: "/prompts.jpg",
   },
   {
     key: "agent-config",
@@ -83,7 +85,7 @@ const workflows: WorkflowCard[] = [
     icon: "⚙",
     color: palette.cyan,
     description: "Configure agent patterns, task types, and tools.",
-    screenshot: "/ss-agent-console.png",
+    screenshot: "/agent.jpg",
   },
   {
     key: "data",
@@ -101,6 +103,24 @@ const workflows: WorkflowCard[] = [
     icon: "◇",
     color: palette.purple,
     description: "Browse classes, properties, and relationships.",
+  },
+  {
+    key: "ontology-manage",
+    view: "ontology-manage",
+    title: "Ontology Management",
+    icon: "◆",
+    color: palette.emerald,
+    description: "Create, edit, validate, and export OWL ontologies.",
+    screenshot: "/ontology.jpg",
+  },
+  {
+    key: "schemas",
+    view: "schemas",
+    title: "Schema Management",
+    icon: "▦",
+    color: palette.blue,
+    description: "Define and manage structured data schemas.",
+    screenshot: "/schema.jpg",
   },
 ];
 
