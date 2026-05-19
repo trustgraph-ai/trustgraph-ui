@@ -95,6 +95,12 @@ class Api:
                     body=t, content_type="image/png"
                 )
 
+            if request.path.endswith(".jpg") or request.path.endswith(".jpeg"):
+                t = self.open_binary(request.path)
+                return web.Response(
+                    body=t, content_type="image/jpeg"
+                )
+
             if request.path.endswith(".svg"):
                 t = self.open(request.path)
                 return web.Response(
