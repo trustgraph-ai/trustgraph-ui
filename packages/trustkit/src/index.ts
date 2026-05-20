@@ -22,6 +22,22 @@ export { OntologyList, OntologyClassTree, OntologyPropertyTree, OntologyClassEdi
 // Components — schema
 export { useSchemaForm, SchemaFieldEditor, SchemaFieldsList, SchemaBasicInfo, SchemaIndexesSection, SchemaValidationErrors, SchemaEditor, SchemaWorkbench } from "./components/schema";
 
+// Components — map
+export { GeoMap, MAP_PRESETS, WorldEventsExplorer, EventTimeline } from "./components/map";
+export type { GeoMapProps, MapMarker, MapPreset, WorldEventsExplorerProps, EventTimelineProps } from "./components/map";
+export { useWorldEvents } from "./hooks/useWorldEvents";
+export type { WorldEvent, EventSummary, EventTypeInfo, TimeBucket, GridCell } from "./hooks/useWorldEvents";
+
+// Components — solar
+export { SolarSystemExplorer } from "./components/solar";
+export type { SolarSystemExplorerProps } from "./components/solar";
+export { useSolarMissions } from "./hooks/useSolarMissions";
+export type { CelestialBody, SolarMission, MissionEvent } from "./hooks/useSolarMissions";
+
+// Components — sparql
+export { SparqlWorkbench } from "./components/sparql";
+export type { SparqlWorkbenchProps, SparqlResult } from "./components/sparql";
+
 // Components — agent config
 export { ConfigSidebar, ConfigEditor, AgentDebugPanel, ExplainFacetCard, AgentConsole } from "./components/agent-config";
 export type { AgentPattern, AgentTaskType, AgentTool, ToolArgument, McpTool, ToolService, ToolServiceParam, ConfigKind, SelectedItem } from "./components/agent-config";

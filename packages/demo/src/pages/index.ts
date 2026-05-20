@@ -14,3 +14,7 @@ export { PromptPage } from "./PromptPage";
 export { AgentConfigPage } from "./AgentConfigPage";
 export { OntologyManagePage } from "./OntologyManagePage";
 export { SchemaPage } from "./SchemaPage";
+export { PlaygroundPage } from "./PlaygroundPage";
+export { WorldEventsPage } from "./WorldEventsPage";
+export { SparqlPage } from "./SparqlPage";
+export { SolarMissionsPage } from "./SolarMissionsPage";

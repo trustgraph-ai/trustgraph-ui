@@ -46,6 +46,9 @@ import {
   TextCompletionResponse,
   TriplesQueryRequest,
   TriplesQueryResponse,
+  SparqlQueryRequest,
+  SparqlStreamBatch,
+  SparqlQueryResult,
   // Chunked upload types
   ChunkedUploadDocumentMetadata,
   BeginUploadRequest,
@@ -170,6 +173,14 @@ export interface Socket {
     collection?: string,
     graph?: string, // Named graph URI filter
   ) => Promise<Triple[]>;
+
+  // Execute a SPARQL query with streaming batched results
+  sparqlQuery: (
+    query: string,
+    collection?: string,
+    limit?: number,
+    batchSize?: number,
+  ) => Promise<SparqlQueryResult>;
 
   // Load a document into the system
   loadDocument: (
@@ -1857,6 +1868,92 @@ export class FlowApi {
         this.flowId,
       )
       .then((r) => r.response);
+  }
+
+  sparqlQuery(
+    query: string,
+    collection?: string,
+    limit?: number,
+    batchSize?: number,
+  ): Promise<SparqlQueryResult> {
+    const columns: string[] = [];
+    const rows: Record<string, string>[] = [];
+    let queryType = "select";
+    let askResult: boolean | undefined;
+    let triples: Triple[] | undefined;
+    let sparqlError: string | null = null;
+
+    const termToString = (val: Term | null): string => {
+      if (!val) return "";
+      if (val.t === "i") return (val as { t: "i"; i: string }).i;
+      if (val.t === "l") return (val as { t: "l"; v: string }).v;
+      return "";
+    };
+
+    return this.api
+      .makeRequestMulti<SparqlQueryRequest, SparqlQueryResult>(
+        "sparql",
+        {
+          query,
+          collection: collection || "default",
+          limit: limit ?? 10000,
+          streaming: true,
+          "batch-size": batchSize ?? 50,
+        },
+        (resp: unknown) => {
+          const msg = resp as { response?: SparqlStreamBatch; complete?: boolean };
+          const batch = msg.response;
+          const isComplete = msg.complete === true;
+
+          if (!batch) return isComplete;
+
+          if (batch.error) {
+            sparqlError = typeof batch.error === "string"
+              ? batch.error
+              : batch.error.message || "SPARQL query error";
+            return true;
+          }
+
+          queryType = batch["query-type"] || queryType;
+
+          if (queryType === "ask") {
+            askResult = batch["ask-result"];
+            return true;
+          }
+
+          if (queryType === "construct" || queryType === "describe") {
+            triples = batch.triples || [];
+            return true;
+          }
+
+          if (batch.variables && columns.length === 0) {
+            columns.push(...batch.variables);
+          }
+
+          if (batch.bindings) {
+            for (const binding of batch.bindings) {
+              const row: Record<string, string> = {};
+              for (let i = 0; i < columns.length; i++) {
+                row[columns[i]] = termToString(binding.values[i] ?? null);
+              }
+              rows.push(row);
+            }
+          }
+
+          return isComplete;
+        },
+        60000,
+        undefined,
+        this.flowId,
+      )
+      .then(() => {
+        if (sparqlError) throw new Error(sparqlError);
+        return { queryType, columns, rows, askResult, triples };
+      })
+      .catch((err) => {
+        if (err instanceof Error) throw err;
+        throw new Error(typeof err === "string" ? err : JSON.stringify(err));
+      });
   }
 
   /**
