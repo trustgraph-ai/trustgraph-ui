@@ -122,6 +122,44 @@ const workflows: WorkflowCard[] = [
     description: "Define and manage structured data schemas.",
     screenshot: "/schema.jpg",
   },
+  {
+    key: "sparql",
+    view: "sparql",
+    title: "SPARQL Query",
+    icon: "⟐",
+    color: palette.purple,
+    description: "Execute SPARQL queries against the knowledge graph.",
+  },
+
+/*
+  {
+    key: "world-events",
+    view: "world-events",
+    title: "World Events Explorer",
+    icon: "⊕",
+    color: palette.cyan,
+    description: "Geo-temporal event explorer with map, timeline, and filters.",
+  },
+  {
+    key: "solar-missions",
+    view: "solar-missions",
+    title: "Solar System Missions",
+    icon: "◉",
+    color: palette.amber,
+    description: "Explore space missions across the solar system.",
+  },
+*/
+
+/*
+  {
+    key: "playground",
+    view: "playground",
+    title: "Playground",
+    icon: "△",
+    color: palette.rose,
+    description: "Experimental sandbox for trying things out.",
+  },
+*/
 ];
 
 export function HomePage({ onNavigate }: HomePageProps) {

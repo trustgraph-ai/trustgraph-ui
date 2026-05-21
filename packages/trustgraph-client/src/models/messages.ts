@@ -192,6 +192,35 @@ export interface TriplesQueryResponse {
   response: Triple[];
 }
 
+export interface SparqlQueryRequest {
+  query: string;
+  collection: string;
+  limit: number;
+  streaming: boolean;
+  "batch-size": number;
+}
+
+export interface SparqlBinding {
+  values: (Term | null)[];
+}
+
+export interface SparqlStreamBatch {
+  "query-type"?: string;
+  variables?: string[];
+  bindings?: SparqlBinding[];
+  triples?: Triple[];
+  "ask-result"?: boolean;
+  error?: { message?: string } | string;
+}
+
+export interface SparqlQueryResult {
+  queryType: string;
+  columns: string[];
+  rows: Record<string, string>[];
+  askResult?: boolean;
+  triples?: Triple[];
+}
+
 export interface RowsQueryRequest {
   query: string;
   user?: string;
