@@ -149,6 +149,14 @@ const workflows: WorkflowCard[] = [
     description: "Explore space missions across the solar system.",
   },
 */
+  {
+    key: "hwsec",
+    view: "hwsec",
+    title: "Hardware Security Explorer",
+    icon: "◈",
+    color: palette.blue,
+    description: "Hardware decomposition tree with security annotations.",
+  },
 
 /*
   {

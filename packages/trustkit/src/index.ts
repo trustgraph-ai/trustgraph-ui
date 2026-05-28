@@ -34,6 +34,12 @@ export type { SolarSystemExplorerProps } from "./components/solar";
 export { useSolarMissions } from "./hooks/useSolarMissions";
 export type { CelestialBody, SolarMission, MissionEvent } from "./hooks/useSolarMissions";
 
+// Components — hwsec
+export { HwSecExplorer } from "./components/hwsec";
+export type { HwSecExplorerProps } from "./components/hwsec";
+export { useHwSecData } from "./hooks/useHwSecData";
+export type { HwNode } from "./hooks/useHwSecData";
+
 // Components — sparql
 export { SparqlWorkbench } from "./components/sparql";
 export type { SparqlWorkbenchProps, SparqlResult } from "./components/sparql";
