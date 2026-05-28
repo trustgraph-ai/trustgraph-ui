@@ -6,7 +6,11 @@ import { LoadingState } from "../common";
 
 export interface HwSecExplorerProps {}
 
-const HW_ENTITY_TYPES = ["System", "Subsystem", "Component", "SubComponent", "Element", "HardwareEntity"] as const;
+const HW_ENTITY_TYPES: readonly string[] = ["System", "Subsystem", "Component", "SubComponent", "Element", "HardwareEntity"];
+
+const TYPE_TIER: Record<string, number> = {
+  System: 0, Subsystem: 1, Component: 2, SubComponent: 3, Element: 4, HardwareEntity: 5,
+};
 
 const KIND_COLORS: Record<string, string> = {
   System: palette.blue,
@@ -89,39 +93,102 @@ function Section({ title, color, children }: { title: string; color: string; chi
 export function HwSecExplorer(_props: HwSecExplorerProps) {
   const data = useHwSecData();
   const [selectedUri, setSelectedUri] = useState<string | null>(null);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    () => new Set(["System", "Component"])
-  );
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() => new Set());
   const [searchTerm, setSearchTerm] = useState("");
 
-  const hwEntities = useMemo(() => {
-    const result: HwNode[] = [];
+  const relationshipScore = useCallback((uri: string): number => {
+    return (data.children.get(uri)?.length || 0)
+      + (data.entitySecurity.get(uri)?.length || 0)
+      + (data.entityInterfaces.get(uri)?.length || 0)
+      + (data.entityFirmware.get(uri)?.length || 0)
+      + (data.entityInteractions.get(uri)?.length || 0);
+  }, [data.children, data.entitySecurity, data.entityInterfaces, data.entityFirmware, data.entityInteractions]);
+
+  const { treeChildren, treeParentOf, treeRoots } = useMemo(() => {
+    const treeChildren = new Map<string, string[]>();
+    const treeParentOf = new Map<string, string>();
+
+    const addChild = (childUri: string, parentUri: string) => {
+      if (treeParentOf.has(childUri)) return;
+      if (childUri === parentUri) return;
+      treeParentOf.set(childUri, parentUri);
+      const kids = treeChildren.get(parentUri) || [];
+      kids.push(childUri);
+      treeChildren.set(parentUri, kids);
+    };
+
+    // Step 1: Copy explicit physicallyContains
+    for (const [parent, kids] of data.children) {
+      for (const kid of kids) addChild(kid, parent);
+    }
+
+    // Step 2: Collect hw entities by type
+    const allHw: HwNode[] = [];
     for (const node of data.nodes.values()) {
-      if ((HW_ENTITY_TYPES as readonly string[]).includes(node.kind)) {
-        result.push(node);
+      if (HW_ENTITY_TYPES.includes(node.kind)) allHw.push(node);
+    }
+
+    const byKind = (kind: string) => allHw.filter(n => n.kind === kind);
+    const systems = byKind("System");
+
+    // Step 3: Find primary system (most relationships)
+    const ranked = [...systems].sort((a, b) => relationshipScore(b.uri) - relationshipScore(a.uri));
+    const primary = ranked[0]?.uri;
+
+    if (primary) {
+      // Step 4: Nest unparented Subsystems under primary System
+      for (const sub of byKind("Subsystem")) addChild(sub.uri, primary);
+
+      // Step 5: Nest unparented Components under primary System
+      for (const comp of byKind("Component")) addChild(comp.uri, primary);
+
+      // Step 6: Nest unparented Elements under the richest Component (likely the SoC)
+      const components = byKind("Component");
+      const rankedComps = [...components].sort((a, b) => relationshipScore(b.uri) - relationshipScore(a.uri));
+      const bestComponent = rankedComps[0]?.uri;
+
+      for (const elem of byKind("Element")) {
+        if (treeParentOf.has(elem.uri)) continue;
+        // Try interactsWith to find a Component parent
+        const interactions = data.entityInteractions.get(elem.uri) || [];
+        const compParent = interactions.find(uri => data.nodes.get(uri)?.kind === "Component");
+        addChild(elem.uri, compParent || bestComponent || primary);
+      }
+
+      // Step 7: Nest unparented generic HardwareEntity under primary if they have relationships
+      for (const hw of byKind("HardwareEntity")) {
+        if (treeParentOf.has(hw.uri)) continue;
+        if (relationshipScore(hw.uri) > 0) addChild(hw.uri, primary);
       }
     }
-    return result;
-  }, [data.nodes]);
 
-  const rootEntities = useMemo(() => {
-    return hwEntities.filter(e => !data.parentOf.has(e.uri));
-  }, [hwEntities, data.parentOf]);
+    // Sort children: by type tier, then alphabetically
+    for (const [, kids] of treeChildren) {
+      kids.sort((a, b) => {
+        const na = data.nodes.get(a);
+        const nb = data.nodes.get(b);
+        if (!na || !nb) return 0;
+        const tierA = TYPE_TIER[na.kind] ?? 99;
+        const tierB = TYPE_TIER[nb.kind] ?? 99;
+        if (tierA !== tierB) return tierA - tierB;
+        return na.label.localeCompare(nb.label);
+      });
+    }
 
-  const groupedRoots = useMemo(() => {
-    const groups = new Map<string, HwNode[]>();
-    for (const type of HW_ENTITY_TYPES) groups.set(type, []);
-    for (const e of rootEntities) {
-      const list = groups.get(e.kind) || [];
-      list.push(e);
-      groups.set(e.kind, list);
-    }
-    for (const [, list] of groups) {
-      list.sort((a, b) => a.label.localeCompare(b.label));
-    }
-    return groups;
-  }, [rootEntities]);
+    // Build roots: entities with no inferred parent
+    const treeRoots = allHw
+      .filter(e => !treeParentOf.has(e.uri))
+      .sort((a, b) => {
+        if (a.uri === primary) return -1;
+        if (b.uri === primary) return 1;
+        const sa = relationshipScore(a.uri);
+        const sb = relationshipScore(b.uri);
+        if (sa !== sb) return sb - sa;
+        return a.label.localeCompare(b.label);
+      });
+
+    return { treeChildren, treeParentOf, treeRoots };
+  }, [data.nodes, data.children, data.entityInteractions, relationshipScore]);
 
   const matchesSearch = useCallback((node: HwNode): boolean => {
     if (!searchTerm) return true;
@@ -132,14 +199,12 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
     return false;
   }, [searchTerm, data.descriptions]);
 
-  const toggleGroup = useCallback((type: string) => {
-    setExpandedGroups(prev => {
-      const next = new Set(prev);
-      if (next.has(type)) next.delete(type);
-      else next.add(type);
-      return next;
-    });
-  }, []);
+  const hasVisibleDescendant = useCallback((uri: string): boolean => {
+    const node = data.nodes.get(uri);
+    if (node && matchesSearch(node)) return true;
+    const kids = treeChildren.get(uri) || [];
+    return kids.some(k => hasVisibleDescendant(k));
+  }, [data.nodes, treeChildren, matchesSearch]);
 
   const toggleNode = useCallback((uri: string) => {
     setExpandedNodes(prev => {
@@ -150,6 +215,18 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
     });
   }, []);
 
+  const expandToNode = useCallback((uri: string) => {
+    setExpandedNodes(prev => {
+      const next = new Set(prev);
+      let current = treeParentOf.get(uri);
+      while (current) {
+        next.add(current);
+        current = treeParentOf.get(current);
+      }
+      return next;
+    });
+  }, [treeParentOf]);
+
   const selected = selectedUri ? data.nodes.get(selectedUri) : null;
 
   const securityCount = useCallback((uri: string) => {
@@ -159,6 +236,24 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
   const interfaceCount = useCallback((uri: string) => {
     return data.entityInterfaces.get(uri)?.length || 0;
   }, [data.entityInterfaces]);
+
+  const hwEntities = useMemo(() => {
+    const result: HwNode[] = [];
+    for (const node of data.nodes.values()) {
+      if (HW_ENTITY_TYPES.includes(node.kind)) result.push(node);
+    }
+    return result;
+  }, [data.nodes]);
+
+  // Auto-expand primary system on first load
+  useMemo(() => {
+    if (treeRoots.length > 0 && expandedNodes.size === 0) {
+      const primary = treeRoots[0];
+      if (primary && (treeChildren.get(primary.uri)?.length || 0) > 0) {
+        setExpandedNodes(new Set([primary.uri]));
+      }
+    }
+  }, [treeRoots.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (data.isLoading) {
     return (
@@ -178,15 +273,17 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
   }
 
   function renderTreeNode(node: HwNode, depth: number) {
-    if (!matchesSearch(node)) return null;
+    if (!hasVisibleDescendant(node.uri) && !matchesSearch(node)) return null;
 
-    const hasChildren = (data.children.get(node.uri)?.length || 0) > 0;
+    const kids = treeChildren.get(node.uri) || [];
+    const hasChildren = kids.length > 0;
     const isExpanded = expandedNodes.has(node.uri);
     const isSelected = selectedUri === node.uri;
     const color = KIND_COLORS[node.kind] || text.muted;
     const sc = securityCount(node.uri);
     const ic = interfaceCount(node.uri);
     const trust = data.trustLevels.get(node.uri);
+    const isInferred = treeParentOf.has(node.uri) && !data.parentOf.has(node.uri);
 
     return (
       <div key={node.uri}>
@@ -233,6 +330,17 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
             {node.label}
           </span>
 
+          {isInferred && (
+            <span style={{
+              fontSize: 6, padding: "1px 3px", borderRadius: 3,
+              background: "rgba(255,255,255,0.06)",
+              color: text.hint,
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}>
+              ~
+            </span>
+          )}
+
           {trust !== undefined && (
             <span style={{
               fontSize: 7, padding: "1px 4px", borderRadius: 4,
@@ -269,7 +377,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
         {hasChildren && isExpanded && (
           <div>
-            {data.children.get(node.uri)!.map(childUri => {
+            {kids.map(childUri => {
               const child = data.nodes.get(childUri);
               if (!child) return null;
               return renderTreeNode(child, depth + 1);
@@ -300,8 +408,8 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
     const fws = data.entityFirmware.get(selected.uri) || [];
     const secs = data.entitySecurity.get(selected.uri) || [];
     const interactions = data.entityInteractions.get(selected.uri) || [];
-    const childUris = data.children.get(selected.uri) || [];
-    const parentUri = data.parentOf.get(selected.uri);
+    const childUris = treeChildren.get(selected.uri) || [];
+    const parentUri = treeParentOf.get(selected.uri);
 
     const secByKind = new Map<string, HwNode[]>();
     for (const uri of secs) {
@@ -311,6 +419,11 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
       list.push(node);
       secByKind.set(node.kind, list);
     }
+
+    const navigateTo = (uri: string) => {
+      setSelectedUri(uri);
+      expandToNode(uri);
+    };
 
     return (
       <div style={{ padding: 16, overflowY: "auto", height: "100%" }}>
@@ -362,39 +475,38 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
         )}
 
         {/* Parent */}
-        {parentUri && (
-          <Section title="Contained By" color={palette.blue}>
-            {(() => {
-              const parent = data.nodes.get(parentUri);
-              if (!parent) return null;
-              const pc = KIND_COLORS[parent.kind] || text.muted;
-              return (
-                <div
-                  onClick={() => setSelectedUri(parentUri)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 6,
-                    padding: "4px 8px", borderRadius: 6, cursor: "pointer",
-                    background: "rgba(255,255,255,0.02)",
-                    border: `1px solid ${border.subtle}`,
-                  }}
-                >
-                  <span style={{ fontSize: 9, color: pc }}>
-                    {KIND_ICONS[parent.kind] || "●"}
-                  </span>
-                  <span style={{ fontSize: 11, color: pc }}>
-                    {parent.label}
-                  </span>
-                  <span style={{
-                    fontSize: 8, color: text.hint,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                  }}>
-                    {parent.kind}
-                  </span>
-                </div>
-              );
-            })()}
-          </Section>
-        )}
+        {parentUri && (() => {
+          const parent = data.nodes.get(parentUri);
+          if (!parent) return null;
+          const pc = KIND_COLORS[parent.kind] || text.muted;
+          const isInferred = !data.parentOf.has(selected.uri);
+          return (
+            <Section title={isInferred ? "Contained By (inferred)" : "Contained By"} color={palette.blue}>
+              <div
+                onClick={() => navigateTo(parentUri)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "4px 8px", borderRadius: 6, cursor: "pointer",
+                  background: "rgba(255,255,255,0.02)",
+                  border: `1px solid ${border.subtle}`,
+                }}
+              >
+                <span style={{ fontSize: 9, color: pc }}>
+                  {KIND_ICONS[parent.kind] || "●"}
+                </span>
+                <span style={{ fontSize: 11, color: pc }}>
+                  {parent.label}
+                </span>
+                <span style={{
+                  fontSize: 8, color: text.hint,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                }}>
+                  {parent.kind}
+                </span>
+              </div>
+            </Section>
+          );
+        })()}
 
         {/* Children */}
         {childUris.length > 0 && (
@@ -407,14 +519,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                 return (
                   <div
                     key={uri}
-                    onClick={() => {
-                      setSelectedUri(uri);
-                      setExpandedNodes(prev => {
-                        const next = new Set(prev);
-                        next.add(selected.uri);
-                        return next;
-                      });
-                    }}
+                    onClick={() => navigateTo(uri)}
                     style={{
                       display: "flex", alignItems: "center", gap: 6,
                       padding: "3px 8px", borderRadius: 4, cursor: "pointer",
@@ -574,7 +679,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                 return (
                   <div
                     key={uri}
-                    onClick={() => setSelectedUri(uri)}
+                    onClick={() => navigateTo(uri)}
                     style={{
                       display: "flex", alignItems: "center", gap: 6,
                       padding: "3px 8px", borderRadius: 4, cursor: "pointer",
@@ -611,12 +716,11 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
       display: "flex", flexDirection: "column",
       padding: "0 16px 16px",
     }}>
-      {/* Top bar with search and stats */}
+      {/* Top bar */}
       <div style={{
         display: "flex", alignItems: "center", gap: 12,
         padding: "12px 0",
         borderBottom: `1px solid ${border.subtle}`,
-        marginBottom: 0,
       }}>
         <div style={{
           fontSize: 13, fontWeight: 700, color: palette.blue,
@@ -671,57 +775,12 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {/* Tree panel */}
         <div style={{
-          width: 360, minWidth: 280,
+          width: 380, minWidth: 300,
           borderRight: `1px solid ${border.subtle}`,
           overflowY: "auto",
           paddingTop: 4,
         }}>
-          {HW_ENTITY_TYPES.map(type => {
-            const entities = groupedRoots.get(type) || [];
-            const filtered = entities.filter(matchesSearch);
-            if (filtered.length === 0) return null;
-            const isExpanded = expandedGroups.has(type);
-            const color = KIND_COLORS[type] || text.muted;
-
-            return (
-              <div key={type} style={{ marginBottom: 2 }}>
-                {/* Group header */}
-                <div
-                  onClick={() => toggleGroup(type)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 6,
-                    padding: "6px 12px", cursor: "pointer",
-                    background: "rgba(255,255,255,0.02)",
-                    borderBottom: `1px solid ${border.subtle}`,
-                    userSelect: "none",
-                  }}
-                >
-                  <span style={{ fontSize: 7, color: text.faint }}>
-                    {isExpanded ? "▼" : "▶"}
-                  </span>
-                  <span style={{
-                    fontSize: 10, color, fontWeight: 600,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    textTransform: "uppercase", letterSpacing: "0.04em",
-                  }}>
-                    {type === "HardwareEntity" ? "Other Entities" : type + "s"}
-                  </span>
-                  <span style={{
-                    fontSize: 9, color: text.hint,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                  }}>
-                    ({filtered.length})
-                  </span>
-                </div>
-
-                {isExpanded && (
-                  <div style={{ paddingBottom: 2 }}>
-                    {filtered.map(e => renderTreeNode(e, 0))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {treeRoots.map(root => renderTreeNode(root, 0))}
 
           {/* Legend */}
           <div style={{
@@ -734,7 +793,21 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
               fontFamily: "'IBM Plex Mono', monospace",
               textTransform: "uppercase", letterSpacing: "0.06em",
             }}>
-              Badges
+              Legend
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+              {["System", "Subsystem", "Component", "Element"].map(kind => (
+                <span key={kind} style={{
+                  fontSize: 7, padding: "1px 5px", borderRadius: 4,
+                  background: (KIND_COLORS[kind] || "#888") + "18",
+                  color: KIND_COLORS[kind] || "#888",
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  display: "flex", alignItems: "center", gap: 3,
+                }}>
+                  <span>{KIND_ICONS[kind]}</span>
+                  <span>{kind}</span>
+                </span>
+              ))}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               <span style={{
@@ -757,6 +830,13 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 2 = interfaces
+              </span>
+              <span style={{
+                fontSize: 7, padding: "1px 5px", borderRadius: 4,
+                background: "rgba(255,255,255,0.06)", color: text.hint,
+                fontFamily: "'IBM Plex Mono', monospace",
+              }}>
+                ~ = inferred
               </span>
             </div>
           </div>
