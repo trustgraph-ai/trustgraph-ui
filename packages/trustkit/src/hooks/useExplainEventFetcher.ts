@@ -1,9 +1,9 @@
 import { useEffect, useCallback, useRef } from "react";
 import { useSocket } from "@trustgraph/react-provider";
 import type { Triple, Term } from "@trustgraph/react-state";
+import { useSessionStore, useSettings } from "@trustgraph/react-state";
 import type { BaseApi } from "@trustgraph/react-provider";
 import type { ExplainNode } from "./useExplainSession";
-import { COLLECTION } from "../config";
 
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
@@ -227,13 +227,14 @@ async function resolveLabel(
   api: ReturnType<BaseApi["flow"]>,
   uri: string,
   cache: Map<string, string>,
+  collection: string,
 ): Promise<string> {
   if (cache.has(uri)) return cache.get(uri)!;
   try {
     const triples = await api.triplesQuery(
       { t: "i", i: uri },
       { t: "i", i: RDFS_LABEL },
-      undefined, 1, COLLECTION,
+      undefined, 1, collection,
     );
     const label = triples.length > 0 ? objValue(triples[0]) : shortUri(uri);
     cache.set(uri, label);
@@ -253,19 +254,20 @@ async function traceProvenanceChain(
   api: ReturnType<BaseApi["flow"]>,
   startUri: string,
   labelCache: Map<string, string>,
+  collection: string,
   maxDepth = 10,
 ): Promise<ProvenanceChain> {
   const chain: { uri: string; label: string }[] = [];
   let current: string | null = startUri;
 
   for (let i = 0; i < maxDepth && current; i++) {
-    const label = await resolveLabel(api, current, labelCache);
+    const label = await resolveLabel(api, current, labelCache, collection);
     chain.push({ uri: current, label });
 
     const parentTriples = await api.triplesQuery(
       { t: "i", i: current },
       { t: "i", i: PROV_WAS_DERIVED_FROM },
-      undefined, 1, COLLECTION,
+      undefined, 1, collection,
     );
 
     const parentUri = parentTriples.length > 0 ? objValue(parentTriples[0]) : null;
@@ -280,6 +282,7 @@ async function queryEdgeProvenance(
   api: ReturnType<BaseApi["flow"]>,
   edge: { s: string; p: string; o: string },
   labelCache: Map<string, string>,
+  collection: string,
 ): Promise<ProvenanceChain[]> {
   const oTerm: Term = (edge.o.startsWith("http") || edge.o.startsWith("urn:"))
     ? { t: "i", i: edge.o }
@@ -296,7 +299,7 @@ async function queryEdgeProvenance(
         o: oTerm,
       },
     },
-    10, COLLECTION,
+    10, collection,
   );
 
   const chains: ProvenanceChain[] = [];
@@ -307,13 +310,13 @@ async function queryEdgeProvenance(
     const derivedTriples = await api.triplesQuery(
       { t: "i", i: subgraphUri },
       { t: "i", i: PROV_WAS_DERIVED_FROM },
-      undefined, 10, COLLECTION,
+      undefined, 10, collection,
     );
 
     for (const dt of derivedTriples) {
       const sourceUri = objValue(dt);
       if (sourceUri) {
-        const chain = await traceProvenanceChain(api, sourceUri, labelCache);
+        const chain = await traceProvenanceChain(api, sourceUri, labelCache, collection);
         chains.push(chain);
       }
     }
@@ -328,13 +331,14 @@ async function enrichEventData(
   basicData: unknown,
   labelCache: Map<string, string>,
   explainGraph: string,
+  collection: string,
 ): Promise<unknown> {
   switch (eventType) {
     case "exploration": {
       const data = { ...(basicData as { entities: string[]; entityLabels?: string[] }) };
       if (data.entities.length > 0) {
         data.entityLabels = await Promise.all(
-          data.entities.map(uri => resolveLabel(api, uri, labelCache))
+          data.entities.map(uri => resolveLabel(api, uri, labelCache, collection))
         );
       }
       return data;
@@ -343,7 +347,7 @@ async function enrichEventData(
       const basic = basicData as { edgeSelections: Array<{ edgeUri: string; edge?: any; edgeLabels?: any; reasoning?: string }> };
       const edgeSelections = await Promise.all(basic.edgeSelections.map(async (basicSel) => {
         const s: Term = { t: "i", i: basicSel.edgeUri };
-        const edgeTriples = await api.triplesQuery(s, undefined, undefined, 100, COLLECTION, explainGraph);
+        const edgeTriples = await api.triplesQuery(s, undefined, undefined, 100, collection, explainGraph);
 
         const sel: any = { edgeUri: basicSel.edgeUri };
         for (const et of edgeTriples) {
@@ -355,11 +359,11 @@ async function enrichEventData(
         if (sel.edge) {
           const [labels, sources] = await Promise.all([
             Promise.all([
-              resolveLabel(api, sel.edge.s, labelCache),
-              resolveLabel(api, sel.edge.p, labelCache),
-              resolveLabel(api, sel.edge.o, labelCache),
+              resolveLabel(api, sel.edge.s, labelCache, collection),
+              resolveLabel(api, sel.edge.p, labelCache, collection),
+              resolveLabel(api, sel.edge.o, labelCache, collection),
             ]),
-            queryEdgeProvenance(api, sel.edge, labelCache),
+            queryEdgeProvenance(api, sel.edge, labelCache, collection),
           ]);
           sel.edgeLabels = { s: labels[0], p: labels[1], o: labels[2] };
           sel.sources = sources;
@@ -387,6 +391,9 @@ export function useExplainEventFetcher(
   updateEvent: (explainId: string, updates: Partial<ExplainNode>) => void,
 ) {
   const socket = useSocket();
+  const flowId = useSessionStore((s) => s.flowId);
+  const { settings } = useSettings();
+  const collection = settings.collection;
   const labelCacheRef = useRef(new Map<string, string>());
   const eventsRef = useRef(events);
   eventsRef.current = events;
@@ -395,7 +402,7 @@ export function useExplainEventFetcher(
     updateEvent(explainId, { fetching: true });
 
     try {
-      const api = socket.flow("default");
+      const api = socket.flow(flowId);
       const node = eventsRef.current.find(n => n.explainId === explainId);
       if (!node) return;
 
@@ -407,11 +414,11 @@ export function useExplainEventFetcher(
         // Fallback: query the graph for triples (backends not yet sending inline)
         console.warn(`[explain] No inline triples for ${explainId}, falling back to graph query`);
         const s: Term = { t: "i", i: node.explainId };
-        triples = await api.triplesQuery(s, undefined, undefined, 100, COLLECTION, node.explainGraph);
+        triples = await api.triplesQuery(s, undefined, undefined, 100, collection, node.explainGraph);
         if (triples.length === 0) {
           // Retry once after a short delay
           await new Promise(r => setTimeout(r, 1000));
-          triples = await api.triplesQuery(s, undefined, undefined, 100, COLLECTION, node.explainGraph);
+          triples = await api.triplesQuery(s, undefined, undefined, 100, collection, node.explainGraph);
         }
         if (triples.length === 0) {
           updateEvent(explainId, { fetched: true, fetching: false });
@@ -433,7 +440,7 @@ export function useExplainEventFetcher(
 
       // Enrich with external label resolution where needed
       const enriched = await enrichEventData(
-        api, eventType, basicData, labelCacheRef.current, node.explainGraph,
+        api, eventType, basicData, labelCacheRef.current, node.explainGraph, collection,
       );
       if (enriched !== basicData) {
         updateEvent(explainId, { data: enriched });
@@ -444,7 +451,7 @@ export function useExplainEventFetcher(
         fetching: false,
       });
     }
-  }, [socket, updateEvent]);
+  }, [socket, flowId, collection, updateEvent]);
 
   useEffect(() => {
     for (const node of events) {

@@ -3,7 +3,7 @@ import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
 import { AgentStepList } from "./AgentStepList";
 import { useAgent } from "../../hooks/useAgent";
 import { palette } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface SimpleAgentViewProps {
   collection?: string;
@@ -13,7 +13,9 @@ interface SimpleAgentViewProps {
  * Simple Agent Query — no explainability.
  * Just a query input and the agent's reasoning steps.
  */
-export function SimpleAgentView({ collection = COLLECTION }: SimpleAgentViewProps) {
+export function SimpleAgentView({ collection: collectionProp }: SimpleAgentViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
 
   const { query, steps, isQuerying, error } = useAgent({ collection });

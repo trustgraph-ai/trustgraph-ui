@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSocket } from "@trustgraph/react-provider";
+import { useSessionStore, useWorkspaceStore } from "@trustgraph/react-state";
 
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const PROV_WAS_DERIVED_FROM = "http://www.w3.org/ns/prov#wasDerivedFrom";
@@ -22,6 +23,8 @@ export function useDocumentProgress(
   pollInterval = 8000,
 ) {
   const socket = useSocket();
+  const flowId = useSessionStore((s) => s.flowId);
+  const generation = useWorkspaceStore((s) => s.generation);
   const [progress, setProgress] = useState<Record<string, DocumentProgress>>({});
   const timerRef = useRef<number | null>(null);
   const activeRef = useRef(true);
@@ -30,7 +33,7 @@ export function useDocumentProgress(
     if (!activeRef.current || documentIds.length === 0) return;
 
     try {
-      const api = socket.flow("default");
+      const api = socket.flow(flowId);
       const docIdSet = new Set(documentIds);
 
       // Query all Page entities in the collection
@@ -127,7 +130,7 @@ export function useDocumentProgress(
     } catch (err) {
       // Silently skip — might not be connected
     }
-  }, [socket, documentIds, collection]);
+  }, [socket, documentIds, collection, flowId, generation]);
 
   useEffect(() => {
     activeRef.current = true;

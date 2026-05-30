@@ -1,2 +1,1 @@
-// TrustGraph collection identifier
-export const COLLECTION = "default";
+// Configuration constants are now read from stores (useSettings, useSessionStore).

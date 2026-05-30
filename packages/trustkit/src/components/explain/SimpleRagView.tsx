@@ -3,7 +3,7 @@ import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
 import { StreamingResponse } from "./StreamingResponse";
 import { useGraphRag } from "../../hooks/useGraphRag";
 import { palette } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface SimpleRagViewProps {
   collection?: string;
@@ -13,7 +13,9 @@ interface SimpleRagViewProps {
  * Option 1: Simple RAG Query — no explainability.
  * Just a query input and a streaming response.
  */
-export function SimpleRagView({ collection = COLLECTION }: SimpleRagViewProps) {
+export function SimpleRagView({ collection: collectionProp }: SimpleRagViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 

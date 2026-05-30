@@ -9,7 +9,7 @@ import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
 import { palette, border } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface DocRagExplainViewProps {
   collection?: string;
@@ -19,7 +19,9 @@ interface DocRagExplainViewProps {
  * Document RAG with explainability — response on the left,
  * explain event timeline on the right with source links.
  */
-export function DocRagExplainView({ collection = COLLECTION }: DocRagExplainViewProps) {
+export function DocRagExplainView({ collection: collectionProp }: DocRagExplainViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 

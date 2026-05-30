@@ -6,7 +6,7 @@ import { useGraphRag } from "../../hooks/useGraphRag";
 import { useExplainSession } from "../../hooks/useExplainSession";
 import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import { palette, border } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface RagWithTimelineViewProps {
   collection?: string;
@@ -17,7 +17,9 @@ interface RagWithTimelineViewProps {
  * Response on the left, event timeline on the right with
  * document-level sources (no chunks, collapsed to documents).
  */
-export function RagWithTimelineView({ collection = COLLECTION }: RagWithTimelineViewProps) {
+export function RagWithTimelineView({ collection: collectionProp }: RagWithTimelineViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 

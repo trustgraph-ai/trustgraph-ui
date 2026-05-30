@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useSocket } from "@trustgraph/react-provider";
 import type { Triple } from "@trustgraph/react-state";
-import { COLLECTION } from "../config";
+import { useSessionStore, useSettings, useWorkspaceStore } from "@trustgraph/react-state";
 import { domainColors } from "../theme";
 import { getLocalName } from "../utils/uri";
 
@@ -165,6 +165,10 @@ export function processTriples(
 
 export function useRawGraphData() {
   const socket = useSocket();
+  const flowId = useSessionStore((s) => s.flowId);
+  const { settings } = useSettings();
+  const collection = settings.collection;
+  const generation = useWorkspaceStore((s) => s.generation);
 
   // Shared mutable cache — refs so fetches don't re-render until we snapshot
   const nodeMapRef = useRef(new Map<string, RawNode>());
@@ -191,12 +195,12 @@ export function useRawGraphData() {
     setError(null);
 
     try {
-      const api = socket.flow("default");
+      const api = socket.flow(flowId);
 
       // Fetch outgoing and incoming triples in parallel
       const [outgoing, incoming] = await Promise.all([
-        api.triplesQuery(makeIriTerm(uri), undefined, undefined, 500, COLLECTION, ""),
-        api.triplesQuery(undefined, undefined, makeIriTerm(uri), 500, COLLECTION, ""),
+        api.triplesQuery(makeIriTerm(uri), undefined, undefined, 500, collection, ""),
+        api.triplesQuery(undefined, undefined, makeIriTerm(uri), 500, collection, ""),
       ]);
 
       const allTriples = [...outgoing, ...incoming];
@@ -213,7 +217,7 @@ export function useRawGraphData() {
       for (const u of newUris) {
         if (!nodeMapRef.current.has(u)) {
           labelFetches.push(
-            api.triplesQuery(makeIriTerm(u), makeIriTerm(RDFS_LABEL), undefined, 1, COLLECTION, ""),
+            api.triplesQuery(makeIriTerm(u), makeIriTerm(RDFS_LABEL), undefined, 1, collection, ""),
           );
         }
       }
@@ -272,7 +276,7 @@ export function useRawGraphData() {
       setIsFetching(false);
       return [];
     }
-  }, [socket]);
+  }, [socket, flowId, collection]);
 
   // Reset the cache (for search "go somewhere new")
   const resetCache = useCallback(() => {
@@ -289,8 +293,8 @@ export function useRawGraphData() {
   // Find a starting node by fetching a small sample of triples
   const findStartNode = useCallback(async (): Promise<string | null> => {
     try {
-      const api = socket.flow("default");
-      const sample = await api.triplesQuery(undefined, undefined, undefined, 100, COLLECTION, "");
+      const api = socket.flow(flowId);
+      const sample = await api.triplesQuery(undefined, undefined, undefined, 100, collection, "");
 
       // Count URI occurrences to find the most connected
       const counts = new Map<string, number>();
@@ -319,21 +323,35 @@ export function useRawGraphData() {
     } catch {
       return null;
     }
-  }, [socket]);
+  }, [socket, flowId, collection]);
 
   // Search index: every URI with an rdfs:label
   const labelsRef = useRef<Map<string, string> | null>(null);
   const labelsBuildingRef = useRef(false);
+
+  // Reset all caches when workspace/collection/flow changes.
+  useEffect(() => {
+    nodeMapRef.current = new Map();
+    edgeListRef.current = [];
+    edgeSetRef.current = new Set();
+    predMapRef.current = new Map();
+    fetchedRef.current = new Set();
+    labelsRef.current = null;
+    labelsBuildingRef.current = false;
+    setNodes(new Map());
+    setEdges([]);
+    setPredicates(new Map());
+  }, [generation, flowId, collection]);
 
   const buildSearchIndex = useCallback(async () => {
     if (labelsRef.current || labelsBuildingRef.current) return;
     labelsBuildingRef.current = true;
 
     try {
-      const api = socket.flow("default");
+      const api = socket.flow(flowId);
       const labelTriples = await api.triplesQuery(
         undefined, makeIriTerm(RDFS_LABEL), undefined,
-        10000, COLLECTION, "",
+        10000, collection, "",
       );
 
       const labels = new Map<string, string>();
@@ -347,7 +365,7 @@ export function useRawGraphData() {
     } catch {
       labelsBuildingRef.current = false;
     }
-  }, [socket]);
+  }, [socket, flowId, collection]);
 
   // Search: build index if needed, then filter
   const searchNodes = useCallback(async (query: string): Promise<RawNode[]> => {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSocket } from "@trustgraph/react-provider";
+import { useSessionStore, useWorkspaceStore } from "@trustgraph/react-state";
 import { SectionLabel, text, border, palette, surface } from "@trustgraph/trustkit";
 
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -47,6 +48,8 @@ function getTermValue(term: { t: string; i?: string; v?: string; d?: string }): 
 
 export function StorageContents({ collection, storeColor }: StorageContentsProps) {
   const socket = useSocket();
+  const flowId = useSessionStore((s) => s.flowId);
+  const generation = useWorkspaceStore((s) => s.generation);
   const [hierarchy, setHierarchy] = useState<DocEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set());
@@ -54,7 +57,7 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
 
   const fetchContents = useCallback(async () => {
     try {
-      const api = socket.flow("default");
+      const api = socket.flow(flowId);
 
       // Get all pages
       const pageTypeTriples = await api.triplesQuery(
@@ -172,7 +175,7 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
       console.error("Failed to fetch storage contents:", err);
       setLoading(false);
     }
-  }, [socket, collection]);
+  }, [socket, collection, flowId, generation]);
 
   useEffect(() => {
     fetchContents();

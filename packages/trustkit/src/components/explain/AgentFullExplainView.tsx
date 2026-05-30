@@ -13,7 +13,7 @@ import { useExplainDAG } from "../../hooks/useExplainDAG";
 import { useExplainGraph } from "../../hooks/useExplainGraph";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
 import { text, palette, border } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface AgentFullExplainViewProps {
   collection?: string;
@@ -24,7 +24,9 @@ interface AgentFullExplainViewProps {
  * The reasoning process as a DAG with click-to-inspect detail panel.
  * DAG on the left with agent steps below, event detail on the right.
  */
-export function AgentFullExplainView({ collection = COLLECTION }: AgentFullExplainViewProps) {
+export function AgentFullExplainView({ collection: collectionProp }: AgentFullExplainViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]);

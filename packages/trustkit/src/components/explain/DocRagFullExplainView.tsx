@@ -11,7 +11,7 @@ import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 import { useExplainDAG } from "../../hooks/useExplainDAG";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
 import { text, palette, border } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface DocRagFullExplainViewProps {
   collection?: string;
@@ -21,7 +21,9 @@ interface DocRagFullExplainViewProps {
  * Document RAG with full DAG explainability.
  * DAG on the left with response below, event detail on the right.
  */
-export function DocRagFullExplainView({ collection = COLLECTION }: DocRagFullExplainViewProps) {
+export function DocRagFullExplainView({ collection: collectionProp }: DocRagFullExplainViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);

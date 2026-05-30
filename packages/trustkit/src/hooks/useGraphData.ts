@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSocket } from "@trustgraph/react-provider";
 import type { Triple } from "@trustgraph/react-state";
+import { useSessionStore, useSettings, useWorkspaceStore } from "@trustgraph/react-state";
 import type { Entity, Relationship, DomainKey, OntologyType } from "../types";
-import { COLLECTION } from "../config";
 import { domainColors } from "../theme";
 
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -43,6 +43,10 @@ export function predicateToName(uri: string): string {
 
 export function useGraphData(domain?: DomainKey) {
   const socket = useSocket();
+  const flowId = useSessionStore((s) => s.flowId);
+  const { settings } = useSettings();
+  const collection = settings.collection;
+  const generation = useWorkspaceStore((s) => s.generation);
   const [triples, setTriples] = useState<Triple[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
@@ -57,10 +61,10 @@ export function useGraphData(domain?: DomainKey) {
         setIsError(false);
         setError(null);
 
-        const api = socket.flow("default");
+        const api = socket.flow(flowId);
         const result = await api.triplesQuery(
           undefined, undefined, undefined,
-          10000, COLLECTION, "",
+          10000, collection, "",
         );
 
         if (!cancelled) {
@@ -77,7 +81,7 @@ export function useGraphData(domain?: DomainKey) {
     })();
 
     return () => { cancelled = true; };
-  }, [socket]);
+  }, [socket, flowId, collection, generation]);
 
   // Process all data from the query
   const { entities, relationships, ontology, propertyLabels } = useMemo(() => {

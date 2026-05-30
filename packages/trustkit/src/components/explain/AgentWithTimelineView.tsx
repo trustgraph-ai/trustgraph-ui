@@ -6,7 +6,7 @@ import { useAgent } from "../../hooks/useAgent";
 import { useExplainSession } from "../../hooks/useExplainSession";
 import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import { palette, border } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface AgentWithTimelineViewProps {
   collection?: string;
@@ -17,7 +17,9 @@ interface AgentWithTimelineViewProps {
  * Agent reasoning steps on the left, event timeline on the right
  * with document-level sources.
  */
-export function AgentWithTimelineView({ collection = COLLECTION }: AgentWithTimelineViewProps) {
+export function AgentWithTimelineView({ collection: collectionProp }: AgentWithTimelineViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
 
   const explainSession = useExplainSession();

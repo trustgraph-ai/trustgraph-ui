@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
-import { SectionLabel, Card, LoadingState, SearchInput, FilterBar, COLLECTION, semantic, palette, text, border, surface } from "@trustgraph/trustkit";
+import { SectionLabel, Card, LoadingState, SearchInput, FilterBar, semantic, palette, text, border, surface } from "@trustgraph/trustkit";
 import type { FilterItem } from "@trustgraph/trustkit";
-import { useSchemas, useEmbeddings, useRowEmbeddingsQuery, useRowsQuery } from "@trustgraph/react-state";
+import { useSchemas, useEmbeddings, useRowEmbeddingsQuery, useRowsQuery, useSettings } from "@trustgraph/react-state";
 
 // Schema field type
 interface SchemaField {
@@ -37,6 +37,9 @@ interface AccumulatedMatch {
 }
 
 export function DataView() {
+  const { settings } = useSettings();
+  const collection = settings.collection;
+
   // Input state
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -106,7 +109,7 @@ export function DataView() {
             const matches = await executeQueryAsync({
               vectors: vector,
               schemaName: schema.key,
-              collection: COLLECTION,
+              collection,
               limit: 10,
             });
             return matches.map(m => ({ ...m, schemaKey: schema.key }));
@@ -138,7 +141,7 @@ export function DataView() {
 
           try {
             const query = buildGraphQLQuery(schema);
-            const result = await executeRowsQueryAsync({ query, collection: COLLECTION });
+            const result = await executeRowsQueryAsync({ query, collection });
             const gqlName = schemaKey.replace(/-/g, '_');
             const rows = (result?.data as Record<string, unknown[]>)?.[gqlName] || [];
             rowDataBySchema[schemaKey] = rows as Record<string, unknown>[];

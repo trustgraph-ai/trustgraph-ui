@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSocket } from "@trustgraph/react-provider";
+import { useSessionStore, useWorkspaceStore } from "@trustgraph/react-state";
 
 const ONT_NS = "http://trustgraph.ai/ontology/solar-system#";
 
@@ -107,6 +108,8 @@ WHERE {
 
 export function useSolarMissions() {
   const socket = useSocket();
+  const flowId = useSessionStore((s) => s.flowId);
+  const generation = useWorkspaceStore((s) => s.generation);
   const [bodies, setBodies] = useState<CelestialBody[]>([]);
   const [missions, setMissions] = useState<SolarMission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,7 +122,7 @@ export function useSolarMissions() {
       try {
         setIsLoading(true);
         setError(null);
-        const api = socket.flow("default");
+        const api = socket.flow(flowId);
 
         const [bodiesResult, missionsResult, targetsResult, eventsResult] =
           await Promise.all([
@@ -193,7 +196,7 @@ export function useSolarMissions() {
     })();
 
     return () => { cancelled = true; };
-  }, [socket]);
+  }, [socket, flowId, generation]);
 
   const bodyMap = useMemo(() => {
     const map = new Map<string, CelestialBody>();

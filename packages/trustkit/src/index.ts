@@ -1,5 +1,5 @@
 // Components — common
-export { SectionLabel, FilterButton, Header, StatusBar, Typewriter, Card, Badge, LoadingState, Toaster, SearchInput, FilterBar, MessageBubble, TextInput, SplitPane, DetailPanel, EmptyState, ModeSelector, Toolbar, PageLayout } from "./components/common";
+export { SectionLabel, FilterButton, Header, StatusBar, Typewriter, Card, Badge, LoadingState, Toaster, SearchInput, FilterBar, MessageBubble, TextInput, SplitPane, DetailPanel, EmptyState, ModeSelector, Toolbar, PageLayout, WorkspaceSwitcher } from "./components/common";
 export type { FilterItem, Message } from "./components/common";
 
 // Components — graph
@@ -100,5 +100,3 @@ export type { ImportResult } from "./utils/ontology-importer";
 export { validateSchema, SCHEMA_TYPE_OPTIONS, DEFAULT_FIELD } from "./utils/schema-validation";
 export type { SchemaField, Schema, SchemaTableRow, SchemaTypeOption } from "./utils/schema-validation";
 
-// Config
-export { COLLECTION } from "./config";
