@@ -3,7 +3,7 @@ import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
 import { StreamingResponse } from "./StreamingResponse";
 import { useDocumentRag } from "../../hooks/useDocumentRag";
 import { palette } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface SimpleDocRagViewProps {
   collection?: string;
@@ -13,7 +13,9 @@ interface SimpleDocRagViewProps {
  * Simple Document RAG view — no explainability.
  * Just a query input and a streaming response.
  */
-export function SimpleDocRagView({ collection = COLLECTION }: SimpleDocRagViewProps) {
+export function SimpleDocRagView({ collection: collectionProp }: SimpleDocRagViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 

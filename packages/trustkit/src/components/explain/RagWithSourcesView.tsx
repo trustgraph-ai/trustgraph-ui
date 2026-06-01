@@ -9,7 +9,7 @@ import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
 import { palette, text, border } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface RagWithSourcesViewProps {
   collection?: string;
@@ -20,7 +20,9 @@ interface RagWithSourcesViewProps {
  * Answer on the left, source citations on the right.
  * Clicking a source shows chunk text.
  */
-export function RagWithSourcesView({ collection = COLLECTION }: RagWithSourcesViewProps) {
+export function RagWithSourcesView({ collection: collectionProp }: RagWithSourcesViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 

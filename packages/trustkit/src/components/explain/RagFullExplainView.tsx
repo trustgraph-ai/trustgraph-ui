@@ -13,7 +13,7 @@ import { useExplainGraph } from "../../hooks/useExplainGraph";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
 import { ExplainGraph } from "../graph/ExplainGraph";
 import { text, palette, border } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface RagFullExplainViewProps {
   collection?: string;
@@ -26,7 +26,9 @@ interface RagFullExplainViewProps {
  * Clicking a DAG node shows that event's detail including sub-graphs
  * for exploration and focus events.
  */
-export function RagFullExplainView({ collection = COLLECTION }: RagFullExplainViewProps) {
+export function RagFullExplainView({ collection: collectionProp }: RagFullExplainViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]);

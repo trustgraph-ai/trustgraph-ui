@@ -8,7 +8,7 @@ import { useExplainSession } from "../../hooks/useExplainSession";
 import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import { useExplainGraph } from "../../hooks/useExplainGraph";
 import { text, border, palette, withGlow } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface GraphRagViewProps {
   /** Collection to query */
@@ -19,7 +19,9 @@ interface GraphRagViewProps {
  * Complete Graph RAG query view — input, streaming response,
  * explain event timeline, and provenance graph.
  */
-export function GraphRagView({ collection = COLLECTION }: GraphRagViewProps) {
+export function GraphRagView({ collection: collectionProp }: GraphRagViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
   const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]);
   const [highlightedEdgeIds, setHighlightedEdgeIds] = useState<string[]>([]);

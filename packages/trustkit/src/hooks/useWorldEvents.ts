@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSocket } from "@trustgraph/react-provider";
+import { useSessionStore, useWorkspaceStore } from "@trustgraph/react-state";
 
 export interface EventSummary {
   id: string;
@@ -196,6 +197,8 @@ function termValue(term: import("@trustgraph/client").Term): string {
 
 export function useWorldEvents(ontologyNs: string) {
   const socket = useSocket();
+  const flowId = useSessionStore((s) => s.flowId);
+  const generation = useWorkspaceStore((s) => s.generation);
   const [gridCells, setGridCells] = useState<GridCell[]>([]);
   const [buckets, setBuckets] = useState<TimeBucket[]>([]);
   const [eventTypes, setEventTypes] = useState<EventTypeInfo[]>([]);
@@ -210,7 +213,7 @@ export function useWorldEvents(ontologyNs: string) {
       try {
         setIsLoading(true);
         setError(null);
-        const api = socket.flow("default");
+        const api = socket.flow(flowId);
 
         const [gridResult, bucketsResult, typesResult, locationsResult] = await Promise.all([
           api.sparqlQuery(buildGridQuery(ontologyNs)),
@@ -280,7 +283,7 @@ export function useWorldEvents(ontologyNs: string) {
     })();
 
     return () => { cancelled = true; };
-  }, [socket, ontologyNs]);
+  }, [socket, ontologyNs, flowId, generation]);
 
   const totalEvents = useMemo(
     () => gridCells.reduce((sum, c) => sum + c.count, 0),
@@ -313,7 +316,7 @@ export function useWorldEvents(ontologyNs: string) {
     filters: SearchFilters,
     limit: number = 25,
   ): Promise<EventSummary[]> => {
-    const api = socket.flow("default");
+    const api = socket.flow(flowId);
     const query = buildSearchQuery(ontologyNs, filters, limit);
     const result = await api.sparqlQuery(query);
 
@@ -329,10 +332,10 @@ export function useWorldEvents(ontologyNs: string) {
         typeLabel: row.typeLabel || typeLocal.replace(/([a-z])([A-Z])/g, "$1 $2"),
       };
     }).sort((a, b) => a.year - b.year);
-  }, [socket, ontologyNs]);
+  }, [socket, ontologyNs, flowId, generation]);
 
   const loadEventDetail = useCallback(async (eventUri: string): Promise<WorldEvent | null> => {
-    const api = socket.flow("default");
+    const api = socket.flow(flowId);
     const triples = await api.triplesQuery(
       { t: "i", i: eventUri },
       undefined,
@@ -380,7 +383,7 @@ export function useWorldEvents(ontologyNs: string) {
       responsible: props.get("responsible") || undefined,
       affectedPopulation: props.get("affected-population") || undefined,
     };
-  }, [socket, ontologyNs]);
+  }, [socket, ontologyNs, flowId, generation]);
 
   return {
     gridCells, eventTypes, buckets, totalEvents,

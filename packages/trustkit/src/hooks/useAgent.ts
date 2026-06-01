@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
-import { useInference } from "@trustgraph/react-state";
+import { useInference, useSettings } from "@trustgraph/react-state";
 import type { ExplainEvent } from "@trustgraph/react-state";
-import { COLLECTION } from "../config";
 
 export type AgentStepType = "thought" | "observation" | "answer";
 
@@ -37,12 +36,14 @@ export interface AgentState {
  * correctly.
  */
 export function useAgent({
-  collection = COLLECTION,
+  collection: collectionProp,
   onExplain,
 }: {
   collection?: string;
   onExplain?: (event: ExplainEvent) => void;
 } = {}): AgentState {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [steps, setSteps] = useState<AgentStep[]>([]);
   const [isQuerying, setIsQuerying] = useState(false);
   const [error, setError] = useState<string | null>(null);

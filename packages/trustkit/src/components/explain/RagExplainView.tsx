@@ -11,7 +11,7 @@ import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 import { useExplainGraph } from "../../hooks/useExplainGraph";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
 import { palette, border } from "../../theme";
-import { COLLECTION } from "../../config";
+import { useSettings } from "@trustgraph/react-state";
 
 interface RagExplainViewProps {
   collection?: string;
@@ -22,7 +22,9 @@ interface RagExplainViewProps {
  * Response + source panel on the left, provenance graph + event
  * timeline with full source chains on the right.
  */
-export function RagExplainView({ collection = COLLECTION }: RagExplainViewProps) {
+export function RagExplainView({ collection: collectionProp }: RagExplainViewProps) {
+  const { settings } = useSettings();
+  const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
   const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]);
   const [highlightedEdgeIds, setHighlightedEdgeIds] = useState<string[]>([]);

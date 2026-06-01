@@ -67,6 +67,15 @@ export { useProgressStateStore } from "./state/progress";
 export type { ProgressState } from "./state/progress";
 export { useSessionStore } from "./state/session";
 export type { SessionState } from "./state/session";
+export {
+  useWorkspaceStore,
+  useWorkspaces,
+  useWhoami,
+  useWorkspaceSync,
+  useWorkspace,
+} from "./state/workspace";
+export type { WorkspaceStoreState } from "./state/workspace";
+export type { Workspace, WhoamiResult } from "@trustgraph/client";
 export { useConversation } from "./state/conversation";
 export type { ConversationState, ChatMode } from "./state/conversation";
 export { useWorkbenchStateStore } from "./state/workbench";

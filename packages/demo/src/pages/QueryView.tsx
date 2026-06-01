@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { GraphCanvasSVG as GraphCanvas, NodeDetailPanel, SectionLabel, Badge, LoadingState, SearchInput, MessageBubble, useGraphData, COLLECTION, getLocalName, palette, text, border, withGlow } from "@trustgraph/trustkit";
+import { GraphCanvasSVG as GraphCanvas, NodeDetailPanel, SectionLabel, Badge, LoadingState, SearchInput, MessageBubble, useGraphData, getLocalName, palette, text, border, withGlow } from "@trustgraph/trustkit";
 import type { Entity } from "@trustgraph/trustkit";
-import { useChat, useConversation, useEmbeddings, useGraphEmbeddings } from "@trustgraph/react-state";
+import { useChat, useConversation, useEmbeddings, useGraphEmbeddings, useSessionStore, useSettings } from "@trustgraph/react-state";
 
 // Type for embedding result items
 interface EmbeddingResultItem {
@@ -14,6 +14,9 @@ interface EmbeddingResultItem {
 }
 
 export function QueryView() {
+  const flowId = useSessionStore((s) => s.flowId);
+  const { settings } = useSettings();
+  const collection = settings.collection;
   const [customInput, setCustomInput] = useState("");
   const [queryForEmbeddings, setQueryForEmbeddings] = useState<string | undefined>(undefined);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
@@ -27,7 +30,7 @@ export function QueryView() {
 
   // Get embeddings for the query text - only fetch when we have a committed query
   const { embeddings, isLoading: embeddingsLoading } = useEmbeddings({
-    flow: "default",
+    flow: flowId,
     term: queryForEmbeddings || undefined,
   });
 
@@ -36,7 +39,7 @@ export function QueryView() {
   const { graphEmbeddings, isLoading: graphEmbeddingsLoading } = useGraphEmbeddings({
     vec: hasEmbeddings ? embeddings[0] : undefined,
     limit: hasEmbeddings ? 10 : 0,
-    collection: COLLECTION,
+    collection,
   });
 
   // Set chat mode to agent on mount

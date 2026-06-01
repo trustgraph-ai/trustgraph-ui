@@ -15,6 +15,7 @@ export interface RequestMessage {
   service: string;
   request: Request;
   flow?: string;
+  workspace?: string;
 }
 
 export interface ApiResponse {

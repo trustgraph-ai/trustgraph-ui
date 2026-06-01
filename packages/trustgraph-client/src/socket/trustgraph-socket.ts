@@ -251,6 +251,12 @@ export class BaseApi {
   // compiling. It will be removed when the request payloads are cleaned
   // up.
   user: string = "";
+  // Active workspace for outbound requests. Sent as the envelope
+  // `workspace` field (sibling of `flow`); the gateway reconciles it
+  // against the authenticated identity and, when empty, defaults to
+  // the token's bound workspace. Kept in sync with the active
+  // workspace by the state layer.
+  workspace: string = "";
   socketUrl: string; // WebSocket URL
   inflight: { [key: string]: ServiceCall } = {}; // Track active requests by
   // message ID
@@ -640,6 +646,10 @@ export class BaseApi {
     // Add flow identifier if provided
     if (flow) msg.flow = flow;
 
+    // Stamp the active workspace onto the envelope. When empty the
+    // gateway falls back to the token's bound workspace.
+    if (this.workspace) msg.workspace = this.workspace;
+
     // Return a Promise that will be resolved/rejected by the ServiceCall
     return new Promise<ResponseType>((resolve, reject) => {
       const call = new ServiceCall(
@@ -750,6 +760,83 @@ export class BaseApi {
 
   collectionManagement() {
     return new CollectionManagementApi(this);
+  }
+
+  iam() {
+    return new IamApi(this);
+  }
+}
+
+// The caller's own user record, as returned by the `whoami` IAM
+// operation. `workspace` is the user's home/default workspace.
+export interface WhoamiResult {
+  id: string;
+  username: string;
+  name: string;
+  email: string;
+  workspace: string;
+  roles: string[];
+  enabled: boolean;
+}
+
+// A workspace the caller has access to, from `list-my-workspaces`.
+export interface Workspace {
+  id: string;
+  name: string;
+  enabled: boolean;
+  created: string;
+}
+
+/**
+ * IamApi - Identity and workspace discovery over the authenticated
+ * socket. IAM is the one surface that lives outside workspace tenancy;
+ * these calls run as the `iam` service and the gateway injects the
+ * caller's identity from the connection's token.
+ */
+export class IamApi {
+  api: BaseApi;
+
+  constructor(api: BaseApi) {
+    this.api = api;
+  }
+
+  // The caller's own user record, including their home workspace.
+  whoami(): Promise<WhoamiResult> {
+    return this.api
+      .makeRequest<{ operation: string }, { user?: Record<string, unknown> }>(
+        "iam",
+        { operation: "whoami" },
+      )
+      .then((r) => {
+        const user = r.user ?? {};
+        return {
+          id: String(user.id ?? ""),
+          username: String(user.username ?? ""),
+          name: String(user.name ?? ""),
+          email: String(user.email ?? ""),
+          workspace: String(user.workspace ?? ""),
+          roles: Array.isArray(user.roles) ? (user.roles as string[]) : [],
+          enabled: !!user.enabled,
+        };
+      });
+  }
+
+  // The workspaces the caller has access to (one for an ordinary user,
+  // all for an admin — driven entirely by what the gateway returns).
+  listMyWorkspaces(): Promise<Workspace[]> {
+    return this.api
+      .makeRequest<
+        { operation: string },
+        { workspaces?: Record<string, unknown>[] }
+      >("iam", { operation: "list-my-workspaces" })
+      .then((r) =>
+        (r.workspaces ?? []).map((w) => ({
+          id: String(w.id ?? ""),
+          name: String(w.name ?? ""),
+          enabled: !!w.enabled,
+          created: String(w.created ?? ""),
+        })),
+      );
   }
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { SectionLabel, SearchInput, ExplainGraph, COLLECTION, palette, text, border, withGlow, semantic } from "@trustgraph/trustkit";
+import { SectionLabel, SearchInput, ExplainGraph, palette, text, border, withGlow, semantic } from "@trustgraph/trustkit";
 import type { ExplainGraphNode, ExplainGraphEdge } from "@trustgraph/trustkit";
-import { useInference } from "@trustgraph/react-state";
+import { useInference, useSessionStore, useSettings, useWorkspaceStore } from "@trustgraph/react-state";
 import type { ExplainEvent, Triple, Term } from "@trustgraph/react-state";
 import { useSocket } from "@trustgraph/react-provider";
 import type { BaseApi } from "@trustgraph/react-provider";
@@ -195,9 +195,9 @@ function objQuotedTriple(triple: Triple): { s: string; p: string; o: string } | 
 async function queryTriples(
   api: ReturnType<BaseApi["flow"]>,
   subject: string,
-  predicate?: string,
-  limit = 100,
-  collection = COLLECTION,
+  predicate: string | undefined,
+  limit: number,
+  collection: string,
   graph?: string,
 ): Promise<Triple[]> {
   const s: Term = { t: "i", i: subject };
@@ -213,8 +213,8 @@ async function queryTriplesUntilSettled(
   api: ReturnType<BaseApi["flow"]>,
   subject: string,
   onUpdate: (triples: Triple[]) => void,
-  limit = 100,
-  collection = COLLECTION,
+  limit: number,
+  collection: string,
   graph?: string,
   maxTries = 6,
 ): Promise<Triple[]> {
@@ -249,6 +249,7 @@ async function resolveLabel(
   api: ReturnType<BaseApi["flow"]>,
   uri: string,
   cache: Map<string, string>,
+  collection: string,
 ): Promise<string> {
   if (cache.has(uri)) return cache.get(uri)!;
   try {
@@ -257,7 +258,7 @@ async function resolveLabel(
       { t: "i", i: RDFS_LABEL },
       undefined,
       1,
-      COLLECTION,
+      collection,
     );
     const label = triples.length > 0 ? objValue(triples[0]) : shortUri(uri);
     cache.set(uri, label);
@@ -274,13 +275,14 @@ async function traceProvenanceChain(
   api: ReturnType<BaseApi["flow"]>,
   startUri: string,
   labelCache: Map<string, string>,
+  collection: string,
   maxDepth = 10,
 ): Promise<ProvenanceChain> {
   const chain: { uri: string; label: string }[] = [];
   let current: string | null = startUri;
 
   for (let i = 0; i < maxDepth && current; i++) {
-    const label = await resolveLabel(api, current, labelCache);
+    const label = await resolveLabel(api, current, labelCache, collection);
     chain.push({ uri: current, label });
 
     // Find parent
@@ -289,7 +291,7 @@ async function traceProvenanceChain(
       { t: "i", i: PROV_WAS_DERIVED_FROM },
       undefined,
       1,
-      COLLECTION,
+      collection,
     );
 
     const parentUri = parentTriples.length > 0 ? objValue(parentTriples[0]) : null;
@@ -305,6 +307,7 @@ async function queryEdgeProvenance(
   api: ReturnType<BaseApi["flow"]>,
   edge: { s: string; p: string; o: string },
   labelCache: Map<string, string>,
+  collection: string,
 ): Promise<ProvenanceChain[]> {
   // Find subgraphs that contain this edge: ?subgraph tg:contains <<s p o>>
   const oTerm: Term = (edge.o.startsWith("http") || edge.o.startsWith("urn:"))
@@ -323,7 +326,7 @@ async function queryEdgeProvenance(
       },
     },
     10,
-    COLLECTION,
+    collection,
   );
 
   // For each subgraph, follow wasDerivedFrom to sources
@@ -337,13 +340,13 @@ async function queryEdgeProvenance(
       { t: "i", i: PROV_WAS_DERIVED_FROM },
       undefined,
       10,
-      COLLECTION,
+      collection,
     );
 
     for (const dt of derivedTriples) {
       const sourceUri = objValue(dt);
       if (sourceUri) {
-        const chain = await traceProvenanceChain(api, sourceUri, labelCache);
+        const chain = await traceProvenanceChain(api, sourceUri, labelCache, collection);
         chains.push(chain);
       }
     }
@@ -456,13 +459,14 @@ async function enrichEventData(
   basicData: EventData,
   labelCache: Map<string, string>,
   explainGraph: string,
+  collection: string,
 ): Promise<EventData> {
   switch (eventType) {
     case "exploration": {
       const data = { ...(basicData as ExplorationData) };
       if (data.entities.length > 0) {
         data.entityLabels = await Promise.all(
-          data.entities.map(uri => resolveLabel(api, uri, labelCache))
+          data.entities.map(uri => resolveLabel(api, uri, labelCache, collection))
         );
       }
       return data;
@@ -472,7 +476,7 @@ async function enrichEventData(
       const basic = basicData as FocusData;
       const edgeSelections = await Promise.all(basic.edgeSelections.map(async (basicSel) => {
         const edgeTriples = await queryTriples(
-          api, basicSel.edgeUri, undefined, 100, COLLECTION, explainGraph,
+          api, basicSel.edgeUri, undefined, 100, collection, explainGraph,
         );
 
         const sel: EdgeSelection = { edgeUri: basicSel.edgeUri };
@@ -485,11 +489,11 @@ async function enrichEventData(
         if (sel.edge) {
           const [labels, sources] = await Promise.all([
             Promise.all([
-              resolveLabel(api, sel.edge.s, labelCache),
-              resolveLabel(api, sel.edge.p, labelCache),
-              resolveLabel(api, sel.edge.o, labelCache),
+              resolveLabel(api, sel.edge.s, labelCache, collection),
+              resolveLabel(api, sel.edge.p, labelCache, collection),
+              resolveLabel(api, sel.edge.o, labelCache, collection),
             ]),
-            queryEdgeProvenance(api, sel.edge, labelCache),
+            queryEdgeProvenance(api, sel.edge, labelCache, collection),
           ]);
           sel.edgeLabels = { s: labels[0], p: labels[1], o: labels[2] };
           sel.sources = sources;
@@ -533,6 +537,10 @@ export function ExplainView() {
 
   const { graphRag, documentRag, agent } = useInference({});
   const socket = useSocket();
+  const flowId = useSessionStore((s) => s.flowId);
+  const { settings } = useSettings();
+  const collection = settings.collection;
+  const generation = useWorkspaceStore((s) => s.generation);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -553,7 +561,7 @@ export function ExplainView() {
     ));
 
     try {
-      const api = socket.flow("default");
+      const api = socket.flow(flowId);
       const node = nodesRef.current.find(n => n.explainId === explainId);
       if (!node) return;
 
@@ -575,7 +583,7 @@ export function ExplainView() {
           latestBasicData = parseBasicEventData(latestEventType, triples);
           updateNode({ eventType: latestEventType, data: latestBasicData, fetched: true, fetching: false });
         },
-        100, COLLECTION, node.explainGraph,
+        100, collection, node.explainGraph,
       );
 
       if (settledTriples.length === 0) {
@@ -585,7 +593,7 @@ export function ExplainView() {
 
       // Phase 2: Enrich with KG lookups (labels, edge details, provenance).
       // These reference known-to-exist data — no retry needed, just fetch once.
-      const enriched = await enrichEventData(api, latestEventType, settledTriples, latestBasicData, labelCacheRef.current, node.explainGraph);
+      const enriched = await enrichEventData(api, latestEventType, settledTriples, latestBasicData, labelCacheRef.current, node.explainGraph, collection);
       if (enriched !== latestBasicData) {
         updateNode({ data: enriched });
       }
@@ -596,7 +604,7 @@ export function ExplainView() {
           : n
       ));
     }
-  }, [socket]);
+  }, [socket, flowId, collection, generation]);
 
   useEffect(() => {
     for (const node of explainNodes) {
@@ -640,7 +648,7 @@ export function ExplainView() {
         case "graph-rag": {
           await graphRag({
             input: trimmed,
-            collection: COLLECTION,
+            collection,
             options: { maxSubgraphSize: 150 },
             callbacks: {
               onChunk: (chunk: string) => setResponse(prev => prev + chunk),
@@ -654,7 +662,7 @@ export function ExplainView() {
         case "doc-rag": {
           await documentRag({
             input: trimmed,
-            collection: COLLECTION,
+            collection,
             callbacks: {
               onChunk: (chunk: string) => setResponse(prev => prev + chunk),
               onExplain: addExplainEvent,
@@ -705,7 +713,7 @@ export function ExplainView() {
     } finally {
       setIsQuerying(false);
     }
-  }, [graphRag, documentRag, agent, queryMode, isQuerying, addExplainEvent]);
+  }, [graphRag, documentRag, agent, queryMode, isQuerying, addExplainEvent, collection]);
 
   // ── Derive graph nodes and edges from explain events ──────────────
   const { graphNodes, graphEdges } = useMemo(() => {

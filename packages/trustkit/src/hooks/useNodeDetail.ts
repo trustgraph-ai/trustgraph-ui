@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSocket } from "@trustgraph/react-provider";
-import { COLLECTION } from "../config";
+import { useSessionStore, useSettings, useWorkspaceStore } from "@trustgraph/react-state";
 import { domainColors } from "../theme";
 import { getLocalName } from "../utils/uri";
 
@@ -66,6 +66,10 @@ function colorForUri(uri: string): string {
 
 export function useNodeDetail(uri: string | null): NodeDetail | null {
   const socket = useSocket();
+  const flowId = useSessionStore((s) => s.flowId);
+  const { settings } = useSettings();
+  const collection = settings.collection;
+  const generation = useWorkspaceStore((s) => s.generation);
   const [detail, setDetail] = useState<NodeDetail | null>(null);
 
   useEffect(() => {
@@ -86,12 +90,12 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
       });
 
       try {
-        const api = socket.flow("default");
+        const api = socket.flow(flowId);
 
         // Fetch outgoing and incoming triples
         const [outgoing, incoming] = await Promise.all([
-          api.triplesQuery(makeIriTerm(uri), undefined, undefined, 500, COLLECTION, ""),
-          api.triplesQuery(undefined, undefined, makeIriTerm(uri), 500, COLLECTION, ""),
+          api.triplesQuery(makeIriTerm(uri), undefined, undefined, 500, collection, ""),
+          api.triplesQuery(undefined, undefined, makeIriTerm(uri), 500, collection, ""),
         ]);
 
         if (cancelled) return;
@@ -106,7 +110,7 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
         const labelFetches: Promise<{ uri: string; triples: { t: string; i?: string; v?: string }[] }>[] = [];
         for (const u of connectedUris) {
           labelFetches.push(
-            api.triplesQuery(makeIriTerm(u), makeIriTerm(RDFS_LABEL), undefined, 1, COLLECTION, "")
+            api.triplesQuery(makeIriTerm(u), makeIriTerm(RDFS_LABEL), undefined, 1, collection, "")
               .then(triples => ({ uri: u, triples: triples.map(t => t.o) }))
           );
         }
@@ -212,7 +216,7 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
     })();
 
     return () => { cancelled = true; };
-  }, [uri, socket]);
+  }, [uri, socket, flowId, collection, generation]);
 
   return detail;
 }

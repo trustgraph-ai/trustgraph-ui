@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { useSocket } from "@trustgraph/react-provider";
+import { useSessionStore } from "@trustgraph/react-state";
 
 export interface PromptTestResult {
   response: string;
@@ -13,6 +14,7 @@ export interface PromptTestResult {
 
 export function usePromptTest() {
   const socket = useSocket();
+  const flowId = useSessionStore((s) => s.flowId);
   const [result, setResult] = useState<PromptTestResult>({
     response: "",
     isStreaming: false,
@@ -34,7 +36,7 @@ export function usePromptTest() {
     // Strip the "template." prefix if present — promptStreaming expects just the ID
     const id = promptId.startsWith("template.") ? promptId.slice(9) : promptId;
 
-    const api = socket.flow("default");
+    const api = socket.flow(flowId);
     api.promptStreaming(
       id,
       variables,
@@ -61,7 +63,7 @@ export function usePromptTest() {
         }));
       },
     );
-  }, [socket]);
+  }, [socket, flowId]);
 
   const abort = useCallback(() => {
     abortRef.current = true;

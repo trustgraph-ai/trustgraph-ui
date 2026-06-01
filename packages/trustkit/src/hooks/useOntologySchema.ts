@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { useTriples } from "@trustgraph/react-state";
-import { COLLECTION } from "../config";
+import { useTriples, useSettings } from "@trustgraph/react-state";
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
 const RDFS_DOMAIN = "http://www.w3.org/2000/01/rdf-schema#domain";
@@ -48,12 +47,15 @@ export interface OntologySchema {
 }
 
 export function useOntologySchema() {
+  const { settings } = useSettings();
+  const collection = settings.collection;
+
   // Query for classes
   const classTriples = useTriples({
     p: { t: "i", i: RDF_TYPE },
     o: { t: "i", i: OWL_CLASS },
     limit: 100,
-    collection: COLLECTION,
+    collection,
   });
 
   // Query for object properties
@@ -61,7 +63,7 @@ export function useOntologySchema() {
     p: { t: "i", i: RDF_TYPE },
     o: { t: "i", i: OWL_OBJECT_PROPERTY },
     limit: 100,
-    collection: COLLECTION,
+    collection,
   });
 
   // Query for datatype properties
@@ -69,13 +71,13 @@ export function useOntologySchema() {
     p: { t: "i", i: RDF_TYPE },
     o: { t: "i", i: OWL_DATATYPE_PROPERTY },
     limit: 100,
-    collection: COLLECTION,
+    collection,
   });
 
   // Query for all triples to get labels, domains, ranges
   const allTriples = useTriples({
     limit: 1000,
-    collection: COLLECTION,
+    collection,
   });
 
   const isLoading = classTriples.isLoading || objectPropertyTriples.isLoading ||
