@@ -1,6 +1,6 @@
 import { Card, text, surface, palette } from "@trustgraph/trustkit";
 
-interface WorkflowCard {
+interface DemoCard {
   key: string;
   view?: string;
   title: string;
@@ -10,129 +10,46 @@ interface WorkflowCard {
   screenshot?: string;
 }
 
-interface HomePageProps {
+interface DemosPageProps {
   onNavigate?: (view: string) => void;
 }
 
-const workflows: WorkflowCard[] = [
+const demos: DemoCard[] = [
   {
-    key: "ingest",
-    view: "ingest",
-    title: "Document Ingestion",
-    icon: "⬆",
+    key: "solar-missions",
+    view: "solar-missions",
+    title: "Solar System Missions",
+    icon: "◉",
     color: palette.amber,
-    description: "Load documents and process them into knowledge.",
-    screenshot: "/doc-ingest.jpg",
+    description: "Explore space missions across the solar system.",
   },
   {
-    key: "explore",
-    view: "explore",
-    title: "Context Graph Explorer",
+    key: "hwsec",
+    view: "hwsec",
+    title: "Hardware Security Explorer",
     icon: "◈",
-    color: palette.emerald,
-    description: "Explore the context graph visually.",
-    screenshot: "/ctxt-graph.jpg",
-  },
-  {
-    key: "graph-rag",
-    view: "graph-rag",
-    title: "Graph RAG Query",
-    icon: "◉",
     color: palette.blue,
-    description: "Ask questions with knowledge graph provenance.",
-    screenshot: "/graph-rag.jpg",
+    description: "Hardware decomposition tree with security annotations.",
   },
   {
-    key: "agent",
-    view: "agent",
-    title: "Agent Query",
-    icon: "⚡",
-    color: palette.amber,
-    description: "Multi-step reasoning agent with provenance.",
-    screenshot: "/agent-retrieval.jpg",
+    key: "playground",
+    view: "playground",
+    title: "Playground",
+    icon: "△",
+    color: palette.rose,
+    description: "Experimental sandbox for trying things out.",
   },
   {
-    key: "doc-rag",
-    view: "doc-rag",
-    title: "Document RAG Query",
-    icon: "◉",
-    color: palette.purple,
-    description: "Semantic document search with grounded answers.",
-    screenshot: "/doc-rag.jpg",
-  },
-  {
-    key: "raw-graph",
-    view: "raw-graph",
-    title: "Graph Navigator",
-    icon: "◎",
+    key: "world-events",
+    view: "world-events",
+    title: "World Events Explorer",
+    icon: "⊕",
     color: palette.cyan,
-    description: "Explore any graph — no schema required.",
-    screenshot: "/ss-raw-graph.png",
-  },
-  {
-    key: "prompts",
-    view: "prompts",
-    title: "Prompt Management",
-    icon: "✎",
-    color: palette.amber,
-    description: "Browse, edit, and test LLM prompt templates.",
-    screenshot: "/prompts.jpg",
-  },
-  {
-    key: "agent-config",
-    view: "agent-config",
-    title: "Agent Console",
-    icon: "⚙",
-    color: palette.cyan,
-    description: "Configure agent patterns, task types, and tools.",
-    screenshot: "/agent.jpg",
-  },
-  {
-    key: "data",
-    view: "data",
-    title: "Table Explorer",
-    icon: "▤",
-    color: palette.blue,
-    description: "Search structured data across schemas.",
-    screenshot: "/ss-data.png",
-  },
-  {
-    key: "ontology",
-    view: "ontology",
-    title: "Ontology Viewer",
-    icon: "◇",
-    color: palette.purple,
-    description: "Browse classes, properties, and relationships.",
-  },
-  {
-    key: "ontology-manage",
-    view: "ontology-manage",
-    title: "Ontology Management",
-    icon: "◆",
-    color: palette.emerald,
-    description: "Create, edit, validate, and export OWL ontologies.",
-    screenshot: "/ontology.jpg",
-  },
-  {
-    key: "schemas",
-    view: "schemas",
-    title: "Schema Management",
-    icon: "▦",
-    color: palette.blue,
-    description: "Define and manage structured data schemas.",
-    screenshot: "/schema.jpg",
-  },
-  {
-    key: "sparql",
-    view: "sparql",
-    title: "SPARQL Query",
-    icon: "⟐",
-    color: palette.purple,
-    description: "Execute SPARQL queries against the knowledge graph.",
+    description: "Geo-temporal event explorer with map, timeline, and filters.",
   },
 ];
 
-export function HomePage({ onNavigate }: HomePageProps) {
+export function DemosPage({ onNavigate }: DemosPageProps) {
   return (
     <div style={{
       padding: "48px 28px",
@@ -140,7 +57,6 @@ export function HomePage({ onNavigate }: HomePageProps) {
       overflowY: "auto",
     }}>
       <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-        {/* Page header */}
         <div style={{ marginBottom: 32 }}>
           <h1 style={{
             fontSize: 24,
@@ -149,31 +65,29 @@ export function HomePage({ onNavigate }: HomePageProps) {
             marginBottom: 6,
             fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
           }}>
-            TrustGraph Workflows
+            Demos
           </h1>
           <p style={{
             fontSize: 13,
             color: text.muted,
             lineHeight: 1.5,
           }}>
-            Each workflow demonstrates how trustkit components compose to create a full experience.
+            Interactive demonstrations showcasing TrustGraph capabilities with real-world datasets.
           </p>
         </div>
 
-        {/* Workflow grid — 3 columns */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: 12,
         }}>
-          {workflows.map((wf) => (
+          {demos.map((wf) => (
             <Card
               key={wf.key}
               borderColor={wf.color + "22"}
               padding={0}
               onClick={wf.view && onNavigate ? () => onNavigate(wf.view!) : undefined}
             >
-              {/* Screenshot thumbnail — compact */}
               <div style={{
                 height: 80,
                 overflow: "hidden",
@@ -195,7 +109,6 @@ export function HomePage({ onNavigate }: HomePageProps) {
                   inset: 0,
                   background: `linear-gradient(180deg, transparent 0%, ${surface.base} 100%)`,
                 }} />
-                {/* Icon overlay */}
                 <div style={{
                   position: "absolute",
                   top: 8,
@@ -215,7 +128,6 @@ export function HomePage({ onNavigate }: HomePageProps) {
                 </div>
               </div>
 
-              {/* Content */}
               <div style={{ padding: "10px 14px 14px" }}>
                 <div style={{
                   fontSize: 13,

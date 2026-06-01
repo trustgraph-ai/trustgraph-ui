@@ -2,12 +2,24 @@ import type { DomainKey, OntologyDomain } from "@trustgraph/trustkit";
 import { SectionLabel, Card, Badge, LoadingState, useGraphData, useOntologySchema, getLocalName, text, surface, border } from "@trustgraph/trustkit";
 
 export function OntologyView() {
-  const { ontology, isLoading: graphLoading } = useGraphData();
-  const { schema, isLoading: schemaLoading } = useOntologySchema();
+  const { ontology, isLoading: graphLoading, isError: graphError, error: graphErr } = useGraphData();
+  const { schema, isLoading: schemaLoading, isError: schemaError, error: schemaErr } = useOntologySchema();
 
   const isLoading = graphLoading || schemaLoading;
+  const isError = graphError || schemaError;
+  const error = graphErr || schemaErr;
 
   if (isLoading || !ontology || !schema) {
+    if (isError) {
+      return (
+        <div style={{ flex: 1, padding: "28px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ textAlign: "center", color: text.muted }}>
+            <div style={{ fontSize: 16, marginBottom: 8, color: "#ef4444" }}>Failed to load ontology</div>
+            <div style={{ fontSize: 12, color: text.faint }}>{error?.message || "Unknown error"}</div>
+          </div>
+        </div>
+      );
+    }
     return <LoadingState message="Loading ontology..." />;
   }
 

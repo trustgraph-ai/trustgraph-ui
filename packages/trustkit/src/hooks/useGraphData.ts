@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useSocket } from "@trustgraph/react-provider";
+import { useSocket, useConnectionState } from "@trustgraph/react-provider";
 import type { Triple } from "@trustgraph/react-state";
 import { useSessionStore, useSettings, useWorkspaceStore } from "@trustgraph/react-state";
 import type { Entity, Relationship, DomainKey, OntologyType } from "../types";
@@ -43,6 +43,8 @@ export function predicateToName(uri: string): string {
 
 export function useGraphData(domain?: DomainKey) {
   const socket = useSocket();
+  const connectionState = useConnectionState();
+  const isSocketReady = connectionState?.status === "authenticated";
   const flowId = useSessionStore((s) => s.flowId);
   const { settings } = useSettings();
   const collection = settings.collection;
@@ -53,6 +55,8 @@ export function useGraphData(domain?: DomainKey) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    if (!isSocketReady) return;
+
     let cancelled = false;
 
     (async () => {
@@ -81,7 +85,7 @@ export function useGraphData(domain?: DomainKey) {
     })();
 
     return () => { cancelled = true; };
-  }, [socket, flowId, collection, generation]);
+  }, [socket, isSocketReady, flowId, collection, generation]);
 
   // Process all data from the query
   const { entities, relationships, ontology, propertyLabels } = useMemo(() => {

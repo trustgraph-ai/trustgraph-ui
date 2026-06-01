@@ -18,3 +18,5 @@ export { PlaygroundPage } from "./PlaygroundPage";
 export { WorldEventsPage } from "./WorldEventsPage";
 export { SparqlPage } from "./SparqlPage";
 export { SolarMissionsPage } from "./SolarMissionsPage";
+export { HwSecPage } from "./HwSecPage";
+export { DemosPage } from "./DemosPage";

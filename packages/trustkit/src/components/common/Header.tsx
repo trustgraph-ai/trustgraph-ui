@@ -40,6 +40,18 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
         >
           ⌂ Workflows
         </button>
+        <button
+          onClick={() => onTabChange("demos" as TabKey)}
+          style={{
+            padding: "7px 16px", borderRadius: 6, border: "none", cursor: "pointer",
+            background: activeTab === "demos" ? "rgba(255,255,255,0.1)" : "transparent",
+            color: activeTab === "demos" ? "#fff" : "#666",
+            fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, fontWeight: activeTab === "demos" ? 600 : 400,
+            transition: "all 0.2s",
+          }}
+        >
+          ▷ Demos
+        </button>
       </div>
     </div>
   );

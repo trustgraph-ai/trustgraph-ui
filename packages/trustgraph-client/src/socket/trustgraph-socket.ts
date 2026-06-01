@@ -99,7 +99,7 @@ export interface ExplainEvent {
 // Configuration constants
 const SOCKET_RECONNECTION_TIMEOUT = 2000; // 2 seconds between reconnection
 // attempts
-const SOCKET_URL = "/api/socket"; // WebSocket endpoint path
+const SOCKET_URL = "/api/v1/socket"; // WebSocket endpoint path
 
 /**
  * Socket interface defining all available operations for the TrustGraph API
@@ -2590,7 +2590,7 @@ export class CollectionManagementApi {
  * the gateway derives the user identity and workspace from it.
  *
  * @param token - Bearer token (JWT from /auth/login or an API key)
- * @param socketUrl - Optional WebSocket URL (defaults to /api/socket
+ * @param socketUrl - Optional WebSocket URL (defaults to /api/v1/socket
  *   for browser, provide full URL for Node.js)
  */
 export const createTrustGraphSocket = (

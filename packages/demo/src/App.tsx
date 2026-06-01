@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import type { DomainKey, Entity } from "@trustgraph/trustkit";
 import { Header, StatusBar, Toaster, useGraphData, toast, WorkspaceSwitcher } from "@trustgraph/trustkit";
 import { useLogout, useWorkspaceSync } from "@trustgraph/react-state";
-import { HomePage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, PlaygroundPage, WorldEventsPage, SparqlPage, SolarMissionsPage } from "./pages";
+import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, PlaygroundPage, WorldEventsPage, SparqlPage, SolarMissionsPage, HwSecPage } from "./pages";
 
-type View = "home" | "ingest" | "explore" | "graph-rag" | "doc-rag" | "agent" | "graph" | "query" | "explain" | "data" | "ontology" | "raw-graph" | "prompts" | "agent-config" | "ontology-manage" | "schemas" | "playground" | "world-events" | "sparql" | "solar-missions";
+type View = "home" | "demos" | "ingest" | "explore" | "graph-rag" | "doc-rag" | "agent" | "graph" | "query" | "explain" | "data" | "ontology" | "raw-graph" | "prompts" | "agent-config" | "ontology-manage" | "schemas" | "playground" | "world-events" | "sparql" | "solar-missions" | "hwsec";
 
 export default function App() {
   const [activeView, setActiveView] = useState<View>("home");
@@ -55,6 +55,8 @@ export default function App() {
 
       {activeView === "home" && <HomePage onNavigate={handleNavigate} />}
 
+      {activeView === "demos" && <DemosPage onNavigate={handleNavigate} />}
+
       {activeView === "ingest" && <IngestPage />}
 
       {activeView === "explore" && <ExploreView />}
@@ -94,11 +96,13 @@ export default function App() {
 
       {activeView === "playground" && <PlaygroundPage />}
 
-      {activeView === "world-events" && <WorldEventsPage />}
-
       {activeView === "sparql" && <SparqlPage />}
 
+      {activeView === "world-events" && <WorldEventsPage />}
+
       {activeView === "solar-missions" && <SolarMissionsPage />}
+
+      {activeView === "hwsec" && <HwSecPage />}
 
       <StatusBar />
       <Toaster />
