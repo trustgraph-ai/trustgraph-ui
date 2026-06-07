@@ -88,7 +88,7 @@ export function useOntologySchema() {
                 datatypePropertyTriples.error || allTriples.error;
 
   const schema = useMemo((): OntologySchema | undefined => {
-    if (isLoading) return undefined;
+    if (isLoading || isError) return undefined;
 
     // Build a map of URI -> metadata from all triples
     const metadata = new Map<string, { label?: string; domain?: string; range?: string; comment?: string }>();

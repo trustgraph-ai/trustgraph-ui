@@ -31,9 +31,9 @@ class Api:
 
         self.app = web.Application(middlewares=[])
 
-        self.app.add_routes([web.get("/api/socket", self.socket)])
-        self.app.add_routes([web.get("/api/export-core", self.export_core)])
-        self.app.add_routes([web.post("/api/import-core", self.import_core)])
+        self.app.add_routes([web.get("/api/v1/socket", self.socket)])
+        self.app.add_routes([web.get("/api/v1/export-core", self.export_core)])
+        self.app.add_routes([web.post("/api/v1/import-core", self.import_core)])
         self.app.add_routes([
             web.route("*", "/api/v1/auth/{tail:.*}", self.auth),
             web.route("*", "/api/v1/auth", self.auth),
@@ -162,7 +162,7 @@ class Api:
 
     async def import_core(self, request):
 
-        url = self.gateway + "api/v1/import-core?" + request.query_string
+        url = self.gateway + request.path.lstrip("/") + "?" + request.query_string
 
         async def sender():
             content = request.content
@@ -178,7 +178,7 @@ class Api:
 
     async def export_core(self, request):
 
-        url = self.gateway + "api/v1/export-core?" + request.query_string
+        url = self.gateway + request.path.lstrip("/") + "?" + request.query_string
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
@@ -209,7 +209,7 @@ class Api:
 
         await ws_server.prepare(request)
 
-        url = self.gateway_ws + "api/v1/socket?" + request.query_string
+        url = self.gateway_ws + request.path.lstrip("/") + "?" + request.query_string
 
         running = Running()
 
