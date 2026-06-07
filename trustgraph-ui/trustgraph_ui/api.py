@@ -38,6 +38,9 @@ class Api:
             web.route("*", "/api/v1/auth/{tail:.*}", self.auth),
             web.route("*", "/api/v1/auth", self.auth),
         ])
+        self.app.add_routes([
+            web.route("*", "/api/v1/{tail:.*}", self.proxy),
+        ])
 
         self.app.add_routes([web.get("/{tail:.*}", self.everything)])
 
@@ -127,6 +130,32 @@ class Api:
         except Exception as e:
             logging.error(f"Exception: {e}")
             raise web.HTTPInternalServerError()
+
+    async def proxy(self, request):
+
+        url = self.gateway + request.path.lstrip("/")
+
+        if request.query_string:
+            url += "?" + request.query_string
+
+        headers = {}
+        if request.content_type:
+            headers["Content-Type"] = request.content_type
+        if "Authorization" in request.headers:
+            headers["Authorization"] = request.headers["Authorization"]
+
+        body = await request.read() if request.has_body else None
+
+        async with aiohttp.ClientSession() as session:
+            async with session.request(
+                request.method, url, data=body, headers=headers
+            ) as resp:
+                response_body = await resp.read()
+                return web.Response(
+                    status=resp.status,
+                    body=response_body,
+                    content_type=resp.content_type,
+                )
 
     async def auth(self, request):
 
