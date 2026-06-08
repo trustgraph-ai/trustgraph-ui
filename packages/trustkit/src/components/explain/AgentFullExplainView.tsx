@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { SearchInput, SectionLabel, Toolbar } from "../common";
+import { SearchInput, SearchPreset, SectionLabel, Toolbar } from "../common";
 import { AgentStepList } from "./AgentStepList";
 import { ExplainEventCard } from "./ExplainEventCard";
 import { ExplainDAG } from "./ExplainDAG";
@@ -17,6 +17,7 @@ import { useSettings } from "@trustgraph/react-state";
 
 interface AgentFullExplainViewProps {
   collection?: string;
+  presets?: SearchPreset[];
 }
 
 /**
@@ -24,7 +25,7 @@ interface AgentFullExplainViewProps {
  * The reasoning process as a DAG with click-to-inspect detail panel.
  * DAG on the left with agent steps below, event detail on the right.
  */
-export function AgentFullExplainView({ collection: collectionProp }: AgentFullExplainViewProps) {
+export function AgentFullExplainView({ collection: collectionProp, presets }: AgentFullExplainViewProps) {
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -87,7 +88,7 @@ export function AgentFullExplainView({ collection: collectionProp }: AgentFullEx
   );
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + DAG + Agent Steps */}
       <div style={{
         flex: 1,
@@ -105,6 +106,7 @@ export function AgentFullExplainView({ collection: collectionProp }: AgentFullEx
             buttonText="Ask"
             isLoading={isQuerying}
             buttonColor={palette.amber}
+            presets={presets}
           />
         </Toolbar>
 

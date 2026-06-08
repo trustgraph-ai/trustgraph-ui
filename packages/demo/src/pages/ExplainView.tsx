@@ -839,7 +839,7 @@ export function ExplainView() {
   }, [socket, sourcePanel?.chunkUri]);
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* LHS: Query + Response */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
         <div style={{ padding: "20px 28px", borderBottom: `1px solid ${border.default}` }}>

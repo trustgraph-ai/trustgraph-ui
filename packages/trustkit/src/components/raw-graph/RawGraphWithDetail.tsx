@@ -34,7 +34,7 @@ export function RawGraphWithDetail({ startUri, onNodeSelect }: RawGraphWithDetai
 
   return (
     <SplitPane
-      height="calc(100vh - 110px)"
+      height="var(--page-height)"
       panelSide="right"
       panelBorder
       panel={detailPanel}

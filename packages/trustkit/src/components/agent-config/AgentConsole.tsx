@@ -15,7 +15,7 @@ export function AgentConsole() {
   return (
     <div style={{
       display: "flex",
-      height: "calc(100vh - 110px)",
+      height: "var(--page-height)",
     }}>
       {/* Config sidebar */}
       <div style={{

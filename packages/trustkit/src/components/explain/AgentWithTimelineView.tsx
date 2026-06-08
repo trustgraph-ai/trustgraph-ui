@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
+import { SearchInput, SearchPreset, SectionLabel, Toolbar, EmptyState } from "../common";
 import { AgentStepList } from "./AgentStepList";
 import { ExplainTimeline } from "./ExplainTimeline";
 import { useAgent } from "../../hooks/useAgent";
@@ -10,6 +10,7 @@ import { useSettings } from "@trustgraph/react-state";
 
 interface AgentWithTimelineViewProps {
   collection?: string;
+  presets?: SearchPreset[];
 }
 
 /**
@@ -17,7 +18,7 @@ interface AgentWithTimelineViewProps {
  * Agent reasoning steps on the left, event timeline on the right
  * with document-level sources.
  */
-export function AgentWithTimelineView({ collection: collectionProp }: AgentWithTimelineViewProps) {
+export function AgentWithTimelineView({ collection: collectionProp, presets }: AgentWithTimelineViewProps) {
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -37,7 +38,7 @@ export function AgentWithTimelineView({ collection: collectionProp }: AgentWithT
   }, [query, isQuerying, explainSession]);
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Agent Steps */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
         <Toolbar>
@@ -50,6 +51,7 @@ export function AgentWithTimelineView({ collection: collectionProp }: AgentWithT
             buttonText="Ask"
             isLoading={isQuerying}
             buttonColor={palette.amber}
+            presets={presets}
           />
         </Toolbar>
 

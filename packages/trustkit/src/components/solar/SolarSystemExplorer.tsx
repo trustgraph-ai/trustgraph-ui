@@ -143,7 +143,7 @@ export function SolarSystemExplorer({
 
   if (isLoading) {
     return (
-      <div style={{ height: "calc(100vh - 110px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ height: "var(--page-height)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <LoadingState message="Loading solar system data..." />
       </div>
     );
@@ -151,7 +151,7 @@ export function SolarSystemExplorer({
 
   if (error) {
     return (
-      <div style={{ height: "calc(100vh - 110px)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
+      <div style={{ height: "var(--page-height)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
         <div style={{ color: palette.rose, fontSize: 14, fontFamily: "'IBM Plex Mono', monospace" }}>
           Failed to load solar system data
         </div>
@@ -161,7 +161,7 @@ export function SolarSystemExplorer({
   }
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)", overflow: "hidden" }}>
+    <div style={{ display: "flex", height: "var(--page-height)", overflow: "hidden" }}>
       {/* Solar system SVG */}
       <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#030308" }}>
         <svg

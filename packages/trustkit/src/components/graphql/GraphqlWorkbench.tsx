@@ -1,112 +1,102 @@
 import { useState, useCallback, useRef, useMemo } from "react";
-import { text, border, palette, surface } from "../../theme";
+import { text, border, palette } from "../../theme";
 import { SectionLabel } from "../common";
 
-export interface SparqlResult {
-  columns: string[];
-  rows: Record<string, string>[];
+type ResultView = "raw" | "table";
+
+function extractTable(data: unknown): { columns: string[]; rows: Record<string, unknown>[] } | null {
+  if (!data || typeof data !== "object") return null;
+  const entries = Object.values(data as Record<string, unknown>);
+  let arr: unknown[] | null = null;
+  if (Array.isArray(data)) {
+    arr = data;
+  } else if (entries.length === 1 && Array.isArray(entries[0])) {
+    arr = entries[0];
+  } else {
+    for (const v of entries) {
+      if (v && typeof v === "object" && !Array.isArray(v)) {
+        const inner = Object.values(v as Record<string, unknown>);
+        if (inner.length === 1 && Array.isArray(inner[0])) {
+          arr = inner[0];
+          break;
+        }
+      }
+    }
+  }
+  if (!arr || arr.length === 0) return null;
+  const first = arr[0];
+  if (!first || typeof first !== "object" || Array.isArray(first)) return null;
+  const columns = Object.keys(first as Record<string, unknown>);
+  if (columns.length === 0) return null;
+  return { columns, rows: arr as Record<string, unknown>[] };
 }
 
-export interface QueryPreset {
+function formatCell(value: unknown): string {
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
+export interface GraphqlResult {
+  data?: unknown;
+  errors?: unknown[];
+}
+
+export interface GraphqlPreset {
   key: string;
   title: string;
   description: string;
   query: string;
 }
 
-export interface SparqlWorkbenchProps {
-  onExecute?: (query: string) => Promise<SparqlResult>;
-  presets?: QueryPreset[];
+export interface GraphqlWorkbenchProps {
+  onExecute?: (query: string) => Promise<GraphqlResult>;
+  presets?: GraphqlPreset[];
 }
 
 const EXAMPLE_QUERIES: { label: string; query: string }[] = [
   {
-    label: "All classes",
-    query: `SELECT ?class ?label
-WHERE {
-  ?class a owl:Class .
-  OPTIONAL { ?class rdfs:label ?label }
-}
-ORDER BY ?label
-LIMIT 100`,
+    label: "Introspect types",
+    query: `{
+  __schema {
+    types {
+      name
+      kind
+    }
+  }
+}`,
   },
   {
-    label: "All properties",
-    query: `SELECT ?prop ?label ?domain ?range
-WHERE {
-  { ?prop a owl:ObjectProperty } UNION { ?prop a owl:DatatypeProperty }
-  OPTIONAL { ?prop rdfs:label ?label }
-  OPTIONAL { ?prop rdfs:domain ?domain }
-  OPTIONAL { ?prop rdfs:range ?range }
-}
-ORDER BY ?label
-LIMIT 100`,
-  },
-  {
-    label: "Count by type",
-    query: `SELECT ?type (COUNT(?s) AS ?count)
-WHERE {
-  ?s a ?type .
-}
-GROUP BY ?type
-ORDER BY DESC(?count)
-LIMIT 50`,
-  },
-  {
-    label: "Sample triples",
-    query: `SELECT ?s ?p ?o
-WHERE {
-  ?s ?p ?o .
-}
-LIMIT 25`,
-  },
-  {
-    label: "Find by label",
-    query: `SELECT ?entity ?label ?type
-WHERE {
-  ?entity rdfs:label ?label .
-  OPTIONAL { ?entity a ?type }
-  FILTER(CONTAINS(LCASE(?label), "london"))
-}
-LIMIT 50`,
+    label: "Introspect fields",
+    query: `{
+  __schema {
+    queryType {
+      fields {
+        name
+        type { name kind }
+      }
+    }
+  }
+}`,
   },
 ];
 
-const DEFAULT_QUERY = EXAMPLE_QUERIES[3].query;
+const DEFAULT_QUERY = EXAMPLE_QUERIES[0].query;
 
-function shortenUri(uri: string): string {
-  const prefixes: Record<string, string> = {
-    "http://www.w3.org/1999/02/22-rdf-syntax-ns#": "rdf:",
-    "http://www.w3.org/2000/01/rdf-schema#": "rdfs:",
-    "http://www.w3.org/2002/07/owl#": "owl:",
-    "http://www.w3.org/2001/XMLSchema#": "xsd:",
-  };
-  for (const [full, short] of Object.entries(prefixes)) {
-    if (uri.startsWith(full)) return short + uri.substring(full.length);
-  }
-  const hash = uri.lastIndexOf("#");
-  if (hash > 0 && hash < uri.length - 1) {
-    const ns = uri.substring(0, hash + 1);
-    const local = uri.substring(hash + 1);
-    if (ns.length > 30) return "…:" + local;
-  }
-  if (uri.length > 60) return "…" + uri.substring(uri.length - 40);
-  return uri;
-}
-
-export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
+export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) {
   const [query, setQuery] = useState(DEFAULT_QUERY);
-  const [result, setResult] = useState<SparqlResult | null>(null);
+  const [result, setResult] = useState<GraphqlResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState<number | null>(null);
   const [showExamples, setShowExamples] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
+  const [resultView, setResultView] = useState<ResultView>("table");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const execute = useCallback(async () => {
     if (!onExecute) {
-      setError("SPARQL endpoint not connected");
+      setError("GraphQL endpoint not connected");
       return;
     }
     const trimmed = query.trim();
@@ -121,6 +111,9 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
     try {
       const res = await onExecute(trimmed);
       setElapsed(performance.now() - t0);
+      if (res.errors && (res.errors as unknown[]).length > 0) {
+        setError(JSON.stringify(res.errors, null, 2));
+      }
       setResult(res);
     } catch (err) {
       setElapsed(performance.now() - t0);
@@ -150,6 +143,16 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
 
   const lineCount = useMemo(() => query.split("\n").length, [query]);
 
+  const formattedResult = useMemo(() => {
+    if (!result?.data) return null;
+    return JSON.stringify(result.data, null, 2);
+  }, [result]);
+
+  const tableData = useMemo(() => {
+    if (!result?.data) return null;
+    return extractTable(result.data);
+  }, [result]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "var(--page-height)", overflow: "hidden" }}>
       {/* Toolbar */}
@@ -160,7 +163,7 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
         alignItems: "center",
         gap: 8,
       }}>
-        <SectionLabel>SPARQL QUERY</SectionLabel>
+        <SectionLabel>GRAPHQL QUERY</SectionLabel>
 
         <div style={{ position: "relative" }}>
           <button
@@ -325,7 +328,6 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
         display: "flex",
         borderBottom: `1px solid ${border.default}`,
       }}>
-        {/* Line numbers */}
         <div style={{
           padding: "12px 0",
           width: 40,
@@ -368,7 +370,6 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
 
       {/* Results area */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {/* Results header */}
         <div style={{
           padding: "6px 16px",
           borderBottom: `1px solid ${border.default}`,
@@ -379,10 +380,10 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
           <span style={{ fontSize: 9, color: text.hint, fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Results
           </span>
-          {result && (
+          {result && !error && (
             <span style={{ fontSize: 9, color: text.faint, fontFamily: "'IBM Plex Mono', monospace" }}>
-              {result.rows.length} row{result.rows.length !== 1 ? "s" : ""}
-              {elapsed !== null && ` · ${(elapsed / 1000).toFixed(2)}s`}
+              {elapsed !== null && `${(elapsed / 1000).toFixed(2)}s`}
+              {tableData && ` · ${tableData.rows.length} rows`}
             </span>
           )}
           {error && (
@@ -390,9 +391,32 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
               Error{elapsed !== null && ` · ${(elapsed / 1000).toFixed(2)}s`}
             </span>
           )}
+          <div style={{ flex: 1 }} />
+          {formattedResult && (
+            <div style={{ display: "flex", gap: 2 }}>
+              {(["table", "raw"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setResultView(v)}
+                  style={{
+                    padding: "2px 8px",
+                    borderRadius: 3,
+                    border: `1px solid ${resultView === v ? border.default : "transparent"}`,
+                    background: resultView === v ? "rgba(255,255,255,0.06)" : "transparent",
+                    color: resultView === v ? text.muted : text.hint,
+                    fontSize: 9,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    cursor: "pointer",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Results content */}
         <div style={{ flex: 1, overflow: "auto" }}>
           {isRunning && (
             <div style={{ padding: 32, textAlign: "center", color: text.faint, fontSize: 12, fontFamily: "'IBM Plex Mono', monospace" }}>
@@ -418,77 +442,84 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
             <div style={{ padding: 32, textAlign: "center", color: text.hint, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
               {onExecute
                 ? "Write a query and press Ctrl+Enter to execute."
-                : "SPARQL endpoint not connected."}
+                : "GraphQL endpoint not connected."}
             </div>
           )}
 
-          {result && result.rows.length === 0 && (
-            <div style={{ padding: 32, textAlign: "center", color: text.faint, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
-              Query returned no results.
-            </div>
-          )}
-
-          {result && result.rows.length > 0 && (
-            <table style={{
-              width: "100%",
-              borderCollapse: "collapse",
+          {formattedResult && resultView === "raw" && (
+            <pre style={{
+              margin: 0,
+              padding: "12px 16px",
               fontSize: 11,
               fontFamily: "'IBM Plex Mono', monospace",
+              color: text.muted,
+              lineHeight: "1.5",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
             }}>
-              <thead>
-                <tr>
-                  {result.columns.map(col => (
-                    <th
-                      key={col}
-                      style={{
-                        padding: "8px 12px",
+              {formattedResult}
+            </pre>
+          )}
+
+          {formattedResult && resultView === "table" && tableData && (
+            <div style={{ padding: "8px 16px" }}>
+              <table style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: 11,
+                fontFamily: "'IBM Plex Mono', monospace",
+              }}>
+                <thead>
+                  <tr>
+                    {tableData.columns.map((col) => (
+                      <th key={col} style={{
+                        padding: "6px 10px",
                         textAlign: "left",
-                        color: palette.cyan,
+                        color: text.subtle,
                         fontWeight: 600,
-                        fontSize: 10,
                         borderBottom: `1px solid ${border.default}`,
-                        position: "sticky",
-                        top: 0,
-                        background: surface.base,
-                        zIndex: 1,
-                      }}
-                    >
-                      ?{col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {result.rows.map((row, i) => (
-                  <tr
-                    key={i}
-                    style={{ background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)" }}
-                  >
-                    {result.columns.map(col => {
-                      const val = row[col] || "";
-                      const isUri = val.startsWith("http://") || val.startsWith("https://");
-                      return (
-                        <td
-                          key={col}
-                          title={val}
-                          style={{
-                            padding: "6px 12px",
-                            color: isUri ? palette.blue : text.muted,
-                            borderBottom: `1px solid rgba(255,255,255,0.03)`,
-                            maxWidth: 400,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {isUri ? shortenUri(val) : val}
-                        </td>
-                      );
-                    })}
+                        whiteSpace: "nowrap",
+                      }}>
+                        {col}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {tableData.rows.map((row, i) => (
+                    <tr key={i} style={{ borderBottom: `1px solid ${border.default}22` }}>
+                      {tableData.columns.map((col) => (
+                        <td key={col} style={{
+                          padding: "5px 10px",
+                          color: text.muted,
+                          maxWidth: 400,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}>
+                          {formatCell(row[col])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {formattedResult && resultView === "table" && !tableData && (
+            <pre style={{
+              margin: 0,
+              padding: "12px 16px",
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              color: text.muted,
+              lineHeight: "1.5",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}>
+              {formattedResult}
+            </pre>
           )}
         </div>
       </div>

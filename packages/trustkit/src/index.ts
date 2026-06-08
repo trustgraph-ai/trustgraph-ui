@@ -1,6 +1,6 @@
 // Components — common
 export { SectionLabel, FilterButton, Header, StatusBar, Typewriter, Card, Badge, LoadingState, Toaster, SearchInput, FilterBar, MessageBubble, TextInput, SplitPane, DetailPanel, EmptyState, ModeSelector, Toolbar, PageLayout, WorkspaceSwitcher } from "./components/common";
-export type { FilterItem, Message } from "./components/common";
+export type { FilterItem, Message, SearchPreset } from "./components/common";
 
 // Components — graph
 export { GraphCanvas, GraphCanvasSVG, ExplainGraph, NodeDetailPanel, ZoomControls } from "./components/graph";
@@ -42,7 +42,11 @@ export type { HwNode } from "./hooks/useHwSecData";
 
 // Components — sparql
 export { SparqlWorkbench } from "./components/sparql";
-export type { SparqlWorkbenchProps, SparqlResult } from "./components/sparql";
+export type { SparqlWorkbenchProps, SparqlResult, QueryPreset } from "./components/sparql";
+
+// Components — graphql
+export { GraphqlWorkbench } from "./components/graphql";
+export type { GraphqlWorkbenchProps, GraphqlResult, GraphqlPreset } from "./components/graphql";
 
 // Components — agent config
 export { ConfigSidebar, ConfigEditor, AgentDebugPanel, ExplainFacetCard, AgentConsole } from "./components/agent-config";

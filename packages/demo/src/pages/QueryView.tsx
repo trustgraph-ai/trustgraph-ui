@@ -122,7 +122,7 @@ export function QueryView() {
   }
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {/* Query input area */}
         <div style={{ padding: "20px 28px", borderBottom: `1px solid ${border.default}` }}>

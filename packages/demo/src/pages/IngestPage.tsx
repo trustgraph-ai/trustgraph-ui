@@ -669,7 +669,7 @@ export function IngestPage() {
 
   return (
     <div style={{
-      height: "calc(100vh - 110px)",
+      height: "var(--page-height)",
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",

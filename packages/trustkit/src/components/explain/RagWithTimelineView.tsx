@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
+import { SearchInput, SearchPreset, SectionLabel, Toolbar, EmptyState } from "../common";
 import { StreamingResponse } from "./StreamingResponse";
 import { ExplainTimeline } from "./ExplainTimeline";
 import { useGraphRag } from "../../hooks/useGraphRag";
@@ -10,6 +10,7 @@ import { useSettings } from "@trustgraph/react-state";
 
 interface RagWithTimelineViewProps {
   collection?: string;
+  presets?: SearchPreset[];
 }
 
 /**
@@ -17,7 +18,7 @@ interface RagWithTimelineViewProps {
  * Response on the left, event timeline on the right with
  * document-level sources (no chunks, collapsed to documents).
  */
-export function RagWithTimelineView({ collection: collectionProp }: RagWithTimelineViewProps) {
+export function RagWithTimelineView({ collection: collectionProp, presets }: RagWithTimelineViewProps) {
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -42,7 +43,7 @@ export function RagWithTimelineView({ collection: collectionProp }: RagWithTimel
   }, [query, isQuerying, explainSession]);
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Response */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
         <Toolbar>
@@ -55,6 +56,7 @@ export function RagWithTimelineView({ collection: collectionProp }: RagWithTimel
             buttonText="Query"
             isLoading={isQuerying}
             buttonColor={palette.cyan}
+          presets={presets}
           />
         </Toolbar>
 

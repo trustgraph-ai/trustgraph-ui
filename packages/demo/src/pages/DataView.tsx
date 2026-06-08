@@ -244,7 +244,7 @@ export function DataView() {
     : `${allMatches.length} results`;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "var(--page-height)" }}>
       {/* Schema Filter Bar */}
       <FilterBar
         items={filterItems}

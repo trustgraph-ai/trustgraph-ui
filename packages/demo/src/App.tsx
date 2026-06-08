@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import type { DomainKey, Entity } from "@trustgraph/trustkit";
 import { Header, StatusBar, Toaster, useGraphData, toast, WorkspaceSwitcher } from "@trustgraph/trustkit";
 import { useLogout, useWorkspaceSync } from "@trustgraph/react-state";
-import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, PlaygroundPage, WorldEventsPage, SparqlPage, SolarMissionsPage, HwSecPage } from "./pages";
+import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, PlaygroundPage, WorldEventsPage, SparqlPage, GraphqlPage, SolarMissionsPage, HwSecPage } from "./pages";
 
-type View = "home" | "demos" | "ingest" | "explore" | "graph-rag" | "doc-rag" | "agent" | "graph" | "query" | "explain" | "data" | "ontology" | "raw-graph" | "prompts" | "agent-config" | "ontology-manage" | "schemas" | "playground" | "world-events" | "sparql" | "solar-missions" | "hwsec";
+type View = "home" | "demos" | "ingest" | "explore" | "graph-rag" | "doc-rag" | "agent" | "graph" | "query" | "explain" | "data" | "ontology" | "raw-graph" | "prompts" | "agent-config" | "ontology-manage" | "schemas" | "playground" | "world-events" | "sparql" | "graphql" | "solar-missions" | "hwsec";
 
 export default function App() {
   const [activeView, setActiveView] = useState<View>("home");
@@ -30,10 +30,11 @@ export default function App() {
 
   return (
     <div style={{
+      "--page-height": "calc(100vh - 140px)",
       width: "100%", minHeight: "100vh", background: "#0A0A0F",
       fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
       color: "#E5E5E5", overflow: "hidden",
-    }}>
+    } as React.CSSProperties}>
       <div style={{ display: "flex", alignItems: "center" }}>
         <div style={{ flex: 1 }}>
           <Header activeTab={activeView as any} onTabChange={handleNavigate} />
@@ -101,6 +102,8 @@ export default function App() {
       {activeView === "world-events" && <WorldEventsPage />}
 
       {activeView === "solar-missions" && <SolarMissionsPage />}
+
+      {activeView === "graphql" && <GraphqlPage />}
 
       {activeView === "hwsec" && <HwSecPage />}
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
+import { SearchInput, SearchPreset, SectionLabel, Toolbar, EmptyState } from "../common";
 import { StreamingResponse } from "./StreamingResponse";
 import { SourceLinkBadge } from "./SourceLinkBadge";
 import { SourcePanel } from "./SourcePanel";
@@ -13,6 +13,7 @@ import { useSettings } from "@trustgraph/react-state";
 
 interface RagWithSourcesViewProps {
   collection?: string;
+  presets?: SearchPreset[];
 }
 
 /**
@@ -20,7 +21,7 @@ interface RagWithSourcesViewProps {
  * Answer on the left, source citations on the right.
  * Clicking a source shows chunk text.
  */
-export function RagWithSourcesView({ collection: collectionProp }: RagWithSourcesViewProps) {
+export function RagWithSourcesView({ collection: collectionProp, presets }: RagWithSourcesViewProps) {
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -84,7 +85,7 @@ export function RagWithSourcesView({ collection: collectionProp }: RagWithSource
   }, [loadSource]);
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Response */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
         <Toolbar>
@@ -97,6 +98,7 @@ export function RagWithSourcesView({ collection: collectionProp }: RagWithSource
             buttonText="Query"
             isLoading={isQuerying}
             buttonColor={palette.cyan}
+          presets={presets}
           />
         </Toolbar>
 

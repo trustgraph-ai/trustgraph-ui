@@ -20,3 +20,4 @@ export { SparqlPage } from "./SparqlPage";
 export { SolarMissionsPage } from "./SolarMissionsPage";
 export { HwSecPage } from "./HwSecPage";
 export { DemosPage } from "./DemosPage";
+export { GraphqlPage } from "./GraphqlPage";

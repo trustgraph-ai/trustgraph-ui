@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   SimpleAgentView,
   AgentWithTimelineView,
@@ -10,6 +10,9 @@ import {
   border,
   palette,
 } from "@trustgraph/trustkit";
+import type { SearchPreset } from "@trustgraph/trustkit";
+import { useSocket } from "@trustgraph/react-provider";
+import { useWorkspaceStore } from "@trustgraph/react-state";
 import { DevPanel } from "../components/DevPanel";
 
 type AgentOption = "simple" | "timeline" | "explain" | "full";
@@ -34,6 +37,50 @@ const optionDescriptions: Record<AgentOption, string> = {
  */
 export function AgentPage() {
   const [option, setOption] = useState<AgentOption>("explain");
+  const socket = useSocket();
+  const generation = useWorkspaceStore((s) => s.generation);
+  const [presets, setPresets] = useState<SearchPreset[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const resp = await socket.config().getConfigAll() as {
+          config: Record<string, Record<string, string>>;
+        };
+        if (cancelled) return;
+
+        const queryEntries = resp.config?.query;
+        if (!queryEntries) {
+          setPresets([]);
+          return;
+        }
+
+        const parsed: SearchPreset[] = [];
+        for (const [key, raw] of Object.entries(queryEntries)) {
+          try {
+            const val = JSON.parse(raw);
+            if (val.language === "agent") {
+              parsed.push({
+                key,
+                title: val.title || key,
+                query: val.query || "",
+              });
+            }
+          } catch {
+            // skip malformed entries
+          }
+        }
+        parsed.sort((a, b) => a.title.localeCompare(b.title));
+        setPresets(parsed);
+      } catch {
+        setPresets([]);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [socket, generation]);
 
   return (
     <>
@@ -63,10 +110,10 @@ export function AgentPage() {
       </div>
 
       {/* Active view */}
-      {option === "simple" && <SimpleAgentView />}
-      {option === "timeline" && <AgentWithTimelineView />}
-      {option === "explain" && <AgentExplainView />}
-      {option === "full" && <AgentFullExplainView />}
+      {option === "simple" && <SimpleAgentView presets={presets} />}
+      {option === "timeline" && <AgentWithTimelineView presets={presets} />}
+      {option === "explain" && <AgentExplainView presets={presets} />}
+      {option === "full" && <AgentFullExplainView presets={presets} />}
 
       <DevPanel
         explanation="This page demonstrates 4 levels of explainability for agent queries. The agent runs a ReAct-style loop with multiple thought/observation steps before a final answer. All views use the same useAgent hook — the difference is which explainability components they compose."

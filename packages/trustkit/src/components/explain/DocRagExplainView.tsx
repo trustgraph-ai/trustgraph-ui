@@ -53,7 +53,7 @@ export function DocRagExplainView({ collection: collectionProp }: DocRagExplainV
   }, [loadSource]);
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Response + Source */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
         <Toolbar>
