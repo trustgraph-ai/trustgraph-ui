@@ -133,6 +133,9 @@ class Api:
 
     async def proxy(self, request):
 
+        if request.headers.get("Upgrade", "").lower() == "websocket":
+            return await self.proxy_ws(request)
+
         url = self.gateway + request.path.lstrip("/")
 
         if request.query_string:
@@ -156,6 +159,67 @@ class Api:
                     body=response_body,
                     content_type=resp.content_type,
                 )
+
+    async def proxy_ws(self, request):
+
+        ws_server = web.WebSocketResponse(max_msg_size=52428800)
+        await ws_server.prepare(request)
+
+        url = self.gateway_ws + request.path.lstrip("/")
+        if request.query_string:
+            url += "?" + request.query_string
+
+        running = Running()
+
+        async with wsclient.connect(url, max_size=52428800) as ws_client:
+
+            async def outbound(ws_from, ws_to, running):
+                while running.get():
+                    try:
+                        msg = await ws_from.receive(timeout=2)
+                    except TimeoutError:
+                        continue
+                    mt = msg.type
+                    md = msg.data
+                    if mt == aiohttp.WSMsgType.TEXT:
+                        await ws_to.send(md)
+                    elif mt == aiohttp.WSMsgType.BINARY:
+                        await ws_to.send_bytes(md)
+                    elif mt == aiohttp.WSMsgType.PING:
+                        await ws_to.ping()
+                    elif mt == aiohttp.WSMsgType.PONG:
+                        await ws_to.pong()
+                    elif mt == aiohttp.WSMsgType.CLOSE:
+                        break
+                    else:
+                        break
+                running.stop()
+
+            async def inbound(ws_from, ws_to, running):
+                while running.get():
+                    try:
+                        msg = await asyncio.wait_for(
+                            ws_from.recv(), 2
+                        )
+                    except TimeoutError:
+                        continue
+                    except Exception:
+                        break
+                    await ws_to.send_str(msg)
+                running.stop()
+
+            s2c_task = asyncio.create_task(
+                inbound(ws_client, ws_server, running)
+            )
+
+            await outbound(ws_server, ws_client, running)
+
+            running.stop()
+            await ws_server.close()
+            await ws_client.close()
+            await s2c_task
+
+        return ws_server
 
     async def auth(self, request):
 
@@ -191,7 +255,7 @@ class Api:
 
     async def import_core(self, request):
 
-        url = self.gateway + request.path.lstrip("/") + "?" + request.query_string
+        url = self.gateway + request.path.lstrip("/") + ("?" + request.query_string if request.query_string else "")
 
         async def sender():
             content = request.content
@@ -207,7 +271,7 @@ class Api:
 
     async def export_core(self, request):
 
-        url = self.gateway + request.path.lstrip("/") + "?" + request.query_string
+        url = self.gateway + request.path.lstrip("/") + ("?" + request.query_string if request.query_string else "")
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
@@ -238,7 +302,9 @@ class Api:
 
         await ws_server.prepare(request)
 
-        url = self.gateway_ws + request.path.lstrip("/") + "?" + request.query_string
+        url = self.gateway_ws + request.path.lstrip("/")
+        if request.query_string:
+            url += "?" + request.query_string
 
         running = Running()
 
