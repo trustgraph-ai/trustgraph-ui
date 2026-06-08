@@ -49,7 +49,7 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
   ) : null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "var(--page-height)" }}>
       {/* Toolbar */}
       <div style={{
         padding: "10px 28px",

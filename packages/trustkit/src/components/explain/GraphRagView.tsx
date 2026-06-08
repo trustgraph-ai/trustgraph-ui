@@ -70,7 +70,7 @@ export function GraphRagView({ collection: collectionProp }: GraphRagViewProps) 
   }, [graphEdges]);
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* LHS: Query + Response */}
       <div style={{
         flex: 1,

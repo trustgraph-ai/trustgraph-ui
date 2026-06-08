@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
+import { SearchInput, SearchPreset, SectionLabel, Toolbar, EmptyState } from "../common";
 import { ExplainGraph } from "../graph/ExplainGraph";
 import { AgentStepList } from "./AgentStepList";
 import { ExplainTimeline } from "./ExplainTimeline";
@@ -15,6 +15,7 @@ import { useSettings } from "@trustgraph/react-state";
 
 interface AgentExplainViewProps {
   collection?: string;
+  presets?: SearchPreset[];
 }
 
 /**
@@ -22,7 +23,7 @@ interface AgentExplainViewProps {
  * Agent steps + source panel on the left, provenance graph + event
  * timeline with full source chains on the right.
  */
-export function AgentExplainView({ collection: collectionProp }: AgentExplainViewProps) {
+export function AgentExplainView({ collection: collectionProp, presets }: AgentExplainViewProps) {
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -74,7 +75,7 @@ export function AgentExplainView({ collection: collectionProp }: AgentExplainVie
   }, [loadSource]);
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Agent Steps + Source */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
         <Toolbar>
@@ -87,6 +88,7 @@ export function AgentExplainView({ collection: collectionProp }: AgentExplainVie
             buttonText="Ask"
             isLoading={isQuerying}
             buttonColor={palette.amber}
+            presets={presets}
           />
         </Toolbar>
 

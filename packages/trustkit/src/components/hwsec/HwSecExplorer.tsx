@@ -712,7 +712,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
   return (
     <div style={{
-      height: "calc(100vh - 110px)",
+      height: "var(--page-height)",
       display: "flex", flexDirection: "column",
       padding: "0 16px 16px",
     }}>

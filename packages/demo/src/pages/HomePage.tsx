@@ -130,13 +130,21 @@ const workflows: WorkflowCard[] = [
     color: palette.purple,
     description: "Execute SPARQL queries against the knowledge graph.",
   },
+  {
+    key: "graphql",
+    view: "graphql",
+    title: "GraphQL Query",
+    icon: "⬡",
+    color: palette.cyan,
+    description: "Execute GraphQL queries against structured data.",
+  },
 ];
 
 export function HomePage({ onNavigate }: HomePageProps) {
   return (
     <div style={{
       padding: "48px 28px",
-      height: "calc(100vh - 110px)",
+      height: "var(--page-height)",
       overflowY: "auto",
     }}>
       <div style={{ maxWidth: 1000, margin: "0 auto" }}>

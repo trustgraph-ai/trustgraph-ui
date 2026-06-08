@@ -53,7 +53,7 @@ export function DemosPage({ onNavigate }: DemosPageProps) {
   return (
     <div style={{
       padding: "48px 28px",
-      height: "calc(100vh - 110px)",
+      height: "var(--page-height)",
       overflowY: "auto",
     }}>
       <div style={{ maxWidth: 1000, margin: "0 auto" }}>

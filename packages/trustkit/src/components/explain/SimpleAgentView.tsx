@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
+import { SearchInput, SearchPreset, SectionLabel, Toolbar, EmptyState } from "../common";
 import { AgentStepList } from "./AgentStepList";
 import { useAgent } from "../../hooks/useAgent";
 import { palette } from "../../theme";
@@ -7,13 +7,14 @@ import { useSettings } from "@trustgraph/react-state";
 
 interface SimpleAgentViewProps {
   collection?: string;
+  presets?: SearchPreset[];
 }
 
 /**
  * Simple Agent Query — no explainability.
  * Just a query input and the agent's reasoning steps.
  */
-export function SimpleAgentView({ collection: collectionProp }: SimpleAgentViewProps) {
+export function SimpleAgentView({ collection: collectionProp, presets }: SimpleAgentViewProps) {
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -27,7 +28,7 @@ export function SimpleAgentView({ collection: collectionProp }: SimpleAgentViewP
   }, [query, isQuerying]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "var(--page-height)" }}>
       <Toolbar>
         <SectionLabel marginBottom={12}>AGENT QUERY</SectionLabel>
         <SearchInput
@@ -38,6 +39,7 @@ export function SimpleAgentView({ collection: collectionProp }: SimpleAgentViewP
           buttonText="Ask"
           isLoading={isQuerying}
           buttonColor={palette.amber}
+          presets={presets}
         />
       </Toolbar>
 

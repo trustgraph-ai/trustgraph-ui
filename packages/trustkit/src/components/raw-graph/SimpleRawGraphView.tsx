@@ -24,7 +24,7 @@ export function SimpleRawGraphView({ startUri, onNodeSelect }: SimpleRawGraphVie
   if (isError) return <LoadingState variant="error" message={error?.message || "Failed to load graph"} />;
 
   return (
-    <div style={{ height: "calc(100vh - 110px)" }}>
+    <div style={{ height: "var(--page-height)" }}>
       <RawGraphCanvas
         nodes={visibleNodes}
         edges={visibleEdges}

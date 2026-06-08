@@ -32,7 +32,7 @@ export function SimpleDocRagView({ collection: collectionProp }: SimpleDocRagVie
   }, [query, isQuerying]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "var(--page-height)" }}>
       <Toolbar>
         <SectionLabel marginBottom={12}>DOCUMENT RAG QUERY</SectionLabel>
         <SearchInput

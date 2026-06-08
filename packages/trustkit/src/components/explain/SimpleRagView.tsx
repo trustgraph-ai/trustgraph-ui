@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
+import { SearchInput, SearchPreset, SectionLabel, Toolbar, EmptyState } from "../common";
 import { StreamingResponse } from "./StreamingResponse";
 import { useGraphRag } from "../../hooks/useGraphRag";
 import { palette } from "../../theme";
@@ -7,13 +7,14 @@ import { useSettings } from "@trustgraph/react-state";
 
 interface SimpleRagViewProps {
   collection?: string;
+  presets?: SearchPreset[];
 }
 
 /**
  * Option 1: Simple RAG Query — no explainability.
  * Just a query input and a streaming response.
  */
-export function SimpleRagView({ collection: collectionProp }: SimpleRagViewProps) {
+export function SimpleRagView({ collection: collectionProp, presets }: SimpleRagViewProps) {
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -32,7 +33,7 @@ export function SimpleRagView({ collection: collectionProp }: SimpleRagViewProps
   }, [query, isQuerying]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "var(--page-height)" }}>
       <Toolbar>
         <SectionLabel marginBottom={12}>GRAPH RAG QUERY</SectionLabel>
         <SearchInput
@@ -43,6 +44,7 @@ export function SimpleRagView({ collection: collectionProp }: SimpleRagViewProps
           buttonText="Query"
           isLoading={isQuerying}
           buttonColor={palette.cyan}
+          presets={presets}
         />
       </Toolbar>
 

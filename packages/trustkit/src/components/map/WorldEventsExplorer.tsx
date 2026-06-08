@@ -229,7 +229,7 @@ export function WorldEventsExplorer({
 
   if (isLoading) {
     return (
-      <div style={{ height: "calc(100vh - 110px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ height: "var(--page-height)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <LoadingState message="Loading events from knowledge graph..." />
       </div>
     );
@@ -237,7 +237,7 @@ export function WorldEventsExplorer({
 
   if (error) {
     return (
-      <div style={{ height: "calc(100vh - 110px)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
+      <div style={{ height: "var(--page-height)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
         <div style={{ color: palette.rose, fontSize: 14, fontFamily: "'IBM Plex Mono', monospace" }}>
           Failed to load events
         </div>
@@ -248,7 +248,7 @@ export function WorldEventsExplorer({
 
   if (gridCells.length === 0) {
     return (
-      <div style={{ height: "calc(100vh - 110px)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
+      <div style={{ height: "var(--page-height)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
         <div style={{ color: text.muted, fontSize: 14, fontFamily: "'IBM Plex Mono', monospace" }}>
           No geo-temporal events found
         </div>
@@ -263,7 +263,7 @@ export function WorldEventsExplorer({
   const cellKey = (c: GridCell) => `${c.latCell},${c.lonCell}`;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "var(--page-height)", overflow: "hidden" }}>
       {/* Filter bar */}
       <div style={{
         padding: "8px 16px",

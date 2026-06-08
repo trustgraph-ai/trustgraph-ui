@@ -61,7 +61,7 @@ export function DocRagFullExplainView({ collection: collectionProp }: DocRagFull
   const selectedEventIndex = explainSession.events.findIndex(e => e.explainId === selectedEventId);
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + DAG + Response */}
       <div style={{
         flex: 1,

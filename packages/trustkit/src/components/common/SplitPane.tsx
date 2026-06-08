@@ -26,7 +26,7 @@ export function SplitPane({
   panelWidth = 320,
   panelSide = "right",
   panelBorder = true,
-  height = "calc(100vh - 110px)",
+  height = "var(--page-height)",
 }: SplitPaneProps) {
   return (
     <div style={{ position: "relative", height }}>

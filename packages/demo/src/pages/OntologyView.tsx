@@ -27,7 +27,7 @@ export function OntologyView() {
   const totalInstances = Object.values(ontology).reduce((sum, d) => sum + d.subclasses.length, 0);
 
   return (
-    <div style={{ flex: 1, padding: "28px", overflowY: "auto", height: "calc(100vh - 110px)" }}>
+    <div style={{ flex: 1, padding: "28px", overflowY: "auto", height: "var(--page-height)" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <SectionLabel marginBottom={24}>ONTOLOGY SCHEMA</SectionLabel>
 

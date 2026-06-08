@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   SimpleRagView,
   RagWithSourcesView,
@@ -11,6 +11,9 @@ import {
   border,
   palette,
 } from "@trustgraph/trustkit";
+import type { SearchPreset } from "@trustgraph/trustkit";
+import { useSocket } from "@trustgraph/react-provider";
+import { useWorkspaceStore } from "@trustgraph/react-state";
 import { DevPanel } from "../components/DevPanel";
 
 type RagOption = "simple" | "sources" | "timeline" | "explain" | "full";
@@ -36,6 +39,50 @@ const optionDescriptions: Record<RagOption, string> = {
  */
 export function GraphRagPage() {
   const [option, setOption] = useState<RagOption>("explain");
+  const socket = useSocket();
+  const generation = useWorkspaceStore((s) => s.generation);
+  const [presets, setPresets] = useState<SearchPreset[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const resp = await socket.config().getConfigAll() as {
+          config: Record<string, Record<string, string>>;
+        };
+        if (cancelled) return;
+
+        const queryEntries = resp.config?.query;
+        if (!queryEntries) {
+          setPresets([]);
+          return;
+        }
+
+        const parsed: SearchPreset[] = [];
+        for (const [key, raw] of Object.entries(queryEntries)) {
+          try {
+            const val = JSON.parse(raw);
+            if (val.language === "graph-rag") {
+              parsed.push({
+                key,
+                title: val.title || key,
+                query: val.query || "",
+              });
+            }
+          } catch {
+            // skip malformed entries
+          }
+        }
+        parsed.sort((a, b) => a.title.localeCompare(b.title));
+        setPresets(parsed);
+      } catch {
+        setPresets([]);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [socket, generation]);
 
   return (
     <>
@@ -65,11 +112,11 @@ export function GraphRagPage() {
       </div>
 
       {/* Active view */}
-      {option === "simple" && <SimpleRagView />}
-      {option === "sources" && <RagWithSourcesView />}
-      {option === "timeline" && <RagWithTimelineView />}
-      {option === "explain" && <RagExplainView />}
-      {option === "full" && <RagFullExplainView />}
+      {option === "simple" && <SimpleRagView presets={presets} />}
+      {option === "sources" && <RagWithSourcesView presets={presets} />}
+      {option === "timeline" && <RagWithTimelineView presets={presets} />}
+      {option === "explain" && <RagExplainView presets={presets} />}
+      {option === "full" && <RagFullExplainView presets={presets} />}
 
       <DevPanel
         explanation="This page demonstrates 5 levels of explainability, from no explain (SimpleRagView) to full DAG visualization (RagFullExplainView). All 5 use the same Tier 1 hooks — the difference is which Tier 2 pieces they compose. Use the selector above to switch between them."

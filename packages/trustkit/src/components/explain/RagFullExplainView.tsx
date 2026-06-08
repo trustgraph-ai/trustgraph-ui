@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { SearchInput, SectionLabel, Toolbar } from "../common";
+import { SearchInput, SearchPreset, SectionLabel, Toolbar } from "../common";
 import { StreamingResponse } from "./StreamingResponse";
 import { ExplainEventCard } from "./ExplainEventCard";
 import { ExplainDAG } from "./ExplainDAG";
@@ -17,6 +17,7 @@ import { useSettings } from "@trustgraph/react-state";
 
 interface RagFullExplainViewProps {
   collection?: string;
+  presets?: SearchPreset[];
 }
 
 /**
@@ -26,7 +27,7 @@ interface RagFullExplainViewProps {
  * Clicking a DAG node shows that event's detail including sub-graphs
  * for exploration and focus events.
  */
-export function RagFullExplainView({ collection: collectionProp }: RagFullExplainViewProps) {
+export function RagFullExplainView({ collection: collectionProp, presets }: RagFullExplainViewProps) {
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -96,7 +97,7 @@ export function RagFullExplainView({ collection: collectionProp }: RagFullExplai
   );
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + DAG + Response */}
       <div style={{
         flex: 1,
@@ -114,6 +115,7 @@ export function RagFullExplainView({ collection: collectionProp }: RagFullExplai
             buttonText="Query"
             isLoading={isQuerying}
             buttonColor={palette.cyan}
+          presets={presets}
           />
         </Toolbar>
 

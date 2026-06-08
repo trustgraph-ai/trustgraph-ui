@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { SearchInput, SectionLabel, Toolbar, EmptyState } from "../common";
+import { SearchInput, SearchPreset, SectionLabel, Toolbar, EmptyState } from "../common";
 import { ExplainGraph } from "../graph/ExplainGraph";
 import { StreamingResponse } from "./StreamingResponse";
 import { ExplainTimeline } from "./ExplainTimeline";
@@ -15,6 +15,7 @@ import { useSettings } from "@trustgraph/react-state";
 
 interface RagExplainViewProps {
   collection?: string;
+  presets?: SearchPreset[];
 }
 
 /**
@@ -22,7 +23,7 @@ interface RagExplainViewProps {
  * Response + source panel on the left, provenance graph + event
  * timeline with full source chains on the right.
  */
-export function RagExplainView({ collection: collectionProp }: RagExplainViewProps) {
+export function RagExplainView({ collection: collectionProp, presets }: RagExplainViewProps) {
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -79,7 +80,7 @@ export function RagExplainView({ collection: collectionProp }: RagExplainViewPro
   }, [loadSource]);
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 110px)" }}>
+    <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Response + Source */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
         <Toolbar>
@@ -92,6 +93,7 @@ export function RagExplainView({ collection: collectionProp }: RagExplainViewPro
             buttonText="Query"
             isLoading={isQuerying}
             buttonColor={palette.cyan}
+          presets={presets}
           />
         </Toolbar>
 
