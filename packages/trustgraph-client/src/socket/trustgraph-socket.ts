@@ -697,6 +697,8 @@ export class BaseApi {
 
     if (flow) msg.flow = flow;
 
+    if (this.workspace) msg.workspace = this.workspace;
+
     return new Promise<ResponseType>((resolve, reject) => {
       const call = new ServiceCallMulti(
         mid,
