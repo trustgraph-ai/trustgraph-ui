@@ -1298,7 +1298,7 @@ export class FlowsApi {
       "config",
       {
         operation: "delete",
-        keys: keys,
+        keys: [keys],
       },
       30000,
     );
@@ -2270,7 +2270,7 @@ export class ConfigApi {
       "config",
       {
         operation: "delete",
-        keys: keys,
+        keys: [keys],
       },
       30000,
     );

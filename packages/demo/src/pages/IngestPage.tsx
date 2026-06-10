@@ -102,7 +102,7 @@ const storeConfig: Record<string, { label: string; color: string }> = {
 };
 
 export function IngestPage() {
-  const { documents, isLoading: docsLoading, uploadTexts, submitDocuments, isSubmitting, refetch: refetchLibrary } = useLibrary();
+  const { documents, isLoading: docsLoading, uploadTexts, submitDocuments, isSubmitting, deleteDocuments, isDeleting, refetch: refetchLibrary } = useLibrary();
   const chunkedUpload = useChunkedUpload({
     onProgress: (p) => {
       // Update the draft's progress
@@ -614,6 +614,20 @@ export function IngestPage() {
     }
   }, [drafts, chunkedUpload, uploadTexts, updateDraft, refetchLibrary, selectedDraftId]);
 
+  const handleDeleteDocument = useCallback((docId: string) => {
+    deleteDocuments({
+      ids: [docId],
+      onSuccess: () => {
+        setSelectedDocId(null);
+      },
+    });
+  }, [deleteDocuments]);
+
+  const discardDraft = useCallback((draftId: string) => {
+    setDrafts(prev => prev.filter(d => d.draftId !== draftId));
+    if (selectedDraftId === draftId) setSelectedDraftId(null);
+  }, [selectedDraftId]);
+
   const handleSubmitForProcessing = useCallback(async (docId: string, params: SubmitParams) => {
     try {
       // Step 1: Create flow if needed
@@ -1124,25 +1138,43 @@ export function IngestPage() {
                   )}
                 </div>
 
-                {/* Upload button */}
-                <button
-                  onClick={() => handleUpload(selectedDraft.draftId)}
-                  disabled={!selectedDraft.title || (selectedDraft.inputMode === "file" ? !selectedDraft.file : !selectedDraft.textContent)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 16px",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: (!selectedDraft.title || (selectedDraft.inputMode === "file" ? !selectedDraft.file : !selectedDraft.textContent)) ? "not-allowed" : "pointer",
-                    background: palette.cyan + "20",
-                    border: `1px solid ${palette.cyan}66`,
-                    color: palette.cyan,
-                    opacity: (!selectedDraft.title || (selectedDraft.inputMode === "file" ? !selectedDraft.file : !selectedDraft.textContent)) ? 0.4 : 1,
-                  }}
-                >
-                  Upload
-                </button>
+                {/* Upload / Discard buttons */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <button
+                    onClick={() => handleUpload(selectedDraft.draftId)}
+                    disabled={!selectedDraft.title || (selectedDraft.inputMode === "file" ? !selectedDraft.file : !selectedDraft.textContent)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 16px",
+                      borderRadius: 8,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: (!selectedDraft.title || (selectedDraft.inputMode === "file" ? !selectedDraft.file : !selectedDraft.textContent)) ? "not-allowed" : "pointer",
+                      background: palette.cyan + "20",
+                      border: `1px solid ${palette.cyan}66`,
+                      color: palette.cyan,
+                      opacity: (!selectedDraft.title || (selectedDraft.inputMode === "file" ? !selectedDraft.file : !selectedDraft.textContent)) ? 0.4 : 1,
+                    }}
+                  >
+                    Upload
+                  </button>
+                  <button
+                    onClick={() => discardDraft(selectedDraft.draftId)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 16px",
+                      borderRadius: 8,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      background: palette.rose + "20",
+                      border: `1px solid ${palette.rose}66`,
+                      color: palette.rose,
+                    }}
+                  >
+                    Discard
+                  </button>
+                </div>
 
                 {selectedDraft.error && (
                   <div style={{ fontSize: 12, color: palette.red, marginTop: 8 }}>
@@ -1525,7 +1557,7 @@ export function IngestPage() {
             )}
 
             {/* Submit for Processing */}
-            <div style={{ marginTop: 24 }}>
+            <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
               <button
                 onClick={() => setShowSubmitDialog(true)}
                 disabled={isSubmitting}
@@ -1543,6 +1575,24 @@ export function IngestPage() {
                 }}
               >
                 {isSubmitting ? "Submitting..." : "Submit for Processing →"}
+              </button>
+              <button
+                onClick={() => handleDeleteDocument(selectedDoc.id)}
+                disabled={isDeleting}
+                style={{
+                  width: "100%",
+                  padding: "10px 16px",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: isDeleting ? "not-allowed" : "pointer",
+                  background: palette.rose + "20",
+                  border: `1px solid ${palette.rose}66`,
+                  color: palette.rose,
+                  opacity: isDeleting ? 0.5 : 1,
+                }}
+              >
+                {isDeleting ? "Deleting..." : "Delete Document"}
               </button>
             </div>
           </DetailPanel>

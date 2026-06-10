@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ConfigSidebar } from "./ConfigSidebar";
 import { ConfigEditor } from "./ConfigEditor";
 import { AgentDebugPanel } from "./AgentDebugPanel";
@@ -11,6 +11,12 @@ import { border } from "../../theme";
  */
 export function AgentConsole() {
   const [selected, setSelected] = useState<SelectedItem | null>(null);
+  const [generation, setGeneration] = useState(0);
+
+  const handleDelete = useCallback(() => {
+    setSelected(null);
+    setGeneration(g => g + 1);
+  }, []);
 
   return (
     <div style={{
@@ -24,7 +30,7 @@ export function AgentConsole() {
         borderRight: `1px solid ${border.default}`,
         overflowY: "auto",
       }}>
-        <ConfigSidebar selected={selected} onSelect={setSelected} />
+        <ConfigSidebar selected={selected} onSelect={setSelected} generation={generation} />
       </div>
 
       {/* Config editor */}
@@ -34,7 +40,7 @@ export function AgentConsole() {
         borderRight: `1px solid ${border.default}`,
         overflowY: "auto",
       }}>
-        <ConfigEditor selected={selected} />
+        <ConfigEditor selected={selected} onDelete={handleDelete} />
       </div>
 
       {/* Debug panel */}
