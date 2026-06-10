@@ -46,11 +46,17 @@ export function useConfigItems(type: string) {
     }
   }, [socket, type, load]);
 
-  const remove = useCallback(async (_key: string): Promise<boolean> => {
-    // The config service may or may not have a delete; for now this is a no-op
-    // (we can wire it up when the API supports it).
-    return false;
-  }, []);
+  const remove = useCallback(async (key: string): Promise<boolean> => {
+    try {
+      const config = socket.config();
+      await config.deleteConfig({ type, key });
+      await load();
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      return false;
+    }
+  }, [socket, type, load]);
 
   return { keys, isLoading, error, reload: load, create, remove };
 }

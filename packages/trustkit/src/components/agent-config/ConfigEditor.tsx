@@ -2,15 +2,16 @@ import { useState, useEffect } from "react";
 import { useConfigItem } from "../../hooks/useConfigItem";
 import { useConfigItems } from "../../hooks/useConfigItems";
 import { useMcpToolInvoke } from "../../hooks/useMcpToolInvoke";
-import type { SelectedItem, AgentPattern, AgentTaskType, AgentTool, McpTool, ToolService } from "./types";
+import type { SelectedItem, AgentPattern, AgentTaskType, AgentTool, ToolArgument, McpTool, ToolService } from "./types";
 import { LoadingState } from "../common";
 import { text, border, surface, palette } from "../../theme";
 
 interface ConfigEditorProps {
   selected: SelectedItem | null;
+  onDelete?: () => void;
 }
 
-export function ConfigEditor({ selected }: ConfigEditorProps) {
+export function ConfigEditor({ selected, onDelete }: ConfigEditorProps) {
   if (!selected) {
     return (
       <div style={{
@@ -27,14 +28,22 @@ export function ConfigEditor({ selected }: ConfigEditorProps) {
     );
   }
 
-  return <Editor selected={selected} key={`${selected.kind}-${selected.key}`} />;
+  return <Editor selected={selected} onDelete={onDelete} key={`${selected.kind}-${selected.key}`} />;
 }
 
-function Editor({ selected }: { selected: SelectedItem }) {
-  const { data, isLoading, error, save, isSaving, saveError } = useConfigItem(
+function Editor({ selected, onDelete }: { selected: SelectedItem; onDelete?: () => void }) {
+  const { data, isLoading, error, save, isSaving, saveError, remove } = useConfigItem(
     selected.kind,
     selected.key,
   );
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    const ok = await remove();
+    setIsDeleting(false);
+    if (ok && onDelete) onDelete();
+  };
 
   if (isLoading) return <LoadingState />;
   if (error) return <LoadingState variant="error" message={error} />;
@@ -68,6 +77,24 @@ function Editor({ selected }: { selected: SelectedItem }) {
             {selected.key}
           </div>
         </div>
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          style={{
+            padding: "5px 12px",
+            borderRadius: 4,
+            border: `1px solid ${palette.rose}33`,
+            background: "transparent",
+            color: palette.rose,
+            fontSize: 10,
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontWeight: 600,
+            cursor: isDeleting ? "wait" : "pointer",
+            opacity: isDeleting ? 0.5 : 1,
+          }}
+        >
+          {isDeleting ? "Deleting..." : "Delete"}
+        </button>
       </div>
 
       {selected.kind === "agent-pattern" && (
@@ -347,6 +374,8 @@ const TOOL_TYPES = [
   "tool-service",
 ];
 
+type ArgsMode = "fields" | "json";
+
 function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool>) {
   const [name, setName] = useState(data.name || "");
   const [description, setDescription] = useState(data.description || "");
@@ -356,6 +385,8 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
   const [mcpToolId, setMcpToolId] = useState(data.mcp_tool_id || "");
   const [service, setService] = useState(data.service || "");
   const [argsJson, setArgsJson] = useState(JSON.stringify(data.arguments || [], null, 2));
+  const [argsFields, setArgsFields] = useState<ToolArgument[]>(data.arguments || []);
+  const [argsMode, setArgsMode] = useState<ArgsMode>("fields");
 
   useEffect(() => {
     setName(data.name || "");
@@ -366,7 +397,13 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
     setMcpToolId(data.mcp_tool_id || "");
     setService(data.service || "");
     setArgsJson(JSON.stringify(data.arguments || [], null, 2));
+    setArgsFields(data.arguments || []);
   }, [data]);
+
+  const currentArgs = (): ToolArgument[] => {
+    if (argsMode === "fields") return argsFields;
+    try { return JSON.parse(argsJson); } catch { return []; }
+  };
 
   const isDirty =
     name !== data.name ||
@@ -376,17 +413,38 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
     templateId !== (data.template_id || "") ||
     mcpToolId !== (data.mcp_tool_id || "") ||
     service !== (data.service || "") ||
-    argsJson !== JSON.stringify(data.arguments || [], null, 2);
+    JSON.stringify(currentArgs()) !== JSON.stringify(data.arguments || []);
 
   const handleSave = () => {
-    let parsedArgs: any[] = [];
-    try { parsedArgs = JSON.parse(argsJson); } catch { /* ignore */ }
+    const parsedArgs = currentArgs();
     const updated: AgentTool = { ...data, name, description, type, arguments: parsedArgs };
     if (collection) updated.collection = collection;
     if (templateId) updated.template_id = templateId;
     if (mcpToolId) updated.mcp_tool_id = mcpToolId;
     if (service) updated.service = service;
     onSave(updated);
+  };
+
+  const switchArgsMode = (mode: ArgsMode) => {
+    if (mode === argsMode) return;
+    if (mode === "json") {
+      setArgsJson(JSON.stringify(argsFields, null, 2));
+    } else {
+      try { setArgsFields(JSON.parse(argsJson)); } catch { /* keep current */ }
+    }
+    setArgsMode(mode);
+  };
+
+  const updateArg = (index: number, field: keyof ToolArgument, value: string) => {
+    setArgsFields(prev => prev.map((a, i) => i === index ? { ...a, [field]: value } : a));
+  };
+
+  const addArg = () => {
+    setArgsFields(prev => [...prev, { name: "", type: "string", description: "" }]);
+  };
+
+  const removeArg = (index: number) => {
+    setArgsFields(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -430,26 +488,160 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
         <Field label="Service ID"><TextInput value={service} onChange={setService} /></Field>
       )}
 
-      <Field label="Arguments (JSON)">
-        <textarea
-          value={argsJson}
-          onChange={(e) => setArgsJson(e.target.value)}
-          spellCheck={false}
-          style={{
-            width: "100%",
-            height: 140,
-            padding: 10,
-            borderRadius: 6,
-            border: `1px solid ${border.default}`,
-            background: surface.card,
-            color: text.primary,
-            fontSize: 11,
-            fontFamily: "'IBM Plex Mono', monospace",
-            lineHeight: 1.5,
-            outline: "none",
-            resize: "vertical",
-          }}
-        />
+      <Field label="Arguments">
+        <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
+          {(["fields", "json"] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => switchArgsMode(mode)}
+              style={{
+                padding: "3px 10px",
+                borderRadius: 4,
+                fontSize: 10,
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontWeight: 600,
+                cursor: "pointer",
+                background: argsMode === mode ? "rgba(255,255,255,0.06)" : "transparent",
+                border: `1px solid ${argsMode === mode ? border.default : "transparent"}`,
+                color: argsMode === mode ? text.muted : text.hint,
+                textTransform: "capitalize",
+              }}
+            >
+              {mode === "fields" ? "Fields" : "JSON"}
+            </button>
+          ))}
+        </div>
+
+        {argsMode === "json" && (
+          <textarea
+            value={argsJson}
+            onChange={(e) => setArgsJson(e.target.value)}
+            spellCheck={false}
+            style={{
+              width: "100%",
+              height: 140,
+              padding: 10,
+              borderRadius: 6,
+              border: `1px solid ${border.default}`,
+              background: surface.card,
+              color: text.primary,
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              lineHeight: 1.5,
+              outline: "none",
+              resize: "vertical",
+            }}
+          />
+        )}
+
+        {argsMode === "fields" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {argsFields.map((arg, i) => (
+              <div key={i} style={{
+                padding: "10px 12px",
+                borderRadius: 6,
+                border: `1px solid ${border.default}`,
+                background: surface.card,
+              }}>
+                <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+                  <div style={{ flex: 2 }}>
+                    <div style={{ fontSize: 9, color: text.hint, marginBottom: 2, fontFamily: "'IBM Plex Mono', monospace" }}>NAME</div>
+                    <input
+                      type="text"
+                      value={arg.name}
+                      onChange={(e) => updateArg(i, "name", e.target.value)}
+                      placeholder="arg_name"
+                      style={{
+                        width: "100%",
+                        padding: "5px 8px",
+                        borderRadius: 4,
+                        border: `1px solid ${border.default}`,
+                        background: "transparent",
+                        color: text.primary,
+                        fontSize: 11,
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 9, color: text.hint, marginBottom: 2, fontFamily: "'IBM Plex Mono', monospace" }}>TYPE</div>
+                    <input
+                      type="text"
+                      value={arg.type}
+                      onChange={(e) => updateArg(i, "type", e.target.value)}
+                      placeholder="string"
+                      style={{
+                        width: "100%",
+                        padding: "5px 8px",
+                        borderRadius: 4,
+                        border: `1px solid ${border.default}`,
+                        background: "transparent",
+                        color: text.primary,
+                        fontSize: 11,
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => removeArg(i)}
+                    style={{
+                      alignSelf: "flex-end",
+                      padding: "5px 8px",
+                      borderRadius: 4,
+                      border: `1px solid ${palette.rose}33`,
+                      background: "transparent",
+                      color: palette.rose,
+                      fontSize: 10,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div>
+                  <div style={{ fontSize: 9, color: text.hint, marginBottom: 2, fontFamily: "'IBM Plex Mono', monospace" }}>DESCRIPTION</div>
+                  <input
+                    type="text"
+                    value={arg.description}
+                    onChange={(e) => updateArg(i, "description", e.target.value)}
+                    placeholder="What this argument does..."
+                    style={{
+                      width: "100%",
+                      padding: "5px 8px",
+                      borderRadius: 4,
+                      border: `1px solid ${border.default}`,
+                      background: "transparent",
+                      color: text.primary,
+                      fontSize: 11,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={addArg}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 4,
+                border: `1px solid ${palette.cyan}33`,
+                background: "transparent",
+                color: palette.cyan,
+                fontSize: 10,
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontWeight: 600,
+                cursor: "pointer",
+                alignSelf: "flex-start",
+              }}
+            >
+              + Add argument
+            </button>
+          </div>
+        )}
       </Field>
 
       <SaveButton onClick={handleSave} isDirty={isDirty} isSaving={isSaving} saveError={saveError} />

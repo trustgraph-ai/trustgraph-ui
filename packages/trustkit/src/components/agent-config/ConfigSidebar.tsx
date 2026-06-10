@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useConfigItems } from "../../hooks/useConfigItems";
 import type { ConfigKind, SelectedItem } from "./types";
 import { text, border, surface, palette } from "../../theme";
@@ -6,6 +6,7 @@ import { text, border, surface, palette } from "../../theme";
 interface ConfigSidebarProps {
   selected: SelectedItem | null;
   onSelect: (item: SelectedItem) => void;
+  generation?: number;
 }
 
 interface SectionDef {
@@ -22,7 +23,7 @@ const sections: SectionDef[] = [
   { kind: "tool-service", label: "Tool Services", color: palette.pink },
 ];
 
-export function ConfigSidebar({ selected, onSelect }: ConfigSidebarProps) {
+export function ConfigSidebar({ selected, onSelect, generation }: ConfigSidebarProps) {
   return (
     <div style={{
       padding: 16,
@@ -48,6 +49,7 @@ export function ConfigSidebar({ selected, onSelect }: ConfigSidebarProps) {
           section={section}
           selected={selected}
           onSelect={onSelect}
+          generation={generation}
         />
       ))}
     </div>
@@ -58,12 +60,18 @@ function ConfigSection({
   section,
   selected,
   onSelect,
+  generation,
 }: {
   section: SectionDef;
   selected: SelectedItem | null;
   onSelect: (item: SelectedItem) => void;
+  generation?: number;
 }) {
   const { keys, isLoading, error, create, reload } = useConfigItems(section.kind);
+
+  useEffect(() => {
+    if (generation) reload();
+  }, [generation, reload]);
   const [showCreate, setShowCreate] = useState(false);
   const [newKey, setNewKey] = useState("");
 

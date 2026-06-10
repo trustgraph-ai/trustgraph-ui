@@ -116,7 +116,19 @@ export const useWorkspaceSync = () => {
   const socket = useSocket();
   const activeWorkspace = useWorkspaceStore((s) => s.activeWorkspace);
   const initActiveWorkspace = useWorkspaceStore((s) => s.initActiveWorkspace);
+  const setActiveWorkspace = useWorkspaceStore((s) => s.setActiveWorkspace);
   const { whoami } = useWhoami();
+  const { workspaces } = useWorkspaces();
+
+  // Until we know the stored workspace is valid, don't stamp it on the
+  // socket — use empty string so the gateway falls back to the token's
+  // default. This prevents a stale/deleted workspace in sessionStorage
+  // from poisoning every request (including the whoami/list calls we
+  // need to detect the problem).
+  const validated =
+    workspaces.length > 0 && activeWorkspace
+      ? workspaces.some((w) => w.id === activeWorkspace)
+      : false;
 
   // Adopt the user's default workspace when we have no active one yet.
   useEffect(() => {
@@ -125,11 +137,19 @@ export const useWorkspaceSync = () => {
     }
   }, [activeWorkspace, whoami, initActiveWorkspace]);
 
-  // Stamp the active workspace onto outbound requests. Empty falls back
-  // to the token's bound workspace at the gateway.
+  // If the stored workspace no longer exists, fall back to the user's
+  // default workspace.
   useEffect(() => {
-    socket.workspace = activeWorkspace ?? "";
-  }, [socket, activeWorkspace]);
+    if (!activeWorkspace || !whoami?.workspace || workspaces.length === 0) return;
+    if (!validated) {
+      setActiveWorkspace(whoami.workspace);
+    }
+  }, [activeWorkspace, workspaces, whoami, validated, setActiveWorkspace]);
+
+  // Only stamp a validated workspace onto the socket.
+  useEffect(() => {
+    socket.workspace = validated ? activeWorkspace! : "";
+  }, [socket, activeWorkspace, validated]);
 };
 
 // Active workspace + the switcher action for components.

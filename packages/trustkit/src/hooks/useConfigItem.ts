@@ -73,5 +73,18 @@ export function useConfigItem<T = any>(type: string, key: string | null) {
     }
   }, [socket, type, key]);
 
-  return { data, isLoading, error, save, isSaving, saveError };
+  const remove = useCallback(async (): Promise<boolean> => {
+    if (!key) return false;
+    try {
+      const config = socket.config();
+      await config.deleteConfig({ type, key });
+      setData(null);
+      return true;
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : String(err));
+      return false;
+    }
+  }, [socket, type, key]);
+
+  return { data, isLoading, error, save, isSaving, saveError, remove };
 }
