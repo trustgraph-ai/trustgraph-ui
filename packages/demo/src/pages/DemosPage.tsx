@@ -47,6 +47,14 @@ const demos: DemoCard[] = [
     color: palette.cyan,
     description: "Geo-temporal event explorer with map, timeline, and filters.",
   },
+  {
+    key: "retail-assistant",
+    view: "retail-assistant",
+    title: "Retail Shopping Assistant",
+    icon: "◈",
+    color: palette.emerald,
+    description: "AI shopping assistant for PC builds, gifts, and camping gear.",
+  },
 ];
 
 export function DemosPage({ onNavigate }: DemosPageProps) {

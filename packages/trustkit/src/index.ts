@@ -40,6 +40,10 @@ export type { HwSecExplorerProps } from "./components/hwsec";
 export { useHwSecData } from "./hooks/useHwSecData";
 export type { HwNode } from "./hooks/useHwSecData";
 
+// Components — retail
+export { RetailAssistant, ChatPanel, ContextPanel, BrowseGrid, CartPanel } from "./components/retail";
+export type { RetailAssistantProps } from "./components/retail";
+
 // Components — sparql
 export { SparqlWorkbench } from "./components/sparql";
 export type { SparqlWorkbenchProps, SparqlResult, QueryPreset } from "./components/sparql";
@@ -88,6 +92,20 @@ export type { DAGNode, DAGEdge, DAGLayout } from "./hooks/useExplainDAG";
 export { useSourceDocument } from "./hooks/useSourceDocument";
 export type { SourceDocumentState } from "./hooks/useSourceDocument";
 export type { ProvenanceChain } from "./hooks/useExplainEventFetcher";
+export { useRetailChat } from "./hooks/useRetailChat";
+export type { ChatMessage, RetailFlow, RetailChatState } from "./hooks/useRetailChat";
+export { useRetailContext } from "./hooks/useRetailContext";
+export type { ProductCategory, CategoryRequirement, ActivityTemplate, CompatConstraint, RetailContextData } from "./hooks/useRetailContext";
+export { useRetailPrompt, buildRetailTerms, buildGenericTerms, parsePromptResponse } from "./hooks/useRetailPrompt";
+export type { RetailAction, RetailActionType, RetailLLMResponse, BuildPhase, SlotState, BuildState, HistoryEntry, RetailPromptState, DisplayedProduct } from "./hooks/useRetailPrompt";
+export { useRetailBuild } from "./hooks/useRetailBuild";
+export type { RecommendedProduct, RetailBuildState } from "./hooks/useRetailBuild";
+export { useRetailOrchestrator } from "./hooks/useRetailOrchestrator";
+export type { ActiveFlow, RetailOrchestratorState } from "./hooks/useRetailOrchestrator";
+export { useRetailCart } from "./hooks/useRetailCart";
+export type { CartItem, CartState } from "./hooks/useRetailCart";
+export { useTripleWriter, iri, literal, triple } from "./hooks/useTripleWriter";
+export type { RawTriple, TripleWriter } from "./hooks/useTripleWriter";
 export { useToastStore, toast } from "./hooks/toastStore";
 export type { Toast, ToastType } from "./hooks/toastStore";
 
@@ -99,6 +117,14 @@ export * from "./types";
 
 // Utils
 export { getLocalName } from "./utils/uri";
+export {
+  createSessionId, createJourneyId, sessionUri, journeyUri,
+  sessionStartTriples, searchTriples, resultsViewedTriples,
+  recommendationTriples, addedToCartTriples, componentSwappedTriples,
+  budgetSignalTriples, checkoutStartedTriples, checkoutCompletedTriples,
+  sessionEndedTriples,
+} from "./utils/interactionEvents";
+export type { EventContext } from "./utils/interactionEvents";
 export { parseExplainEvent } from "./utils/explainParse";
 export type { ParsedExplainEvent } from "./utils/explainParse";
 export { OntologyValidator } from "./utils/ontology-validator";
