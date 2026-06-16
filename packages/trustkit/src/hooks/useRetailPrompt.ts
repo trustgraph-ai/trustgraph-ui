@@ -40,6 +40,7 @@ export type BuildPhase = "configure" | "recommend" | "refine" | "complete";
 
 export interface SlotState {
   product: string | null;
+  uri: string | null;
   price: number | null;
   locked: boolean;
   alternatives?: string[];
@@ -73,7 +74,7 @@ export interface RetailPromptState {
   rawText: string;
   isStreaming: boolean;
   error: string | null;
-  send: (terms: Record<string, unknown>) => void;
+  send: (terms: Record<string, unknown>, onComplete?: (response: RetailLLMResponse) => void) => void;
 }
 
 function stripCodeFences(raw: string): string {
@@ -198,7 +199,7 @@ export function useRetailPrompt(templateId: string): RetailPromptState {
   const abortRef = useRef(false);
 
   const send = useCallback(
-    (terms: Record<string, unknown>) => {
+    (terms: Record<string, unknown>, onComplete?: (response: RetailLLMResponse) => void) => {
       abortRef.current = false;
       bufferRef.current = "";
       setResponse(null);
@@ -222,6 +223,7 @@ export function useRetailPrompt(templateId: string): RetailPromptState {
             const parsed = parsePromptResponse(bufferRef.current);
             setResponse(parsed.response);
             if (parsed.error) setError(parsed.error);
+            if (parsed.response && onComplete) onComplete(parsed.response);
           }
         },
         (err: string) => {

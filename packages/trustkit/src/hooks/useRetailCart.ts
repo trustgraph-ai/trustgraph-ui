@@ -3,6 +3,7 @@ import type { BuildState } from "./useRetailPrompt";
 
 export interface CartItem {
   name: string;
+  uri: string | null;
   price: number;
   slot?: string;
   isExtra: boolean;
@@ -15,7 +16,7 @@ export interface CartState {
   total: number;
   isFinalized: boolean;
   addBuild: (build: BuildState) => void;
-  addExtra: (name: string, price: number) => void;
+  addExtra: (name: string, price: number, uri?: string) => void;
   removeExtra: (name: string) => void;
   finalize: () => void;
   reset: () => void;
@@ -30,6 +31,7 @@ export function useRetailCart(): CartState {
       .filter(([, s]) => s.product)
       .map(([slot, s]) => ({
         name: s.product!,
+        uri: s.uri || null,
         price: s.price ?? 0,
         slot,
         isExtra: false,
@@ -40,10 +42,10 @@ export function useRetailCart(): CartState {
     });
   }, []);
 
-  const addExtra = useCallback((name: string, price: number) => {
+  const addExtra = useCallback((name: string, price: number, uri?: string) => {
     setItems((prev) => {
       if (prev.some((i) => i.isExtra && i.name === name)) return prev;
-      return [...prev, { name, price, isExtra: true }];
+      return [...prev, { name, uri: uri || null, price, isExtra: true }];
     });
   }, []);
 

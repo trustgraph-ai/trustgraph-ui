@@ -63,10 +63,9 @@ export function useTripleWriter(collection?: string): TripleWriter {
 
     try {
       const ws = new WebSocket(getWsUrl());
-      ws.onopen = () => console.log("[triple-writer] connected");
+      ws.onopen = () => {};
       ws.onerror = (e) => console.error("[triple-writer] error", e);
       ws.onclose = () => {
-        console.log("[triple-writer] disconnected");
         wsRef.current = null;
       };
       wsRef.current = ws;
@@ -80,7 +79,6 @@ export function useTripleWriter(collection?: string): TripleWriter {
     ensureConnection();
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) {
-      console.log(`[triple-writer] WS not ready (state=${ws?.readyState}), re-buffering ${triples.length} triples`);
       bufferRef.current.push(...triples);
       return;
     }
@@ -92,7 +90,6 @@ export function useTripleWriter(collection?: string): TripleWriter {
       },
       triples,
     });
-    console.log(`[triple-writer] sending ${triples.length} triples`);
     ws.send(message);
   }, [ensureConnection]);
 
@@ -103,7 +100,6 @@ export function useTripleWriter(collection?: string): TripleWriter {
   }, [sendBatch]);
 
   const emit = useCallback((triples: RawTriple[]) => {
-    console.log(`[triple-writer] emit ${triples.length} triples, buffer now ${bufferRef.current.length + triples.length}`);
     bufferRef.current.push(...triples);
     if (bufferRef.current.length >= BATCH_SIZE) {
       flush();

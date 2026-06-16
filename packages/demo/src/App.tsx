@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import type { DomainKey, Entity } from "@trustgraph/trustkit";
 import { Header, StatusBar, Toaster, useGraphData, toast, WorkspaceSwitcher } from "@trustgraph/trustkit";
 import { useLogout, useWorkspaceSync } from "@trustgraph/react-state";
-import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, PlaygroundPage, WorldEventsPage, SparqlPage, GraphqlPage, SolarMissionsPage, HwSecPage, RetailAssistantPage } from "./pages";
+import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, PlaygroundPage, WorldEventsPage, SparqlPage, GraphqlPage, SolarMissionsPage, HwSecPage, RetailAssistantPage, BrandAnalyticsPage } from "./pages";
 
-type View = "home" | "demos" | "ingest" | "explore" | "graph-rag" | "doc-rag" | "agent" | "graph" | "query" | "explain" | "data" | "ontology" | "raw-graph" | "prompts" | "agent-config" | "ontology-manage" | "schemas" | "playground" | "world-events" | "sparql" | "graphql" | "solar-missions" | "hwsec" | "retail-assistant";
+type View = "home" | "demos" | "ingest" | "explore" | "graph-rag" | "doc-rag" | "agent" | "graph" | "query" | "explain" | "data" | "ontology" | "raw-graph" | "prompts" | "agent-config" | "ontology-manage" | "schemas" | "playground" | "world-events" | "sparql" | "graphql" | "solar-missions" | "hwsec" | "retail-assistant" | "brand-analytics";
 
 export default function App() {
   const [activeView, setActiveView] = useState<View>("home");
@@ -108,6 +108,8 @@ export default function App() {
       {activeView === "hwsec" && <HwSecPage />}
 
       {activeView === "retail-assistant" && <RetailAssistantPage />}
+
+      {activeView === "brand-analytics" && <BrandAnalyticsPage />}
 
       <StatusBar />
       <Toaster />
