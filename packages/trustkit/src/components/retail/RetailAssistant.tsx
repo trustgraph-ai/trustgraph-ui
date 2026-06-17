@@ -105,7 +105,7 @@ export function RetailAssistant(_props: RetailAssistantProps) {
   const hasCenterPanel = hasBuild || hasCheckout || hasBrowse;
 
   const handlePlaceOrder = useCallback(() => {
-    orch.send("I'd like to place my order now.");
+    orch.placeOrder();
   }, [orch]);
 
   return (

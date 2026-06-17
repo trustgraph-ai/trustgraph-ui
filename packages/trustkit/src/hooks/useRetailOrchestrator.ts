@@ -24,6 +24,7 @@ import {
   recommendationTriples,
   addedToCartTriples,
   componentSwappedTriples,
+  crossSellAcceptedTriples,
   budgetSignalTriples,
   checkoutStartedTriples,
   checkoutCompletedTriples,
@@ -151,6 +152,7 @@ export interface RetailOrchestratorState {
   selectProduct: (slot: string, product: RecommendedProduct) => void;
   addExtra: (product: RecommendedProduct) => void;
   removeExtra: (name: string) => void;
+  placeOrder: () => void;
   reset: () => void;
 }
 
@@ -229,18 +231,8 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
   );
 
   // --- Generic prompt response handler ---
-  const genericProcessedRef = useRef<RetailLLMResponse | null>(null);
-
-  useEffect(() => {
-    if (
-      activeFlowRef.current !== "generic" ||
-      !genericPrompt.response ||
-      genericPrompt.isStreaming ||
-      genericPrompt.response === genericProcessedRef.current
-    ) return;
-
-    genericProcessedRef.current = genericPrompt.response;
-    const { message, actions } = genericPrompt.response;
+  const handleGenericResponse = useCallback((resp: RetailLLMResponse) => {
+    const { message, actions } = resp;
 
     const withAssistant = [...genericHistoryRef.current, { role: "assistant" as const, text: message }];
     setGenericHistory(withAssistant);
@@ -265,7 +257,27 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
     if (browseAction) {
       executeBrowse(browseAction);
     }
-  }, [genericPrompt.response, genericPrompt.isStreaming, build, executeBrowse]);
+  }, [build, executeBrowse]);
+
+  // --- Checkout prompt response handler ---
+  const handleCheckoutResponse = useCallback((resp: RetailLLMResponse) => {
+    const { message, actions } = resp;
+
+    setCheckoutMessage(message);
+    const withAssistant = [...checkoutHistoryRef.current, { role: "assistant" as const, text: message }];
+    setCheckoutHistory(withAssistant);
+    checkoutHistoryRef.current = withAssistant;
+
+    const browseAction = actions.find((a) => a.action === "browse");
+    if (browseAction) {
+      executeBrowse(browseAction);
+    }
+
+    const finalizeAction = actions.find((a) => a.action === "finalize");
+    if (finalizeAction) {
+      cart.finalize();
+    }
+  }, [executeBrowse, cart]);
 
   // --- Auto-transition to checkout when build completes ---
   useEffect(() => {
@@ -310,41 +322,9 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
         build.build.budget,
         [],
       );
-      checkoutPrompt.send(terms);
+      checkoutPrompt.send(terms, handleCheckoutResponse);
     }
-  }, [build.build.phase, build.build, socket, flowId, cart, checkoutPrompt]);
-
-  // --- Checkout prompt response handler ---
-  const checkoutProcessedRef = useRef<RetailLLMResponse | null>(null);
-
-  useEffect(() => {
-    if (
-      activeFlowRef.current !== "checkout" ||
-      !checkoutPrompt.response ||
-      checkoutPrompt.isStreaming ||
-      checkoutPrompt.response === checkoutProcessedRef.current
-    ) return;
-
-    checkoutProcessedRef.current = checkoutPrompt.response;
-    const { message, actions } = checkoutPrompt.response;
-
-    setCheckoutMessage(message);
-    const withAssistant = [...checkoutHistoryRef.current, { role: "assistant" as const, text: message }];
-    setCheckoutHistory(withAssistant);
-    checkoutHistoryRef.current = withAssistant;
-
-    const browseAction = actions.find((a) => a.action === "browse");
-    if (browseAction) {
-      executeBrowse(browseAction);
-    }
-
-    const finalizeAction = actions.find((a) => a.action === "finalize");
-    if (finalizeAction) {
-      const purchasedUris = cart.items.map((i) => i.name);
-      emitEvent(checkoutCompletedTriples(getEventContext(), purchasedUris, cart.total));
-      cart.finalize();
-    }
-  }, [checkoutPrompt.response, checkoutPrompt.isStreaming, executeBrowse, cart, getEventContext, emitEvent]);
+  }, [build.build.phase, build.build, socket, flowId, cart, checkoutPrompt, handleCheckoutResponse, emitEvent, getEventContext]);
 
   // --- Recommendation events ---
   const lastRecsRef = useRef<string>("");
@@ -389,7 +369,7 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
         setError(null);
         setBrowseProducts([]);
         const terms = buildGenericTerms(trimmed, newHistory);
-        genericPrompt.send(terms);
+        genericPrompt.send(terms, handleGenericResponse);
       } else if (activeFlow === "pc-build") {
         build.send(trimmed);
       } else if (activeFlow === "checkout") {
@@ -407,15 +387,17 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
           build.build.budget,
           crossSellCategories,
         );
-        checkoutPrompt.send(terms);
+        checkoutPrompt.send(terms, handleCheckoutResponse);
       }
     },
-    [activeFlow, genericHistory, genericPrompt, build, checkoutHistory, checkoutPrompt, cart, crossSellCategories],
+    [activeFlow, genericHistory, genericPrompt, build, checkoutHistory, checkoutPrompt, cart, crossSellCategories, handleGenericResponse, handleCheckoutResponse, ensureSessionStarted, getEventContext, emitEvent],
   );
 
   const selectProduct = useCallback(
     (slot: string, product: RecommendedProduct) => {
       if (activeFlow === "pc-build") {
+        const alternativeUris = build.recommendations.map((r) => r.uri).filter(Boolean);
+        const reasoning = build.lastMessage || undefined;
         const existingSlot = build.build.slots[slot];
         if (existingSlot?.product && product.uri) {
           emitEvent(componentSwappedTriples(
@@ -423,9 +405,11 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
             existingSlot.product,
             product.uri,
             slot,
+            undefined,
+            reasoning,
           ));
         } else if (product.uri) {
-          emitEvent(addedToCartTriples(getEventContext(), product.uri, slot));
+          emitEvent(addedToCartTriples(getEventContext(), product.uri, slot, alternativeUris, reasoning));
         }
         build.selectProduct(slot, product);
       }
@@ -436,9 +420,9 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
   const addExtra = useCallback(
     (product: RecommendedProduct) => {
       if (product.uri) {
-        emitEvent(addedToCartTriples(getEventContext(), product.uri));
+        emitEvent(crossSellAcceptedTriples(getEventContext(), product.uri));
       }
-      cart.addExtra(product.name, product.price);
+      cart.addExtra(product.name, product.price, product.uri);
       const note = `[Added ${product.name} ($${product.price.toFixed(0)}) to cart]`;
       const newHistory: HistoryEntry[] = [...checkoutHistoryRef.current, { role: "user", text: note }];
       setCheckoutHistory(newHistory);
@@ -452,9 +436,9 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
         build.build.budget,
         crossSellCategories,
       );
-      checkoutPrompt.send(terms);
+      checkoutPrompt.send(terms, handleCheckoutResponse);
     },
-    [cart, checkoutPrompt, build.build.activity, build.build.budget, crossSellCategories, getEventContext, emitEvent],
+    [cart, checkoutPrompt, build.build.activity, build.build.budget, crossSellCategories, getEventContext, emitEvent, handleCheckoutResponse],
   );
 
   const removeExtra = useCallback(
@@ -464,10 +448,17 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
     [cart],
   );
 
+  const placeOrder = useCallback(() => {
+    if (!cart.isFinalized) return;
+    const purchasedUris = cart.items.map((i) => i.uri).filter(Boolean) as string[];
+    emitEvent(checkoutCompletedTriples(getEventContext(), purchasedUris, cart.total));
+    emitEvent(sessionEndedTriples(getEventContext(), "purchase"));
+    writer.flush();
+  }, [cart, getEventContext, emitEvent, writer]);
+
   const reset = useCallback(() => {
-    if (sessionStartedRef.current) {
-      const outcome = cart.isFinalized ? "purchase" : "abandonment";
-      emitEvent(sessionEndedTriples(getEventContext(), outcome as "purchase" | "abandonment"));
+    if (sessionStartedRef.current && !cart.isFinalized) {
+      emitEvent(sessionEndedTriples(getEventContext(), "abandonment"));
       writer.flush();
     }
     setActiveFlow("generic");
@@ -481,8 +472,6 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
     setCheckoutMessage(null);
     setError(null);
     pendingMessageRef.current = null;
-    genericProcessedRef.current = null;
-    checkoutProcessedRef.current = null;
     checkoutInitRef.current = false;
     sessionStartedRef.current = false;
     sessionIdRef.current = createSessionId();
@@ -518,6 +507,7 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
     selectProduct,
     addExtra,
     removeExtra,
+    placeOrder,
     reset,
   };
 }

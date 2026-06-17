@@ -414,6 +414,7 @@ export function useRetailBuild(): RetailBuildState {
             ...prev.slots,
             [slot]: {
               product: product.name,
+              uri: product.uri || null,
               price: product.price,
               locked: false,
             } as SlotState,

@@ -44,6 +44,12 @@ export type { HwNode } from "./hooks/useHwSecData";
 export { RetailAssistant, ChatPanel, ContextPanel, BrowseGrid, CartPanel } from "./components/retail";
 export type { RetailAssistantProps } from "./components/retail";
 
+// Components — brand analytics
+export { BrandAnalytics } from "./components/brand-analytics";
+export type { BrandAnalyticsProps } from "./components/brand-analytics";
+export { useBrandAnalytics, BUDGET_TIERS } from "./hooks/useBrandAnalytics";
+export type { CompetitorEntry, CategoryCompetition, HeadToHead, FunnelEntry, AnchorAttachment, BudgetTierDef, BrandAnalyticsData } from "./hooks/useBrandAnalytics";
+
 // Components — sparql
 export { SparqlWorkbench } from "./components/sparql";
 export type { SparqlWorkbenchProps, SparqlResult, QueryPreset } from "./components/sparql";
@@ -121,6 +127,7 @@ export {
   createSessionId, createJourneyId, sessionUri, journeyUri,
   sessionStartTriples, searchTriples, resultsViewedTriples,
   recommendationTriples, addedToCartTriples, componentSwappedTriples,
+  crossSellAcceptedTriples, crossSellDeclinedTriples,
   budgetSignalTriples, checkoutStartedTriples, checkoutCompletedTriples,
   sessionEndedTriples,
 } from "./utils/interactionEvents";

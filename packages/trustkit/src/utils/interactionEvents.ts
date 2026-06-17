@@ -117,6 +117,8 @@ export function addedToCartTriples(
   ctx: EventContext,
   productUri: string,
   slot?: string,
+  alternativeUris?: string[],
+  reasoning?: string,
 ): { triples: RawTriple[]; eventUri: string } {
   const sessionId = ctx.sessionUri.replace(`${IX}session/`, "");
   const uri = nextEventUri(sessionId);
@@ -127,6 +129,18 @@ export function addedToCartTriples(
   if (slot) {
     t.push(triple(uri, `${IX}involvedCategory`, `${RT}${slot}`));
   }
+  if (alternativeUris) {
+    for (const alt of alternativeUris) {
+      if (alt !== productUri) {
+        t.push(triple(uri, `${IX}rejectedOption`, alt));
+        t.push(triple(uri, `${IX}optionConsidered`, alt));
+      }
+    }
+    t.push(triple(uri, `${IX}optionConsidered`, productUri));
+  }
+  if (reasoning) {
+    t.push(triple(uri, `${IX}decisionReasoning`, literal(reasoning)));
+  }
   return { triples: t, eventUri: uri };
 }
 
@@ -136,6 +150,7 @@ export function componentSwappedTriples(
   newProductUri: string,
   slot?: string,
   reason?: string,
+  reasoning?: string,
 ): { triples: RawTriple[]; eventUri: string } {
   const sessionId = ctx.sessionUri.replace(`${IX}session/`, "");
   const uri = nextEventUri(sessionId);
@@ -151,6 +166,38 @@ export function componentSwappedTriples(
   if (reason) {
     t.push(triple(uri, `${IX}swapReason`, literal(reason)));
   }
+  if (reasoning) {
+    t.push(triple(uri, `${IX}decisionReasoning`, literal(reasoning)));
+  }
+  return { triples: t, eventUri: uri };
+}
+
+export function crossSellAcceptedTriples(
+  ctx: EventContext,
+  productUri: string,
+  category?: string,
+): { triples: RawTriple[]; eventUri: string } {
+  const sessionId = ctx.sessionUri.replace(`${IX}session/`, "");
+  const uri = nextEventUri(sessionId);
+  const t = baseTriples(uri, ["CrossSellAccepted", "AddedToCart"], ctx);
+  t.push(triple(uri, `${IX}acceptedProduct`, productUri));
+  t.push(triple(uri, `${IX}addedProduct`, productUri));
+  if (category) {
+    t.push(triple(uri, `${IX}acceptedCategory`, `${RT}${category}`));
+  }
+  return { triples: t, eventUri: uri };
+}
+
+export function crossSellDeclinedTriples(
+  ctx: EventContext,
+  category: string,
+  reason: "not-needed" | "already-own" | "not-now" | "too-expensive" | "no-reason" = "no-reason",
+): { triples: RawTriple[]; eventUri: string } {
+  const sessionId = ctx.sessionUri.replace(`${IX}session/`, "");
+  const uri = nextEventUri(sessionId);
+  const t = baseTriples(uri, ["CrossSellDeclined"], ctx);
+  t.push(triple(uri, `${IX}declinedCategory`, `${RT}${category}`));
+  t.push(triple(uri, `${IX}declineReason`, literal(reason)));
   return { triples: t, eventUri: uri };
 }
 

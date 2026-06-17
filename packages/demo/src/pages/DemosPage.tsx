@@ -55,6 +55,14 @@ const demos: DemoCard[] = [
     color: palette.emerald,
     description: "AI shopping assistant for PC builds, gifts, and camping gear.",
   },
+  {
+    key: "brand-analytics",
+    view: "brand-analytics",
+    title: "Brand Analytics",
+    icon: "◎",
+    color: palette.purple,
+    description: "Brand intelligence from interaction signals. See what users buy, reject, and why.",
+  },
 ];
 
 export function DemosPage({ onNavigate }: DemosPageProps) {
