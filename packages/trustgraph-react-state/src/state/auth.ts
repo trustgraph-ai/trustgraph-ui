@@ -119,7 +119,7 @@ export interface UseLoginResult {
   login: (
     username: string,
     password: string,
-    workspace?: string,
+    default_workspace?: string,
   ) => Promise<boolean>;
   isLoading: boolean;
   error: string | null;
@@ -132,13 +132,13 @@ export const useLogin = (): UseLoginResult => {
   const error = useAuthStore((s) => s.error);
 
   const login = useCallback(
-    async (username: string, password: string, workspace?: string) => {
+    async (username: string, password: string, default_workspace?: string) => {
       setStatus("logging-in", null);
       try {
         const result = await getAuthApi().login(
           username,
           password,
-          workspace,
+          default_workspace,
         );
         setToken(result.jwt, result.jwtExpires);
         return true;

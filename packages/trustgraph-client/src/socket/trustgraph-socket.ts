@@ -427,7 +427,7 @@ export class BaseApi {
 
       // Auth handshake frames are addressed by `type`, not by request id.
       if (obj.type === "auth-ok") {
-        console.log("[socket] auth-ok", obj.workspace ?? "");
+        console.log("[socket] auth-ok", obj.default_workspace ?? "");
         this.authState = "ok";
         this.lastError = undefined;
         this.notifyStateChange();
@@ -770,13 +770,13 @@ export class BaseApi {
 }
 
 // The caller's own user record, as returned by the `whoami` IAM
-// operation. `workspace` is the user's home/default workspace.
+// operation. `default_workspace` is the user's stored home workspace.
 export interface WhoamiResult {
   id: string;
   username: string;
   name: string;
   email: string;
-  workspace: string;
+  default_workspace: string;
   roles: string[];
   enabled: boolean;
 }
@@ -816,7 +816,7 @@ export class IamApi {
           username: String(user.username ?? ""),
           name: String(user.name ?? ""),
           email: String(user.email ?? ""),
-          workspace: String(user.workspace ?? ""),
+          default_workspace: String(user.default_workspace ?? ""),
           roles: Array.isArray(user.roles) ? (user.roles as string[]) : [],
           enabled: !!user.enabled,
         };

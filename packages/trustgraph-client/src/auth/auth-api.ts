@@ -61,10 +61,10 @@ export class AuthApi {
   async login(
     username: string,
     password: string,
-    workspace?: string,
+    default_workspace?: string,
   ): Promise<LoginResult> {
     const payload: Record<string, string> = { username, password };
-    if (workspace) payload.workspace = workspace;
+    if (default_workspace) payload.default_workspace = default_workspace;
 
     const resp = await this.fetchImpl(this.loginUrl, {
       method: "POST",
