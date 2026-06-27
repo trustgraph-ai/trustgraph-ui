@@ -132,17 +132,17 @@ export const useWorkspaceSync = () => {
 
   // Adopt the user's default workspace when we have no active one yet.
   useEffect(() => {
-    if (!activeWorkspace && whoami?.workspace) {
-      initActiveWorkspace(whoami.workspace);
+    if (!activeWorkspace && whoami?.default_workspace) {
+      initActiveWorkspace(whoami.default_workspace);
     }
   }, [activeWorkspace, whoami, initActiveWorkspace]);
 
   // If the stored workspace no longer exists, fall back to the user's
   // default workspace.
   useEffect(() => {
-    if (!activeWorkspace || !whoami?.workspace || workspaces.length === 0) return;
+    if (!activeWorkspace || !whoami?.default_workspace || workspaces.length === 0) return;
     if (!validated) {
-      setActiveWorkspace(whoami.workspace);
+      setActiveWorkspace(whoami.default_workspace);
     }
   }, [activeWorkspace, workspaces, whoami, validated, setActiveWorkspace]);
 
@@ -197,7 +197,7 @@ export const useWorkspace = () => {
   return {
     activeWorkspace,
     workspaces,
-    defaultWorkspace: whoami?.workspace ?? null,
+    defaultWorkspace: whoami?.default_workspace ?? null,
     generation,
     switchWorkspace,
   };
