@@ -206,6 +206,17 @@ export interface Socket {
  * @param length - Number of random characters to generate
  * @returns Random string of specified length
  */
+// Normalise the top-level `error` field from a WebSocket response frame.
+// The gateway may send it as a plain string *or* as an object with a
+// `message` field; callers always want a string.
+function errorToString(err: unknown): string {
+  if (typeof err === "string") return err;
+  if (err && typeof err === "object" && "message" in err) {
+    return String((err as { message: unknown }).message);
+  }
+  return String(err);
+}
+
 function makeid(length: number) {
   const array = new Uint32Array(length);
   crypto.getRandomValues(array);
@@ -1166,11 +1177,11 @@ export class LibrarianApi {
     chunkSize?: number,
   ): void {
     const receiver = (message: unknown): boolean => {
-      const msg = message as { response?: StreamDocumentResponse; complete?: boolean; error?: string };
+      const msg = message as { response?: StreamDocumentResponse; complete?: boolean; error?: unknown };
 
       // Check for top-level error
       if (msg.error) {
-        onError(msg.error);
+        onError(errorToString(msg.error));
         return true;
       }
 
@@ -1539,11 +1550,11 @@ export class FlowApi {
     collection?: string,
   ) {
     const receiver = (message: unknown) => {
-      const msg = message as { response?: AgentResponse; complete?: boolean; error?: string };
+      const msg = message as { response?: AgentResponse; complete?: boolean; error?: unknown };
 
       // Check for top-level error
       if (msg.error) {
-        error(msg.error);
+        error(errorToString(msg.error));
         return true;
       }
 
@@ -1638,11 +1649,11 @@ export class FlowApi {
     onExplain?: (event: ExplainEvent) => void,
   ): void {
     const recv = (message: unknown): boolean => {
-      const msg = message as { response?: GraphRagResponse; complete?: boolean; error?: string };
+      const msg = message as { response?: GraphRagResponse; complete?: boolean; error?: unknown };
 
       // Check for top-level error
       if (msg.error) {
-        onError(msg.error);
+        onError(errorToString(msg.error));
         return true;
       }
 
@@ -1715,11 +1726,11 @@ export class FlowApi {
     onExplain?: (event: ExplainEvent) => void,
   ): void {
     const recv = (message: unknown): boolean => {
-      const msg = message as { response?: DocumentRagResponse; complete?: boolean; error?: string };
+      const msg = message as { response?: DocumentRagResponse; complete?: boolean; error?: unknown };
 
       // Check for top-level error
       if (msg.error) {
-        onError(msg.error);
+        onError(errorToString(msg.error));
         return true;
       }
 
@@ -1784,11 +1795,11 @@ export class FlowApi {
     onError: (error: string) => void,
   ): void {
     const recv = (message: unknown): boolean => {
-      const msg = message as { response?: TextCompletionResponse; complete?: boolean; error?: string };
+      const msg = message as { response?: TextCompletionResponse; complete?: boolean; error?: unknown };
 
       // Check for top-level error
       if (msg.error) {
-        onError(msg.error);
+        onError(errorToString(msg.error));
         return true;
       }
 
@@ -1842,11 +1853,11 @@ export class FlowApi {
     onError: (error: string) => void,
   ): void {
     const recv = (message: unknown): boolean => {
-      const msg = message as { response?: PromptResponse; complete?: boolean; error?: string };
+      const msg = message as { response?: PromptResponse; complete?: boolean; error?: unknown };
 
       // Check for top-level error
       if (msg.error) {
-        onError(msg.error);
+        onError(errorToString(msg.error));
         return true;
       }
 
