@@ -217,7 +217,8 @@ function ExplainEventData({
         edgeUri: string;
         edge?: { s: string; p: string; o: string };
         edgeLabels?: { s: string; p: string; o: string };
-        reasoning?: string;
+        concept?: string;
+        score?: number;
         sources?: ProvenanceChain[];
       }>) || [];
       return (
@@ -248,17 +249,29 @@ function ExplainEventData({
                   <span style={{ color: palette.pink }}>{sel.edgeLabels.o}</span>
                 </div>
               )}
-              {sel.reasoning && (
+              {(sel.concept || sel.score != null) && (
                 <div style={{
-                  fontSize: 11,
+                  fontSize: 10,
                   color: text.subtle,
                   lineHeight: 1.4,
-                  fontStyle: "italic",
                   marginTop: 2,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
                 }}>
-                  {sel.reasoning.length > 150
-                    ? sel.reasoning.slice(0, 150) + "…"
-                    : sel.reasoning}
+                  {sel.concept && (
+                    <span>
+                      <span style={{ color: text.faint }}>concept: </span>
+                      <span style={{ color: palette.orange }}>{sel.concept}</span>
+                    </span>
+                  )}
+                  {sel.score != null && (
+                    <span>
+                      <span style={{ color: text.faint }}>score: </span>
+                      <span style={{ color: palette.cyan }}>{sel.score.toFixed(4)}</span>
+                    </span>
+                  )}
                 </div>
               )}
               {/* Source links */}

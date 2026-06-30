@@ -15,7 +15,8 @@ export interface ExplainGraphEdge {
   from: string;
   to: string;
   label: string;
-  reasoning?: string;
+  concept?: string;
+  score?: number;
 }
 
 interface LayoutNode extends ExplainGraphNode {
@@ -438,9 +439,14 @@ export function ExplainGraph({
             <div style={{ color: palette.cyan, fontWeight: 700, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
               {edge.label}
             </div>
-            {edge.reasoning && (
-              <div style={{ color: text.muted, fontSize: 10, marginTop: 4, lineHeight: 1.4, fontStyle: "italic" }}>
-                {edge.reasoning.length > 150 ? edge.reasoning.slice(0, 150) + "..." : edge.reasoning}
+            {(edge.concept || edge.score != null) && (
+              <div style={{ color: text.muted, fontSize: 10, marginTop: 4, lineHeight: 1.4, fontFamily: "'IBM Plex Mono', monospace" }}>
+                {edge.concept && (
+                  <div><span style={{ color: text.faint }}>concept: </span><span style={{ color: palette.orange }}>{edge.concept}</span></div>
+                )}
+                {edge.score != null && (
+                  <div><span style={{ color: text.faint }}>score: </span><span style={{ color: palette.cyan }}>{edge.score.toFixed(4)}</span></div>
+                )}
               </div>
             )}
           </div>

@@ -14,7 +14,7 @@ const TG_ENTITY = TG + "entity";
 const TG_EDGE_COUNT = TG + "edgeCount";
 const TG_SELECTED_EDGE = TG + "selectedEdge";
 const TG_EDGE = TG + "edge";
-const TG_REASONING = TG + "reasoning";
+const TG_SCORE = TG + "score";
 const TG_CONTENT = TG + "content";
 const TG_CONTAINS = TG + "contains";
 const TG_CHUNK_COUNT = TG + "chunkCount";
@@ -35,7 +35,8 @@ interface EdgeSelection {
   edgeUri: string;
   edge?: { s: string; p: string; o: string };
   edgeLabels?: { s: string; p: string; o: string };
-  reasoning?: string;
+  concept?: string;
+  score?: number;
   sources?: ProvenanceChain[];
 }
 
@@ -483,7 +484,11 @@ async function enrichEventData(
         for (const et of edgeTriples) {
           const p = predIri(et);
           if (p === TG_EDGE) sel.edge = objQuotedTriple(et) || undefined;
-          if (p === TG_REASONING) sel.reasoning = objValue(et);
+          if (p === TG_CONCEPT) sel.concept = objValue(et);
+          if (p === TG_SCORE) {
+            const v = parseFloat(objValue(et));
+            if (!isNaN(v)) sel.score = v;
+          }
         }
 
         if (sel.edge) {
@@ -751,7 +756,6 @@ export function ExplainView() {
             from: s,
             to: o,
             label: pLabel,
-            reasoning: sel.reasoning,
           });
         }
       }
@@ -1406,10 +1410,25 @@ function EdgeSelectionView({ sel, onClick, onSourceClick }: {
         </div>
       )}
 
-      {/* Reasoning - compact */}
-      {sel.reasoning && (
-        <div style={{ fontSize: 10, color: text.subtle, lineHeight: 1.4, fontStyle: "italic", marginTop: 2 }}>
-          {sel.reasoning.length > 120 ? sel.reasoning.slice(0, 120) + "..." : sel.reasoning}
+      {/* Concept + Score */}
+      {(sel.concept || sel.score != null) && (
+        <div style={{
+          fontSize: 10, color: text.subtle, lineHeight: 1.4, marginTop: 2,
+          fontFamily: "'IBM Plex Mono', monospace",
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          {sel.concept && (
+            <span>
+              <span style={{ color: text.faint }}>concept: </span>
+              <span style={{ color: palette.orange }}>{sel.concept}</span>
+            </span>
+          )}
+          {sel.score != null && (
+            <span>
+              <span style={{ color: text.faint }}>score: </span>
+              <span style={{ color: palette.cyan }}>{sel.score.toFixed(4)}</span>
+            </span>
+          )}
         </div>
       )}
     </div>

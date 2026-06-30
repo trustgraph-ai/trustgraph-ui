@@ -14,7 +14,7 @@ const TG_ENTITY = TG + "entity";
 const TG_EDGE_COUNT = TG + "edgeCount";
 const TG_SELECTED_EDGE = TG + "selectedEdge";
 const TG_EDGE = TG + "edge";
-const TG_REASONING = TG + "reasoning";
+const TG_SCORE = TG + "score";
 const TG_CONTENT = TG + "content";
 const TG_CHUNK_COUNT = TG + "chunkCount";
 const TG_ACTION = TG + "action";
@@ -344,7 +344,7 @@ async function enrichEventData(
       return data;
     }
     case "focus": {
-      const basic = basicData as { edgeSelections: Array<{ edgeUri: string; edge?: any; edgeLabels?: any; reasoning?: string }> };
+      const basic = basicData as { edgeSelections: Array<{ edgeUri: string; edge?: any; edgeLabels?: any; concept?: string; score?: number }> };
       const edgeSelections = await Promise.all(basic.edgeSelections.map(async (basicSel) => {
         const s: Term = { t: "i", i: basicSel.edgeUri };
         const edgeTriples = await api.triplesQuery(s, undefined, undefined, 100, collection, explainGraph);
@@ -353,7 +353,11 @@ async function enrichEventData(
         for (const et of edgeTriples) {
           const p = predIri(et);
           if (p === TG_EDGE) sel.edge = objQuotedTriple(et) || undefined;
-          if (p === TG_REASONING) sel.reasoning = objValue(et);
+          if (p === TG_CONCEPT) sel.concept = objValue(et);
+          if (p === TG_SCORE) {
+            const v = parseFloat(objValue(et));
+            if (!isNaN(v)) sel.score = v;
+          }
         }
 
         if (sel.edge) {

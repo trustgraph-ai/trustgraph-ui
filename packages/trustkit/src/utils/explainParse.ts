@@ -94,8 +94,8 @@ export interface ParsedExplainEvent {
   /** tg:edge — edge content references (multi-valued) */
   edges: string[];
 
-  /** tg:reasoning — per-edge reasoning text (multi-valued) */
-  reasonings: string[];
+  /** tg:score — per-edge cross-encoder relevance scores (multi-valued) */
+  scores: number[];
 
   /** tg:chunkCount — number of candidate chunks (DocRag) */
   chunkCount?: number;
@@ -168,6 +168,7 @@ const KNOWN_TYPES = new Set([
   "Error",
   // New
   "PatternDecision",
+  "EdgeSelection",
 ]);
 
 // ── Parser ───────────────────────────────────────────────────────
@@ -185,7 +186,7 @@ export function parseExplainEvent(uri: string, triples: Triple[]): ParsedExplain
     entities: [],
     selectedEdges: [],
     edges: [],
-    reasonings: [],
+    scores: [],
     selectedChunks: [],
     subagentGoals: [],
     planSteps: [],
@@ -251,9 +252,11 @@ export function parseExplainEvent(uri: string, triples: Triple[]): ParsedExplain
       case TG + "edge":
         if (o) result.edges.push(o);
         break;
-      case TG + "reasoning":
-        result.reasonings.push(o);
+      case TG + "score": {
+        const parsed = parseFloat(o);
+        if (!isNaN(parsed)) result.scores.push(parsed);
         break;
+      }
       case TG + "chunkCount":
         result.chunkCount = parseInt(o, 10) || undefined;
         break;
