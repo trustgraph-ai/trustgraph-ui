@@ -31,7 +31,8 @@ export function useExplainGraph(events: ExplainNode[]) {
           edgeUri: string;
           edge?: { s: string; p: string; o: string };
           edgeLabels?: { s: string; p: string; o: string };
-          reasoning?: string;
+          concept?: string;
+          score?: number;
         }>) || [];
 
         for (const sel of edgeSelections) {
@@ -49,7 +50,8 @@ export function useExplainGraph(events: ExplainNode[]) {
             from: s,
             to: o,
             label: pLabel,
-            reasoning: sel.reasoning,
+            concept: sel.concept,
+            score: sel.score,
           });
         }
       }

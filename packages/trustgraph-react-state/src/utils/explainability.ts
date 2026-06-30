@@ -9,7 +9,8 @@ import {
   TG_EDGE_COUNT,
   TG_SELECTED_EDGE,
   TG_EDGE,
-  TG_REASONING,
+  TG_CONCEPT as TG_CONCEPT_NS,
+  TG_SCORE,
   TG_CONTENT,
   PROV_STARTED_AT_TIME,
   PROV_WAS_DERIVED_FROM,
@@ -21,7 +22,7 @@ import {
 const TG_ACTION = TG + "action";
 const TG_ARGUMENTS = TG + "arguments";
 const TG_SUBAGENT_GOAL = TG + "subagentGoal";
-const TG_CONCEPT = TG + "concept";
+const TG_CONCEPT = TG_CONCEPT_NS;
 const TG_ENTITY = TG + "entity";
 
 // RDF type URIs
@@ -70,7 +71,8 @@ export interface ExplorationEvent {
 export interface SelectedEdge {
   edge: { s: string; p: string; o: string };
   labels?: { s: string; p: string; o: string };
-  reasoning?: string;
+  concept?: string;
+  score?: number;
   sources?: ProvenanceChainItem[];
 }
 
@@ -283,22 +285,42 @@ function extractCommonFields(triples: Triple[]): {
 }
 
 /**
- * Extract inline edges from triples (tg:edge quoted triples).
+ * Extract inline edges from triples (tg:edge quoted triples + concept/score).
+ * Groups by edge selection subject URI to associate edge, concept, and score.
  * Returns SelectedEdge objects with URIs — labels resolved later.
  */
 function extractInlineEdges(triples: Triple[]): SelectedEdge[] {
-  const edges: SelectedEdge[] = [];
+  const bySubject = new Map<string, SelectedEdge>();
 
   for (const t of triples) {
-    if (getTermValue(t.p) === TG_EDGE && t.o.t === "t" && t.o.tr) {
+    const s = getTermValue(t.s);
+    const p = getTermValue(t.p);
+
+    if (p === TG_EDGE && t.o.t === "t" && t.o.tr) {
       const edge = extractQuotedTriple(t.o);
       if (edge) {
-        edges.push({ edge });
+        const existing = bySubject.get(s) || { edge };
+        existing.edge = edge;
+        bySubject.set(s, existing);
+      }
+    } else if (p === TG_CONCEPT) {
+      const concept = getTermValue(t.o);
+      if (concept) {
+        const existing = bySubject.get(s) || { edge: { s: "", p: "", o: "" } };
+        existing.concept = concept;
+        bySubject.set(s, existing);
+      }
+    } else if (p === TG_SCORE) {
+      const scoreStr = getTermValue(t.o);
+      if (scoreStr) {
+        const existing = bySubject.get(s) || { edge: { s: "", p: "", o: "" } };
+        existing.score = parseFloat(scoreStr);
+        bySubject.set(s, existing);
       }
     }
   }
 
-  return edges;
+  return Array.from(bySubject.values()).filter(se => se.edge.s !== "");
 }
 
 // ── Parsers ─────────────────────────────────────────────────────────
@@ -388,18 +410,24 @@ export function parseSynthesisTriples(
 
 export function parseEdgeSelectionTriples(triples: Triple[]): {
   edge: { s: string; p: string; o: string } | null;
-  reasoning: string | null;
+  concept: string | null;
+  score: number | null;
 } {
   let edge: { s: string; p: string; o: string } | null = null;
-  let reasoning: string | null = null;
+  let concept: string | null = null;
+  let score: number | null = null;
 
   for (const triple of triples) {
     const p = getTermValue(triple.p);
     if (p === TG_EDGE) edge = extractQuotedTriple(triple.o);
-    else if (p === TG_REASONING) reasoning = getTermValue(triple.o);
+    else if (p === TG_CONCEPT) concept = getTermValue(triple.o);
+    else if (p === TG_SCORE) {
+      const v = getTermValue(triple.o);
+      if (v) score = parseFloat(v);
+    }
   }
 
-  return { edge, reasoning };
+  return { edge, concept, score };
 }
 
 function parseGroundingTriples(

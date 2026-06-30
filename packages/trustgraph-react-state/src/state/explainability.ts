@@ -101,13 +101,14 @@ export const useExplainability = (
       const edgeTriples = allTriples.filter(
         (t) => getTermValue(t.s) === edgeSelUri
       );
-      const { edge, reasoning } = parseEdgeSelectionTriples(edgeTriples);
+      const { edge, concept, score } = parseEdgeSelectionTriples(edgeTriples);
 
       if (!edge) return null;
 
       const selectedEdge: SelectedEdge = {
         edge,
-        reasoning: reasoning || undefined,
+        concept: concept || undefined,
+        score: score ?? undefined,
       };
 
       // Kick off label resolution and provenance in parallel

@@ -171,12 +171,12 @@ describe("parseExplainEvent", () => {
       expect(result.edges).toHaveLength(1);
     });
 
-    it("extracts reasonings", () => {
+    it("extracts scores", () => {
       const triples: Triple[] = [
-        { s: iri(EVENT), p: iri(TG + "reasoning"), o: lit("This is relevant because...") },
+        { s: iri(EVENT), p: iri(TG + "score"), o: lit("0.9962") },
       ];
       const result = parseExplainEvent(EVENT, triples);
-      expect(result.reasonings).toEqual(["This is relevant because..."]);
+      expect(result.scores).toEqual([0.9962]);
     });
 
     it("parses chunkCount and selectedChunks", () => {

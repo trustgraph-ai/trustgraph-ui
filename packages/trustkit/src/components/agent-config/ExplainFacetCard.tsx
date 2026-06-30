@@ -180,23 +180,37 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
         </Facet>
       )}
 
-      {/* Focus: selected edges with reasoning */}
+      {/* Focus: selected edges with concept/score */}
       {event.selectedEdges.length > 0 && (
         <Facet label={`Focus (${event.selectedEdges.length} edges)`}>
-          {event.reasonings.slice(0, 3).map((r, i) => (
-            <div key={i} style={{
+          {event.scores.length > 0 && (
+            <div style={{
               fontSize: 10,
+              fontFamily: "'IBM Plex Mono', monospace",
               color: text.secondary,
-              lineHeight: 1.4,
-              marginBottom: 2,
+              lineHeight: 1.6,
             }}>
-              {r}
+              {event.scores.slice(0, 3).map((s, i) => (
+                <div key={i}>
+                  {event.concepts[i] && (
+                    <span style={{ color: palette.orange }}>{event.concepts[i]}</span>
+                  )}
+                  <span style={{ color: text.faint, marginLeft: 6 }}>
+                    score: <span style={{ color: palette.cyan }}>{s.toFixed(4)}</span>
+                  </span>
+                </div>
+              ))}
+              {event.scores.length > 3 && (
+                <div style={{ color: text.hint }}>
+                  +{event.scores.length - 3} more
+                </div>
+              )}
             </div>
-          ))}
-          {event.reasonings.length > 3 && (
-            <div style={{ fontSize: 10, color: text.hint }}>
-              +{event.reasonings.length - 3} more
-            </div>
+          )}
+          {event.scores.length === 0 && (
+            <span style={{ color: text.secondary }}>
+              {event.selectedEdges.length} edge{event.selectedEdges.length !== 1 ? "s" : ""} selected
+            </span>
           )}
         </Facet>
       )}
