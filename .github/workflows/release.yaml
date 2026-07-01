@@ -47,15 +47,27 @@ jobs:
           podman image prune --all --force
           podman builder prune -a -f
 
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build UI
+        run: npm run build
+
+      - name: Run tests
+        run: npm test -- --run
+
+      - name: Get version
+        id: version
+        run: echo VERSION=$(git describe --exact-match --tags | sed 's/^v//') >> $GITHUB_OUTPUT
+
+      - name: Build service package
+        run: make service-package VERSION=${{ steps.version.outputs.VERSION }}
+
       - name: Docker Hub token
         run: echo ${{ secrets.DOCKER_SECRET }} > docker-token.txt
 
       - name: Authenticate with Docker hub
         run: make docker-hub-login
-
-      - name: Get version
-        id: version
-        run: echo VERSION=$(git describe --exact-match --tags | sed 's/^v//') >> $GITHUB_OUTPUT
 
       - name: Build container
         run: make platform-${{ matrix.container }}-${{ matrix.platform }} VERSION=${{ steps.version.outputs.VERSION }}
