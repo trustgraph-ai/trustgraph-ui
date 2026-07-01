@@ -28,7 +28,6 @@ const TG_SUBAGENT_GOAL = TG + "subagentGoal";
 const PROV = "http://www.w3.org/ns/prov#";
 const PROV_STARTED_AT_TIME = PROV + "startedAtTime";
 const PROV_WAS_DERIVED_FROM = PROV + "wasDerivedFrom";
-const PROV_WAS_GENERATED_BY = PROV + "wasGeneratedBy";
 
 // Type checks — first match wins.
 // Unrecognised types still work: the DAG renders them with a name
@@ -79,20 +78,23 @@ function shortUri(uri: string): string {
   return pos >= 0 ? uri.slice(pos + 1) : uri;
 }
 
+function subjectIri(triple: Triple): string {
+  return triple.s.t === "i" ? triple.s.i : "";
+}
+
 /**
- * Extract derivation links (prov:wasDerivedFrom, prov:wasGeneratedBy)
- * and rdfs:label from an event's triples.
+ * Extract derivation links (prov:wasDerivedFrom)
+ * and rdfs:label from an event's triples, filtered to the event's own subject.
  */
-function extractDerivationInfo(triples: Triple[]): { derivedFrom: string[]; label?: string } {
+function extractDerivationInfo(triples: Triple[], explainId: string): { derivedFrom: string[]; label?: string } {
   const derivedFrom: string[] = [];
   let label: string | undefined;
 
   for (const t of triples) {
+    if (subjectIri(t) !== explainId) continue;
     const p = predIri(t);
     const val = objValue(t);
     if (p === PROV_WAS_DERIVED_FROM && val) {
-      derivedFrom.push(val);
-    } else if (p === PROV_WAS_GENERATED_BY && val) {
       derivedFrom.push(val);
     } else if (p === RDFS_LABEL && val) {
       label = val;
@@ -102,10 +104,10 @@ function extractDerivationInfo(triples: Triple[]): { derivedFrom: string[]; labe
   return { derivedFrom, label };
 }
 
-function getEventTypeFromTriples(triples: Triple[]): string {
+function getEventTypeFromTriples(triples: Triple[], explainId: string): string {
   const types = new Set<string>();
   for (const t of triples) {
-    if (predIri(t) === RDF_TYPE) types.add(objValue(t));
+    if (subjectIri(t) === explainId && predIri(t) === RDF_TYPE) types.add(objValue(t));
   }
   for (const [typeUri, displayName] of TYPE_CHECKS) {
     if (types.has(typeUri)) return displayName;
@@ -429,9 +431,9 @@ export function useExplainEventFetcher(
           return;
         }
       }
-      const eventType = getEventTypeFromTriples(triples);
+      const eventType = getEventTypeFromTriples(triples, explainId);
       const basicData = parseBasicEventData(eventType, triples);
-      const { derivedFrom, label } = extractDerivationInfo(triples);
+      const { derivedFrom, label } = extractDerivationInfo(triples, explainId);
 
       updateEvent(explainId, {
         eventType,

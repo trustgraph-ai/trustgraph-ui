@@ -81,17 +81,21 @@ export function useExplainDAG(events: ExplainNode[]): DAGLayout {
       }
     }
 
+    const processed = new Set<string>();
     while (queue.length > 0) {
       const id = queue.shift()!;
+      if (processed.has(id)) continue;
+      processed.add(id);
       const depth = depthMap.get(id)!;
       const children = childrenOf.get(id) || [];
       for (const childId of children) {
         const existing = depthMap.get(childId);
         const newDepth = depth + 1;
-        // Take the maximum depth (longest path from root)
         if (existing === undefined || newDepth > existing) {
           depthMap.set(childId, newDepth);
-          queue.push(childId);
+          if (!processed.has(childId)) {
+            queue.push(childId);
+          }
         }
       }
     }

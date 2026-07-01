@@ -92,6 +92,7 @@ export function AgentFullExplainView({ collection: collectionProp, presets }: Ag
       {/* Left: Query + DAG + Agent Steps */}
       <div style={{
         flex: 1,
+        minWidth: 0,
         display: "flex",
         flexDirection: "column",
         borderRight: selectedEvent ? `1px solid ${border.default}` : undefined,
