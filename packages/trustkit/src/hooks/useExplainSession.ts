@@ -7,7 +7,7 @@ export interface ExplainNode {
   eventType: string;
   label?: string;
   data?: unknown;
-  /** URIs this event was derived from (prov:wasDerivedFrom + prov:wasGeneratedBy) */
+  /** URIs this event was derived from (prov:wasDerivedFrom) */
   derivedFrom?: string[];
   /** Inline triples delivered with the explain event (avoids graph round-trip) */
   inlineTriples?: Triple[];

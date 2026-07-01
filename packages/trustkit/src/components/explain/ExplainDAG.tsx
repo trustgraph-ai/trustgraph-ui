@@ -196,20 +196,47 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
                 strokeWidth={1}
               />
 
-              {/* Node label */}
-              <text
-                x={pos.x + NODE_W / 2}
-                y={pos.y + NODE_H / 2}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fill={nodeColor}
-                fontSize={12}
-                fontWeight={600}
-                fontFamily="'IBM Plex Mono', monospace"
-                style={{ pointerEvents: "none" }}
-              >
-                {node.label}
-              </text>
+              {/* Node label — wrap to two lines if needed */}
+              {(() => {
+                const maxChars = 18;
+                const label = node.label;
+                if (label.length <= maxChars) {
+                  return (
+                    <text
+                      x={pos.x + NODE_W / 2}
+                      y={pos.y + NODE_H / 2}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fill={nodeColor}
+                      fontSize={10}
+                      fontWeight={600}
+                      fontFamily="'IBM Plex Mono', monospace"
+                      style={{ pointerEvents: "none" }}
+                    >
+                      {label}
+                    </text>
+                  );
+                }
+                const mid = label.lastIndexOf(" ", maxChars);
+                const line1 = mid > 0 ? label.slice(0, mid) : label.slice(0, maxChars);
+                const line2 = mid > 0 ? label.slice(mid + 1) : label.slice(maxChars);
+                return (
+                  <text
+                    x={pos.x + NODE_W / 2}
+                    y={pos.y + NODE_H / 2 - 6}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fill={nodeColor}
+                    fontSize={10}
+                    fontWeight={600}
+                    fontFamily="'IBM Plex Mono', monospace"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    <tspan x={pos.x + NODE_W / 2} dy={0}>{line1}</tspan>
+                    <tspan x={pos.x + NODE_W / 2} dy={12}>{line2}</tspan>
+                  </text>
+                );
+              })()}
             </g>
           );
         })}

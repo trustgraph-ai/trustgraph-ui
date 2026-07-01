@@ -76,20 +76,17 @@ export class ServiceCallMulti {
   }
 
   /**
-   * Called when socket connects - immediately retry if we were waiting
+   * Called when socket reconnects. Streaming requests cannot be resumed
+   * after a disconnect — the backend state is gone — so fail immediately.
    */
   retryNow() {
     if (this.complete) return;
 
-    // Clear any pending backoff timer
     clearTimeout(this.timeoutId);
     this.timeoutId = undefined;
-
-    // Restore retry count since we didn't actually fail
-    this.retries++;
-
-    // Attempt immediately
-    this.attempt();
+    this.complete = true;
+    delete this.socket.inflight[this.mid];
+    this.error("Connection lost during streaming request");
   }
 
   onTimeout() {

@@ -644,7 +644,7 @@ export class BaseApi {
     const mid = this.getNextId();
 
     // Set default values
-    if (timeout == undefined) timeout = 10000;
+    if (timeout == undefined) timeout = 30000;
     if (retries == undefined) retries = 3;
 
     // Construct the request message
@@ -696,7 +696,7 @@ export class BaseApi {
     const mid = this.getNextId();
 
     // Set defaults
-    if (timeout == undefined) timeout = 10000;
+    if (timeout == undefined) timeout = 30000;
     if (retries == undefined) retries = 3;
 
     // Construct request message
@@ -1620,8 +1620,8 @@ export class FlowApi {
           streaming: true, // Always use streaming mode
         },
         receiver,
-        120000,
-        2,
+        180000,
+        1,
         this.flowId,
       )
       .catch((err) => {
