@@ -5,8 +5,9 @@ import type { ChunkedUploadDocumentMetadata } from "@trustgraph/client";
 import { useNotification } from "../hooks/useNotification";
 import { createDocId } from "../model/document-metadata";
 
-// Default chunk size: 5MB (matches backend default)
-const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
+// Default chunk size: 2MB (base64 + JSON encoding inflates ~4x on the wire,
+// Pulsar message limit is around 3MB raw)
+const DEFAULT_CHUNK_SIZE = 2 * 1024 * 1024;
 
 // Maximum parallel chunk uploads
 const DEFAULT_PARALLEL_UPLOADS = 3;
