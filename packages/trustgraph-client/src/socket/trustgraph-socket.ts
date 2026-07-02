@@ -1703,8 +1703,8 @@ export class FlowApi {
         streaming: true,
       },
       recv,
-      60000,
-      undefined,
+      180000,
+      1,
       this.flowId,
     );
   }
@@ -1775,8 +1775,8 @@ export class FlowApi {
         streaming: true,
       },
       recv,
-      60000,
-      undefined,
+      180000,
+      1,
       this.flowId,
     );
   }
