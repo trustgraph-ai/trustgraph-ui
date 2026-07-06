@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { SparqlWorkbench } from "@trustgraph/trustkit";
 import type { SparqlResult, QueryPreset } from "@trustgraph/trustkit";
 import { useSocket } from "@trustgraph/react-provider";
-import { useSessionStore, useWorkspaceStore } from "@trustgraph/react-state";
+import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
 
 export function SparqlPage() {
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
+  const { settings } = useSettings();
+  const collection = settings.collection;
   const [presets, setPresets] = useState<QueryPreset[]>([]);
 
   useEffect(() => {
@@ -54,9 +56,9 @@ export function SparqlPage() {
 
   const handleExecute = useCallback(async (query: string): Promise<SparqlResult> => {
     const api = socket.flow(flowId);
-    const result = await api.sparqlQuery(query);
+    const result = await api.sparqlQuery(query, collection);
     return { columns: result.columns, rows: result.rows };
-  }, [socket, flowId]);
+  }, [socket, flowId, collection]);
 
   return <SparqlWorkbench onExecute={handleExecute} presets={presets} />;
 }

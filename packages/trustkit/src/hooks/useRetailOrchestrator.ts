@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSocket } from "@trustgraph/react-provider";
-import { useSessionStore } from "@trustgraph/react-state";
+import { useSessionStore, useSettings } from "@trustgraph/react-state";
 import { useRetailPrompt, buildGenericTerms } from "./useRetailPrompt";
 import { useRetailBuild } from "./useRetailBuild";
 import { useRetailCart } from "./useRetailCart";
@@ -159,6 +159,8 @@ export interface RetailOrchestratorState {
 export function useRetailOrchestrator(): RetailOrchestratorState {
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
+  const { settings } = useSettings();
+  const collection = settings.collection;
   const genericPrompt = useRetailPrompt("generic-assistant");
   const checkoutPrompt = useRetailPrompt("checkout-assistant");
   const build = useRetailBuild();
@@ -212,7 +214,7 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
       try {
         const api = socket.flow(flowId);
         const params = (action.parameters || {}) as Record<string, unknown>;
-        const result = await api.sparqlQuery(buildBrowseQuery(action.category, params));
+        const result = await api.sparqlQuery(buildBrowseQuery(action.category, params), collection);
         const products = parseBrowseProducts(result.rows);
         setBrowseProducts(products);
 
@@ -227,7 +229,7 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
         setIsQuerying(false);
       }
     },
-    [socket, flowId, getEventContext, emitEvent],
+    [socket, flowId, getEventContext, emitEvent, collection],
   );
 
   // --- Generic prompt response handler ---
@@ -302,7 +304,7 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
       const activity = build.build.activity || "";
       if (activity) {
         const api = socket.flow(flowId);
-        api.sparqlQuery(buildCrossSellCategoryQuery(activity))
+        api.sparqlQuery(buildCrossSellCategoryQuery(activity), collection)
           .then((result: { rows: Record<string, string>[] }) => {
             const cats = result.rows.map((r) => r.categoryName).filter(Boolean);
             setCrossSellCategories(cats);
@@ -324,7 +326,7 @@ export function useRetailOrchestrator(): RetailOrchestratorState {
       );
       checkoutPrompt.send(terms, handleCheckoutResponse);
     }
-  }, [build.build.phase, build.build, socket, flowId, cart, checkoutPrompt, handleCheckoutResponse, emitEvent, getEventContext]);
+  }, [build.build.phase, build.build, socket, flowId, cart, checkoutPrompt, handleCheckoutResponse, emitEvent, getEventContext, collection]);
 
   // --- Recommendation events ---
   const lastRecsRef = useRef<string>("");

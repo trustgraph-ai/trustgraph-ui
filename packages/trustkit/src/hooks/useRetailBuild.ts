@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSocket } from "@trustgraph/react-provider";
-import { useSessionStore } from "@trustgraph/react-state";
+import { useSessionStore, useSettings } from "@trustgraph/react-state";
 import { useRetailPrompt, buildRetailTerms } from "./useRetailPrompt";
 import type {
   BuildState,
@@ -253,6 +253,8 @@ function parseProducts(rows: Record<string, string>[]): RecommendedProduct[] {
 export function useRetailBuild(): RetailBuildState {
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
+  const { settings } = useSettings();
+  const collection = settings.collection;
   const prompt = useRetailPrompt("retail-assistant");
 
   const [build, setBuild] = useState<BuildState>(emptyBuild);
@@ -288,19 +290,19 @@ export function useRetailBuild(): RetailBuildState {
         try {
           const api = socket.flow(flowId);
           const params = recommendAction.parameters as Record<string, unknown>;
-          let result = await api.sparqlQuery(buildRecommendQuery(recommendAction.slot, params));
+          let result = await api.sparqlQuery(buildRecommendQuery(recommendAction.slot, params), collection);
 
           if (result.rows.length === 0 && params["min-performance-tier"]) {
             const relaxed = { ...params };
             delete relaxed["min-performance-tier"];
-            result = await api.sparqlQuery(buildRecommendQuery(recommendAction.slot, relaxed));
+            result = await api.sparqlQuery(buildRecommendQuery(recommendAction.slot, relaxed), collection);
           }
 
           if (result.rows.length === 0 && params["max-price"]) {
             const relaxed = { ...params };
             delete relaxed["min-performance-tier"];
             delete relaxed["max-price"];
-            result = await api.sparqlQuery(buildRecommendQuery(recommendAction.slot, relaxed));
+            result = await api.sparqlQuery(buildRecommendQuery(recommendAction.slot, relaxed), collection);
           }
 
           const products = parseProducts(result.rows);
@@ -311,7 +313,7 @@ export function useRetailBuild(): RetailBuildState {
               products.slice(0, 3).map(async (p) => {
                 const specQuery = buildProductSpecsQuery(p.uri, rdfClass);
                 if (!specQuery) return {};
-                const specResult = await api.sparqlQuery(specQuery);
+                const specResult = await api.sparqlQuery(specQuery, collection);
                 const row = specResult.rows[0] || {};
                 const specs: Record<string, string> = {};
                 for (const [k, v] of Object.entries(row)) {
@@ -345,7 +347,7 @@ export function useRetailBuild(): RetailBuildState {
         }
       }
     },
-    [socket, flowId, prompt],
+    [socket, flowId, prompt, collection],
   );
 
   const processedRef = useRef<RetailLLMResponse | null>(null);
