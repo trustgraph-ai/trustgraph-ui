@@ -20,7 +20,8 @@ const mockSocket = {
 };
 
 // Mock setTimeout and clearTimeout
-const mockSetTimeout = vi.fn();
+let timerId = 0;
+const mockSetTimeout = vi.fn(() => ++timerId);
 const mockClearTimeout = vi.fn();
 
 vi.stubGlobal("setTimeout", mockSetTimeout);
