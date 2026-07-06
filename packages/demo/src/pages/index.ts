@@ -23,3 +23,4 @@ export { DemosPage } from "./DemosPage";
 export { GraphqlPage } from "./GraphqlPage";
 export { RetailAssistantPage } from "./RetailAssistantPage";
 export { BrandAnalyticsPage } from "./BrandAnalyticsPage";
+export { InnovationPage } from "./InnovationPage";
