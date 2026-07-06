@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSocket } from "@trustgraph/react-provider";
-import { useSessionStore, useWorkspaceStore } from "@trustgraph/react-state";
+import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
 
 const RT = "http://trustgraph.ai/ontology/retail#";
 
@@ -140,6 +140,8 @@ export function useRetailContext(): RetailContextData {
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
+  const { settings } = useSettings();
+  const collection = settings.collection;
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [activities, setActivities] = useState<ActivityTemplate[]>([]);
   const [constraints, setConstraints] = useState<CompatConstraint[]>([]);
@@ -158,11 +160,11 @@ export function useRetailContext(): RetailContextData {
 
         const [catResult, actResult, reqResult, conResult, countResult] =
           await Promise.all([
-            api.sparqlQuery(buildCategoriesQuery()),
-            api.sparqlQuery(buildActivitiesQuery()),
-            api.sparqlQuery(buildRequirementsQuery()),
-            api.sparqlQuery(buildConstraintsQuery()),
-            api.sparqlQuery(buildProductCountQuery()),
+            api.sparqlQuery(buildCategoriesQuery(), collection),
+            api.sparqlQuery(buildActivitiesQuery(), collection),
+            api.sparqlQuery(buildRequirementsQuery(), collection),
+            api.sparqlQuery(buildConstraintsQuery(), collection),
+            api.sparqlQuery(buildProductCountQuery(), collection),
           ]);
 
         if (cancelled) return;
@@ -231,7 +233,7 @@ export function useRetailContext(): RetailContextData {
     return () => {
       cancelled = true;
     };
-  }, [socket, flowId, generation]);
+  }, [socket, flowId, generation, collection]);
 
   return { categories, activities, constraints, totalProducts, isLoading, error };
 }

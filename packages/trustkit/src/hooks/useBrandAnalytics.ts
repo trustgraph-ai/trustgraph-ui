@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useSocket } from "@trustgraph/react-provider";
-import { useSessionStore } from "@trustgraph/react-state";
+import { useSessionStore, useSettings } from "@trustgraph/react-state";
 
 const IX = "http://trustgraph.ai/ontology/interaction#";
 
@@ -210,6 +210,8 @@ GROUP BY ?product`;
 export function useBrandAnalytics(): BrandAnalyticsData {
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
+  const { settings } = useSettings();
+  const collection = settings.collection;
 
   const [competition, setCompetition] = useState<CategoryCompetition[]>([]);
   const [headToHead, setHeadToHead] = useState<HeadToHead[]>([]);
@@ -227,7 +229,7 @@ export function useBrandAnalytics(): BrandAnalyticsData {
     const api = socket.flow(flowId);
 
     try {
-      const budgetResult = await api.sparqlQuery(sessionBudgetsQuery()).catch(() => ({ rows: [] }));
+      const budgetResult = await api.sparqlQuery(sessionBudgetsQuery(), collection).catch(() => ({ rows: [] }));
       const budgetMap = new Map<string, number>();
       for (const r of budgetResult.rows as Record<string, string>[]) {
         budgetMap.set(r.session, parseFloat(r.budget) || 0);
@@ -249,11 +251,11 @@ export function useBrandAnalytics(): BrandAnalyticsData {
 
       const [compResult, h2hResult, purResult, basketResult, totalSessResult] =
         await Promise.all([
-          api.sparqlQuery(competitionQuery(sf)).catch(() => ({ rows: [] })),
-          api.sparqlQuery(headToHeadQuery(sf)).catch(() => ({ rows: [] })),
-          api.sparqlQuery(purchasedQuery(sf)).catch(() => ({ rows: [] })),
-          api.sparqlQuery(anchorBasketQuery(sv)).catch(() => ({ rows: [] })),
-          api.sparqlQuery(anchorTotalSessionsQuery(sv)).catch(() => ({ rows: [] })),
+          api.sparqlQuery(competitionQuery(sf), collection).catch(() => ({ rows: [] })),
+          api.sparqlQuery(headToHeadQuery(sf), collection).catch(() => ({ rows: [] })),
+          api.sparqlQuery(purchasedQuery(sf), collection).catch(() => ({ rows: [] })),
+          api.sparqlQuery(anchorBasketQuery(sv), collection).catch(() => ({ rows: [] })),
+          api.sparqlQuery(anchorTotalSessionsQuery(sv), collection).catch(() => ({ rows: [] })),
         ]);
 
       const compRows = compResult.rows as Record<string, string>[];
@@ -336,7 +338,7 @@ export function useBrandAnalytics(): BrandAnalyticsData {
     } finally {
       setIsLoading(false);
     }
-  }, [socket, flowId, budgetTierIndex]);
+  }, [socket, flowId, budgetTierIndex, collection]);
 
   useEffect(() => {
     refresh();

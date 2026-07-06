@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSocket } from "@trustgraph/react-provider";
-import { useSessionStore, useWorkspaceStore } from "@trustgraph/react-state";
+import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
 
 export interface EventSummary {
   id: string;
@@ -199,6 +199,8 @@ export function useWorldEvents(ontologyNs: string) {
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
+  const { settings } = useSettings();
+  const collection = settings.collection;
   const [gridCells, setGridCells] = useState<GridCell[]>([]);
   const [buckets, setBuckets] = useState<TimeBucket[]>([]);
   const [eventTypes, setEventTypes] = useState<EventTypeInfo[]>([]);
@@ -216,10 +218,10 @@ export function useWorldEvents(ontologyNs: string) {
         const api = socket.flow(flowId);
 
         const [gridResult, bucketsResult, typesResult, locationsResult] = await Promise.all([
-          api.sparqlQuery(buildGridQuery(ontologyNs)),
-          api.sparqlQuery(buildBucketsQuery(ontologyNs)),
-          api.sparqlQuery(buildTypesQuery(ontologyNs)),
-          api.sparqlQuery(buildLocationsQuery(ontologyNs)),
+          api.sparqlQuery(buildGridQuery(ontologyNs), collection),
+          api.sparqlQuery(buildBucketsQuery(ontologyNs), collection),
+          api.sparqlQuery(buildTypesQuery(ontologyNs), collection),
+          api.sparqlQuery(buildLocationsQuery(ontologyNs), collection),
         ]);
 
         if (cancelled) return;
@@ -283,7 +285,7 @@ export function useWorldEvents(ontologyNs: string) {
     })();
 
     return () => { cancelled = true; };
-  }, [socket, ontologyNs, flowId, generation]);
+  }, [socket, ontologyNs, flowId, generation, collection]);
 
   const totalEvents = useMemo(
     () => gridCells.reduce((sum, c) => sum + c.count, 0),
@@ -318,7 +320,7 @@ export function useWorldEvents(ontologyNs: string) {
   ): Promise<EventSummary[]> => {
     const api = socket.flow(flowId);
     const query = buildSearchQuery(ontologyNs, filters, limit);
-    const result = await api.sparqlQuery(query);
+    const result = await api.sparqlQuery(query, collection);
 
     return result.rows.map(row => {
       const typeUri = row.type || "";
@@ -332,7 +334,7 @@ export function useWorldEvents(ontologyNs: string) {
         typeLabel: row.typeLabel || typeLocal.replace(/([a-z])([A-Z])/g, "$1 $2"),
       };
     }).sort((a, b) => a.year - b.year);
-  }, [socket, ontologyNs, flowId, generation]);
+  }, [socket, ontologyNs, flowId, generation, collection]);
 
   const loadEventDetail = useCallback(async (eventUri: string): Promise<WorldEvent | null> => {
     const api = socket.flow(flowId);

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { useSocket } from "@trustgraph/react-provider";
-import { useSessionStore } from "@trustgraph/react-state";
+import { useSessionStore, useSettings } from "@trustgraph/react-state";
 
 const IX = "http://trustgraph.ai/ontology/interaction#";
 const RT = "http://trustgraph.ai/ontology/retail#";
@@ -121,6 +121,8 @@ function toBudgetTier(budgets: number[]): string | null {
 export function useProductScorecard() {
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
+  const { settings } = useSettings();
+  const collection = settings.collection;
   const [data, setData] = useState<ProductScorecardData>(EMPTY);
   const cacheRef = useRef(new Map<string, ProductScorecardData>());
 
@@ -136,12 +138,12 @@ export function useProductScorecard() {
 
     try {
       const [basics, wins, losses, budgets, competitor, attach] = await Promise.all([
-        api.sparqlQuery(basicsQuery(productUri)).catch(() => ({ rows: [] })),
-        api.sparqlQuery(winReasonsQuery(productUri)).catch(() => ({ rows: [] })),
-        api.sparqlQuery(lossReasonsQuery(productUri)).catch(() => ({ rows: [] })),
-        api.sparqlQuery(budgetCohortQuery(productUri)).catch(() => ({ rows: [] })),
-        api.sparqlQuery(topCompetitorQuery(productUri)).catch(() => ({ rows: [] })),
-        api.sparqlQuery(attachHeroQuery(productUri)).catch(() => ({ rows: [] })),
+        api.sparqlQuery(basicsQuery(productUri), collection).catch(() => ({ rows: [] })),
+        api.sparqlQuery(winReasonsQuery(productUri), collection).catch(() => ({ rows: [] })),
+        api.sparqlQuery(lossReasonsQuery(productUri), collection).catch(() => ({ rows: [] })),
+        api.sparqlQuery(budgetCohortQuery(productUri), collection).catch(() => ({ rows: [] })),
+        api.sparqlQuery(topCompetitorQuery(productUri), collection).catch(() => ({ rows: [] })),
+        api.sparqlQuery(attachHeroQuery(productUri), collection).catch(() => ({ rows: [] })),
       ]);
 
       const b = (basics.rows as Record<string, string>[])[0];
@@ -169,7 +171,7 @@ export function useProductScorecard() {
     } catch {
       setData({ ...EMPTY, isLoading: false });
     }
-  }, [socket, flowId]);
+  }, [socket, flowId, collection]);
 
   const clear = useCallback(() => setData(EMPTY), []);
 

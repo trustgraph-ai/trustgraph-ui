@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSocket } from "@trustgraph/react-provider";
-import { useSessionStore, useWorkspaceStore } from "@trustgraph/react-state";
+import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
 
 const HW = "https://trustgraph.ai/ontology/hwsec/hw#";
 const SEC = "https://trustgraph.ai/ontology/hwsec/sec#";
@@ -19,6 +19,8 @@ export function useHwSecData() {
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
+  const { settings } = useSettings();
+  const collection = settings.collection;
 
   const [nodes, setNodes] = useState<Map<string, HwNode>>(new Map());
   const [descriptions, setDescriptions] = useState<Map<string, string[]>>(new Map());
@@ -51,37 +53,37 @@ export function useHwSecData() {
           descRes, trustRes, protoRes, fwVerRes, fwSigRes,
           containsRes, hasIfaceRes, hasFwRes, hasSecRes, interactsRes,
         ] = await Promise.all([
-          api.sparqlQuery(q(`SELECT ?e ?label WHERE { ?e a hw:System ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?e ?label WHERE { ?e a hw:Subsystem ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?e ?label WHERE { ?e a hw:Component ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?e ?label WHERE { ?e a hw:Element ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?e ?label WHERE { ?e a hw:HardwareEntity ; rdfs:label ?label . }`)),
+          api.sparqlQuery(q(`SELECT ?e ?label WHERE { ?e a hw:System ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?e ?label WHERE { ?e a hw:Subsystem ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?e ?label WHERE { ?e a hw:Component ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?e ?label WHERE { ?e a hw:Element ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?e ?label WHERE { ?e a hw:HardwareEntity ; rdfs:label ?label . }`), collection),
 
-          api.sparqlQuery(q(`SELECT ?i ?label WHERE { ?i a hw:Interface ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?i ?label WHERE { ?i a hw:NetworkInterface ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?i ?label WHERE { ?i a hw:PhysicalInterface ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?i ?label WHERE { ?i a hw:LogicalInterface ; rdfs:label ?label . }`)),
+          api.sparqlQuery(q(`SELECT ?i ?label WHERE { ?i a hw:Interface ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?i ?label WHERE { ?i a hw:NetworkInterface ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?i ?label WHERE { ?i a hw:PhysicalInterface ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?i ?label WHERE { ?i a hw:LogicalInterface ; rdfs:label ?label . }`), collection),
 
-          api.sparqlQuery(q(`SELECT ?fw ?label WHERE { ?fw a hw:Firmware ; rdfs:label ?label . }`)),
+          api.sparqlQuery(q(`SELECT ?fw ?label WHERE { ?fw a hw:Firmware ; rdfs:label ?label . }`), collection),
 
-          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:SecurityProperty ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:Vulnerability ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:AttackSurface ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:Countermeasure ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:SideChannel ; rdfs:label ?label . }`)),
-          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:ThreatModel ; rdfs:label ?label . }`)),
+          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:SecurityProperty ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:Vulnerability ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:AttackSurface ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:Countermeasure ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:SideChannel ; rdfs:label ?label . }`), collection),
+          api.sparqlQuery(q(`SELECT ?sp ?label WHERE { ?sp a sec:ThreatModel ; rdfs:label ?label . }`), collection),
 
-          api.sparqlQuery(q(`SELECT ?e ?d WHERE { ?e hw:description ?d . }`)),
-          api.sparqlQuery(q(`SELECT ?e ?l WHERE { ?e hw:trustLevel ?l . }`)),
-          api.sparqlQuery(q(`SELECT ?i ?p WHERE { ?i hw:protocol ?p . }`)),
-          api.sparqlQuery(q(`SELECT ?f ?v WHERE { ?f hw:firmwareVersion ?v . }`)),
-          api.sparqlQuery(q(`SELECT ?f ?s WHERE { ?f hw:isSignatureVerified ?s . }`)),
+          api.sparqlQuery(q(`SELECT ?e ?d WHERE { ?e hw:description ?d . }`), collection),
+          api.sparqlQuery(q(`SELECT ?e ?l WHERE { ?e hw:trustLevel ?l . }`), collection),
+          api.sparqlQuery(q(`SELECT ?i ?p WHERE { ?i hw:protocol ?p . }`), collection),
+          api.sparqlQuery(q(`SELECT ?f ?v WHERE { ?f hw:firmwareVersion ?v . }`), collection),
+          api.sparqlQuery(q(`SELECT ?f ?s WHERE { ?f hw:isSignatureVerified ?s . }`), collection),
 
-          api.sparqlQuery(q(`SELECT ?p ?c WHERE { ?p hw:physicallyContains ?c . }`)),
-          api.sparqlQuery(q(`SELECT ?e ?i WHERE { ?e hw:hasInterface ?i . }`)),
-          api.sparqlQuery(q(`SELECT ?e ?fw WHERE { ?e hw:hasFirmware ?fw . }`)),
-          api.sparqlQuery(q(`SELECT ?e ?sp WHERE { ?e hw:hasSecurityProperty ?sp . }`)),
-          api.sparqlQuery(q(`SELECT ?a ?b WHERE { ?a hw:interactsWith ?b . }`)),
+          api.sparqlQuery(q(`SELECT ?p ?c WHERE { ?p hw:physicallyContains ?c . }`), collection),
+          api.sparqlQuery(q(`SELECT ?e ?i WHERE { ?e hw:hasInterface ?i . }`), collection),
+          api.sparqlQuery(q(`SELECT ?e ?fw WHERE { ?e hw:hasFirmware ?fw . }`), collection),
+          api.sparqlQuery(q(`SELECT ?e ?sp WHERE { ?e hw:hasSecurityProperty ?sp . }`), collection),
+          api.sparqlQuery(q(`SELECT ?a ?b WHERE { ?a hw:interactsWith ?b . }`), collection),
         ]);
 
         if (cancelled) return;
@@ -157,7 +159,7 @@ export function useHwSecData() {
     })();
 
     return () => { cancelled = true; };
-  }, [socket, flowId, generation]);
+  }, [socket, flowId, generation, collection]);
 
   const children = useMemo(() => {
     const m = new Map<string, string[]>();

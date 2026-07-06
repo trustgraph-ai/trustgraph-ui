@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSocket } from "@trustgraph/react-provider";
-import { useSessionStore, useWorkspaceStore } from "@trustgraph/react-state";
+import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
 
 const ONT_NS = "http://trustgraph.ai/ontology/solar-system#";
 
@@ -110,6 +110,8 @@ export function useSolarMissions() {
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
+  const { settings } = useSettings();
+  const collection = settings.collection;
   const [bodies, setBodies] = useState<CelestialBody[]>([]);
   const [missions, setMissions] = useState<SolarMission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -126,10 +128,10 @@ export function useSolarMissions() {
 
         const [bodiesResult, missionsResult, targetsResult, eventsResult] =
           await Promise.all([
-            api.sparqlQuery(buildBodiesQuery()),
-            api.sparqlQuery(buildMissionsQuery()),
-            api.sparqlQuery(buildTargetsQuery()),
-            api.sparqlQuery(buildEventsQuery()),
+            api.sparqlQuery(buildBodiesQuery(), collection),
+            api.sparqlQuery(buildMissionsQuery(), collection),
+            api.sparqlQuery(buildTargetsQuery(), collection),
+            api.sparqlQuery(buildEventsQuery(), collection),
           ]);
 
         if (cancelled) return;
@@ -196,7 +198,7 @@ export function useSolarMissions() {
     })();
 
     return () => { cancelled = true; };
-  }, [socket, flowId, generation]);
+  }, [socket, flowId, generation, collection]);
 
   const bodyMap = useMemo(() => {
     const map = new Map<string, CelestialBody>();
