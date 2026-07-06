@@ -12,7 +12,14 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
       padding: "16px 28px", display: "flex", alignItems: "center", justifyContent: "space-between",
       background: "linear-gradient(180deg, rgba(15,15,22,1) 0%, rgba(10,10,15,1) 100%)",
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <div
+        onClick={() => onTabChange("home" as TabKey)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onTabChange("home" as TabKey); }}
+        title="Back to Workflows"
+        style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}
+      >
         <img
           src="/tg.svg"
           alt="TrustGraph"
