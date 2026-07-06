@@ -50,6 +50,12 @@ export type { BrandAnalyticsProps } from "./components/brand-analytics";
 export { useBrandAnalytics, BUDGET_TIERS } from "./hooks/useBrandAnalytics";
 export type { CompetitorEntry, CategoryCompetition, HeadToHead, FunnelEntry, AnchorAttachment, BudgetTierDef, BrandAnalyticsData } from "./hooks/useBrandAnalytics";
 
+// Components — innovation intelligence
+export { InnovationExplorer } from "./components/innovation";
+export type { InnovationExplorerProps } from "./components/innovation";
+export { useInnovationData } from "./hooks/useInnovationData";
+export type { IINode } from "./hooks/useInnovationData";
+
 // Components — sparql
 export { SparqlWorkbench } from "./components/sparql";
 export type { SparqlWorkbenchProps, SparqlResult, QueryPreset } from "./components/sparql";

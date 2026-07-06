@@ -63,6 +63,14 @@ const demos: DemoCard[] = [
     color: palette.purple,
     description: "Brand intelligence from interaction signals. See what users buy, reject, and why.",
   },
+  {
+    key: "innovation",
+    view: "innovation",
+    title: "Innovation Intelligence",
+    icon: "🔍",
+    color: palette.cyan,
+    description: "Innovation ecosystem explorer for navigating organisations, capabilities, procurement routes, and people.",
+  },
 ];
 
 export function DemosPage({ onNavigate }: DemosPageProps) {
