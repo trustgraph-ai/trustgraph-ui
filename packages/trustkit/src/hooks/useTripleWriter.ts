@@ -57,41 +57,38 @@ export function useTripleWriter(collection?: string): TripleWriter {
     return `${proto}//${host}/api/v1/flow/${flowId}/import/triples?${params.toString()}`;
   }, [socket, flowId]);
 
-  const ensureConnection = useCallback(() => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
-    if (wsRef.current && wsRef.current.readyState === WebSocket.CONNECTING) return;
+  const sendBatch = useCallback((triples: RawTriple[]) => {
+    if (triples.length === 0) return;
 
+    // Reuse an existing open connection if available
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      const message = JSON.stringify({
+        metadata: { id: "", metadata: [], collection: collectionRef.current },
+        triples,
+      });
+      wsRef.current.send(message);
+      return;
+    }
+
+    // Open a new connection, send once open, then let the server close it
     try {
       const ws = new WebSocket(getWsUrl());
-      ws.onopen = () => {};
+      wsRef.current = ws;
+      ws.onopen = () => {
+        const message = JSON.stringify({
+          metadata: { id: "", metadata: [], collection: collectionRef.current },
+          triples,
+        });
+        ws.send(message);
+      };
       ws.onerror = (e) => console.error("[triple-writer] error", e);
       ws.onclose = () => {
         wsRef.current = null;
       };
-      wsRef.current = ws;
     } catch (e) {
       console.error("[triple-writer] failed to connect", e);
     }
   }, [getWsUrl]);
-
-  const sendBatch = useCallback((triples: RawTriple[]) => {
-    if (triples.length === 0) return;
-    ensureConnection();
-    const ws = wsRef.current;
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      bufferRef.current.push(...triples);
-      return;
-    }
-    const message = JSON.stringify({
-      metadata: {
-        id: "",
-        metadata: [],
-        collection: collectionRef.current,
-      },
-      triples,
-    });
-    ws.send(message);
-  }, [ensureConnection]);
 
   const flush = useCallback(() => {
     if (bufferRef.current.length === 0) return;
