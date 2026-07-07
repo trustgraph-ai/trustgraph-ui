@@ -192,6 +192,440 @@ function edgeColor(label: string): string {
   return EDGE_COLORS[label] || text.faint;
 }
 
+// --- Subway map visualization (DAG layout — each entity appears once) ---
+
+interface DagNode {
+  uri: string;
+  layer: number;
+  order: number;
+  pathCount: number;
+  isStart: boolean;
+  isEnd: boolean;
+}
+
+interface DagEdge {
+  from: string;
+  to: string;
+  label: string;
+}
+
+function buildDag(paths: FoundPath[]): { nodes: Map<string, DagNode>; edges: DagEdge[] } {
+  const startUri = paths[0]?.[0]?.uri || "";
+  const endUri = paths[0]?.[paths[0].length - 1]?.uri || "";
+
+  // Collect directed edges as they appear in paths (always forward: earlier step → later step)
+  const edgeSet = new Map<string, DagEdge>();
+  const nodePathCount = new Map<string, number>();
+  const successors = new Map<string, Set<string>>();
+  const allUris = new Set<string>();
+
+  for (const path of paths) {
+    const seen = new Set<string>();
+    for (let si = 0; si < path.length; si++) {
+      const uri = path[si].uri;
+      allUris.add(uri);
+      if (!seen.has(uri)) {
+        nodePathCount.set(uri, (nodePathCount.get(uri) ?? 0) + 1);
+        seen.add(uri);
+      }
+      if (si > 0) {
+        const from = path[si - 1].uri;
+        const to = uri;
+        const label = path[si].edgeLabel;
+        const key = `${from}\0${to}\0${label}`;
+        if (!edgeSet.has(key)) {
+          edgeSet.set(key, { from, to, label });
+          if (!successors.has(from)) successors.set(from, new Set());
+          successors.get(from)!.add(to);
+        }
+      }
+    }
+  }
+
+  // Remove cycle-causing edges: for each pair with edges in both directions,
+  // keep only the one where the source has the lower minimum depth across paths
+  const minDepth = new Map<string, number>();
+  for (const path of paths) {
+    for (let si = 0; si < path.length; si++) {
+      const uri = path[si].uri;
+      minDepth.set(uri, Math.min(minDepth.get(uri) ?? Infinity, si));
+    }
+  }
+  const pairSeen = new Set<string>();
+  const edgesToRemove = new Set<string>();
+  for (const [key, edge] of edgeSet) {
+    const pairKey = [edge.from, edge.to].sort().join("\0");
+    if (pairSeen.has(pairKey)) continue;
+    pairSeen.add(pairKey);
+    // Check if reverse exists
+    for (const [rk, re] of edgeSet) {
+      if (re.from === edge.to && re.to === edge.from) {
+        // Keep the edge where source has lower minDepth
+        const fwd = (minDepth.get(edge.from) ?? 0);
+        const rev = (minDepth.get(re.from) ?? 0);
+        if (fwd <= rev) edgesToRemove.add(rk);
+        else edgesToRemove.add(key);
+        break;
+      }
+    }
+  }
+  for (const key of edgesToRemove) {
+    const removed = edgeSet.get(key);
+    if (removed) {
+      edgeSet.delete(key);
+      const succs = successors.get(removed.from);
+      if (succs) succs.delete(removed.to);
+    }
+  }
+
+  // Compute layers via longest path from start (guarantees all edges go left→right)
+  const dist = new Map<string, number>();
+  for (const uri of allUris) dist.set(uri, -1);
+  dist.set(startUri, 0);
+
+  const maxIter = allUris.size;
+  for (let iter = 0; iter < maxIter; iter++) {
+    let changed = false;
+    for (const edge of edgeSet.values()) {
+      const du = dist.get(edge.from) ?? -1;
+      if (du < 0) continue;
+      const dv = dist.get(edge.to) ?? -1;
+      if (du + 1 > dv) {
+        dist.set(edge.to, du + 1);
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
+
+  // Group nodes by layer and order within layers using barycenter
+  const layers = new Map<number, string[]>();
+  for (const [uri, layer] of dist) {
+    if (layer < 0) continue;
+    const list = layers.get(layer) || [];
+    list.push(uri);
+    layers.set(layer, list);
+  }
+
+  const nodeOrder = new Map<string, number>();
+  const sortedLayerKeys = [...layers.keys()].sort((a, b) => a - b);
+
+  for (const layerIdx of sortedLayerKeys) {
+    const uris = layers.get(layerIdx)!;
+    if (layerIdx === 0) {
+      uris.forEach((u, i) => nodeOrder.set(u, i));
+      continue;
+    }
+
+    const bary = new Map<string, number>();
+    for (const uri of uris) {
+      let sum = 0;
+      let count = 0;
+      for (const edge of edgeSet.values()) {
+        if (edge.to === uri && nodeOrder.has(edge.from)) {
+          sum += nodeOrder.get(edge.from)!;
+          count++;
+        }
+      }
+      bary.set(uri, count > 0 ? sum / count : 0);
+    }
+    uris.sort((a, b) => (bary.get(a) ?? 0) - (bary.get(b) ?? 0));
+    uris.forEach((u, i) => nodeOrder.set(u, i));
+  }
+
+  // Build final node map
+  const nodes = new Map<string, DagNode>();
+  for (const [uri, layer] of dist) {
+    if (layer < 0) continue;
+    nodes.set(uri, {
+      uri,
+      layer,
+      order: nodeOrder.get(uri) ?? 0,
+      pathCount: nodePathCount.get(uri) ?? 0,
+      isStart: uri === startUri,
+      isEnd: uri === endUri,
+    });
+  }
+
+  // Filter edges to only those with both endpoints in the layout
+  const validEdges = [...edgeSet.values()].filter(e => nodes.has(e.from) && nodes.has(e.to));
+
+  return { nodes, edges: validEdges };
+}
+
+const NODE_H = 44;
+const COL_GAP = 120;
+const ROW_GAP = 24;
+const STATION_R = 6;
+const MIN_NODE_W = 150;
+const CHAR_W = 7.5;
+
+function SubwayMap({
+  paths,
+  nodeLabel,
+  nodeKindColor,
+  nodes: nodeMap,
+  onSelectNode,
+}: {
+  paths: FoundPath[];
+  nodeLabel: (uri: string) => string;
+  nodeKindColor: (uri: string) => string;
+  nodes: Map<string, IINode>;
+  onSelectNode: (uri: string) => void;
+}) {
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
+  const { dagNodes, dagEdges, svgWidth, svgHeight, bypassBaseY, nodeW } = useMemo(() => {
+    const { nodes: dn, edges: de } = buildDag(paths);
+
+    // Compute node width from longest label
+    let maxLabelLen = 0;
+    for (const uri of dn.keys()) {
+      const label = nodeLabel(uri);
+      if (label.length > maxLabelLen) maxLabelLen = label.length;
+    }
+    const computedW = Math.max(MIN_NODE_W, Math.min(220, maxLabelLen * CHAR_W + 24));
+
+    let maxLayer = 0;
+    const layerCounts = new Map<number, number>();
+    for (const n of dn.values()) {
+      if (n.layer > maxLayer) maxLayer = n.layer;
+      layerCounts.set(n.layer, (layerCounts.get(n.layer) ?? 0) + 1);
+    }
+    let maxRowCount = 0;
+    for (const c of layerCounts.values()) if (c > maxRowCount) maxRowCount = c;
+
+    let bypassCount = 0;
+    for (const e of de) {
+      const from = dn.get(e.from);
+      const to = dn.get(e.to);
+      if (from && to && to.layer - from.layer > 1) bypassCount++;
+    }
+
+    const padX = 20;
+    const padY = 20;
+    const nodeAreaH = maxRowCount * (NODE_H + ROW_GAP);
+    const bypassAreaH = bypassCount > 0 ? 30 + bypassCount * 18 : 0;
+    const w = padX * 2 + (maxLayer + 1) * computedW + maxLayer * COL_GAP;
+    const h = padY * 2 + nodeAreaH + bypassAreaH;
+    const bpBaseY = padY + nodeAreaH + 20;
+
+    return { dagNodes: dn, dagEdges: de, svgWidth: w, svgHeight: h, bypassBaseY: bpBaseY, nodeW: computedW };
+  }, [paths, nodeLabel]);
+
+  const nodeX = (layer: number) => 20 + layer * (nodeW + COL_GAP) + nodeW / 2;
+  const nodeY = (order: number) => 20 + order * (NODE_H + ROW_GAP) + NODE_H / 2;
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) setContainerWidth(entry.contentRect.width);
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const MIN_RENDER_WIDTH = 800;
+  const fitsNaturally = containerWidth >= svgWidth;
+  const needsScroll = containerWidth > 0 && containerWidth < MIN_RENDER_WIDTH && svgWidth > containerWidth;
+
+  const renderWidth = fitsNaturally
+    ? containerWidth
+    : needsScroll ? svgWidth : containerWidth;
+  const scale = renderWidth / svgWidth;
+  const displayHeight = svgHeight * scale;
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        borderRadius: 8, background: "rgba(255,255,255,0.02)",
+        border: `1px solid ${border.subtle}`,
+        overflowX: needsScroll ? "auto" : "hidden",
+        overflowY: "hidden",
+      }}
+    >
+      <svg
+        width={needsScroll ? svgWidth : "100%"}
+        height={displayHeight}
+        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+        preserveAspectRatio="xMidYMin meet"
+        style={{ display: "block" }}
+      >
+        {/* Edges */}
+        {dagEdges.map((edge, i) => {
+          const from = dagNodes.get(edge.from);
+          const to = dagNodes.get(edge.to);
+          if (!from || !to) return null;
+
+          const x1 = nodeX(from.layer) + nodeW / 2;
+          const y1 = nodeY(from.order);
+          const x2 = nodeX(to.layer) - nodeW / 2;
+          const y2 = nodeY(to.order);
+
+          const color = edgeColor(edge.label);
+          const layerSpan = to.layer - from.layer;
+
+          const bendR = Math.min(20, Math.abs(y2 - y1) / 2, COL_GAP / 4);
+          let path: string;
+          let labelX: number;
+          let labelY: number;
+
+          if (y1 === y2 && layerSpan <= 1) {
+            path = `M${x1},${y1} L${x2},${y2}`;
+            labelX = (x1 + x2) / 2;
+            labelY = y1;
+          } else if (layerSpan <= 1) {
+            // Adjacent layers: bend in the middle of the gap
+            const midX = (x1 + x2) / 2;
+            path = `M${x1},${y1} L${midX - bendR},${y1} Q${midX},${y1} ${midX},${y1 + (y2 > y1 ? bendR : -bendR)} L${midX},${y2 - (y2 > y1 ? bendR : -bendR)} Q${midX},${y2} ${midX + bendR},${y2} L${x2},${y2}`;
+            labelX = midX;
+            labelY = (y1 + y2) / 2;
+          } else {
+            // Multi-layer span: route below all nodes through bypass area
+            // Count which bypass lane this edge uses
+            let bypassIdx = 0;
+            for (let j = 0; j < i; j++) {
+              const ef = dagNodes.get(dagEdges[j].from);
+              const et = dagNodes.get(dagEdges[j].to);
+              if (ef && et && et.layer - ef.layer > 1) bypassIdx++;
+            }
+            const bypassY = bypassBaseY + bypassIdx * 18;
+            const r = 12;
+
+            // Down from source → horizontal along bypass → up to target
+            path = [
+              `M${x1},${y1}`,
+              `L${x1 + r},${y1}`,
+              `Q${x1 + r * 2},${y1} ${x1 + r * 2},${y1 + r}`,
+              `L${x1 + r * 2},${bypassY - r}`,
+              `Q${x1 + r * 2},${bypassY} ${x1 + r * 3},${bypassY}`,
+              `L${x2 - r * 3},${bypassY}`,
+              `Q${x2 - r * 2},${bypassY} ${x2 - r * 2},${bypassY - r}`,
+              `L${x2 - r * 2},${y2 + r}`,
+              `Q${x2 - r * 2},${y2} ${x2 - r},${y2}`,
+              `L${x2},${y2}`,
+            ].join(" ");
+
+            labelX = (x1 + x2) / 2;
+            labelY = bypassY;
+          }
+
+          const isBypass = layerSpan > 1;
+
+          // Offset labels for edges sharing the same target to avoid stacking
+          let labelOffset = 0;
+          for (let j = 0; j < i; j++) {
+            const ej = dagEdges[j];
+            if (ej.to === edge.to && dagNodes.get(ej.from)?.layer === from.layer) {
+              labelOffset += 16;
+            }
+          }
+
+          return (
+            <g key={i}>
+              <path
+                d={path}
+                fill="none"
+                stroke={color}
+                strokeWidth={isBypass ? 1.5 : 2}
+                strokeOpacity={isBypass ? 0.35 : 0.5}
+                strokeDasharray={isBypass ? "6 4" : undefined}
+              />
+              <rect
+                x={labelX - edge.label.length * 2.6 - 4}
+                y={labelY - 7 + labelOffset}
+                width={edge.label.length * 5.2 + 8}
+                height={14}
+                rx={3}
+                fill="#15151F"
+                fillOpacity={0.92}
+              />
+              <text
+                x={labelX}
+                y={labelY + 3.5 + labelOffset}
+                textAnchor="middle"
+                fontSize={8}
+                fontFamily="'IBM Plex Mono', monospace"
+                fill={color}
+                fillOpacity={isBypass ? 0.65 : 0.85}
+              >
+                {edge.label}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Nodes */}
+        {[...dagNodes.entries()].map(([uri, node]) => {
+          const x = nodeX(node.layer);
+          const y = nodeY(node.order);
+          const color = nodeKindColor(uri);
+          const label = nodeLabel(uri);
+          const kind = nodeMap.get(uri)?.kind || "";
+          const isHovered = hoveredNode === uri;
+
+          const isHub = node.pathCount > 1 && !node.isStart && !node.isEnd;
+
+          return (
+            <g
+              key={uri}
+              style={{ cursor: "pointer" }}
+              onClick={() => onSelectNode(uri)}
+              onMouseEnter={() => setHoveredNode(uri)}
+              onMouseLeave={() => setHoveredNode(null)}
+            >
+              <rect
+                x={x - nodeW / 2}
+                y={y - NODE_H / 2}
+                width={nodeW}
+                height={NODE_H}
+                rx={8}
+                fill={isHovered ? `${color}22` : `${color}11`}
+                stroke={node.isStart || node.isEnd ? color : `${color}44`}
+                strokeWidth={node.isStart || node.isEnd ? 2 : 1}
+                style={{ transition: "fill 0.12s" }}
+              />
+
+              {isHub && (
+                <>
+                  <circle cx={x - nodeW / 2} cy={y} r={STATION_R + 1} fill="#15151F" />
+                  <circle cx={x - nodeW / 2} cy={y} r={STATION_R} fill="none" stroke={color} strokeWidth={2} />
+                </>
+              )}
+
+              <text
+                x={x}
+                y={y - 4}
+                textAnchor="middle"
+                fontSize={10}
+                fontWeight={500}
+                fill={color}
+              >
+                {label.length > 28 ? label.slice(0, 27) + "…" : label}
+              </text>
+
+              <text
+                x={x}
+                y={y + 10}
+                textAnchor="middle"
+                fontSize={7}
+                fontFamily="'IBM Plex Mono', monospace"
+                fill={text.hint}
+              >
+                {kind.replace(/([A-Z])/g, " $1").trim()}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: PathFinderProps) {
   const [startUri, setStartUri] = useState<string | null>(null);
   const [endUri, setEndUri] = useState<string | null>(null);
@@ -276,6 +710,8 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
             Discover how organisations, capabilities, procurement routes, and people are linked.
           </div>
         </div>
+      </div>
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
 
         {/* Selectors */}
         <div style={{
@@ -408,109 +844,6 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
           </div>
         )}
 
-        {/* Results */}
-        {paths !== null && (
-          <div>
-            {paths.length === 0 ? (
-              <div style={{
-                padding: 32, textAlign: "center", borderRadius: 8,
-                background: "rgba(255,255,255,0.02)", border: `1px solid ${border.subtle}`,
-              }}>
-                <div style={{ fontSize: 24, opacity: 0.3, marginBottom: 8 }}>∅</div>
-                <div style={{ color: text.faint, fontSize: 13 }}>
-                  No paths found within {MAX_DEPTH} steps
-                </div>
-                <div style={{ color: text.hint, fontSize: 11, marginTop: 4 }}>
-                  These entities may not be connected in the current dataset
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div style={{
-                  fontSize: 10, color: text.faint, marginBottom: 12,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                }}>
-                  {paths.length} path{paths.length !== 1 ? "s" : ""} found
-                  {paths.length >= MAX_PATHS && " (showing first " + MAX_PATHS + ")"}
-                </div>
-
-                {paths.map((path, pi) => (
-                  <div
-                    key={pi}
-                    style={{
-                      marginBottom: 12, padding: 16, borderRadius: 8,
-                      background: "rgba(255,255,255,0.02)",
-                      border: `1px solid ${border.subtle}`,
-                    }}
-                  >
-                    <div style={{
-                      fontSize: 9, color: text.hint, marginBottom: 10,
-                      fontFamily: "'IBM Plex Mono', monospace",
-                    }}>
-                      PATH {pi + 1} — {path.length - 1} step{path.length - 1 !== 1 ? "s" : ""}
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 4 }}>
-                      {path.map((step, si) => {
-                        const color = nodeKindColor(step.uri);
-                        const kind = nodes.get(step.uri)?.kind || "";
-                        return (
-                          <div key={si} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            {si > 0 && (
-                              <div style={{
-                                display: "flex", alignItems: "center", gap: 2,
-                                margin: "0 2px",
-                              }}>
-                                <div style={{
-                                  width: 16, height: 1,
-                                  background: edgeColor(step.edgeLabel),
-                                }} />
-                                <div style={{
-                                  fontSize: 8, color: edgeColor(step.edgeLabel),
-                                  fontFamily: "'IBM Plex Mono', monospace",
-                                  whiteSpace: "nowrap", padding: "1px 4px",
-                                  borderRadius: 3, background: `${edgeColor(step.edgeLabel)}11`,
-                                }}>
-                                  {step.edgeLabel}
-                                </div>
-                                <div style={{
-                                  width: 0, height: 0,
-                                  borderTop: "4px solid transparent",
-                                  borderBottom: "4px solid transparent",
-                                  borderLeft: `6px solid ${edgeColor(step.edgeLabel)}`,
-                                }} />
-                              </div>
-                            )}
-                            <div
-                              onClick={() => onSelectNode(step.uri)}
-                              style={{
-                                padding: "4px 10px", borderRadius: 5, cursor: "pointer",
-                                background: `${color}11`, border: `1px solid ${color}33`,
-                                transition: "all 0.12s",
-                              }}
-                              onMouseEnter={e => (e.currentTarget.style.background = `${color}22`)}
-                              onMouseLeave={e => (e.currentTarget.style.background = `${color}11`)}
-                            >
-                              <div style={{ fontSize: 11, color, fontWeight: 500 }}>
-                                {nodeLabel(step.uri)}
-                              </div>
-                              <div style={{
-                                fontSize: 8, color: text.hint,
-                                fontFamily: "'IBM Plex Mono', monospace",
-                              }}>
-                                {kind.replace(/([A-Z])/g, " $1").trim()}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
         {paths === null && startUri && endUri && (
           <div style={{
             padding: 32, textAlign: "center", color: text.hint, fontSize: 12,
@@ -519,6 +852,45 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
           </div>
         )}
       </div>
+
+      {/* Results — full width, no maxWidth constraint */}
+      {paths !== null && (
+        <div style={{ padding: "0 16px" }}>
+          {paths.length === 0 ? (
+            <div style={{
+              padding: 32, textAlign: "center", borderRadius: 8,
+              background: "rgba(255,255,255,0.02)", border: `1px solid ${border.subtle}`,
+              maxWidth: 900, margin: "0 auto",
+            }}>
+              <div style={{ fontSize: 24, opacity: 0.3, marginBottom: 8 }}>∅</div>
+              <div style={{ color: text.faint, fontSize: 13 }}>
+                No paths found within {MAX_DEPTH} steps
+              </div>
+              <div style={{ color: text.hint, fontSize: 11, marginTop: 4 }}>
+                These entities may not be connected in the current dataset
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div style={{
+                fontSize: 10, color: text.faint, marginBottom: 12,
+                fontFamily: "'IBM Plex Mono', monospace",
+              }}>
+                {paths.length} path{paths.length !== 1 ? "s" : ""} found
+                {paths.length >= MAX_PATHS && " (showing first " + MAX_PATHS + ")"}
+              </div>
+
+              <SubwayMap
+                paths={paths}
+                nodeLabel={nodeLabel}
+                nodeKindColor={nodeKindColor}
+                nodes={nodes}
+                onSelectNode={onSelectNode}
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
