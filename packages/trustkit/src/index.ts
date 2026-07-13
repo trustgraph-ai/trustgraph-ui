@@ -56,6 +56,12 @@ export type { InnovationExplorerProps } from "./components/innovation";
 export { useInnovationData } from "./hooks/useInnovationData";
 export type { IINode } from "./hooks/useInnovationData";
 
+// Components — risk
+export { RiskExplorer } from "./components/risk";
+export type { RiskExplorerProps } from "./components/risk";
+export { useRiskData } from "./hooks/useRiskData";
+export type { RiskNode } from "./hooks/useRiskData";
+
 // Components — sparql
 export { SparqlWorkbench } from "./components/sparql";
 export type { SparqlWorkbenchProps, SparqlResult, QueryPreset } from "./components/sparql";

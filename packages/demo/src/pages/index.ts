@@ -24,3 +24,4 @@ export { GraphqlPage } from "./GraphqlPage";
 export { RetailAssistantPage } from "./RetailAssistantPage";
 export { BrandAnalyticsPage } from "./BrandAnalyticsPage";
 export { InnovationPage } from "./InnovationPage";
+export { RiskPage } from "./RiskPage";
