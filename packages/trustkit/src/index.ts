@@ -68,6 +68,12 @@ export type { GameTheoryExplorerProps } from "./components/game-theory";
 export { useGameTheoryData } from "./hooks/useGameTheoryData";
 export type { GTNode } from "./hooks/useGameTheoryData";
 
+// Components — law in context
+export { LawExplorer } from "./components/law-in-context";
+export type { LawExplorerProps } from "./components/law-in-context";
+export { useLawData } from "./hooks/useLawData";
+export type { LawNode } from "./hooks/useLawData";
+
 // Components — sparql
 export { SparqlWorkbench } from "./components/sparql";
 export type { SparqlWorkbenchProps, SparqlResult, QueryPreset } from "./components/sparql";

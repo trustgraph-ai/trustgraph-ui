@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-
 import type { DomainKey, Entity } from "@trustgraph/trustkit";
 import { Header, StatusBar, Toaster, useGraphData, toast, WorkspaceSwitcher } from "@trustgraph/trustkit";
 import { useLogout, useWorkspaceSync } from "@trustgraph/react-state";
-import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, PlaygroundPage, WorldEventsPage, SparqlPage, GraphqlPage, SolarMissionsPage, HwSecPage, RetailAssistantPage, BrandAnalyticsPage, InnovationPage, RiskPage, GameTheoryPage } from "./pages";
+import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, PlaygroundPage, WorldEventsPage, SparqlPage, GraphqlPage, SolarMissionsPage, HwSecPage, RetailAssistantPage, BrandAnalyticsPage, InnovationPage, RiskPage, GameTheoryPage, LawInContextPage } from "./pages";
 
 export default function App() {
   const navigate = useNavigate();
@@ -100,6 +100,7 @@ export default function App() {
         <Route path="/innovation" element={<InnovationPage />} />
         <Route path="/risk" element={<RiskPage />} />
         <Route path="/game-theory" element={<GameTheoryPage />} />
+        <Route path="/law-in-context" element={<LawInContextPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

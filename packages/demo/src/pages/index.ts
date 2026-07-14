@@ -26,3 +26,4 @@ export { BrandAnalyticsPage } from "./BrandAnalyticsPage";
 export { InnovationPage } from "./InnovationPage";
 export { RiskPage } from "./RiskPage";
 export { GameTheoryPage } from "./GameTheoryPage";
+export { LawInContextPage } from "./LawInContextPage";
