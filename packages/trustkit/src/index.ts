@@ -62,6 +62,12 @@ export type { RiskExplorerProps } from "./components/risk";
 export { useRiskData } from "./hooks/useRiskData";
 export type { RiskNode } from "./hooks/useRiskData";
 
+// Components — game theory
+export { GameTheoryExplorer } from "./components/game-theory";
+export type { GameTheoryExplorerProps } from "./components/game-theory";
+export { useGameTheoryData } from "./hooks/useGameTheoryData";
+export type { GTNode } from "./hooks/useGameTheoryData";
+
 // Components — sparql
 export { SparqlWorkbench } from "./components/sparql";
 export type { SparqlWorkbenchProps, SparqlResult, QueryPreset } from "./components/sparql";
