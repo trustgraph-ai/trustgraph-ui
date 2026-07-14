@@ -64,6 +64,14 @@ const demos: DemoCard[] = [
     description: "Brand intelligence from interaction signals. See what users buy, reject, and why.",
   },
   {
+    key: "risk",
+    view: "risk",
+    title: "Risk Management",
+    icon: "🛡",
+    color: palette.rose,
+    description: "Enterprise risk explorer with time-windowed event analysis, threat actors, assets, and incident response tracking.",
+  },
+  {
     key: "innovation",
     view: "innovation",
     title: "Innovation Intelligence",
