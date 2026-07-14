@@ -72,6 +72,14 @@ const demos: DemoCard[] = [
     description: "Enterprise risk explorer with time-windowed event analysis, threat actors, assets, and incident response tracking.",
   },
   {
+    key: "game-theory",
+    view: "game-theory",
+    title: "Game Theory",
+    icon: "♟",
+    color: palette.purple,
+    description: "Interactive game tree visualizer with payoff matrices, backward induction, Nash equilibria, and what-if sandbox.",
+  },
+  {
     key: "innovation",
     view: "innovation",
     title: "Innovation Intelligence",
