@@ -337,26 +337,36 @@ export function DataView() {
                             gap: "8px 16px",
                             marginBottom: 8,
                           }}>
-                            {Object.entries(match.rowData).map(([key, value]) => (
-                              <div key={key}>
+                            {Object.entries(match.rowData).map(([key, value]) => {
+                              const isMatched = (match.index_name || "").split('.').includes(key);
+                              return (
+                              <div key={key} style={isMatched ? {
+                                background: `${palette.blue}22`,
+                                borderLeft: `3px solid ${palette.blue}`,
+                                borderRadius: 4,
+                                padding: "3px 8px",
+                              } : undefined}>
                                 <span style={{
                                   fontSize: 10,
-                                  color: text.faint,
+                                  color: isMatched ? palette.blue : text.faint,
+                                  fontWeight: isMatched ? 700 : 400,
                                   fontFamily: "'IBM Plex Mono', monospace",
                                   textTransform: "uppercase",
                                 }}>
-                                  {key}
+                                  {key}{isMatched ? "  ● matched" : ""}
                                 </span>
                                 <div style={{
                                   fontSize: 13,
-                                  color: text.primary,
+                                  color: isMatched ? palette.blue : text.primary,
+                                  fontWeight: isMatched ? 600 : 400,
                                   marginTop: 2,
                                   wordBreak: "break-word",
                                 }}>
                                   {String(value ?? "")}
                                 </div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         ) : (
                           <div style={{
