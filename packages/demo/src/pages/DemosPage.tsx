@@ -87,6 +87,14 @@ const demos: DemoCard[] = [
     color: palette.cyan,
     description: "Innovation ecosystem explorer for navigating organisations, capabilities, procurement routes, and people.",
   },
+  {
+    key: "law-in-context",
+    view: "law-in-context",
+    title: "Law in Context",
+    icon: "\u2696",
+    color: palette.amber,
+    description: "Multilingual legal explorer: institutions, civic rights, compliance obligations, emergency powers, and legislative structure.",
+  },
 ];
 
 export function DemosPage({ onNavigate }: DemosPageProps) {
