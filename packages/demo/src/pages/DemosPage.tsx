@@ -95,6 +95,14 @@ const demos: DemoCard[] = [
     color: palette.amber,
     description: "Multilingual legal explorer: institutions, civic rights, compliance obligations, emergency powers, and legislative structure.",
   },
+  {
+    key: "threat-explorer",
+    view: "threat-explorer",
+    title: "Threat Explorer",
+    icon: "\u26A0",
+    color: palette.cyan,
+    description: "Cybersecurity investigation tool: pivot through risk events, actors, assets, and categories. Drill into raw OCSF events for evidence.",
+  },
 ];
 
 export function DemosPage({ onNavigate }: DemosPageProps) {

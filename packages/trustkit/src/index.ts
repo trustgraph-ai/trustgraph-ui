@@ -56,6 +56,12 @@ export type { InnovationExplorerProps } from "./components/innovation";
 export { useInnovationData } from "./hooks/useInnovationData";
 export type { IINode } from "./hooks/useInnovationData";
 
+// Components — ocsf / threat
+export { ThreatExplorer } from "./components/ocsf";
+export type { ThreatExplorerProps } from "./components/ocsf";
+export { useOcsfData } from "./hooks/useOcsfData";
+export type { OcsfNode } from "./hooks/useOcsfData";
+
 // Components — risk
 export { RiskExplorer } from "./components/risk";
 export type { RiskExplorerProps } from "./components/risk";
