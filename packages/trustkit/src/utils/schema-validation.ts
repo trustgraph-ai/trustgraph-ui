@@ -11,7 +11,8 @@ export interface Schema {
   name: string;
   description: string;
   fields: SchemaField[];
-  indexes?: string[];
+  "query-indexes"?: string[];
+  "vector-indexes"?: string[];
 }
 
 export type SchemaTableRow = [string, Schema];
@@ -70,9 +71,15 @@ export const validateSchema = (
     }
   });
 
-  if (schema.indexes) {
-    schema.indexes.forEach((indexField) => {
-      if (!fieldNames.includes(indexField)) errors.push(`Indexed field "${indexField}" does not exist`);
+  if (schema["query-indexes"]) {
+    schema["query-indexes"].forEach((indexField) => {
+      if (!fieldNames.includes(indexField)) errors.push(`Query-indexed field "${indexField}" does not exist`);
+    });
+  }
+
+  if (schema["vector-indexes"]) {
+    schema["vector-indexes"].forEach((indexField) => {
+      if (!fieldNames.includes(indexField)) errors.push(`Vector-indexed field "${indexField}" does not exist`);
     });
   }
 
