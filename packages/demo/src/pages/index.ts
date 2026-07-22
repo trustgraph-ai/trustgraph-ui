@@ -27,3 +27,4 @@ export { InnovationPage } from "./InnovationPage";
 export { RiskPage } from "./RiskPage";
 export { GameTheoryPage } from "./GameTheoryPage";
 export { LawInContextPage } from "./LawInContextPage";
+export { ThreatExplorerPage } from "./ThreatExplorerPage";
