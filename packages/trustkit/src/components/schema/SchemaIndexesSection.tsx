@@ -2,34 +2,36 @@ import { useState } from "react";
 import type { SchemaField } from "../../utils/schema-validation";
 import { text, border, surface, palette } from "../../theme";
 
-interface SchemaIndexesSectionProps {
+interface IndexGroupProps {
+  label: string;
+  color: string;
   indexes: string[];
   fields: SchemaField[];
-  onAddIndex: (fieldName: string) => void;
-  onRemoveIndex: (fieldName: string) => void;
+  onAdd: (fieldName: string) => void;
+  onRemove: (fieldName: string) => void;
 }
 
 const labelStyle = { fontSize: 10, fontFamily: "'IBM Plex Mono', monospace" as const, fontWeight: 600 as const, color: text.faint, letterSpacing: "0.1em", marginBottom: 8 };
 const inputStyle = { padding: "5px 7px", borderRadius: 4, border: `1px solid ${border.default}`, background: surface.card, color: text.primary, fontSize: 10, fontFamily: "'IBM Plex Mono', monospace" as const, outline: "none", cursor: "pointer" };
 
-export function SchemaIndexesSection({ indexes, fields, onAddIndex, onRemoveIndex }: SchemaIndexesSectionProps) {
+function IndexGroup({ label, color, indexes, fields, onAdd, onRemove }: IndexGroupProps) {
   const [selected, setSelected] = useState("");
   const indexableFields = fields.filter((f) => f.name.trim() && !indexes.includes(f.name));
 
   return (
     <div>
-      <div style={labelStyle}>INDEXES</div>
+      <div style={labelStyle}>{label}</div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
         {indexes.map((idx) => (
-          <span key={idx} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 4, background: `${palette.blue}1a`, color: palette.blue, fontSize: 10, fontFamily: "'IBM Plex Mono', monospace" }}>
+          <span key={idx} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 4, background: `${color}1a`, color, fontSize: 10, fontFamily: "'IBM Plex Mono', monospace" }}>
             {idx}
-            <button onClick={() => onRemoveIndex(idx)}
-              style={{ border: "none", background: "transparent", color: palette.blue, fontSize: 10, cursor: "pointer", padding: 0 }}>×</button>
+            <button onClick={() => onRemove(idx)}
+              style={{ border: "none", background: "transparent", color, fontSize: 10, cursor: "pointer", padding: 0 }}>×</button>
           </span>
         ))}
         {indexes.length === 0 && (
-          <span style={{ fontSize: 10, color: text.hint, fontFamily: "'IBM Plex Mono', monospace", fontStyle: "italic" }}>No indexes</span>
+          <span style={{ fontSize: 10, color: text.hint, fontFamily: "'IBM Plex Mono', monospace", fontStyle: "italic" }}>None</span>
         )}
       </div>
 
@@ -39,14 +41,31 @@ export function SchemaIndexesSection({ indexes, fields, onAddIndex, onRemoveInde
             <option value="">Select field...</option>
             {indexableFields.map((f) => <option key={f.id} value={f.name}>{f.name}</option>)}
           </select>
-          <button onClick={() => { if (selected) { onAddIndex(selected); setSelected(""); } }} disabled={!selected}
-            style={{ padding: "5px 10px", borderRadius: 4, border: `1px solid ${palette.blue}44`, background: `${palette.blue}1a`, color: !selected ? text.disabled : palette.blue, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+          <button onClick={() => { if (selected) { onAdd(selected); setSelected(""); } }} disabled={!selected}
+            style={{ padding: "5px 10px", borderRadius: 4, border: `1px solid ${color}44`, background: `${color}1a`, color: !selected ? text.disabled : color, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
             Add
           </button>
         </div>
       )}
+    </div>
+  );
+}
 
-      <div style={{ fontSize: 9, color: text.hint, marginTop: 4 }}>Fields to index for faster lookups</div>
+interface SchemaIndexesSectionProps {
+  queryIndexes: string[];
+  vectorIndexes: string[];
+  fields: SchemaField[];
+  onAddQueryIndex: (fieldName: string) => void;
+  onRemoveQueryIndex: (fieldName: string) => void;
+  onAddVectorIndex: (fieldName: string) => void;
+  onRemoveVectorIndex: (fieldName: string) => void;
+}
+
+export function SchemaIndexesSection({ queryIndexes, vectorIndexes, fields, onAddQueryIndex, onRemoveQueryIndex, onAddVectorIndex, onRemoveVectorIndex }: SchemaIndexesSectionProps) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <IndexGroup label="QUERY INDEXES" color={palette.blue} indexes={queryIndexes} fields={fields} onAdd={onAddQueryIndex} onRemove={onRemoveQueryIndex} />
+      <IndexGroup label="VECTOR INDEXES" color={palette.purple} indexes={vectorIndexes} fields={fields} onAdd={onAddVectorIndex} onRemove={onRemoveVectorIndex} />
     </div>
   );
 }

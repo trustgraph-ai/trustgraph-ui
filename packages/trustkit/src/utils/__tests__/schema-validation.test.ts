@@ -81,14 +81,26 @@ describe("validateSchema", () => {
     expect(errors.some((e) => e.includes("must have at least one value"))).toBe(true);
   });
 
-  it("validates indexes reference existing fields", () => {
-    const schema = makeSchema({ indexes: ["nonexistent"] });
+  it("validates query-indexes reference existing fields", () => {
+    const schema = makeSchema({ "query-indexes": ["nonexistent"] });
     const errors = validateSchema(schema, []);
     expect(errors.some((e) => e.includes("does not exist"))).toBe(true);
   });
 
-  it("accepts valid indexes", () => {
-    const schema = makeSchema({ indexes: ["name"] });
+  it("validates vector-indexes reference existing fields", () => {
+    const schema = makeSchema({ "vector-indexes": ["nonexistent"] });
+    const errors = validateSchema(schema, []);
+    expect(errors.some((e) => e.includes("does not exist"))).toBe(true);
+  });
+
+  it("accepts valid query-indexes", () => {
+    const schema = makeSchema({ "query-indexes": ["name"] });
+    const errors = validateSchema(schema, []);
+    expect(errors.some((e) => e.includes("does not exist"))).toBe(false);
+  });
+
+  it("accepts valid vector-indexes", () => {
+    const schema = makeSchema({ "vector-indexes": ["name"] });
     const errors = validateSchema(schema, []);
     expect(errors.some((e) => e.includes("does not exist"))).toBe(false);
   });

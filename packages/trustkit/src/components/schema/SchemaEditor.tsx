@@ -27,7 +27,8 @@ export function SchemaEditor({ schemaId, schema, existingSchemas, onSave, onDele
 
   const isDirty = form.name !== (schema.name || "") || form.description !== (schema.description || "") ||
     JSON.stringify(form.fields) !== JSON.stringify(schema.fields) ||
-    JSON.stringify(form.indexes) !== JSON.stringify(schema.indexes || []);
+    JSON.stringify(form.queryIndexes) !== JSON.stringify(schema["query-indexes"] || []) ||
+    JSON.stringify(form.vectorIndexes) !== JSON.stringify(schema["vector-indexes"] || []);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: 20 }}>
@@ -64,7 +65,9 @@ export function SchemaEditor({ schemaId, schema, existingSchemas, onSave, onDele
 
           <div style={{ borderTop: `1px solid ${border.subtle}`, margin: "16px 0" }} />
 
-          <SchemaIndexesSection indexes={form.indexes} fields={form.fields} onAddIndex={form.handleAddIndex} onRemoveIndex={form.handleRemoveIndex} />
+          <SchemaIndexesSection queryIndexes={form.queryIndexes} vectorIndexes={form.vectorIndexes} fields={form.fields}
+            onAddQueryIndex={form.handleAddQueryIndex} onRemoveQueryIndex={form.handleRemoveQueryIndex}
+            onAddVectorIndex={form.handleAddVectorIndex} onRemoveVectorIndex={form.handleRemoveVectorIndex} />
         </div>
       </div>
     </div>

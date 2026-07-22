@@ -14,7 +14,8 @@ export const useSchemaForm = ({ schemaId, initialSchema }: UseSchemaFormProps) =
   const [fields, setFields] = useState<SchemaField[]>(
     initialSchema?.fields?.map((f) => ({ ...f, id: f.id || crypto.randomUUID() })) || [{ ...DEFAULT_FIELD, id: crypto.randomUUID() }],
   );
-  const [indexes, setIndexes] = useState<string[]>(initialSchema?.indexes || []);
+  const [queryIndexes, setQueryIndexes] = useState<string[]>(initialSchema?.["query-indexes"] || []);
+  const [vectorIndexes, setVectorIndexes] = useState<string[]>(initialSchema?.["vector-indexes"] || []);
   const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
@@ -22,7 +23,8 @@ export const useSchemaForm = ({ schemaId, initialSchema }: UseSchemaFormProps) =
     setName(initialSchema?.name || "");
     setDescription(initialSchema?.description || "");
     setFields(initialSchema?.fields?.map((f) => ({ ...f, id: f.id || crypto.randomUUID() })) || [{ ...DEFAULT_FIELD, id: crypto.randomUUID() }]);
-    setIndexes(initialSchema?.indexes || []);
+    setQueryIndexes(initialSchema?.["query-indexes"] || []);
+    setVectorIndexes(initialSchema?.["vector-indexes"] || []);
   }, [schemaId, initialSchema]);
 
   const handleAddField = () => {
@@ -32,7 +34,8 @@ export const useSchemaForm = ({ schemaId, initialSchema }: UseSchemaFormProps) =
   const handleRemoveField = (index: number) => {
     const removedName = fields[index].name;
     setFields(fields.filter((_, i) => i !== index));
-    setIndexes(indexes.filter((idx) => idx !== removedName));
+    setQueryIndexes(queryIndexes.filter((idx) => idx !== removedName));
+    setVectorIndexes(vectorIndexes.filter((idx) => idx !== removedName));
   };
 
   const handleFieldChange = (index: number, update: Partial<SchemaField>) => {
@@ -54,28 +57,41 @@ export const useSchemaForm = ({ schemaId, initialSchema }: UseSchemaFormProps) =
     handleFieldChange(fieldIndex, { enum: (field.enum || []).filter((v) => v !== value) });
   };
 
-  const handleAddIndex = (fieldName: string) => {
-    if (fieldName && !indexes.includes(fieldName)) setIndexes([...indexes, fieldName]);
+  const handleAddQueryIndex = (fieldName: string) => {
+    if (fieldName && !queryIndexes.includes(fieldName)) setQueryIndexes([...queryIndexes, fieldName]);
   };
 
-  const handleRemoveIndex = (fieldName: string) => {
-    setIndexes(indexes.filter((idx) => idx !== fieldName));
+  const handleRemoveQueryIndex = (fieldName: string) => {
+    setQueryIndexes(queryIndexes.filter((idx) => idx !== fieldName));
   };
 
-  const getSchema = (): Schema => ({ name, description, fields, indexes: indexes.length > 0 ? indexes : undefined });
+  const handleAddVectorIndex = (fieldName: string) => {
+    if (fieldName && !vectorIndexes.includes(fieldName)) setVectorIndexes([...vectorIndexes, fieldName]);
+  };
+
+  const handleRemoveVectorIndex = (fieldName: string) => {
+    setVectorIndexes(vectorIndexes.filter((idx) => idx !== fieldName));
+  };
+
+  const getSchema = (): Schema => ({
+    name, description, fields,
+    "query-indexes": queryIndexes.length > 0 ? queryIndexes : undefined,
+    "vector-indexes": vectorIndexes.length > 0 ? vectorIndexes : undefined,
+  });
 
   const resetForm = () => {
     setId(""); setName(""); setDescription("");
     setFields([{ ...DEFAULT_FIELD, id: crypto.randomUUID() }]);
-    setIndexes([]); setErrors([]);
+    setQueryIndexes([]); setVectorIndexes([]); setErrors([]);
   };
 
   return {
     id, setId, name, setName, description, setDescription,
-    fields, indexes, errors, setErrors,
+    fields, queryIndexes, vectorIndexes, errors, setErrors,
     handleAddField, handleRemoveField, handleFieldChange,
     handleAddEnumValue, handleRemoveEnumValue,
-    handleAddIndex, handleRemoveIndex,
+    handleAddQueryIndex, handleRemoveQueryIndex,
+    handleAddVectorIndex, handleRemoveVectorIndex,
     getSchema, resetForm,
   };
 };
