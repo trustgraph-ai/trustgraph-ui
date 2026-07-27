@@ -1,5 +1,11 @@
-import { GraphExplorer } from "@trustgraph/trustkit";
+import { useState } from "react";
+import { GraphExplorer, ModeSelector, SectionLabel, text, border, palette } from "@trustgraph/trustkit";
 import { DevPanel } from "../components/DevPanel";
+
+const RENDERER_MODES = [
+  { key: "svg", label: "2D" },
+  { key: "3d", label: "3D" },
+];
 
 /**
  * Knowledge Explorer workflow — uses the GraphExplorer composite
@@ -7,9 +13,34 @@ import { DevPanel } from "../components/DevPanel";
  * component, no additional wiring.
  */
 export function ExploreView() {
+  const [renderer, setRenderer] = useState<"svg" | "3d">("svg");
+
   return (
     <>
-      <GraphExplorer renderer="svg" />
+      <div style={{
+        padding: "10px 28px",
+        borderBottom: `1px solid ${border.default}`,
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+      }}>
+        <SectionLabel>VIEW</SectionLabel>
+        <ModeSelector
+          modes={RENDERER_MODES}
+          activeMode={renderer}
+          onChange={(key) => setRenderer(key as "svg" | "3d")}
+          color={palette.emerald}
+        />
+        <span style={{
+          fontSize: 11,
+          color: text.subtle,
+          fontStyle: "italic",
+          marginLeft: 8,
+        }}>
+          {renderer === "3d" ? "3D graph with perspective projection." : "2D graph with domain clustering."}
+        </span>
+      </div>
+      <GraphExplorer renderer={renderer} />
       <DevPanel
         explanation="This entire view is a single GraphExplorer composite from trustkit. It internally wires useGraphData, useDomainFilter, and useEntityNeighbourhood to provide a complete graph exploration experience with filtering and entity detail."
         codeSamples={[

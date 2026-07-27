@@ -3,7 +3,7 @@ export { SectionLabel, FilterButton, Header, StatusBar, Typewriter, Card, Badge,
 export type { FilterItem, Message, SearchPreset } from "./components/common";
 
 // Components — graph
-export { GraphCanvas, GraphCanvasSVG, ExplainGraph, NodeDetailPanel, ZoomControls } from "./components/graph";
+export { GraphCanvas, GraphCanvasSVG, GraphCanvas3D, ExplainGraph, NodeDetailPanel, ZoomControls } from "./components/graph";
 export type { ExplainGraphNode, ExplainGraphEdge } from "./components/graph";
 
 // Components — knowledge

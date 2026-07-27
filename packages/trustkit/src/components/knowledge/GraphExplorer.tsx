@@ -5,13 +5,14 @@ import { useEntityNeighbourhood } from "../../hooks/useEntityNeighbourhood";
 import { useDomainFilter } from "../../hooks/useDomainFilter";
 import { GraphCanvas } from "../graph/GraphCanvas";
 import { GraphCanvasSVG } from "../graph/GraphCanvasSVG";
+import { GraphCanvas3D } from "../graph/GraphCanvas3D";
 import { FilterBar, LoadingState, SplitPane, DetailPanel } from "../common";
 import { EntityProperties } from "./EntityProperties";
 import { EntityRelationships } from "./EntityRelationships";
 
 interface GraphExplorerProps {
   /** Which graph renderer to use */
-  renderer?: "canvas" | "svg";
+  renderer?: "canvas" | "svg" | "3d";
   /** External callback when an entity is selected */
   onEntitySelect?: (entity: Entity | null) => void;
 }
@@ -100,6 +101,15 @@ export function GraphExplorer({ renderer = "svg", onEntitySelect }: GraphExplore
       <SplitPane panel={detailPanel} height="calc(100vh - 150px)">
         {renderer === "canvas" ? (
           <GraphCanvas
+            entities={entities}
+            relationships={relationships}
+            ontology={ontology}
+            highlightedEntities={highlightedEntities}
+            onNodeClick={handleNodeClick}
+            activeFilter={activeFilter}
+          />
+        ) : renderer === "3d" ? (
+          <GraphCanvas3D
             entities={entities}
             relationships={relationships}
             ontology={ontology}
