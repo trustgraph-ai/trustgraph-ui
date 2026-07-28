@@ -5,7 +5,7 @@ import { RawGraphCanvas3D } from "./RawGraphCanvas3D";
 import { RawNodeDetailPanel } from "./RawNodeDetailPanel";
 import { RawNodeSearch } from "./RawNodeSearch";
 import { SplitPane, LoadingState } from "../common";
-import { text, palette, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface RawGraphExplorer3DProps {
   startUri?: string;
@@ -23,6 +23,7 @@ export function RawGraphExplorer3D({ startUri, onNodeSelect }: RawGraphExplorer3
     handleNodeClick, handleNodeNavigate, handleSearchSelect, handleClose, handleReset,
   } = useRawGraphState({ startUri, onNodeSelect });
 
+  const { theme, sz } = useTheme();
   const [showSearch, setShowSearch] = useState(false);
 
   if (initialLoading) return <LoadingState />;
@@ -50,21 +51,21 @@ export function RawGraphExplorer3D({ startUri, onNodeSelect }: RawGraphExplorer3
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "var(--page-height)" }}>
       <div style={{
-        padding: "10px 28px",
-        borderBottom: `1px solid ${border.default}`,
+        padding: `${sz(10)}px ${sz(28)}px`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
-        gap: 12,
+        gap: sz(12),
       }}>
         <button
           onClick={() => setShowSearch(!showSearch)}
           style={{
-            padding: "5px 12px",
+            padding: `${sz(5)}px ${sz(12)}px`,
             borderRadius: 6,
-            border: `1px solid ${showSearch ? palette.cyan + "44" : border.default}`,
-            background: showSearch ? `${palette.cyan}1a` : "transparent",
-            color: showSearch ? palette.cyan : text.subtle,
-            fontSize: 11,
+            border: `1px solid ${showSearch ? theme.palette.cyan + "44" : theme.border.default}`,
+            background: showSearch ? `${theme.palette.cyan}1a` : "transparent",
+            color: showSearch ? theme.palette.cyan : theme.text.subtle,
+            fontSize: sz(11),
             fontFamily: "'IBM Plex Mono', monospace",
             cursor: "pointer",
             transition: "all 0.2s",
@@ -77,12 +78,12 @@ export function RawGraphExplorer3D({ startUri, onNodeSelect }: RawGraphExplorer3
           <button
             onClick={handleReset}
             style={{
-              padding: "5px 12px",
+              padding: `${sz(5)}px ${sz(12)}px`,
               borderRadius: 6,
-              border: `1px solid ${border.default}`,
+              border: `1px solid ${theme.border.default}`,
               background: "transparent",
-              color: text.faint,
-              fontSize: 11,
+              color: theme.text.faint,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
               cursor: "pointer",
             }}
@@ -93,9 +94,9 @@ export function RawGraphExplorer3D({ startUri, onNodeSelect }: RawGraphExplorer3
 
         {isFetching && !showSearch && (
           <span style={{
-            fontSize: 10,
+            fontSize: sz(10),
             fontFamily: "'IBM Plex Mono', monospace",
-            color: palette.amber,
+            color: theme.palette.amber,
           }}>
             loading...
           </span>
@@ -104,9 +105,9 @@ export function RawGraphExplorer3D({ startUri, onNodeSelect }: RawGraphExplorer3
         <div style={{ flex: 1 }} />
 
         <span style={{
-          fontSize: 10,
+          fontSize: sz(10),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: text.hint,
+          color: theme.text.hint,
         }}>
           {stats}
         </span>
@@ -140,8 +141,8 @@ export function RawGraphExplorer3D({ startUri, onNodeSelect }: RawGraphExplorer3
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
-              color: text.hint,
-              fontSize: 13,
+              color: theme.text.hint,
+              fontSize: sz(13),
               fontStyle: "italic",
             }}>
               Open search to find entities

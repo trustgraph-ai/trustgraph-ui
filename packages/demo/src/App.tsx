@@ -1,48 +1,56 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import type { DomainKey, Entity } from "@trustgraph/trustkit";
-import { Header, StatusBar, Toaster, useGraphData, toast, WorkspaceSwitcher } from "@trustgraph/trustkit";
+import { Header, StatusBar, Toaster, useGraphData, toast, WorkspaceSwitcher, ThemeProvider, useTheme } from "@trustgraph/trustkit";
 import { useLogout, useWorkspaceSync } from "@trustgraph/react-state";
+import { useThemeSettings, ThemePanel } from "./components/ThemePanel";
 import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, PlaygroundPage, WorldEventsPage, SparqlPage, GraphqlPage, SolarMissionsPage, HwSecPage, RetailAssistantPage, BrandAnalyticsPage, InnovationPage, RiskPage, GameTheoryPage, LawInContextPage, ThreatExplorerPage } from "./pages";
 
 export default function App() {
+  const themeSettings = useThemeSettings();
+
+  return (
+    <ThemeProvider theme={themeSettings.theme} scale={themeSettings.scale}>
+      <AppShell themeSettings={themeSettings} />
+    </ThemeProvider>
+  );
+}
+
+function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useThemeSettings> }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeFilter, setActiveFilter] = useState<DomainKey | null>(null);
   const [selectedNode, setSelectedNode] = useState<Entity | null>(null);
   const { entities, isLoading } = useGraphData();
   const logout = useLogout();
+  const { theme, sz } = useTheme();
 
-  // Bootstrap the active workspace from whoami and keep the socket's
-  // outbound workspace in sync.
   useWorkspaceSync();
 
-  // Notification when graph loads
   useEffect(() => {
     if (!isLoading && entities.length > 0) {
       toast.success(`Graph loaded: ${entities.length} entities`);
     }
   }, [isLoading, entities.length]);
 
-  // Views map 1:1 to routes: "home" is "/", every other view is "/<view>".
-  // Navigating through react-router gives real URLs and working browser
-  // back/forward, instead of swapping components behind a single URL.
   const handleNavigate = (view: string) => {
     navigate(view === "home" ? "/" : `/${view}`);
   };
 
-  // Derive the active top-level tab from the URL so the header highlight
-  // stays in sync with back/forward navigation and deep links.
   const activeView = location.pathname === "/" ? "home" : location.pathname.slice(1);
 
   return (
     <div style={{
       "--page-height": "calc(100vh - 140px)",
-      width: "100%", minHeight: "100vh", background: "#0A0A0F",
+      width: "100%", minHeight: "100vh", background: theme.surface.base,
       fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
-      color: "#E5E5E5", overflow: "hidden",
+      color: theme.text.primary, overflow: "hidden",
     } as React.CSSProperties}>
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{
+        display: "flex", alignItems: "center",
+        background: theme.surface.overlay,
+        borderBottom: `1px solid ${theme.border.default}`,
+      }}>
         <div style={{ flex: 1 }}>
           <Header activeTab={activeView as any} onTabChange={handleNavigate} />
         </div>
@@ -50,10 +58,10 @@ export default function App() {
         <button
           onClick={logout}
           style={{
-            marginRight: 20, padding: "6px 14px", borderRadius: 6,
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "#999", fontSize: 12, cursor: "pointer",
+            marginRight: sz(20), padding: `${sz(6)}px ${sz(14)}px`, borderRadius: 6,
+            background: theme.surface.card,
+            border: `1px solid ${theme.border.medium}`,
+            color: theme.text.subtle, fontSize: sz(12), cursor: "pointer",
             fontFamily: "'IBM Plex Mono', monospace",
           }}
         >
@@ -107,6 +115,7 @@ export default function App() {
 
       <StatusBar />
       <Toaster />
+      <ThemePanel settings={themeSettings} />
     </div>
   );
 }

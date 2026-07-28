@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import type { RawNode, RawEdge } from "../../hooks/useRawGraphData";
 import { ZoomControls } from "../graph/ZoomControls";
-import { border, text, surface } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import { domainColors as staticDomainColors } from "../../theme/colors";
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -124,6 +125,15 @@ export function RawGraphCanvas({
   onNodeClick,
   onNodeNavigate,
 }: RawGraphCanvasProps) {
+  const { theme, domainColors: themeDomainColors, sz } = useTheme();
+  const remapColor = useMemo(() => {
+    const map = new Map<string, string>();
+    for (let i = 0; i < staticDomainColors.length; i++) {
+      map.set(staticDomainColors[i].color, themeDomainColors[i].color);
+    }
+    return (color: string) => map.get(color) ?? color;
+  }, [themeDomainColors]);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -283,13 +293,13 @@ export function RawGraphCanvas({
     if (width === 0) return lines;
 
     for (let x = 0; x < width; x += 30) {
-      lines.push(<line key={`v-${x}`} x1={x} y1={0} x2={x} y2={height} stroke={border.grid} strokeWidth={0.5} />);
+      lines.push(<line key={`v-${x}`} x1={x} y1={0} x2={x} y2={height} stroke={theme.border.grid} strokeWidth={0.5} />);
     }
     for (let y = 0; y < height; y += 30) {
-      lines.push(<line key={`h-${y}`} x1={0} y1={y} x2={width} y2={y} stroke={border.grid} strokeWidth={0.5} />);
+      lines.push(<line key={`h-${y}`} x1={0} y1={y} x2={width} y2={y} stroke={theme.border.grid} strokeWidth={0.5} />);
     }
     return lines;
-  }, [containerSize]);
+  }, [containerSize, theme.border.grid]);
 
   // Filtered edges
   const filteredEdges = useMemo(() => {
@@ -414,28 +424,24 @@ export function RawGraphCanvas({
                 <g key={`${edge.from}-${edge.predicate}-${edge.to}-${i}`}>
                   <path
                     d={path}
-                    stroke={edge.color}
+                    stroke={remapColor(edge.color)}
                     strokeOpacity={alpha}
                     strokeWidth={isHighlighted ? 1.5 : 0.75}
                     fill="none"
                   />
                   {/* Predicate label at midpoint */}
-                  {isHighlighted && (
-                    <>
-                      <text
-                        x={mx}
-                        y={my - 6}
-                        fill={edge.color}
-                        fillOpacity={0.7}
-                        fontSize={7}
-                        fontFamily="'IBM Plex Mono', monospace"
-                        textAnchor="middle"
-                      >
-                        {edge.predicate}
-                      </text>
-                      {showParticle && <circle cx={px} cy={py} r={1.5} fill="#fff" />}
-                    </>
-                  )}
+                  <text
+                    x={mx}
+                    y={my - 6}
+                    fill={remapColor(edge.color)}
+                    fillOpacity={isHighlighted ? 0.7 : 0.35}
+                    fontSize={sz(7)}
+                    fontFamily="'IBM Plex Mono', monospace"
+                    textAnchor="middle"
+                  >
+                    {edge.predicate}
+                  </text>
+                  {isHighlighted && showParticle && <circle cx={px} cy={py} r={1.5} fill={theme.text.primary} />}
                 </g>
               );
             })}
@@ -471,7 +477,7 @@ export function RawGraphCanvas({
                       cy={node.y}
                       r={r + 8 + pulseR}
                       fill="none"
-                      stroke={node.color}
+                      stroke={remapColor(node.color)}
                       strokeOpacity={isCenter ? 0.15 : 0.25}
                       strokeWidth={isCenter ? 3 : 2}
                     />
@@ -482,9 +488,9 @@ export function RawGraphCanvas({
                     cx={node.x}
                     cy={node.y}
                     r={r + pulseR}
-                    fill={node.color}
+                    fill={remapColor(node.color)}
                     fillOpacity={alpha * (isCenter ? 0.35 : 0.2)}
-                    stroke={node.color}
+                    stroke={remapColor(node.color)}
                     strokeOpacity={alpha}
                     strokeWidth={isCenter ? 1.5 : isHighlighted ? 1.25 : 0.75}
                   />
@@ -493,8 +499,9 @@ export function RawGraphCanvas({
                   <text
                     x={node.x}
                     y={node.y + r + 11}
-                    fill={`rgba(255,255,255,${alpha * (isHighlighted || isCenter ? 1 : 0.7)})`}
-                    fontSize={isHovered || isCenter ? 8.5 : 7}
+                    fill={theme.text.primary}
+                    fillOpacity={alpha * (isHighlighted || isCenter ? 1 : 0.7)}
+                    fontSize={sz(isHovered || isCenter ? 8.5 : 7)}
                     fontWeight={isCenter || isHighlighted ? "bold" : "normal"}
                     fontFamily="'IBM Plex Sans', sans-serif"
                     textAnchor="middle"
@@ -521,9 +528,9 @@ export function RawGraphCanvas({
         position: "absolute",
         bottom: 16,
         left: 16,
-        fontSize: 10,
+        fontSize: sz(10),
         fontFamily: "'IBM Plex Mono', monospace",
-        color: text.hint,
+        color: theme.text.hint,
       }}>
         click to select · double-click to navigate · shift+drag to pan
       </div>
@@ -542,8 +549,8 @@ export function RawGraphCanvas({
             position: "absolute",
             left: screenX + 20,
             top: screenY - 20,
-            background: surface.overlay,
-            border: `1px solid ${node.color}44`,
+            background: theme.surface.overlay,
+            border: `1px solid ${remapColor(node.color)}44`,
             borderRadius: 8,
             padding: "10px 14px",
             pointerEvents: "none",
@@ -553,9 +560,9 @@ export function RawGraphCanvas({
             maxWidth: 320,
           }}>
             <div style={{
-              color: node.color,
+              color: remapColor(node.color),
               fontWeight: 700,
-              fontSize: 12,
+              fontSize: sz(12),
               fontFamily: "'IBM Plex Sans', sans-serif",
               marginBottom: node.description ? 4 : 4,
             }}>
@@ -563,8 +570,8 @@ export function RawGraphCanvas({
             </div>
             {node.description && (
               <div style={{
-                color: text.secondary,
-                fontSize: 11,
+                color: theme.text.secondary,
+                fontSize: sz(11),
                 fontFamily: "'IBM Plex Sans', sans-serif",
                 lineHeight: 1.4,
               }}>

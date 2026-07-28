@@ -6,7 +6,7 @@ import {
   useSessionStore,
   useSettings,
 } from "@trustgraph/react-state";
-import { palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 const FONT = "'IBM Plex Mono', monospace";
 
@@ -23,6 +23,7 @@ function Pill({
   items: string[];
   onSelect: (id: string) => void;
 }) {
+  const { theme, sz } = useTheme();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -44,23 +45,23 @@ function Pill({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 6,
-          padding: "4px 10px",
+          gap: sz(6),
+          padding: `${sz(4)}px ${sz(10)}px`,
           borderRadius: 6,
           border: `1px solid ${color}33`,
           background: `${color}0D`,
           color: color,
-          fontSize: 11,
+          fontSize: sz(11),
           fontFamily: FONT,
           cursor: single ? "default" : "pointer",
           transition: "all 0.15s",
           whiteSpace: "nowrap",
         }}
       >
-        <span style={{ opacity: 0.6, fontSize: 10 }}>{label}</span>
+        <span style={{ opacity: 0.6, fontSize: sz(10) }}>{label}</span>
         <span style={{ fontWeight: 600 }}>{value}</span>
         {!single && (
-          <span style={{ fontSize: 8, opacity: 0.5 }}>▼</span>
+          <span style={{ fontSize: sz(8), opacity: 0.5 }}>▼</span>
         )}
       </button>
 
@@ -71,7 +72,7 @@ function Pill({
             top: "calc(100% + 4px)",
             right: 0,
             minWidth: 160,
-            background: "#1A1A24",
+            background: theme.surface.base,
             border: `1px solid ${color}33`,
             borderRadius: 8,
             padding: 4,
@@ -87,12 +88,12 @@ function Pill({
                 setOpen(false);
               }}
               style={{
-                padding: "6px 10px",
+                padding: `${sz(6)}px ${sz(10)}px`,
                 borderRadius: 4,
                 cursor: "pointer",
-                fontSize: 11,
+                fontSize: sz(11),
                 fontFamily: FONT,
-                color: id === value ? color : "#999",
+                color: id === value ? color : theme.text.muted,
                 fontWeight: id === value ? 600 : 400,
                 background: id === value ? `${color}11` : "transparent",
                 transition: "all 0.1s",
@@ -121,6 +122,7 @@ export function WorkspaceSwitcher() {
   const setFlowId = useSessionStore((s) => s.setFlowId);
   const { settings, updateSetting } = useSettings();
   const collection = settings.collection;
+  const { theme, sz } = useTheme();
 
   const workspaceIds = workspaces.map((w) => w.id);
 
@@ -135,12 +137,12 @@ export function WorkspaceSwitcher() {
     : [flowId];
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: sz(6) }}>
       {workspaceIds.length > 0 && (
         <Pill
           label="WS"
           value={activeWorkspace || "—"}
-          color={palette.cyan}
+          color={theme.palette.cyan}
           items={workspaceIds}
           onSelect={switchWorkspace}
         />
@@ -148,14 +150,14 @@ export function WorkspaceSwitcher() {
       <Pill
         label="COL"
         value={collection}
-        color={palette.emerald}
+        color={theme.palette.emerald}
         items={collectionIds}
         onSelect={(id) => updateSetting("collection", id)}
       />
       <Pill
         label="FLOW"
         value={flowId}
-        color={palette.amber}
+        color={theme.palette.amber}
         items={flowIds}
         onSelect={setFlowId}
       />

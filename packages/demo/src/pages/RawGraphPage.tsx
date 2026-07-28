@@ -7,9 +7,7 @@ import {
   RawGraphExplorer3D,
   ModeSelector,
   SectionLabel,
-  text,
-  border,
-  palette,
+  useTheme,
 } from "@trustgraph/trustkit";
 import { DevPanel } from "../components/DevPanel";
 
@@ -36,29 +34,30 @@ const modeDescriptions: Record<GraphMode, string> = {
  */
 export function RawGraphPage() {
   const [mode, setMode] = useState<GraphMode>("full");
+  const { theme, sz } = useTheme();
 
   return (
     <>
       {/* Mode selector bar */}
       <div style={{
-        padding: "10px 28px",
-        borderBottom: `1px solid ${border.default}`,
+        padding: `${sz(10)}px ${sz(28)}px`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
-        gap: 16,
+        gap: sz(16),
       }}>
         <SectionLabel>VIEW</SectionLabel>
         <ModeSelector
           modes={modes}
           activeMode={mode}
           onChange={(key) => setMode(key as GraphMode)}
-          color={palette.cyan}
+          color={theme.palette.cyan}
         />
         <span style={{
-          fontSize: 11,
-          color: text.subtle,
+          fontSize: sz(11),
+          color: theme.text.subtle,
           fontStyle: "italic",
-          marginLeft: 8,
+          marginLeft: sz(8),
         }}>
           {modeDescriptions[mode]}
         </span>
