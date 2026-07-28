@@ -32,8 +32,9 @@ export interface WorkspaceStoreState {
   // from whoami; an empty socket workspace means "the token's default".
   activeWorkspace: string | null;
 
-  // Incremented on every real workspace switch. Lets cache consumers
-  // discard stale in-flight responses from a previous workspace.
+  // Incremented on every real workspace switch (and once after bootstrap
+  // validation). Lets cache consumers discard stale in-flight responses
+  // from a previous workspace and re-fire after the workspace is stamped.
   generation: number;
 
   // Adopt a default workspace at bootstrap without counting as a switch.
@@ -41,6 +42,9 @@ export interface WorkspaceStoreState {
 
   // Switch workspace; bumps the generation.
   setActiveWorkspace: (id: string) => void;
+
+  // Bump generation without changing the workspace (used by validation).
+  bumpGeneration: () => void;
 
   clearActiveWorkspace: () => void;
 }
@@ -60,6 +64,8 @@ export const useWorkspaceStore = create<WorkspaceStoreState>((set) => ({
     writeSession(id);
     set((s) => ({ activeWorkspace: id, generation: s.generation + 1 }));
   },
+
+  bumpGeneration: () => set((s) => ({ generation: s.generation + 1 })),
 
   clearActiveWorkspace: () => {
     writeSession(null);
@@ -147,9 +153,13 @@ export const useWorkspaceSync = () => {
   }, [activeWorkspace, workspaces, whoami, validated, setActiveWorkspace]);
 
   // Only stamp a validated workspace onto the socket.
+  // Bump generation so hooks that depend on it re-fire with the
+  // workspace now set on the socket.
+  const bumpGeneration = useWorkspaceStore((s) => s.bumpGeneration);
   useEffect(() => {
     socket.workspace = validated ? activeWorkspace! : "";
-  }, [socket, activeWorkspace, validated]);
+    if (validated) bumpGeneration();
+  }, [socket, activeWorkspace, validated, bumpGeneration]);
 };
 
 // Active workspace + the switcher action for components.

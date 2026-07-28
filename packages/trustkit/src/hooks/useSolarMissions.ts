@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useSocket } from "@trustgraph/react-provider";
+import { useSocket, useConnectionState } from "@trustgraph/react-provider";
 import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
 
 const ONT_NS = "http://trustgraph.ai/ontology/solar-system#";
@@ -108,6 +108,8 @@ WHERE {
 
 export function useSolarMissions() {
   const socket = useSocket();
+  const connectionState = useConnectionState();
+  const isSocketReady = connectionState?.status === "authenticated";
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
   const { settings } = useSettings();
@@ -118,6 +120,7 @@ export function useSolarMissions() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    if (!isSocketReady) return;
     let cancelled = false;
 
     (async () => {
@@ -198,7 +201,7 @@ export function useSolarMissions() {
     })();
 
     return () => { cancelled = true; };
-  }, [socket, flowId, generation, collection]);
+  }, [socket, isSocketReady, flowId, generation, collection]);
 
   const bodyMap = useMemo(() => {
     const map = new Map<string, CelestialBody>();
@@ -206,5 +209,5 @@ export function useSolarMissions() {
     return map;
   }, [bodies]);
 
-  return { bodies, missions, bodyMap, isLoading, error };
+  return { bodies, missions, bodyMap, isLoading: isLoading || !isSocketReady, error };
 }

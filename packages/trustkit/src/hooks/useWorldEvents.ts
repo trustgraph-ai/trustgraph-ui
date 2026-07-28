@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useSocket } from "@trustgraph/react-provider";
+import { useSocket, useConnectionState } from "@trustgraph/react-provider";
 import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
 
 export interface EventSummary {
@@ -197,6 +197,8 @@ function termValue(term: import("@trustgraph/client").Term): string {
 
 export function useWorldEvents(ontologyNs: string) {
   const socket = useSocket();
+  const connectionState = useConnectionState();
+  const isSocketReady = connectionState?.status === "authenticated";
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
   const { settings } = useSettings();
@@ -209,6 +211,7 @@ export function useWorldEvents(ontologyNs: string) {
   const locationCache = useRef<Map<string, LocationInfo>>(new Map());
 
   useEffect(() => {
+    if (!isSocketReady) return;
     let cancelled = false;
 
     (async () => {
@@ -285,7 +288,7 @@ export function useWorldEvents(ontologyNs: string) {
     })();
 
     return () => { cancelled = true; };
-  }, [socket, ontologyNs, flowId, generation, collection]);
+  }, [socket, isSocketReady, ontologyNs, flowId, generation, collection]);
 
   const totalEvents = useMemo(
     () => gridCells.reduce((sum, c) => sum + c.count, 0),
@@ -389,7 +392,7 @@ export function useWorldEvents(ontologyNs: string) {
 
   return {
     gridCells, eventTypes, buckets, totalEvents,
-    isLoading, error,
+    isLoading: isLoading || !isSocketReady, error,
     getLocationUrisInBounds, getLocationUrisForPoints,
     searchEvents, loadEventDetail,
   };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useSocket } from "@trustgraph/react-provider";
+import { useSocket, useConnectionState } from "@trustgraph/react-provider";
 import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
 
 const TG = "http://trustgraph.ai/ontology/";
@@ -18,6 +18,8 @@ export type OcsfRelation = [string, string];
 
 export function useOcsfData() {
   const socket = useSocket();
+  const connectionState = useConnectionState();
+  const isSocketReady = connectionState?.status === "authenticated";
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
   const { settings } = useSettings();
@@ -38,6 +40,7 @@ export function useOcsfData() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    if (!isSocketReady) return;
     let cancelled = false;
 
     (async () => {
@@ -146,7 +149,7 @@ export function useOcsfData() {
     })();
 
     return () => { cancelled = true; };
-  }, [socket, flowId, generation, collection]);
+  }, [socket, isSocketReady, flowId, generation, collection]);
 
   const buildRelMap = (rels: OcsfRelation[]) => {
     const m = new Map<string, string[]>();
@@ -181,6 +184,6 @@ export function useOcsfData() {
     riskScores, timestamps, eventDates, severities,
     eventActors, eventRisks, eventAssets,
     actorEvents, riskEvents, assetEvents,
-    isLoading, error,
+    isLoading: isLoading || !isSocketReady, error,
   };
 }

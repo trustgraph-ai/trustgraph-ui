@@ -1,6 +1,10 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useLawData } from "../../hooks/useLawData";
-import type { LawNode } from "../../hooks/useLawData";
+import type {
+  LawNode, LawEntityDetail, LawEntityRelationships,
+  OverviewData, InstitutionsOverviewData, RightsOverviewData,
+  ComplianceOverviewData, StructureData,
+} from "../../hooks/useLawData";
 import { palette, text, surface } from "../../theme/colors";
 
 export interface LawExplorerProps {}
@@ -76,6 +80,50 @@ const sectionTitle: React.CSSProperties = {
   marginTop: 16,
 };
 
+const loadingDot: React.CSSProperties = {
+  fontSize: 11,
+  color: text.hint,
+  fontStyle: "italic",
+  padding: "8px 0",
+};
+
+const SPINNER_ID = "law-spinner-keyframes";
+function ensureSpinnerStyles() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(SPINNER_ID)) return;
+  const style = document.createElement("style");
+  style.id = SPINNER_ID;
+  style.textContent = `
+    @keyframes law-spin { to { transform: rotate(360deg); } }
+    @keyframes law-pulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+  `;
+  document.head.appendChild(style);
+}
+
+function ModeLoading({ color, message }: { color: string; message: string }) {
+  ensureSpinnerStyles();
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      height: "100%", gap: 16, padding: 40,
+    }}>
+      <div style={{
+        width: 36, height: 36, borderRadius: "50%",
+        border: `2.5px solid ${color}15`,
+        borderTopColor: color,
+        animation: "law-spin 0.8s linear infinite",
+      }} />
+      <div style={{
+        fontSize: 12, color: text.subtle,
+        animation: "law-pulse 1.5s ease-in-out infinite",
+      }}>
+        {message}
+      </div>
+    </div>
+  );
+}
+
 export function LawExplorer(_props: LawExplorerProps) {
   const [lang, setLang] = useState<"en" | "lt">("en");
   const [mode, setMode] = useState<Mode>("overview");
@@ -85,6 +133,24 @@ export function LawExplorer(_props: LawExplorerProps) {
 
   const data = useLawData(lang);
 
+  // Async state for detail panel
+  const [detail, setDetail] = useState<LawEntityDetail | null>(null);
+  const [rels, setRels] = useState<LawEntityRelationships | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  // Async state for mode views
+  const [overviewData, setOverviewData] = useState<OverviewData | null>(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [instData, setInstData] = useState<InstitutionsOverviewData | null>(null);
+  const [instLoading, setInstLoading] = useState(false);
+  const [rightsData, setRightsData] = useState<RightsOverviewData | null>(null);
+  const [rightsLoading, setRightsLoading] = useState(false);
+  const [compData, setCompData] = useState<ComplianceOverviewData | null>(null);
+  const [compLoading, setCompLoading] = useState(false);
+  const [structData, setStructData] = useState<StructureData | null>(null);
+  const [structLoading, setStructLoading] = useState(false);
+
+  // Node helpers
   const nodeLabel = useCallback((uri: string | undefined) => {
     if (!uri) return "";
     return data.nodes.get(uri)?.label || uri.split("#").pop() || uri;
@@ -93,12 +159,8 @@ export function LawExplorer(_props: LawExplorerProps) {
   const nodesByKind = useCallback((...kinds: string[]) => {
     return [...data.nodes.values()]
       .filter(n => kinds.includes(n.kind))
-      .sort((a, b) => {
-        const ia = data.indexNumbers.get(a.uri) ?? 999;
-        const ib = data.indexNumbers.get(b.uri) ?? 999;
-        return ia - ib || a.label.localeCompare(b.label);
-      });
-  }, [data.nodes, data.indexNumbers]);
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [data.nodes]);
 
   const orgs = useMemo(() => nodesByKind(...ORG_KINDS), [nodesByKind]);
   const entities = useMemo(() => nodesByKind(...ENTITY_KINDS), [nodesByKind]);
@@ -114,13 +176,133 @@ export function LawExplorer(_props: LawExplorerProps) {
 
   const selected = selectedUri ? data.nodes.get(selectedUri) : null;
 
-  if (data.isLoading) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "var(--page-height)", color: text.muted, fontSize: 14 }}>
-        Loading data...
-      </div>
-    );
-  }
+  // Fetch detail + relationships when selection changes
+  useEffect(() => {
+    if (!selectedUri || !data.isSocketReady) {
+      setDetail(null);
+      setRels(null);
+      return;
+    }
+
+    let cancelled = false;
+    setDetailLoading(true);
+
+    Promise.all([
+      data.fetchDetail(selectedUri),
+      data.fetchRelationships(selectedUri),
+    ]).then(([d, r]) => {
+      if (!cancelled) {
+        setDetail(d);
+        setRels(r);
+        setDetailLoading(false);
+      }
+    }).catch(() => {
+      if (!cancelled) setDetailLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [selectedUri, data.isSocketReady, data.fetchDetail, data.fetchRelationships]);
+
+  // Fetch entities + mode data on mode entry (incremental: each mode fetches only what it needs)
+  useEffect(() => {
+    if (mode !== "overview" || !data.isSocketReady) return;
+    let cancelled = false;
+    setOverviewLoading(true);
+    (async () => {
+      const fetchedLaws = await data.fetchEntitiesByKind(...LAW_KINDS);
+      const fetchedPipelines = await data.fetchEntitiesByKind("InformationPipeline");
+      if (cancelled) return;
+      const ov = await data.fetchOverview(
+        fetchedLaws.map(l => l.uri),
+        fetchedPipelines.map(p => p.uri),
+      );
+      if (cancelled) return;
+      setOverviewData(ov);
+      setOverviewLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [mode, lang, data.isSocketReady, data.fetchEntitiesByKind, data.fetchOverview]);
+
+  useEffect(() => {
+    if (mode !== "institutions" || !data.isSocketReady) return;
+    let cancelled = false;
+    setInstLoading(true);
+    (async () => {
+      const fetchedOrgs = await data.fetchEntitiesByKind(...ORG_KINDS);
+      if (cancelled) return;
+      const inst = await data.fetchInstitutionsOverview(fetchedOrgs.map(o => o.uri));
+      if (cancelled) return;
+      setInstData(inst);
+      setInstLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [mode, lang, data.isSocketReady, data.fetchEntitiesByKind, data.fetchInstitutionsOverview]);
+
+  useEffect(() => {
+    if (mode !== "rights" || !data.isSocketReady) return;
+    let cancelled = false;
+    setRightsLoading(true);
+    (async () => {
+      const fetchedRights = await data.fetchEntitiesByKind("CivicRight");
+      const fetchedTriggers = await data.fetchEntitiesByKind(...TRIGGER_KINDS);
+      if (cancelled) return;
+      const rd = await data.fetchRightsOverview(
+        fetchedRights.map(r => r.uri),
+        fetchedTriggers.map(t => t.uri),
+      );
+      if (cancelled) return;
+      setRightsData(rd);
+      setRightsLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [mode, lang, data.isSocketReady, data.fetchEntitiesByKind, data.fetchRightsOverview]);
+
+  useEffect(() => {
+    if (mode !== "compliance" || !data.isSocketReady) return;
+    let cancelled = false;
+    setCompLoading(true);
+    (async () => {
+      const fetchedEntities = await data.fetchEntitiesByKind(...ENTITY_KINDS);
+      const fetchedMandates = await data.fetchEntitiesByKind(...MANDATE_KINDS);
+      await data.fetchEntitiesByKind("ExecutiveLiability");
+      if (cancelled) return;
+      const cd = await data.fetchComplianceOverview(
+        fetchedEntities.map(e => e.uri),
+        fetchedMandates.map(m => m.uri),
+      );
+      if (cancelled) return;
+      setCompData(cd);
+      setCompLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [mode, lang, data.isSocketReady, data.fetchEntitiesByKind, data.fetchComplianceOverview]);
+
+  useEffect(() => {
+    if (mode !== "structure" || !data.isSocketReady) return;
+    let cancelled = false;
+    setStructLoading(true);
+    (async () => {
+      await data.fetchEntitiesByKind(...LAW_KINDS);
+      await data.fetchEntitiesByKind("Chapter", "Article", "LegalConcept");
+      if (cancelled) return;
+      const sd = await data.fetchStructure();
+      if (cancelled) return;
+      setStructData(sd);
+      setStructLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [mode, lang, data.isSocketReady, data.fetchEntitiesByKind, data.fetchStructure]);
+
+  // Clear mode caches on language change
+  useEffect(() => {
+    setOverviewData(null);
+    setInstData(null);
+    setRightsData(null);
+    setCompData(null);
+    setStructData(null);
+    setDetail(null);
+    setRels(null);
+  }, [lang]);
 
   if (data.error) {
     return (
@@ -160,49 +342,6 @@ export function LawExplorer(_props: LawExplorerProps) {
     return renderChip(node.label, c, () => setSelectedUri(uri));
   }
 
-  function renderDetailPanel(node: LawNode) {
-    const desc = data.descriptions.get(node.uri);
-    const basis = data.legalBases.get(node.uri);
-    const domain = data.governanceDomains.get(node.uri);
-    const color = KIND_COLORS[node.kind] || text.muted;
-
-    return (
-      <div style={{ padding: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          {renderChip(node.kind.replace(/([A-Z])/g, " $1").trim(), color)}
-          {domain && renderChip(domain, domainBadgeColor(domain))}
-        </div>
-
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: "8px 0 4px", lineHeight: 1.3 }}>
-          {node.label}
-        </h2>
-
-        {desc && (
-          <p style={{ fontSize: 12, color: text.secondary, lineHeight: 1.6, margin: "8px 0 16px" }}>
-            {desc}
-          </p>
-        )}
-
-        {basis && (
-          <div style={{ fontSize: 11, color: text.subtle, marginBottom: 16 }}>
-            Legal basis: <span style={{ color: text.secondary }}>{basis}</span>
-          </div>
-        )}
-
-        {LAW_KINDS.includes(node.kind) && renderLawDetail(node.uri)}
-        {ORG_KINDS.includes(node.kind) && renderOrgConnections(node.uri)}
-        {ENTITY_KINDS.includes(node.kind) && renderEntityConnections(node.uri)}
-        {TRIGGER_KINDS.includes(node.kind) && renderTriggerDetail(node.uri)}
-        {node.kind === "CivicRight" && renderRightDetail(node.uri)}
-        {MANDATE_KINDS.includes(node.kind) && renderMandateDetail(node.uri)}
-        {node.kind === "Article" && renderArticleDetail(node.uri)}
-        {node.kind === "Chapter" && renderArticleDetail(node.uri)}
-        {node.kind === "ExecutiveLiability" && renderLiabilityDetail(node.uri)}
-        {node.kind === "InformationPipeline" && renderPipelineDetail(node.uri)}
-      </div>
-    );
-  }
-
   function renderConnectionSection(title: string, uris: string[] | undefined, color?: string) {
     if (!uris || uris.length === 0) return null;
     return (
@@ -215,120 +354,192 @@ export function LawExplorer(_props: LawExplorerProps) {
     );
   }
 
-  function renderOrgConnections(uri: string) {
-    const subAgencies = data.authoritySubAgencies.get(uri);
-    const parentOrg = data.subAgencyParent.get(uri);
-    const governed = data.authorityEntities.get(uri);
-    const exchanges = data.dataExchange.get(uri);
+  // ─── Detail panel ──────────────────────────────────────────────────
+
+  function renderDetailPanel(node: LawNode) {
+    const color = KIND_COLORS[node.kind] || text.muted;
+
+    if (detailLoading) {
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            {renderChip(node.kind.replace(/([A-Z])/g, " $1").trim(), color)}
+          </div>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: "8px 0 4px", lineHeight: 1.3 }}>
+            {node.label}
+          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0" }}>
+            <div style={{
+              width: 14, height: 14, borderRadius: "50%",
+              border: `2px solid ${color}15`,
+              borderTopColor: color,
+              animation: "law-spin 0.8s linear infinite",
+            }} />
+            <span style={{ fontSize: 11, color: text.hint }}>{lang === "lt" ? "Kraunama..." : "Loading details..."}</span>
+          </div>
+        </div>
+      );
+    }
 
     return (
+      <div style={{ padding: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          {renderChip(node.kind.replace(/([A-Z])/g, " $1").trim(), color)}
+          {detail?.governanceDomain && renderChip(detail.governanceDomain, domainBadgeColor(detail.governanceDomain))}
+        </div>
+
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: "8px 0 4px", lineHeight: 1.3 }}>
+          {node.label}
+        </h2>
+
+        {detail?.description && (
+          <p style={{ fontSize: 12, color: text.secondary, lineHeight: 1.6, margin: "8px 0 16px" }}>
+            {detail.description}
+          </p>
+        )}
+
+        {detail?.legalBasis && (
+          <div style={{ fontSize: 11, color: text.subtle, marginBottom: 16 }}>
+            Legal basis: <span style={{ color: text.secondary }}>{detail.legalBasis}</span>
+          </div>
+        )}
+
+        {LAW_KINDS.includes(node.kind) && renderLawDetail()}
+        {ORG_KINDS.includes(node.kind) && renderOrgConnections()}
+        {ENTITY_KINDS.includes(node.kind) && renderEntityConnections()}
+        {TRIGGER_KINDS.includes(node.kind) && renderTriggerDetail()}
+        {node.kind === "CivicRight" && renderRightDetail()}
+        {MANDATE_KINDS.includes(node.kind) && renderMandateDetail()}
+        {(node.kind === "Article" || node.kind === "Chapter") && renderArticleDetail()}
+        {node.kind === "ExecutiveLiability" && renderLiabilityDetail()}
+        {node.kind === "InformationPipeline" && renderPipelineDetail()}
+      </div>
+    );
+  }
+
+  function renderLawDetail() {
+    if (!detail || !rels) return null;
+    return (
       <>
-        {renderConnectionSection(lang === "lt" ? "Pavaldi" : "Sub-agencies", subAgencies, palette.blue)}
-        {renderConnectionSection(lang === "lt" ? "Pavaldi organizacijai" : "Reports to", parentOrg, palette.blue)}
-        {renderConnectionSection(lang === "lt" ? "Priiueri subjektus" : "Governs", governed, palette.rose)}
-        {renderConnectionSection(lang === "lt" ? "Keiciasi duomenimis su" : "Exchanges data with", exchanges, palette.cyan)}
+        {detail.docId && (
+          <div style={{ fontSize: 12, color: text.secondary, marginBottom: 4 }}>
+            <span style={{ color: text.subtle }}>{lang === "lt" ? "Dokumentas: " : "Document ID: "}</span>
+            <span style={{ fontWeight: 600 }}>{detail.docId}</span>
+          </div>
+        )}
+        {detail.dateEnacted && (
+          <div style={{ fontSize: 12, color: text.secondary, marginBottom: 12 }}>
+            <span style={{ color: text.subtle }}>{lang === "lt" ? "Priimtas: " : "Enacted: "}</span>
+            <span style={{ fontWeight: 600 }}>{detail.dateEnacted}</span>
+          </div>
+        )}
+        {renderConnectionSection(lang === "lt" ? "Keicia" : "Amends", rels.amendsStatutes, palette.amber)}
+        {renderConnectionSection(lang === "lt" ? "Keiciamas" : "Amended by", rels.amendedBy, palette.cyan)}
+        {renderConnectionSection(lang === "lt" ? "Pakeicia" : "Supersedes", rels.supersedesVersions, text.muted)}
+        {renderConnectionSection(lang === "lt" ? "Pakeiciamas" : "Superseded by", rels.supersededBy, text.muted)}
+        {renderConnectionSection(lang === "lt" ? "Garantuojamos teises" : "Guarantees rights", rels.guaranteesRights, palette.emerald)}
+        {renderConnectionSection(lang === "lt" ? "Skyriai" : "Chapters", rels.components, palette.purple)}
       </>
     );
   }
 
-  function renderEntityConnections(uri: string) {
-    const reportsTo = data.entityReportsTo.get(uri);
-    const penalties = data.entityPenalties.get(uri);
-    const entityMandates = data.entityMandates.get(uri);
-    const isPubAdmin = data.publicAdmin.get(uri);
-
+  function renderOrgConnections() {
+    if (!rels) return null;
     return (
       <>
-        {isPubAdmin !== undefined && (
-          <div style={{ marginBottom: 12 }}>
-            {renderChip(
-              isPubAdmin ? (lang === "lt" ? "Viesojo administravimo" : "Public administration") : (lang === "lt" ? "Privatus sektorius" : "Private sector"),
-              isPubAdmin ? palette.blue : palette.amber,
-            )}
-          </div>
-        )}
-        {renderConnectionSection(lang === "lt" ? "Praneiti" : "Must report to", reportsTo, palette.blue)}
-        {renderConnectionSection(lang === "lt" ? "Pareigos" : "Obligations", entityMandates, palette.cyan)}
-        {renderConnectionSection(lang === "lt" ? "Baudos" : "Subject to penalties", penalties, "#FF4A6B")}
+        {renderConnectionSection(lang === "lt" ? "Pavaldi" : "Sub-agencies", rels.subAgencies, palette.blue)}
+        {renderConnectionSection(lang === "lt" ? "Pavaldi organizacijai" : "Reports to", rels.subAgencyOf, palette.blue)}
+        {renderConnectionSection(lang === "lt" ? "Priiueri subjektus" : "Governs", rels.governsEntities, palette.rose)}
+        {renderConnectionSection(lang === "lt" ? "Keiciasi duomenimis su" : "Exchanges data with", rels.exchangesDataWith, palette.cyan)}
       </>
     );
   }
 
-  function renderTriggerDetail(uri: string) {
-    const isExtra = data.extraordinaryPower.get(uri);
-    const limit = data.emergencyLimits.get(uri);
-    const window = data.responseWindows.get(uri);
-    const authority = data.triggerAuthority.get(uri);
-    const rightsLimited = data.triggerRights.get(uri);
-
+  function renderEntityConnections() {
+    if (!detail || !rels) return null;
     return (
       <>
-        {isExtra !== undefined && (
+        {detail.isPublicAdministration !== undefined && (
           <div style={{ marginBottom: 12 }}>
             {renderChip(
-              isExtra ? (lang === "lt" ? "Ypatingasis igaliojimas" : "Extraordinary power") : (lang === "lt" ? "Standartinis" : "Standard power"),
-              isExtra ? palette.orange : palette.emerald,
+              detail.isPublicAdministration ? (lang === "lt" ? "Viesojo administravimo" : "Public administration") : (lang === "lt" ? "Privatus sektorius" : "Private sector"),
+              detail.isPublicAdministration ? palette.blue : palette.amber,
             )}
           </div>
         )}
-        {limit && (
+        {renderConnectionSection(lang === "lt" ? "Praneiti" : "Must report to", rels.reportsTo, palette.blue)}
+        {renderConnectionSection(lang === "lt" ? "Pareigos" : "Obligations", rels.mandatedBy, palette.cyan)}
+        {renderConnectionSection(lang === "lt" ? "Baudos" : "Subject to penalties", rels.penalizedBy, "#FF4A6B")}
+      </>
+    );
+  }
+
+  function renderTriggerDetail() {
+    if (!detail || !rels) return null;
+    return (
+      <>
+        {detail.isExtraordinaryPower !== undefined && (
+          <div style={{ marginBottom: 12 }}>
+            {renderChip(
+              detail.isExtraordinaryPower ? (lang === "lt" ? "Ypatingasis igaliojimas" : "Extraordinary power") : (lang === "lt" ? "Standartinis" : "Standard power"),
+              detail.isExtraordinaryPower ? palette.orange : palette.emerald,
+            )}
+          </div>
+        )}
+        {detail.emergencyLimit && (
           <div style={{ fontSize: 12, color: text.secondary, marginBottom: 8 }}>
             <span style={{ color: text.subtle }}>{lang === "lt" ? "Laiko riba: " : "Time limit: "}</span>
-            <span style={{ color: palette.amber, fontWeight: 600 }}>{formatDuration(limit)}</span>
+            <span style={{ color: palette.amber, fontWeight: 600 }}>{formatDuration(detail.emergencyLimit)}</span>
           </div>
         )}
-        {window && (
+        {detail.responseWindow && (
           <div style={{ fontSize: 12, color: text.secondary, marginBottom: 8 }}>
             <span style={{ color: text.subtle }}>{lang === "lt" ? "Reagavimo langas: " : "Response window: "}</span>
-            <span style={{ color: palette.amber, fontWeight: 600 }}>{formatDuration(window)}</span>
+            <span style={{ color: palette.amber, fontWeight: 600 }}>{formatDuration(detail.responseWindow)}</span>
           </div>
         )}
-        {renderConnectionSection(lang === "lt" ? "Vykdoma" : "Executed by", authority, palette.blue)}
-        {renderConnectionSection(lang === "lt" ? "Riboja teises" : "Limits rights", rightsLimited, palette.emerald)}
+        {renderConnectionSection(lang === "lt" ? "Vykdoma" : "Executed by", rels.executedBy, palette.blue)}
+        {renderConnectionSection(lang === "lt" ? "Riboja teises" : "Limits rights", rels.limitsRights, palette.emerald)}
       </>
     );
   }
 
-  function renderRightDetail(uri: string) {
-    const limitedBy = data.rightTriggers.get(uri);
+  function renderRightDetail() {
+    if (!rels) return null;
     return renderConnectionSection(
       lang === "lt" ? "Gali buti ribojama" : "Can be limited by",
-      limitedBy,
+      rels.limitedByTriggers,
       palette.orange,
     );
   }
 
-  function renderMandateDetail(uri: string) {
-    const isSelfFunded = data.selfFunded.get(uri);
-    const affectedEntities = data.mandateEntities.get(uri);
-
+  function renderMandateDetail() {
+    if (!detail || !rels) return null;
     return (
       <>
-        {isSelfFunded !== undefined && (
+        {detail.isAtExpenseOfEntity !== undefined && (
           <div style={{ marginBottom: 12 }}>
             {renderChip(
-              isSelfFunded ? (lang === "lt" ? "Savo lesomis" : "At entity's own expense") : (lang === "lt" ? "Valstybes lesomis" : "State funded"),
-              isSelfFunded ? palette.amber : palette.emerald,
+              detail.isAtExpenseOfEntity ? (lang === "lt" ? "Savo lesomis" : "At entity's own expense") : (lang === "lt" ? "Valstybes lesomis" : "State funded"),
+              detail.isAtExpenseOfEntity ? palette.amber : palette.emerald,
             )}
           </div>
         )}
-        {renderConnectionSection(lang === "lt" ? "Taikoma" : "Applies to", affectedEntities, palette.rose)}
+        {renderConnectionSection(lang === "lt" ? "Taikoma" : "Applies to", rels.bearsCostOf, palette.rose)}
       </>
     );
   }
 
-  function renderArticleDetail(uri: string) {
-    const concepts = data.articleConcepts.get(uri);
-    return renderConnectionSection(lang === "lt" ? "Kodifikuoja" : "Codifies", concepts, "#9CA3AF");
+  function renderArticleDetail() {
+    if (!rels) return null;
+    return renderConnectionSection(lang === "lt" ? "Kodifikuoja" : "Codifies", rels.codifiesConcepts, "#9CA3AF");
   }
 
-  function renderLiabilityDetail(uri: string) {
-    const isPersonal = data.personalHazard.get(uri);
-    const penalized = data.liabilityEntities.get(uri);
-
+  function renderLiabilityDetail() {
+    if (!detail || !rels) return null;
     return (
       <>
-        {isPersonal && (
+        {detail.isPersonalHazard && (
           <div style={{ marginBottom: 12 }}>
             {renderChip(
               lang === "lt" ? "Asmenine atsakomybe" : "Personal liability (targets executives individually)",
@@ -336,53 +547,24 @@ export function LawExplorer(_props: LawExplorerProps) {
             )}
           </div>
         )}
-        {renderConnectionSection(lang === "lt" ? "Taikoma subjektams" : "Penalizes", penalized, palette.rose)}
+        {renderConnectionSection(lang === "lt" ? "Taikoma subjektams" : "Penalizes", rels.penalizesEntities, palette.rose)}
       </>
     );
   }
 
-  function renderPipelineDetail(uri: string) {
-    const relaysTo = data.pipelineAuthority.get(uri);
-    return renderConnectionSection(lang === "lt" ? "Perduoda duomenis" : "Relays data to", relaysTo, palette.blue);
-  }
-
-  function renderLawDetail(uri: string) {
-    const docId = data.docIds.get(uri);
-    const enacted = data.datesEnacted.get(uri);
-    const amends = data.draftAmends.get(uri);
-    const amendedByList = data.amendedBy.get(uri);
-    const supersededByList = data.supersededBy.get(uri);
-    const supersedesList = data.supersedes.get(uri);
-    const guaranteedRights = data.statuteRights.get(uri);
-    const components = data.parentChildren.get(uri);
-
-    return (
-      <>
-        {docId && (
-          <div style={{ fontSize: 12, color: text.secondary, marginBottom: 4 }}>
-            <span style={{ color: text.subtle }}>{lang === "lt" ? "Dokumentas: " : "Document ID: "}</span>
-            <span style={{ fontWeight: 600 }}>{docId}</span>
-          </div>
-        )}
-        {enacted && (
-          <div style={{ fontSize: 12, color: text.secondary, marginBottom: 12 }}>
-            <span style={{ color: text.subtle }}>{lang === "lt" ? "Priimtas: " : "Enacted: "}</span>
-            <span style={{ fontWeight: 600 }}>{enacted}</span>
-          </div>
-        )}
-        {renderConnectionSection(lang === "lt" ? "Keicia" : "Amends", amends, palette.amber)}
-        {renderConnectionSection(lang === "lt" ? "Keiciamas" : "Amended by", amendedByList, palette.cyan)}
-        {renderConnectionSection(lang === "lt" ? "Pakeicia" : "Supersedes", supersedesList, text.muted)}
-        {renderConnectionSection(lang === "lt" ? "Pakeiciamas" : "Superseded by", supersededByList, text.muted)}
-        {renderConnectionSection(lang === "lt" ? "Garantuojamos teises" : "Guarantees rights", guaranteedRights, palette.emerald)}
-        {renderConnectionSection(lang === "lt" ? "Skyriai" : "Chapters", components, palette.purple)}
-      </>
-    );
+  function renderPipelineDetail() {
+    if (!rels) return null;
+    return renderConnectionSection(lang === "lt" ? "Perduoda duomenis" : "Relays data to", rels.relaysDataTo, palette.blue);
   }
 
   // ─── Overview mode ──────────────────────────────────────────────────
 
   function renderOverview() {
+    if (allLaws.length === 0 && overviewLoading) {
+      const m = MODE_META[0];
+      return <ModeLoading color={m.color} message={lang === "lt" ? "Kraunami teises aktai..." : "Loading legal documents..."} />;
+    }
+
     const stats = [
       { label: lang === "lt" ? "Teises aktai" : "Legal documents", value: allLaws.length, color: palette.amber },
       { label: lang === "lt" ? "Institucijos" : "Institutions", value: orgs.length, color: palette.blue },
@@ -398,10 +580,7 @@ export function LawExplorer(_props: LawExplorerProps) {
           {lang === "lt" ? "Teises aktai" : "Legal documents"}
         </div>
         {allLaws.map(law => {
-          const docId = data.docIds.get(law.uri);
-          const enacted = data.datesEnacted.get(law.uri);
-          const desc = data.descriptions.get(law.uri);
-          const amends = data.draftAmends.get(law.uri);
+          const ld = overviewData?.lawDetails.get(law.uri);
           const isStatute = law.kind === "Statute";
           const accentColor = isStatute ? palette.amber : palette.cyan;
 
@@ -422,9 +601,9 @@ export function LawExplorer(_props: LawExplorerProps) {
               onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = accentColor + "22"; }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                {docId && (
+                {ld?.docId && (
                   <span style={{ fontSize: 11, color: accentColor, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                    {docId}
+                    {ld.docId}
                   </span>
                 )}
                 {renderChip(isStatute ? (lang === "lt" ? "Istatymas" : "Statute") : (lang === "lt" ? "Projektas" : "Draft/Amendment"), accentColor)}
@@ -432,27 +611,30 @@ export function LawExplorer(_props: LawExplorerProps) {
               <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: "0 0 4px", lineHeight: 1.3 }}>
                 {law.label}
               </h2>
-              {enacted && (
+              {ld?.dateEnacted && (
                 <div style={{ fontSize: 12, color: text.muted, marginBottom: 6 }}>
-                  {lang === "lt" ? "Priimtas: " : "Enacted: "}{enacted}
+                  {lang === "lt" ? "Priimtas: " : "Enacted: "}{ld.dateEnacted}
                 </div>
               )}
-              {amends && amends.length > 0 && (
+              {ld?.amends && ld.amends.length > 0 && (
                 <div style={{ fontSize: 11, color: palette.cyan, marginBottom: 4 }}>
-                  {lang === "lt" ? "Keicia: " : "Amends: "}{amends.map(u => nodeLabel(u)).join(", ")}
+                  {lang === "lt" ? "Keicia: " : "Amends: "}{ld.amends.map(u => nodeLabel(u)).join(", ")}
                 </div>
               )}
-              {desc && (
+              {ld?.description && (
                 <p style={{ fontSize: 12, color: text.subtle, lineHeight: 1.5, margin: "4px 0 0" }}>
-                  {desc.length > 200 ? desc.slice(0, 200) + "..." : desc}
+                  {ld.description.length > 200 ? ld.description.slice(0, 200) + "..." : ld.description}
                 </p>
+              )}
+              {!ld && overviewLoading && (
+                <div style={loadingDot}>Loading...</div>
               )}
             </div>
           );
         })}
 
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(${stats.length}, 1fr)`, gap: 10, marginBottom: 24 }}>
-          {stats.map(s => (
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${stats.filter(s => s.value > 0).length || 1}, 1fr)`, gap: 10, marginBottom: 24 }}>
+          {stats.filter(s => s.value > 0).map(s => (
             <div
               key={s.label}
               style={{
@@ -513,9 +695,11 @@ export function LawExplorer(_props: LawExplorerProps) {
                 style={{ ...cardBase, marginBottom: 8, borderColor: palette.purple + "22" }}
               >
                 <div style={{ fontSize: 13, fontWeight: 600, color: palette.purple }}>{p.label}</div>
-                <div style={{ fontSize: 11, color: text.subtle, marginTop: 4 }}>
-                  {data.descriptions.get(p.uri)?.slice(0, 120)}...
-                </div>
+                {overviewData?.pipelineDescriptions.get(p.uri) && (
+                  <div style={{ fontSize: 11, color: text.subtle, marginTop: 4 }}>
+                    {overviewData.pipelineDescriptions.get(p.uri)!.slice(0, 120)}...
+                  </div>
+                )}
               </div>
             ))}
           </>
@@ -527,6 +711,11 @@ export function LawExplorer(_props: LawExplorerProps) {
   // ─── Institutions mode ──────────────────────────────────────────────
 
   function renderInstitutions() {
+    if (orgs.length === 0 && instLoading) {
+      const m = MODE_META[1];
+      return <ModeLoading color={m.color} message={lang === "lt" ? "Kraunamos institucijos..." : "Loading institutions..."} />;
+    }
+
     const ministries = orgs.filter(o => o.kind === "Ministry");
     const authorities = orgs.filter(o => o.kind === "JurisdictionAuthority");
 
@@ -537,10 +726,10 @@ export function LawExplorer(_props: LawExplorerProps) {
           overflowY: "auto", padding: "12px 10px",
         }}>
           <div style={sectionTitle}>{lang === "lt" ? "Ministerijos" : "Ministries"}</div>
-          {ministries.map(renderOrgCard)}
+          {ministries.map(o => renderOrgCard(o))}
 
           <div style={sectionTitle}>{lang === "lt" ? "Institucijos" : "Authorities"}</div>
-          {authorities.map(renderOrgCard)}
+          {authorities.map(o => renderOrgCard(o))}
         </div>
 
         <div style={{ flex: 1, overflowY: "auto" }}>
@@ -555,8 +744,8 @@ export function LawExplorer(_props: LawExplorerProps) {
 
   function renderOrgCard(node: LawNode) {
     const isSelected = selectedUri === node.uri;
-    const domain = data.governanceDomains.get(node.uri);
     const color = KIND_COLORS[node.kind] || text.muted;
+    const domain = instData?.governanceDomains.get(node.uri);
 
     return (
       <div
@@ -595,9 +784,10 @@ export function LawExplorer(_props: LawExplorerProps) {
         </p>
 
         <div style={sectionTitle}>{lang === "lt" ? "Duomenu mainu tinklas" : "Data exchange network"}</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {data.dataExchange.size > 0 && [...data.dataExchange.entries()].map(([from, tos]) =>
-            tos.map(to => (
+        {instLoading && <div style={loadingDot}>Loading exchanges...</div>}
+        {instData && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {instData.dataExchanges.map(([from, to]) => (
               <div key={`${from}-${to}`} style={{
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "6px 10px", borderRadius: 6,
@@ -618,9 +808,9 @@ export function LawExplorer(_props: LawExplorerProps) {
                   {nodeLabel(to)}
                 </span>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -628,6 +818,11 @@ export function LawExplorer(_props: LawExplorerProps) {
   // ─── Rights & Powers mode ───────────────────────────────────────────
 
   function renderRightsAndPowers() {
+    if (rights.length === 0 && triggers.length === 0 && rightsLoading) {
+      const m = MODE_META[2];
+      return <ModeLoading color={m.color} message={lang === "lt" ? "Kraunamos teises ir galios..." : "Loading rights & powers..."} />;
+    }
+
     return (
       <div style={{ display: "flex", height: "100%" }}>
         <div style={{
@@ -640,7 +835,7 @@ export function LawExplorer(_props: LawExplorerProps) {
           </div>
           {rights.map(r => {
             const isSelected = selectedUri === r.uri;
-            const limitedBy = data.rightTriggers.get(r.uri);
+            const limitedBy = rightsData?.rightTriggers.get(r.uri);
             return (
               <div
                 key={r.uri}
@@ -671,9 +866,7 @@ export function LawExplorer(_props: LawExplorerProps) {
           </div>
           {triggers.map(t => {
             const isSelected = selectedUri === t.uri;
-            const isExtra = data.extraordinaryPower.get(t.uri);
-            const limit = data.emergencyLimits.get(t.uri);
-            const window = data.responseWindows.get(t.uri);
+            const flags = rightsData?.triggerFlags.get(t.uri);
             return (
               <div
                 key={t.uri}
@@ -689,10 +882,12 @@ export function LawExplorer(_props: LawExplorerProps) {
                 <div style={{ fontSize: 12, fontWeight: 600, color: isSelected ? palette.orange : text.primary }}>
                   {t.label}
                 </div>
-                <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
-                  {isExtra && renderChip(lang === "lt" ? "Ypatingasis" : "Extraordinary", palette.orange)}
-                  {(limit || window) && renderChip(formatDuration(limit || window || ""), palette.amber)}
-                </div>
+                {flags && (
+                  <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
+                    {flags.extraordinary && renderChip(lang === "lt" ? "Ypatingasis" : "Extraordinary", palette.orange)}
+                    {(flags.limit || flags.window) && renderChip(formatDuration(flags.limit || flags.window || ""), palette.amber)}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -721,45 +916,51 @@ export function LawExplorer(_props: LawExplorerProps) {
           }
         </p>
 
-        <div style={sectionTitle}>{lang === "lt" ? "Teisiu ir galiu rysiai" : "Rights-powers connections"}</div>
-        {rights.map(r => {
-          const limitedBy = data.rightTriggers.get(r.uri);
-          if (!limitedBy || limitedBy.length === 0) return (
-            <div key={r.uri} style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "8px 10px", borderRadius: 6,
-              background: "rgba(255,255,255,0.02)",
-              marginBottom: 4, fontSize: 12,
-            }}>
-              <span style={{ color: palette.emerald, fontWeight: 600, flex: 1, cursor: "pointer" }}
-                onClick={() => setSelectedUri(r.uri)}>
-                {r.label}
-              </span>
-              <span style={{ color: text.hint, fontSize: 11 }}>
-                {lang === "lt" ? "Neribojama" : "Not limited"}
-              </span>
-            </div>
-          );
-          return (
-            <div key={r.uri} style={{
-              padding: "8px 10px", borderRadius: 6,
-              background: "rgba(255,255,255,0.02)",
-              marginBottom: 4,
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: 12, color: palette.emerald, fontWeight: 600, flex: 1, cursor: "pointer" }}
-                  onClick={() => setSelectedUri(r.uri)}>
-                  {r.label}
-                </span>
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, paddingLeft: 12 }}>
-                {limitedBy.map(t => (
-                  <span key={t}>{renderRefChip(t, palette.orange)}</span>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+        {rightsLoading && <div style={loadingDot}>Loading connections...</div>}
+
+        {rightsData && (
+          <>
+            <div style={sectionTitle}>{lang === "lt" ? "Teisiu ir galiu rysiai" : "Rights-powers connections"}</div>
+            {rights.map(r => {
+              const limitedBy = rightsData.rightTriggers.get(r.uri);
+              if (!limitedBy || limitedBy.length === 0) return (
+                <div key={r.uri} style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "8px 10px", borderRadius: 6,
+                  background: "rgba(255,255,255,0.02)",
+                  marginBottom: 4, fontSize: 12,
+                }}>
+                  <span style={{ color: palette.emerald, fontWeight: 600, flex: 1, cursor: "pointer" }}
+                    onClick={() => setSelectedUri(r.uri)}>
+                    {r.label}
+                  </span>
+                  <span style={{ color: text.hint, fontSize: 11 }}>
+                    {lang === "lt" ? "Neribojama" : "Not limited"}
+                  </span>
+                </div>
+              );
+              return (
+                <div key={r.uri} style={{
+                  padding: "8px 10px", borderRadius: 6,
+                  background: "rgba(255,255,255,0.02)",
+                  marginBottom: 4,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, color: palette.emerald, fontWeight: 600, flex: 1, cursor: "pointer" }}
+                      onClick={() => setSelectedUri(r.uri)}>
+                      {r.label}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, paddingLeft: 12 }}>
+                    {limitedBy.map(t => (
+                      <span key={t}>{renderRefChip(t, palette.orange)}</span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
     );
   }
@@ -767,6 +968,11 @@ export function LawExplorer(_props: LawExplorerProps) {
   // ─── Compliance mode ────────────────────────────────────────────────
 
   function renderCompliance() {
+    if (entities.length === 0 && mandates.length === 0 && compLoading) {
+      const m = MODE_META[3];
+      return <ModeLoading color={m.color} message={lang === "lt" ? "Kraunama atitiktis..." : "Loading compliance data..."} />;
+    }
+
     return (
       <div style={{ display: "flex", height: "100%" }}>
         <div style={{
@@ -807,7 +1013,7 @@ export function LawExplorer(_props: LawExplorerProps) {
           </div>
           {mandates.map(m => {
             const isSelected = selectedUri === m.uri;
-            const isSelf = data.selfFunded.get(m.uri);
+            const isSelf = compData?.selfFunded.get(m.uri);
             return (
               <div
                 key={m.uri}
@@ -885,30 +1091,36 @@ export function LawExplorer(_props: LawExplorerProps) {
           }
         </p>
 
-        <div style={sectionTitle}>{lang === "lt" ? "Praneisimu grandine" : "Reporting chains"}</div>
-        {entities.map(e => {
-          const reportsTo = data.entityReportsTo.get(e.uri);
-          return (
-            <div key={e.uri} style={{
-              padding: "8px 10px", borderRadius: 6,
-              background: "rgba(255,255,255,0.02)",
-              marginBottom: 4,
-            }}>
-              <div style={{
-                fontSize: 12, fontWeight: 600, color: palette.rose,
-                cursor: "pointer", marginBottom: 4,
-              }} onClick={() => setSelectedUri(e.uri)}>
-                {e.label}
-              </div>
-              {reportsTo && (
-                <div style={{ display: "flex", alignItems: "center", gap: 4, paddingLeft: 12, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 10, color: text.hint }}>{lang === "lt" ? "praneisa" : "reports to"} {"\u2192"}</span>
-                  {reportsTo.map(a => <span key={a}>{renderRefChip(a, palette.blue)}</span>)}
+        {compLoading && <div style={loadingDot}>Loading reporting chains...</div>}
+
+        {compData && (
+          <>
+            <div style={sectionTitle}>{lang === "lt" ? "Praneisimu grandine" : "Reporting chains"}</div>
+            {entities.map(e => {
+              const reportsTo = compData.entityReportsTo.get(e.uri);
+              return (
+                <div key={e.uri} style={{
+                  padding: "8px 10px", borderRadius: 6,
+                  background: "rgba(255,255,255,0.02)",
+                  marginBottom: 4,
+                }}>
+                  <div style={{
+                    fontSize: 12, fontWeight: 600, color: palette.rose,
+                    cursor: "pointer", marginBottom: 4,
+                  }} onClick={() => setSelectedUri(e.uri)}>
+                    {e.label}
+                  </div>
+                  {reportsTo && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 4, paddingLeft: 12, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 10, color: text.hint }}>{lang === "lt" ? "praneisa" : "reports to"} {"\u2192"}</span>
+                      {reportsTo.map(a => <span key={a}>{renderRefChip(a, palette.blue)}</span>)}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          );
-        })}
+              );
+            })}
+          </>
+        )}
       </div>
     );
   }
@@ -917,7 +1129,7 @@ export function LawExplorer(_props: LawExplorerProps) {
 
   function renderArticleRow(art: LawNode, indent: number) {
     const isArtExpanded = expandedArticles.has(art.uri);
-    const concepts = data.articleConcepts.get(art.uri) || [];
+    const concepts = structData?.articleConcepts.get(art.uri) || [];
     return (
       <div key={art.uri} style={{ marginLeft: indent, marginTop: 2 }}>
         <div
@@ -971,10 +1183,12 @@ export function LawExplorer(_props: LawExplorerProps) {
   }
 
   function renderLawChildren(lawUri: string) {
-    const children = (data.parentChildren.get(lawUri) || [])
+    if (!structData) return null;
+
+    const children = (structData.parentChildren.get(lawUri) || [])
       .map(u => data.nodes.get(u))
       .filter((n): n is LawNode => !!n)
-      .sort((a, b) => (data.indexNumbers.get(a.uri) ?? 0) - (data.indexNumbers.get(b.uri) ?? 0));
+      .sort((a, b) => (structData.indexNumbers.get(a.uri) ?? 0) - (structData.indexNumbers.get(b.uri) ?? 0));
 
     const chapterChildren = children.filter(n => n.kind === "Chapter");
     const articleChildren = children.filter(n => n.kind === "Article");
@@ -983,10 +1197,10 @@ export function LawExplorer(_props: LawExplorerProps) {
       <>
         {chapterChildren.map(ch => {
           const isExpanded = expandedChapters.has(ch.uri);
-          const chapterArticles = (data.parentChildren.get(ch.uri) || [])
+          const chapterArticles = (structData.parentChildren.get(ch.uri) || [])
             .map(u => data.nodes.get(u))
             .filter((n): n is LawNode => n?.kind === "Article")
-            .sort((a, b) => (data.indexNumbers.get(a.uri) ?? 0) - (data.indexNumbers.get(b.uri) ?? 0));
+            .sort((a, b) => (structData.indexNumbers.get(a.uri) ?? 0) - (structData.indexNumbers.get(b.uri) ?? 0));
 
           return (
             <div key={ch.uri} style={{ marginLeft: 16, marginTop: 4 }}>
@@ -1034,6 +1248,8 @@ export function LawExplorer(_props: LawExplorerProps) {
             {lang === "lt" ? "Istatymo struktura" : "Law structure"}
           </div>
 
+          {structLoading && <div style={loadingDot}>Loading structure...</div>}
+
           {allLaws.map(s => (
             <div key={s.uri} style={{ marginBottom: 8 }}>
               <div
@@ -1051,7 +1267,7 @@ export function LawExplorer(_props: LawExplorerProps) {
                 {s.label}
               </div>
 
-              {renderLawChildren(s.uri)}
+              {structData && renderLawChildren(s.uri)}
             </div>
           ))}
         </div>
@@ -1102,9 +1318,11 @@ export function LawExplorer(_props: LawExplorerProps) {
           <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>
             {lang === "lt" ? "Teises aktai kontekste" : "Law in Context"}
           </div>
-          <div style={{ fontSize: 10, color: text.subtle }}>
-            {allLaws.length} {lang === "lt" ? "teises aktai" : allLaws.length === 1 ? "legal document" : "legal documents"}
-          </div>
+          {allLaws.length > 0 && (
+            <div style={{ fontSize: 10, color: text.subtle }}>
+              {allLaws.length} {lang === "lt" ? "teises aktai" : allLaws.length === 1 ? "legal document" : "legal documents"}
+            </div>
+          )}
         </div>
 
         {/* Language toggle */}

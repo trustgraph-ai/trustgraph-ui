@@ -4,7 +4,19 @@ import { useSessionStore } from "@trustgraph/react-state";
 import { useOcsfData } from "../../hooks/useOcsfData";
 import type { OcsfNode } from "../../hooks/useOcsfData";
 import { text, border, palette } from "../../theme";
-import { LoadingState } from "../common";
+
+const OCSF_SPINNER_ID = "ocsf-spinner-keyframes";
+function ensureSpinnerStyles() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(OCSF_SPINNER_ID)) return;
+  const style = document.createElement("style");
+  style.id = OCSF_SPINNER_ID;
+  style.textContent = `
+    @keyframes ocsf-spin { to { transform: rotate(360deg); } }
+    @keyframes ocsf-pulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+  `;
+  document.head.appendChild(style);
+}
 
 export interface ThreatExplorerProps {}
 
@@ -707,9 +719,25 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
   /* ── loading / error ────────────────────────────────────────────── */
 
   if (data.isLoading) {
+    ensureSpinnerStyles();
     return (
-      <div style={{ padding: 48, display: "flex", justifyContent: "center" }}>
-        <LoadingState message="Loading threat intelligence data..." />
+      <div style={{
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        height: "var(--page-height)", gap: 16,
+      }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: "50%",
+          border: `2.5px solid ${palette.rose}15`,
+          borderTopColor: palette.rose,
+          animation: "ocsf-spin 0.8s linear infinite",
+        }} />
+        <div style={{
+          fontSize: 12, color: text.subtle,
+          animation: "ocsf-pulse 1.5s ease-in-out infinite",
+        }}>
+          Loading threat intelligence data...
+        </div>
       </div>
     );
   }

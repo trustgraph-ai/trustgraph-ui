@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useSocket } from "@trustgraph/react-provider";
+import { useSocket, useConnectionState } from "@trustgraph/react-provider";
 import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
 
 const HW = "https://trustgraph.ai/ontology/hwsec/hw#";
@@ -17,6 +17,8 @@ export interface HwNode {
 
 export function useHwSecData() {
   const socket = useSocket();
+  const connectionState = useConnectionState();
+  const isSocketReady = connectionState?.status === "authenticated";
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
   const { settings } = useSettings();
@@ -37,6 +39,7 @@ export function useHwSecData() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    if (!isSocketReady) return;
     let cancelled = false;
 
     (async () => {
@@ -159,7 +162,7 @@ export function useHwSecData() {
     })();
 
     return () => { cancelled = true; };
-  }, [socket, flowId, generation, collection]);
+  }, [socket, isSocketReady, flowId, generation, collection]);
 
   const children = useMemo(() => {
     const m = new Map<string, string[]>();
@@ -224,6 +227,6 @@ export function useHwSecData() {
     nodes, descriptions, trustLevels, protocols, fwVersions, fwSignatures,
     children, parentOf,
     entityInterfaces, entityFirmware, entitySecurity, entityInteractions,
-    isLoading, error,
+    isLoading: isLoading || !isSocketReady, error,
   };
 }
