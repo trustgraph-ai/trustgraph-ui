@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { OWLObjectProperty, OWLDatatypeProperty, Ontology } from "@trustgraph/react-state";
-import { text, border, surface, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface OntologyPropertyEditorProps {
   propertyId: string;
@@ -11,11 +11,12 @@ interface OntologyPropertyEditorProps {
   onDeleteProperty: (id: string, type: "object" | "datatype") => void;
 }
 
-const labelStyle = { fontSize: 10, fontFamily: "'IBM Plex Mono', monospace" as const, fontWeight: 600 as const, color: text.faint, letterSpacing: "0.1em", marginBottom: 4 };
-const inputStyle = { width: "100%", padding: "6px 8px", borderRadius: 4, border: `1px solid ${border.default}`, background: surface.card, color: text.primary, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" as const, outline: "none" };
-const hintStyle = { fontSize: 9, color: text.hint, marginTop: 2, marginBottom: 16 };
-
 export function OntologyPropertyEditor({ propertyId, property, propertyType, ontology, onUpdateProperty, onDeleteProperty }: OntologyPropertyEditorProps) {
+  const { theme, sz } = useTheme();
+
+  const labelStyle = { fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace" as const, fontWeight: 600 as const, color: theme.text.faint, letterSpacing: "0.1em", marginBottom: 4 };
+  const inputStyle = { width: "100%", padding: "6px 8px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: theme.surface.card, color: theme.text.primary, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" as const, outline: "none" };
+  const hintStyle = { fontSize: sz(9), color: theme.text.hint, marginTop: 2, marginBottom: 16 };
   const [labelValue, setLabelValue] = useState("");
   const [comment, setComment] = useState("");
   const [domain, setDomain] = useState("");
@@ -50,29 +51,29 @@ export function OntologyPropertyEditor({ propertyId, property, propertyType, ont
   };
 
   const classes = Object.entries(ontology.classes);
-  const typeBadgeColor = propertyType === "object" ? palette.blue : palette.purple;
+  const typeBadgeColor = propertyType === "object" ? theme.palette.blue : theme.palette.purple;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: 20 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ fontSize: 14, color: text.primary, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>{labelValue || propertyId}</div>
-            <span style={{ padding: "2px 6px", borderRadius: 3, background: `${typeBadgeColor}1a`, color: typeBadgeColor, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>
+            <div style={{ fontSize: sz(14), color: theme.text.primary, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>{labelValue || propertyId}</div>
+            <span style={{ padding: "2px 6px", borderRadius: 3, background: `${typeBadgeColor}1a`, color: typeBadgeColor, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>
               {propertyType === "object" ? "Object" : "Datatype"}
             </span>
           </div>
-          <div style={{ fontSize: 10, color: text.hint, fontFamily: "'IBM Plex Mono', monospace", marginTop: 2 }}>{property.uri}</div>
+          <div style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace", marginTop: 2 }}>{property.uri}</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           {isDirty && (
             <button onClick={handleSave}
-              style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${palette.emerald}44`, background: `${palette.emerald}1a`, color: palette.emerald, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+              style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${theme.palette.emerald}44`, background: `${theme.palette.emerald}1a`, color: theme.palette.emerald, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
               Save
             </button>
           )}
           <button onClick={() => { if (window.confirm(`Delete ${propertyType} property "${labelValue || propertyId}"?`)) onDeleteProperty(propertyId, propertyType); }}
-            style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${palette.red}44`, background: "transparent", color: palette.red, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+            style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${theme.palette.red}44`, background: "transparent", color: theme.palette.red, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
             Delete
           </button>
         </div>
@@ -89,7 +90,7 @@ export function OntologyPropertyEditor({ propertyId, property, propertyType, ont
             style={{ ...inputStyle, resize: "vertical" as const, lineHeight: 1.5 }} />
           <div style={hintStyle}>What this property represents</div>
 
-          <div style={{ borderTop: `1px solid ${border.subtle}`, margin: "8px 0 16px" }} />
+          <div style={{ borderTop: `1px solid ${theme.border.subtle}`, margin: "8px 0 16px" }} />
 
           <div style={labelStyle}>DOMAIN</div>
           <select value={domain} onChange={(e) => setDomain(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
@@ -109,11 +110,11 @@ export function OntologyPropertyEditor({ propertyId, property, propertyType, ont
           )}
           <div style={hintStyle}>{propertyType === "object" ? "Target class" : "XSD datatype (e.g. xsd:string, xsd:integer)"}</div>
 
-          <div style={{ borderTop: `1px solid ${border.subtle}`, margin: "8px 0 16px" }} />
+          <div style={{ borderTop: `1px solid ${theme.border.subtle}`, margin: "8px 0 16px" }} />
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
             <input type="checkbox" checked={functional} onChange={(e) => setFunctional(e.target.checked)} />
-            <span style={{ fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", color: text.secondary }}>Functional property</span>
+            <span style={{ fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.secondary }}>Functional property</span>
           </label>
           <div style={hintStyle}>Each individual can have at most one value for this property</div>
         </div>

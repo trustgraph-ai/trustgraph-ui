@@ -1,5 +1,5 @@
 import { FilterButton } from "./FilterButton";
-import { text, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 export interface FilterItem {
   key: string;
@@ -29,6 +29,7 @@ export function FilterBar({
   emptyMessage,
   maxItems = 10,
 }: FilterBarProps) {
+  const { theme, sz } = useTheme();
   const displayItems = items.slice(0, maxItems);
 
   return (
@@ -37,15 +38,15 @@ export function FilterBar({
       display: "flex",
       gap: 8,
       alignItems: "center",
-      borderBottom: `1px solid ${border.subtle}`,
+      borderBottom: `1px solid ${theme.border.subtle}`,
       flexWrap: "wrap",
     }}>
-      <span style={{ fontSize: 11, color: text.disabled, fontFamily: "'IBM Plex Mono', monospace", marginRight: 8 }}>
+      <span style={{ fontSize: sz(11), color: theme.text.disabled, fontFamily: "'IBM Plex Mono', monospace", marginRight: 8 }}>
         FILTER:
       </span>
 
       {emptyMessage && items.length === 0 ? (
-        <span style={{ fontSize: 11, color: text.disabled, fontStyle: "italic" }}>{emptyMessage}</span>
+        <span style={{ fontSize: sz(11), color: theme.text.disabled, fontStyle: "italic" }}>{emptyMessage}</span>
       ) : (
         <>
           {showAll && (
@@ -69,7 +70,7 @@ export function FilterBar({
       )}
 
       {stats && (
-        <div style={{ marginLeft: "auto", fontSize: 11, color: text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ marginLeft: "auto", fontSize: sz(11), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
           {stats}
         </div>
       )}

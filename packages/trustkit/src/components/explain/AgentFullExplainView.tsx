@@ -12,7 +12,7 @@ import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 import { useExplainDAG } from "../../hooks/useExplainDAG";
 import { useExplainGraph } from "../../hooks/useExplainGraph";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
-import { text, palette, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useSettings } from "@trustgraph/react-state";
 
 interface AgentFullExplainViewProps {
@@ -26,6 +26,7 @@ interface AgentFullExplainViewProps {
  * DAG on the left with agent steps below, event detail on the right.
  */
 export function AgentFullExplainView({ collection: collectionProp, presets }: AgentFullExplainViewProps) {
+  const { theme, sz } = useTheme();
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -95,7 +96,7 @@ export function AgentFullExplainView({ collection: collectionProp, presets }: Ag
         minWidth: 0,
         display: "flex",
         flexDirection: "column",
-        borderRight: selectedEvent ? `1px solid ${border.default}` : undefined,
+        borderRight: selectedEvent ? `1px solid ${theme.border.default}` : undefined,
       }}>
         <Toolbar>
           <SectionLabel marginBottom={12}>AGENT QUERY</SectionLabel>
@@ -106,7 +107,7 @@ export function AgentFullExplainView({ collection: collectionProp, presets }: Ag
             placeholder="Ask a question..."
             buttonText="Ask"
             isLoading={isQuerying}
-            buttonColor={palette.amber}
+            buttonColor={theme.palette.amber}
             presets={presets}
           />
         </Toolbar>
@@ -114,7 +115,7 @@ export function AgentFullExplainView({ collection: collectionProp, presets }: Ag
         {/* DAG */}
         <div style={{
           flex: 1,
-          borderBottom: `1px solid ${border.default}`,
+          borderBottom: `1px solid ${theme.border.default}`,
           position: "relative",
           minHeight: 200,
         }}>
@@ -130,7 +131,7 @@ export function AgentFullExplainView({ collection: collectionProp, presets }: Ag
         {/* Agent Steps */}
         <div style={{ maxHeight: "35%", padding: "20px 28px", overflowY: "auto" }}>
           {steps.length === 0 && !isQuerying && !error && (
-            <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+            <div style={{ color: theme.text.hint, fontSize: sz(13), fontStyle: "italic" }}>
               Agent reasoning steps will appear here.
             </div>
           )}
@@ -152,14 +153,14 @@ export function AgentFullExplainView({ collection: collectionProp, presets }: Ag
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
-          background: "rgba(12,12,18,0.95)",
+          background: theme.surface.overlay,
           backdropFilter: "blur(12px)",
         }}>
           {/* Header */}
           <div style={{
             flexShrink: 0,
             padding: "16px 20px",
-            borderBottom: `1px solid ${border.default}`,
+            borderBottom: `1px solid ${theme.border.default}`,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -169,7 +170,7 @@ export function AgentFullExplainView({ collection: collectionProp, presets }: Ag
               onClick={() => setSelectedEventId(null)}
               style={{
                 background: "none", border: "none",
-                color: text.faint, cursor: "pointer", fontSize: 18,
+                color: theme.text.faint, cursor: "pointer", fontSize: sz(18),
               }}
             >
               ×
@@ -181,7 +182,7 @@ export function AgentFullExplainView({ collection: collectionProp, presets }: Ag
             <div style={{
               flexShrink: 0,
               height: "55%",
-              borderBottom: `1px solid ${border.default}`,
+              borderBottom: `1px solid ${theme.border.default}`,
               position: "relative",
             }}>
               <ExplainGraph

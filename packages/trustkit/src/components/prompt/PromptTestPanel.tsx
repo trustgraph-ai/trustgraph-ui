@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import type { PromptTestResult } from "../../hooks/usePromptTest";
-import { text, border, surface, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 type InputMode = "json" | "fields";
 
@@ -12,15 +12,10 @@ interface PromptTestPanelProps {
   onReset: () => void;
 }
 
-// Extract variable names from Jinja template for hints, excluding
-// loop-internal variables defined by {% for x in ... %} blocks.
 function extractVariableHints(template: string): string[] {
   const vars = new Set<string>();
   const internal = new Set<string>();
 
-  // Collect loop variables (these are internal, not template inputs).
-  // Handles single ({% for x in list %}) and tuple unpacking
-  // ({% for k, v in dict.items() %}).
   const forRe = /\{%-?\s*for\s+([\w,\s]+?)\s+in\s+(\w+)/g;
   let match;
   while ((match = forRe.exec(template)) !== null) {
@@ -31,19 +26,16 @@ function extractVariableHints(template: string): string[] {
     vars.add(match[2]);
   }
 
-  // {{ variable }}, {{ variable.x }}, {{ variable | filter }}, {{variable}}, etc.
   const exprRe = /\{\{-?\s*([a-zA-Z_]\w*)/g;
   while ((match = exprRe.exec(template)) !== null) {
     vars.add(match[1]);
   }
 
-  // {% if variable %} / {% elif variable %}
   const ifRe = /\{%-?\s*(?:if|elif)\s+(\w+)/g;
   while ((match = ifRe.exec(template)) !== null) {
     vars.add(match[1]);
   }
 
-  // Remove loop-internal variables and Jinja builtins
   for (const v of internal) vars.delete(v);
   vars.delete("true");
   vars.delete("false");
@@ -60,6 +52,7 @@ export function PromptTestPanel({
   onRun,
   onReset,
 }: PromptTestPanelProps) {
+  const { theme, sz } = useTheme();
   const [variablesJson, setVariablesJson] = useState("{}");
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<InputMode>("fields");
@@ -97,10 +90,10 @@ export function PromptTestPanel({
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: 20 }}>
       {/* Header */}
       <div style={{
-        fontSize: 10,
+        fontSize: sz(10),
         fontFamily: "'IBM Plex Mono', monospace",
         fontWeight: 600,
-        color: text.faint,
+        color: theme.text.faint,
         letterSpacing: "0.1em",
         marginBottom: 12,
       }}>
@@ -116,13 +109,13 @@ export function PromptTestPanel({
             style={{
               padding: "3px 10px",
               borderRadius: 4,
-              fontSize: 10,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
               fontWeight: 600,
               cursor: "pointer",
-              background: inputMode === mode ? "rgba(255,255,255,0.06)" : "transparent",
-              border: `1px solid ${inputMode === mode ? border.default : "transparent"}`,
-              color: inputMode === mode ? text.muted : text.hint,
+              background: inputMode === mode ? theme.surface.cardHover : "transparent",
+              border: `1px solid ${inputMode === mode ? theme.border.default : "transparent"}`,
+              color: inputMode === mode ? theme.text.muted : theme.text.hint,
               textTransform: "capitalize",
             }}
           >
@@ -135,7 +128,7 @@ export function PromptTestPanel({
       {inputMode === "fields" && (
         <div style={{ marginBottom: 12 }}>
           {hints.length === 0 ? (
-            <div style={{ fontSize: 11, color: text.hint, fontStyle: "italic", padding: "8px 0" }}>
+            <div style={{ fontSize: sz(11), color: theme.text.hint, fontStyle: "italic", padding: "8px 0" }}>
               No variables detected in template.
             </div>
           ) : (
@@ -144,9 +137,9 @@ export function PromptTestPanel({
                 <div key={name}>
                   <label style={{
                     display: "block",
-                    fontSize: 10,
+                    fontSize: sz(10),
                     fontFamily: "'IBM Plex Mono', monospace",
-                    color: palette.amber,
+                    color: theme.palette.amber,
                     marginBottom: 4,
                   }}>
                     {name}
@@ -161,10 +154,10 @@ export function PromptTestPanel({
                       width: "100%",
                       padding: "6px 10px",
                       borderRadius: 6,
-                      border: `1px solid ${border.default}`,
-                      background: surface.card,
-                      color: text.primary,
-                      fontSize: 12,
+                      border: `1px solid ${theme.border.default}`,
+                      background: theme.surface.card,
+                      color: theme.text.primary,
+                      fontSize: sz(12),
                       fontFamily: "'IBM Plex Mono', monospace",
                       lineHeight: 1.5,
                       resize: "vertical",
@@ -189,9 +182,9 @@ export function PromptTestPanel({
               marginBottom: 8,
             }}>
               <span style={{
-                fontSize: 10,
+                fontSize: sz(10),
                 fontFamily: "'IBM Plex Mono', monospace",
-                color: text.hint,
+                color: theme.text.hint,
               }}>
                 variables:
               </span>
@@ -199,13 +192,13 @@ export function PromptTestPanel({
                 <span
                   key={v}
                   style={{
-                    fontSize: 10,
+                    fontSize: sz(10),
                     fontFamily: "'IBM Plex Mono', monospace",
-                    color: palette.amber,
+                    color: theme.palette.amber,
                     padding: "1px 6px",
                     borderRadius: 3,
-                    background: `${palette.amber}15`,
-                    border: `1px solid ${palette.amber}22`,
+                    background: `${theme.palette.amber}15`,
+                    border: `1px solid ${theme.palette.amber}22`,
                   }}
                 >
                   {v}
@@ -223,10 +216,10 @@ export function PromptTestPanel({
               height: 100,
               padding: 10,
               borderRadius: 6,
-              border: `1px solid ${jsonError ? palette.red + "44" : border.default}`,
-              background: surface.card,
-              color: text.primary,
-              fontSize: 12,
+              border: `1px solid ${jsonError ? theme.palette.red + "44" : theme.border.default}`,
+              background: theme.surface.card,
+              color: theme.text.primary,
+              fontSize: sz(12),
               fontFamily: "'IBM Plex Mono', monospace",
               lineHeight: 1.5,
               resize: "vertical",
@@ -234,7 +227,7 @@ export function PromptTestPanel({
             }}
           />
           {jsonError && (
-            <div style={{ fontSize: 10, color: palette.red, marginTop: 4 }}>{jsonError}</div>
+            <div style={{ fontSize: sz(10), color: theme.palette.red, marginTop: 4 }}>{jsonError}</div>
           )}
         </div>
       )}
@@ -247,10 +240,10 @@ export function PromptTestPanel({
           style={{
             padding: "6px 16px",
             borderRadius: 6,
-            border: `1px solid ${palette.emerald}44`,
-            background: result.isStreaming ? "transparent" : `${palette.emerald}1a`,
-            color: result.isStreaming ? text.disabled : palette.emerald,
-            fontSize: 11,
+            border: `1px solid ${theme.palette.emerald}44`,
+            background: result.isStreaming ? "transparent" : `${theme.palette.emerald}1a`,
+            color: result.isStreaming ? theme.text.disabled : theme.palette.emerald,
+            fontSize: sz(11),
             fontFamily: "'IBM Plex Mono', monospace",
             fontWeight: 600,
             cursor: result.isStreaming ? "wait" : "pointer",
@@ -266,10 +259,10 @@ export function PromptTestPanel({
             style={{
               padding: "6px 12px",
               borderRadius: 6,
-              border: `1px solid ${border.default}`,
+              border: `1px solid ${theme.border.default}`,
               background: "transparent",
-              color: text.faint,
-              fontSize: 11,
+              color: theme.text.faint,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
               cursor: "pointer",
             }}
@@ -285,14 +278,14 @@ export function PromptTestPanel({
         overflowY: "auto",
         padding: 14,
         borderRadius: 8,
-        border: `1px solid ${border.default}`,
-        background: surface.card,
+        border: `1px solid ${theme.border.default}`,
+        background: theme.surface.card,
         minHeight: 120,
       }}>
         {result.error && (
           <div style={{
-            fontSize: 12,
-            color: palette.red,
+            fontSize: sz(12),
+            color: theme.palette.red,
             fontFamily: "'IBM Plex Mono', monospace",
           }}>
             Error: {result.error}
@@ -302,24 +295,24 @@ export function PromptTestPanel({
         {result.response && (
           <pre style={{
             margin: 0,
-            fontSize: 12,
+            fontSize: sz(12),
             fontFamily: "'IBM Plex Mono', monospace",
-            color: text.primary,
+            color: theme.text.primary,
             lineHeight: 1.6,
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
           }}>
             {result.response}
             {result.isStreaming && (
-              <span style={{ color: palette.cyan, opacity: 0.6 }}>▌</span>
+              <span style={{ color: theme.palette.cyan, opacity: 0.6 }}>▌</span>
             )}
           </pre>
         )}
 
         {!result.response && !result.error && !result.isStreaming && (
           <div style={{
-            fontSize: 12,
-            color: text.hint,
+            fontSize: sz(12),
+            color: theme.text.hint,
             fontStyle: "italic",
           }}>
             Enter variables and click Run to test this prompt
@@ -333,9 +326,9 @@ export function PromptTestPanel({
           display: "flex",
           gap: 16,
           marginTop: 10,
-          fontSize: 10,
+          fontSize: sz(10),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: text.subtle,
+          color: theme.text.subtle,
         }}>
           {result.inTokens && (
             <span>in: {result.inTokens.toLocaleString()} tokens</span>

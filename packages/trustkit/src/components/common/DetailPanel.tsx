@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { text } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface DetailPanelProps {
   /** Panel heading */
@@ -31,6 +31,8 @@ export function DetailPanel({
   children,
   padding = 24,
 }: DetailPanelProps) {
+  const { theme, sz } = useTheme();
+
   return (
     <div style={{ padding }}>
       {/* Header */}
@@ -43,8 +45,8 @@ export function DetailPanel({
         }}>
           {subtitle && (
             <div style={{
-              color: subtitleColor || text.muted,
-              fontSize: 11,
+              color: subtitleColor || theme.text.muted,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
               fontWeight: 600,
             }}>
@@ -57,9 +59,9 @@ export function DetailPanel({
               style={{
                 background: "none",
                 border: "none",
-                color: text.faint,
+                color: theme.text.faint,
                 cursor: "pointer",
-                fontSize: 18,
+                fontSize: sz(18),
               }}
             >
               ×
@@ -71,7 +73,7 @@ export function DetailPanel({
       {/* Title */}
       {title && (
         <div style={{
-          fontSize: 20,
+          fontSize: sz(20),
           fontWeight: 700,
           color: "#fff",
           marginBottom: 6,

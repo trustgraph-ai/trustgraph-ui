@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { OWLClass, Ontology } from "@trustgraph/react-state";
-import { text, border, surface, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface OntologyClassEditorProps {
   classId: string;
@@ -10,12 +10,13 @@ interface OntologyClassEditorProps {
   onDeleteClass: (classId: string) => void;
 }
 
-const labelStyle = { fontSize: 10, fontFamily: "'IBM Plex Mono', monospace" as const, fontWeight: 600 as const, color: text.faint, letterSpacing: "0.1em", marginBottom: 4 };
-const inputStyle = { width: "100%", padding: "6px 8px", borderRadius: 4, border: `1px solid ${border.default}`, background: surface.card, color: text.primary, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" as const, outline: "none" };
-const readOnlyStyle = { ...inputStyle, color: text.subtle, background: "transparent" };
-const hintStyle = { fontSize: 9, color: text.hint, marginTop: 2 };
-
 export function OntologyClassEditor({ classId, owlClass, ontology, onUpdateClass, onDeleteClass }: OntologyClassEditorProps) {
+  const { theme, sz } = useTheme();
+
+  const labelStyle = { fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace" as const, fontWeight: 600 as const, color: theme.text.faint, letterSpacing: "0.1em", marginBottom: 4 };
+  const inputStyle = { width: "100%", padding: "6px 8px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: theme.surface.card, color: theme.text.primary, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" as const, outline: "none" };
+  const readOnlyStyle = { ...inputStyle, color: theme.text.subtle, background: "transparent" };
+  const hintStyle = { fontSize: sz(9), color: theme.text.hint, marginTop: 2 };
   const [labelValue, setLabelValue] = useState("");
   const [comment, setComment] = useState("");
   const [subClassOf, setSubClassOf] = useState("");
@@ -51,18 +52,18 @@ export function OntologyClassEditor({ classId, owlClass, ontology, onUpdateClass
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: 20 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 14, color: text.primary, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>{labelValue || classId}</div>
-          <div style={{ fontSize: 10, color: text.hint, fontFamily: "'IBM Plex Mono', monospace", marginTop: 2 }}>{owlClass.uri}</div>
+          <div style={{ fontSize: sz(14), color: theme.text.primary, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>{labelValue || classId}</div>
+          <div style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace", marginTop: 2 }}>{owlClass.uri}</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           {isDirty && (
             <button onClick={handleSave}
-              style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${palette.emerald}44`, background: `${palette.emerald}1a`, color: palette.emerald, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+              style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${theme.palette.emerald}44`, background: `${theme.palette.emerald}1a`, color: theme.palette.emerald, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
               Save
             </button>
           )}
           <button onClick={() => { if (window.confirm(`Delete class "${labelValue || classId}"?`)) onDeleteClass(classId); }}
-            style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${palette.red}44`, background: "transparent", color: palette.red, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+            style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${theme.palette.red}44`, background: "transparent", color: theme.palette.red, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
             Delete
           </button>
         </div>
@@ -83,7 +84,7 @@ export function OntologyClassEditor({ classId, owlClass, ontology, onUpdateClass
           <input type="text" value={owlClass.uri} readOnly style={readOnlyStyle} />
           <div style={{ ...hintStyle, marginBottom: 16 }}>Unique identifier (read-only)</div>
 
-          <div style={{ borderTop: `1px solid ${border.subtle}`, margin: "8px 0 16px" }} />
+          <div style={{ borderTop: `1px solid ${theme.border.subtle}`, margin: "8px 0 16px" }} />
 
           <div style={labelStyle}>SUBCLASS OF</div>
           <select value={subClassOf} onChange={(e) => setSubClassOf(e.target.value)}
@@ -97,11 +98,11 @@ export function OntologyClassEditor({ classId, owlClass, ontology, onUpdateClass
 
           {domainProperties.length > 0 && (
             <>
-              <div style={{ borderTop: `1px solid ${border.subtle}`, margin: "8px 0 16px" }} />
+              <div style={{ borderTop: `1px solid ${theme.border.subtle}`, margin: "8px 0 16px" }} />
               <div style={labelStyle}>PROPERTIES USING THIS CLASS AS DOMAIN</div>
               {domainProperties.map((p) => (
-                <div key={p.id} style={{ padding: "4px 8px", marginBottom: 2, borderRadius: 4, background: surface.card, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", color: text.secondary, display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ padding: "1px 4px", borderRadius: 2, background: p.kind === "object" ? `${palette.blue}1a` : `${palette.purple}1a`, color: p.kind === "object" ? palette.blue : palette.purple, fontSize: 8, fontWeight: 600 }}>
+                <div key={p.id} style={{ padding: "4px 8px", marginBottom: 2, borderRadius: 4, background: theme.surface.card, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.secondary, display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ padding: "1px 4px", borderRadius: 2, background: p.kind === "object" ? `${theme.palette.blue}1a` : `${theme.palette.purple}1a`, color: p.kind === "object" ? theme.palette.blue : theme.palette.purple, fontSize: sz(8), fontWeight: 600 }}>
                     {p.kind === "object" ? "OBJ" : "DT"}
                   </span>
                   {p.label}

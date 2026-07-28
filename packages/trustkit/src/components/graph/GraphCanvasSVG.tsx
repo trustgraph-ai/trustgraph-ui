@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import type { DomainKey, Entity, GraphNode, OntologyType, Relationship } from "../../types";
 import { ZoomControls } from "./ZoomControls";
-import { border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 function truncateLabel(label: string, maxLength = 30): string {
   if (label.length <= maxLength) return label;
@@ -26,6 +26,7 @@ export function GraphCanvasSVG({ entities, relationships, ontology, highlightedE
   const [hovered, setHovered] = useState<string | null>(null);
   const [settled, setSettled] = useState(false);
   const [time, setTime] = useState(0);
+  const { theme, sz } = useTheme();
   const animRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
   const lastFrameTimeRef = useRef<number>(0);
@@ -166,16 +167,16 @@ export function GraphCanvasSVG({ entities, relationships, ontology, highlightedE
 
     for (let x = 0; x < width; x += 30) {
       lines.push(
-        <line key={`v-${x}`} x1={x} y1={0} x2={x} y2={height} stroke={border.grid} strokeWidth={0.5} />
+        <line key={`v-${x}`} x1={x} y1={0} x2={x} y2={height} stroke={theme.border.grid} strokeWidth={0.5} />
       );
     }
     for (let y = 0; y < height; y += 30) {
       lines.push(
-        <line key={`h-${y}`} x1={0} y1={y} x2={width} y2={y} stroke={border.grid} strokeWidth={0.5} />
+        <line key={`h-${y}`} x1={0} y1={y} x2={width} y2={y} stroke={theme.border.grid} strokeWidth={0.5} />
       );
     }
     return lines;
-  }, [containerSize]);
+  }, [containerSize, theme]);
 
   // Calculate edge path with curve
   const getEdgePath = useCallback((fromNode: GraphNode, toNode: GraphNode, time: number, isSettled: boolean) => {
@@ -299,7 +300,7 @@ export function GraphCanvasSVG({ entities, relationships, ontology, highlightedE
                 x={pos.x}
                 y={pos.y - Math.min(containerSize.width, containerSize.height) * 0.14}
                 fill={data.color + "44"}
-                fontSize={11}
+                fontSize={sz(11)}
                 fontWeight="bold"
                 fontFamily="'IBM Plex Mono', monospace"
                 textAnchor="middle"
@@ -347,7 +348,7 @@ export function GraphCanvasSVG({ entities, relationships, ontology, highlightedE
                   fill="none"
                 />
                 {isHighlighted && (
-                  <circle cx={px} cy={py} r={1.5} fill="#fff" />
+                  <circle cx={px} cy={py} r={1.5} fill={theme.text.primary} />
                 )}
               </g>
             );
@@ -411,8 +412,9 @@ export function GraphCanvasSVG({ entities, relationships, ontology, highlightedE
                 <text
                   x={x}
                   y={y + r + 9}
-                  fill={`rgba(255,255,255,${alpha * (isHighlighted ? 1 : 0.75)})`}
-                  fontSize={isHovered ? 8.5 : 7}
+                  fill={theme.text.primary}
+                  fillOpacity={alpha * (isHighlighted ? 1 : 0.75)}
+                  fontSize={sz(isHovered ? 8.5 : 7)}
                   fontWeight={isHighlighted ? "bold" : "normal"}
                   fontFamily="'IBM Plex Sans', sans-serif"
                   textAnchor="middle"
@@ -441,16 +443,16 @@ export function GraphCanvasSVG({ entities, relationships, ontology, highlightedE
         return (
           <div style={{
             position: "absolute", left: x + 20, top: y - 20,
-            background: "rgba(15,15,20,0.95)", border: `1px solid ${node.color}44`,
+            background: theme.surface.overlay, border: `1px solid ${node.color}44`,
             borderRadius: 8, padding: "10px 14px", pointerEvents: "none",
             backdropFilter: "blur(12px)", zIndex: 10, minWidth: 180,
           }}>
-            <div style={{ color: node.color, fontWeight: 700, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: node.color, fontWeight: 700, fontSize: sz(13), fontFamily: "'IBM Plex Mono', monospace" }}>
               {node.icon} {node.label}
             </div>
-            <div style={{ color: "#888", fontSize: 11, marginTop: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: theme.text.muted, fontSize: sz(11), marginTop: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
               {Object.entries(node.props || {}).map(([k, v]) => (
-                <div key={k}><span style={{ color: "#666" }}>{k}:</span> <span style={{ color: "#ccc" }}>{String(v)}</span></div>
+                <div key={k}><span style={{ color: theme.text.faint }}>{k}:</span> <span style={{ color: theme.text.secondary }}>{String(v)}</span></div>
               ))}
             </div>
           </div>

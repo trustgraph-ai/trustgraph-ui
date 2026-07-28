@@ -6,13 +6,14 @@ import type { ParsedExplainEvent } from "../../utils/explainParse";
 import type { ExplainEvent } from "@trustgraph/react-state";
 import { ExplainFacetCard } from "./ExplainFacetCard";
 import { AgentStepCard } from "../explain/AgentStepCard";
-import { text, border, surface, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 /**
  * Full-height debug panel for the Agent Console.
  * Test input at top, reasoning steps + facet cards below.
  */
 export function AgentDebugPanel() {
+  const { theme, sz } = useTheme();
   const [question, setQuestion] = useState("");
   const [view, setView] = useState<"steps" | "events">("steps");
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
@@ -66,18 +67,18 @@ export function AgentDebugPanel() {
       display: "flex",
       flexDirection: "column",
       height: "100%",
-      borderLeft: `1px solid ${border.default}`,
+      borderLeft: `1px solid ${theme.border.default}`,
     }}>
       {/* Header + input */}
       <div style={{
         padding: "12px 16px",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
       }}>
         <div style={{
-          fontSize: 10,
+          fontSize: sz(10),
           fontFamily: "'IBM Plex Mono', monospace",
           fontWeight: 600,
-          color: text.faint,
+          color: theme.text.faint,
           letterSpacing: "0.1em",
           marginBottom: 8,
         }}>
@@ -96,10 +97,10 @@ export function AgentDebugPanel() {
               flex: 1,
               padding: "7px 12px",
               borderRadius: 6,
-              border: `1px solid ${border.default}`,
-              background: surface.card,
-              color: text.primary,
-              fontSize: 12,
+              border: `1px solid ${theme.border.default}`,
+              background: theme.surface.card,
+              color: theme.text.primary,
+              fontSize: sz(12),
               fontFamily: "'IBM Plex Sans', sans-serif",
               outline: "none",
             }}
@@ -110,10 +111,10 @@ export function AgentDebugPanel() {
             style={{
               padding: "7px 14px",
               borderRadius: 6,
-              border: `1px solid ${palette.amber}44`,
-              background: !question.trim() || isQuerying ? "transparent" : `${palette.amber}1a`,
-              color: !question.trim() || isQuerying ? text.disabled : palette.amber,
-              fontSize: 11,
+              border: `1px solid ${theme.palette.amber}44`,
+              background: !question.trim() || isQuerying ? "transparent" : `${theme.palette.amber}1a`,
+              color: !question.trim() || isQuerying ? theme.text.disabled : theme.palette.amber,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
               fontWeight: 600,
               cursor: !question.trim() || isQuerying ? "default" : "pointer",
@@ -128,18 +129,18 @@ export function AgentDebugPanel() {
       {patternDecision && (
         <div style={{
           padding: "6px 16px",
-          borderBottom: `1px solid ${border.subtle}`,
-          fontSize: 10,
+          borderBottom: `1px solid ${theme.border.subtle}`,
+          fontSize: sz(10),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: text.subtle,
+          color: theme.text.subtle,
           display: "flex",
           gap: 12,
         }}>
           {patternDecision.pattern && (
-            <span>pattern: <span style={{ color: palette.cyan }}>{patternDecision.pattern}</span></span>
+            <span>pattern: <span style={{ color: theme.palette.cyan }}>{patternDecision.pattern}</span></span>
           )}
           {patternDecision.taskType && (
-            <span>task: <span style={{ color: palette.amber }}>{patternDecision.taskType}</span></span>
+            <span>task: <span style={{ color: theme.palette.amber }}>{patternDecision.taskType}</span></span>
           )}
         </div>
       )}
@@ -148,24 +149,24 @@ export function AgentDebugPanel() {
       {(tokenTotals.inTotal > 0 || tokenTotals.outTotal > 0 || isQuerying) && (
         <div style={{
           padding: "5px 16px",
-          borderBottom: `1px solid ${border.subtle}`,
-          fontSize: 9,
+          borderBottom: `1px solid ${theme.border.subtle}`,
+          fontSize: sz(9),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: text.faint,
+          color: theme.text.faint,
           display: "flex",
           gap: 12,
         }}>
           <span>events: {parsedEvents.length}</span>
           {tokenTotals.inTotal > 0 && <span>in: {tokenTotals.inTotal.toLocaleString()}</span>}
           {tokenTotals.outTotal > 0 && <span>out: {tokenTotals.outTotal.toLocaleString()}</span>}
-          {isQuerying && <span style={{ color: palette.amber }}>running...</span>}
+          {isQuerying && <span style={{ color: theme.palette.amber }}>running...</span>}
         </div>
       )}
 
       {/* View toggle */}
       <div style={{
         padding: "6px 16px",
-        borderBottom: `1px solid ${border.subtle}`,
+        borderBottom: `1px solid ${theme.border.subtle}`,
         display: "flex",
         gap: 8,
       }}>
@@ -176,10 +177,10 @@ export function AgentDebugPanel() {
             style={{
               padding: "3px 10px",
               borderRadius: 4,
-              border: `1px solid ${view === v ? palette.cyan + "44" : border.default}`,
-              background: view === v ? `${palette.cyan}1a` : "transparent",
-              color: view === v ? palette.cyan : text.subtle,
-              fontSize: 10,
+              border: `1px solid ${view === v ? theme.palette.cyan + "44" : theme.border.default}`,
+              background: view === v ? `${theme.palette.cyan}1a` : "transparent",
+              color: view === v ? theme.palette.cyan : theme.text.subtle,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
               cursor: "pointer",
             }}
@@ -195,8 +196,8 @@ export function AgentDebugPanel() {
           <div style={{ padding: "12px 16px" }}>
             {error && (
               <div style={{
-                fontSize: 12,
-                color: palette.red,
+                fontSize: sz(12),
+                color: theme.palette.red,
                 fontFamily: "'IBM Plex Mono', monospace",
                 marginBottom: 8,
               }}>
@@ -205,7 +206,7 @@ export function AgentDebugPanel() {
             )}
 
             {steps.length === 0 && !isQuerying && !error && (
-              <div style={{ fontSize: 12, color: text.hint, fontStyle: "italic" }}>
+              <div style={{ fontSize: sz(12), color: theme.text.hint, fontStyle: "italic" }}>
                 Run a query to see agent reasoning steps.
               </div>
             )}
@@ -229,10 +230,10 @@ export function AgentDebugPanel() {
               width: selectedEvent ? "50%" : "100%",
               overflowY: "auto",
               padding: "8px 12px",
-              borderRight: selectedEvent ? `1px solid ${border.default}` : "none",
+              borderRight: selectedEvent ? `1px solid ${theme.border.default}` : "none",
             }}>
               {parsedEvents.length === 0 && !isQuerying && (
-                <div style={{ fontSize: 12, color: text.hint, fontStyle: "italic", padding: 8 }}>
+                <div style={{ fontSize: sz(12), color: theme.text.hint, fontStyle: "italic", padding: 8 }}>
                   Run a query to see explain events.
                 </div>
               )}
@@ -255,10 +256,10 @@ export function AgentDebugPanel() {
                 padding: "12px 16px",
               }}>
                 <div style={{
-                  fontSize: 10,
+                  fontSize: sz(10),
                   fontFamily: "'IBM Plex Mono', monospace",
                   fontWeight: 600,
-                  color: text.faint,
+                  color: theme.text.faint,
                   letterSpacing: "0.1em",
                   marginBottom: 12,
                 }}>
@@ -271,9 +272,9 @@ export function AgentDebugPanel() {
                 {selectedEvent.derivedFrom.length > 0 && (
                   <div style={{ marginTop: 12 }}>
                     <div style={{
-                      fontSize: 9,
+                      fontSize: sz(9),
                       fontFamily: "'IBM Plex Mono', monospace",
-                      color: text.faint,
+                      color: theme.text.faint,
                       letterSpacing: "0.05em",
                       textTransform: "uppercase",
                       marginBottom: 4,
@@ -294,10 +295,10 @@ export function AgentDebugPanel() {
                             marginBottom: 2,
                             padding: "4px 8px",
                             borderRadius: 4,
-                            background: surface.card,
-                            border: `1px solid ${border.subtle}`,
-                            color: linked ? palette.cyan : text.hint,
-                            fontSize: 10,
+                            background: theme.surface.card,
+                            border: `1px solid ${theme.border.subtle}`,
+                            color: linked ? theme.palette.cyan : theme.text.hint,
+                            fontSize: sz(10),
                             fontFamily: "'IBM Plex Mono', monospace",
                             cursor: idx >= 0 ? "pointer" : "default",
                           }}
@@ -318,10 +319,10 @@ export function AgentDebugPanel() {
       {termination && !isQuerying && (
         <div style={{
           padding: "6px 16px",
-          borderTop: `1px solid ${border.default}`,
-          fontSize: 10,
+          borderTop: `1px solid ${theme.border.default}`,
+          fontSize: sz(10),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: palette.amber,
+          color: theme.palette.amber,
         }}>
           Terminated: {termination.terminationReason}
         </div>

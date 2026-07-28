@@ -8,7 +8,7 @@ import { useExplainSession } from "../../hooks/useExplainSession";
 import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
-import { palette, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useSettings } from "@trustgraph/react-state";
 
 interface DocRagExplainViewProps {
@@ -20,6 +20,7 @@ interface DocRagExplainViewProps {
  * explain event timeline on the right with source links.
  */
 export function DocRagExplainView({ collection: collectionProp }: DocRagExplainViewProps) {
+  const { theme } = useTheme();
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -55,7 +56,7 @@ export function DocRagExplainView({ collection: collectionProp }: DocRagExplainV
   return (
     <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Response + Source */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${theme.border.default}` }}>
         <Toolbar>
           <SectionLabel marginBottom={12}>DOCUMENT RAG QUERY</SectionLabel>
           <SearchInput
@@ -65,7 +66,7 @@ export function DocRagExplainView({ collection: collectionProp }: DocRagExplainV
             placeholder="Ask a question..."
             buttonText="Query"
             isLoading={isQuerying}
-            buttonColor={palette.purple}
+            buttonColor={theme.palette.purple}
           />
         </Toolbar>
 

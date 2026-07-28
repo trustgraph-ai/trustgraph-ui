@@ -1,25 +1,25 @@
 import {
   OntologyWorkbench,
   SectionLabel,
-  text,
-  border,
+  useTheme,
 } from "@trustgraph/trustkit";
 import { DevPanel } from "../components/DevPanel";
 
 export function OntologyManagePage() {
+  const { theme, sz } = useTheme();
   return (
     <>
       <div style={{
         padding: "10px 28px",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
         gap: 16,
       }}>
         <SectionLabel>ONTOLOGY MANAGEMENT</SectionLabel>
         <span style={{
-          fontSize: 11,
-          color: text.subtle,
+          fontSize: sz(11),
+          color: theme.text.subtle,
           fontStyle: "italic",
           marginLeft: 8,
         }}>

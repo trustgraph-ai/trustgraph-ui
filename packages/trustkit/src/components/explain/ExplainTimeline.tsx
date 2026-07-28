@@ -3,7 +3,8 @@ import { SectionLabel } from "../common";
 import { ExplainEventCard } from "./ExplainEventCard";
 import type { ExplainNode } from "../../hooks/useExplainSession";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
-import { text, border, palette, withGlow } from "../../theme";
+import { withGlow } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface ExplainTimelineProps {
   /** Explain events to display */
@@ -31,6 +32,7 @@ export function ExplainTimeline({
   onSourceClick,
   sourceLevel = "full",
 }: ExplainTimelineProps) {
+  const { theme, sz } = useTheme();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,11 +41,11 @@ export function ExplainTimeline({
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-      <div style={{ padding: "12px 20px", borderBottom: `1px solid ${border.default}` }}>
+      <div style={{ padding: "12px 20px", borderBottom: `1px solid ${theme.border.default}` }}>
         <SectionLabel>
           EVENTS
           {events.length > 0 && (
-            <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
+            <span style={{ color: theme.text.muted, fontWeight: 400, marginLeft: 8 }}>
               {events.length} event{events.length !== 1 ? "s" : ""}
             </span>
           )}
@@ -52,7 +54,7 @@ export function ExplainTimeline({
 
       <div style={{ flex: 1, padding: "12px 16px", overflowY: "auto" }}>
         {events.length === 0 && !isQuerying && (
-          <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+          <div style={{ color: theme.text.hint, fontSize: sz(13), fontStyle: "italic" }}>
             Explain events will appear here as the query progresses.
           </div>
         )}
@@ -60,8 +62,8 @@ export function ExplainTimeline({
         {isQuerying && events.length === 0 && (
           <div style={{
             padding: "8px 12px",
-            fontSize: 11,
-            color: withGlow(palette.cyan, 0.6),
+            fontSize: sz(11),
+            color: withGlow(theme.palette.cyan, 0.6),
             fontFamily: "'IBM Plex Mono', monospace",
           }}>
             Waiting for explain events...

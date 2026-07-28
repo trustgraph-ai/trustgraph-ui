@@ -5,7 +5,7 @@ import { ExplainTimeline } from "./ExplainTimeline";
 import { useAgent } from "../../hooks/useAgent";
 import { useExplainSession } from "../../hooks/useExplainSession";
 import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
-import { palette, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useSettings } from "@trustgraph/react-state";
 
 interface AgentWithTimelineViewProps {
@@ -19,6 +19,7 @@ interface AgentWithTimelineViewProps {
  * with document-level sources.
  */
 export function AgentWithTimelineView({ collection: collectionProp, presets }: AgentWithTimelineViewProps) {
+  const { theme } = useTheme();
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -40,7 +41,7 @@ export function AgentWithTimelineView({ collection: collectionProp, presets }: A
   return (
     <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Agent Steps */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${theme.border.default}` }}>
         <Toolbar>
           <SectionLabel marginBottom={12}>AGENT QUERY</SectionLabel>
           <SearchInput
@@ -50,7 +51,7 @@ export function AgentWithTimelineView({ collection: collectionProp, presets }: A
             placeholder="Ask a question..."
             buttonText="Ask"
             isLoading={isQuerying}
-            buttonColor={palette.amber}
+            buttonColor={theme.palette.amber}
             presets={presets}
           />
         </Toolbar>

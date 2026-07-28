@@ -1,5 +1,5 @@
 import type { ParsedExplainEvent } from "../../utils/explainParse";
-import { text, border, surface, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface ExplainFacetCardProps {
   event: ParsedExplainEvent;
@@ -16,8 +16,9 @@ interface ExplainFacetCardProps {
  * and renders a section for each. Unknown types get a badge.
  */
 export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCardProps) {
+  const { theme, sz } = useTheme();
   const isError = event.knownTypes.has("Error");
-  const borderColor = isError ? palette.red : isSelected ? palette.cyan : border.default;
+  const borderColor = isError ? theme.palette.red : isSelected ? theme.palette.cyan : theme.border.default;
 
   return (
     <div
@@ -27,7 +28,7 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
         marginBottom: 6,
         borderRadius: 8,
         border: `1px solid ${borderColor}${isSelected ? "" : "88"}`,
-        background: isError ? `${palette.red}08` : isSelected ? `${palette.cyan}08` : "transparent",
+        background: isError ? `${theme.palette.red}08` : isSelected ? `${theme.palette.cyan}08` : "transparent",
         cursor: onClick ? "pointer" : "default",
         transition: "all 0.15s",
       }}
@@ -43,10 +44,10 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
         {/* Step number */}
         {event.stepNumber !== undefined && (
           <span style={{
-            fontSize: 9,
+            fontSize: sz(9),
             fontFamily: "'IBM Plex Mono', monospace",
             fontWeight: 700,
-            color: text.muted,
+            color: theme.text.muted,
             marginRight: 4,
           }}>
             #{event.stepNumber}
@@ -69,9 +70,9 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
       {/* Label */}
       {event.label && (
         <div style={{
-          fontSize: 12,
+          fontSize: sz(12),
           fontWeight: 600,
-          color: "#fff",
+          color: theme.text.primary,
           marginBottom: 6,
         }}>
           {event.label}
@@ -81,10 +82,10 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
       {/* Pattern Decision facet */}
       {event.pattern && (
         <Facet label="Pattern">
-          <span style={{ color: palette.cyan }}>{event.pattern}</span>
+          <span style={{ color: theme.palette.cyan }}>{event.pattern}</span>
           {event.taskType && (
-            <span style={{ color: text.subtle, marginLeft: 8 }}>
-              task type: <span style={{ color: palette.amber }}>{event.taskType}</span>
+            <span style={{ color: theme.text.subtle, marginLeft: 8 }}>
+              task type: <span style={{ color: theme.palette.amber }}>{event.taskType}</span>
             </span>
           )}
         </Facet>
@@ -93,20 +94,20 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
       {/* Query facet */}
       {event.query && (
         <Facet label="Query">
-          <span style={{ color: text.primary }}>{event.query}</span>
+          <span style={{ color: theme.text.primary }}>{event.query}</span>
         </Facet>
       )}
 
       {/* Tool decision facet (Analysis/ToolUse) */}
       {event.action && (
         <Facet label="Tool">
-          <span style={{ color: palette.emerald, fontWeight: 600 }}>{event.action}</span>
+          <span style={{ color: theme.palette.emerald, fontWeight: 600 }}>{event.action}</span>
           {event.arguments && (
             <pre style={{
               margin: "4px 0 0",
-              fontSize: 10,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
-              color: text.secondary,
+              color: theme.text.secondary,
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
             }}>
@@ -124,13 +125,13 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
               <span
                 key={c}
                 style={{
-                  fontSize: 10,
+                  fontSize: sz(10),
                   fontFamily: "'IBM Plex Mono', monospace",
                   padding: "1px 6px",
                   borderRadius: 3,
-                  background: c === event.action ? `${palette.emerald}20` : surface.card,
-                  border: `1px solid ${c === event.action ? palette.emerald + "44" : border.subtle}`,
-                  color: c === event.action ? palette.emerald : text.subtle,
+                  background: c === event.action ? `${theme.palette.emerald}20` : theme.surface.card,
+                  border: `1px solid ${c === event.action ? theme.palette.emerald + "44" : theme.border.subtle}`,
+                  color: c === event.action ? theme.palette.emerald : theme.text.subtle,
                 }}
               >
                 {c}
@@ -146,13 +147,13 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
             {event.concepts.map((c, i) => (
               <span key={i} style={{
-                fontSize: 10,
+                fontSize: sz(10),
                 fontFamily: "'IBM Plex Mono', monospace",
                 padding: "1px 6px",
                 borderRadius: 3,
-                background: `${palette.blue}15`,
-                border: `1px solid ${palette.blue}22`,
-                color: palette.blue,
+                background: `${theme.palette.blue}15`,
+                border: `1px solid ${theme.palette.blue}22`,
+                color: theme.palette.blue,
               }}>
                 {c}
               </span>
@@ -165,7 +166,7 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
       {(event.entities.length > 0 || event.edgeCount !== undefined) && (
         <Facet label="Exploration">
           {event.edgeCount !== undefined && (
-            <span style={{ color: text.secondary }}>
+            <span style={{ color: theme.text.secondary }}>
               {event.edgeCount} edges, {event.entities.length} entities
             </span>
           )}
@@ -174,7 +175,7 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
 
       {event.chunkCount !== undefined && (
         <Facet label="Chunks">
-          <span style={{ color: text.secondary }}>
+          <span style={{ color: theme.text.secondary }}>
             {event.chunkCount} candidates, {event.selectedChunks.length} selected
           </span>
         </Facet>
@@ -185,30 +186,30 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
         <Facet label={`Focus (${event.selectedEdges.length} edges)`}>
           {event.scores.length > 0 && (
             <div style={{
-              fontSize: 10,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
-              color: text.secondary,
+              color: theme.text.secondary,
               lineHeight: 1.6,
             }}>
               {event.scores.slice(0, 3).map((s, i) => (
                 <div key={i}>
                   {event.concepts[i] && (
-                    <span style={{ color: palette.orange }}>{event.concepts[i]}</span>
+                    <span style={{ color: theme.palette.orange }}>{event.concepts[i]}</span>
                   )}
-                  <span style={{ color: text.faint, marginLeft: 6 }}>
-                    score: <span style={{ color: palette.cyan }}>{s.toFixed(4)}</span>
+                  <span style={{ color: theme.text.faint, marginLeft: 6 }}>
+                    score: <span style={{ color: theme.palette.cyan }}>{s.toFixed(4)}</span>
                   </span>
                 </div>
               ))}
               {event.scores.length > 3 && (
-                <div style={{ color: text.hint }}>
+                <div style={{ color: theme.text.hint }}>
                   +{event.scores.length - 3} more
                 </div>
               )}
             </div>
           )}
           {event.scores.length === 0 && (
-            <span style={{ color: text.secondary }}>
+            <span style={{ color: theme.text.secondary }}>
               {event.selectedEdges.length} edge{event.selectedEdges.length !== 1 ? "s" : ""} selected
             </span>
           )}
@@ -220,13 +221,13 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
         <Facet label="Plan">
           {event.planSteps.map((s, i) => (
             <div key={i} style={{
-              fontSize: 11,
-              color: text.secondary,
+              fontSize: sz(11),
+              color: theme.text.secondary,
               lineHeight: 1.4,
               marginBottom: 2,
               paddingLeft: 8,
             }}>
-              <span style={{ color: text.faint, marginRight: 6 }}>{i + 1}.</span>
+              <span style={{ color: theme.text.faint, marginRight: 6 }}>{i + 1}.</span>
               {s}
             </div>
           ))}
@@ -238,13 +239,13 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
         <Facet label="Sub-agent goals">
           {event.subagentGoals.map((g, i) => (
             <div key={i} style={{
-              fontSize: 11,
-              color: text.secondary,
+              fontSize: sz(11),
+              color: theme.text.secondary,
               lineHeight: 1.4,
               marginBottom: 2,
               paddingLeft: 8,
             }}>
-              <span style={{ color: text.faint, marginRight: 6 }}>{i + 1}.</span>
+              <span style={{ color: theme.text.faint, marginRight: 6 }}>{i + 1}.</span>
               {g}
             </div>
           ))}
@@ -254,14 +255,14 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
       {/* Tool error */}
       {event.toolError && (
         <Facet label="Error">
-          <span style={{ color: palette.red }}>{event.toolError}</span>
+          <span style={{ color: theme.palette.red }}>{event.toolError}</span>
         </Facet>
       )}
 
       {/* Termination reason */}
       {event.terminationReason && (
         <Facet label="Terminated">
-          <span style={{ color: palette.amber }}>{event.terminationReason}</span>
+          <span style={{ color: theme.palette.amber }}>{event.terminationReason}</span>
         </Facet>
       )}
 
@@ -272,10 +273,10 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
           gap: 12,
           marginTop: 6,
           paddingTop: 6,
-          borderTop: `1px solid ${border.subtle}`,
-          fontSize: 9,
+          borderTop: `1px solid ${theme.border.subtle}`,
+          fontSize: sz(9),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: text.faint,
+          color: theme.text.faint,
         }}>
           {event.inToken !== undefined && (
             <span>in: {event.inToken.toLocaleString()}</span>
@@ -300,10 +301,10 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
         <div style={{
           marginTop: 6,
           paddingTop: 6,
-          borderTop: `1px solid ${border.subtle}`,
-          fontSize: 9,
+          borderTop: `1px solid ${theme.border.subtle}`,
+          fontSize: sz(9),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: text.hint,
+          color: theme.text.hint,
         }}>
           Unrecognised facets: {event.unknownTypeNames.join(", ")}
         </div>
@@ -313,9 +314,9 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
       {event.extraPredicates.length > 0 && (
         <div style={{
           marginTop: 4,
-          fontSize: 9,
+          fontSize: sz(9),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: text.hint,
+          color: theme.text.hint,
         }}>
           {event.extraPredicates.map(({ predicateName, values }) => (
             <div key={predicateName}>
@@ -331,15 +332,16 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
 // ── Sub-components ───────────────────────────────────────────────
 
 function TypeBadge({ name, known, isError }: { name: string; known: boolean; isError?: boolean }) {
+  const { theme, sz } = useTheme();
   const color = isError
-    ? palette.red
+    ? theme.palette.red
     : known
-    ? palette.cyan
-    : text.hint;
+    ? theme.palette.cyan
+    : theme.text.hint;
 
   return (
     <span style={{
-      fontSize: 9,
+      fontSize: sz(9),
       fontFamily: "'IBM Plex Mono', monospace",
       padding: "1px 5px",
       borderRadius: 3,
@@ -353,19 +355,20 @@ function TypeBadge({ name, known, isError }: { name: string; known: boolean; isE
 }
 
 function Facet({ label, children }: { label: string; children: React.ReactNode }) {
+  const { theme, sz } = useTheme();
   return (
     <div style={{ marginBottom: 6 }}>
       <div style={{
-        fontSize: 9,
+        fontSize: sz(9),
         fontFamily: "'IBM Plex Mono', monospace",
-        color: text.faint,
+        color: theme.text.faint,
         letterSpacing: "0.05em",
         textTransform: "uppercase",
         marginBottom: 2,
       }}>
         {label}
       </div>
-      <div style={{ fontSize: 11, lineHeight: 1.4 }}>
+      <div style={{ fontSize: sz(11), lineHeight: 1.4 }}>
         {children}
       </div>
     </div>

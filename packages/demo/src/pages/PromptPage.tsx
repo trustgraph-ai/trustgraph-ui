@@ -4,9 +4,7 @@ import {
   PromptWorkbench,
   ModeSelector,
   SectionLabel,
-  text,
-  border,
-  palette,
+  useTheme,
 } from "@trustgraph/trustkit";
 import { DevPanel } from "../components/DevPanel";
 
@@ -23,13 +21,14 @@ const modeDescriptions: Record<PromptMode, string> = {
 };
 
 export function PromptPage() {
+  const { theme, sz } = useTheme();
   const [mode, setMode] = useState<PromptMode>("workbench");
 
   return (
     <>
       <div style={{
         padding: "10px 28px",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
         gap: 16,
@@ -39,11 +38,11 @@ export function PromptPage() {
           modes={modes}
           activeMode={mode}
           onChange={(key) => setMode(key as PromptMode)}
-          color={palette.amber}
+          color={theme.palette.amber}
         />
         <span style={{
-          fontSize: 11,
-          color: text.subtle,
+          fontSize: sz(11),
+          color: theme.text.subtle,
           fontStyle: "italic",
           marginLeft: 8,
         }}>

@@ -7,9 +7,7 @@ import {
   RagFullExplainView,
   ModeSelector,
   SectionLabel,
-  text,
-  border,
-  palette,
+  useTheme,
 } from "@trustgraph/trustkit";
 import type { SearchPreset } from "@trustgraph/trustkit";
 import { useSocket } from "@trustgraph/react-provider";
@@ -42,6 +40,7 @@ export function GraphRagPage() {
   const socket = useSocket();
   const generation = useWorkspaceStore((s) => s.generation);
   const [presets, setPresets] = useState<SearchPreset[]>([]);
+  const { theme, sz } = useTheme();
 
   useEffect(() => {
     let cancelled = false;
@@ -88,24 +87,24 @@ export function GraphRagPage() {
     <>
       {/* Option selector bar */}
       <div style={{
-        padding: "10px 28px",
-        borderBottom: `1px solid ${border.default}`,
+        padding: `${sz(10)}px ${sz(28)}px`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
-        gap: 16,
+        gap: sz(16),
       }}>
         <SectionLabel>EXPLAINABILITY</SectionLabel>
         <ModeSelector
           modes={modes}
           activeMode={option}
           onChange={(key) => setOption(key as RagOption)}
-          color={palette.cyan}
+          color={theme.palette.cyan}
         />
         <span style={{
-          fontSize: 11,
-          color: text.subtle,
+          fontSize: sz(11),
+          color: theme.text.subtle,
           fontStyle: "italic",
-          marginLeft: 8,
+          marginLeft: sz(8),
         }}>
           {optionDescriptions[option]}
         </span>

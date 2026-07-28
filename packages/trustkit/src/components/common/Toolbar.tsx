@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface ToolbarProps {
   /** Bar contents */
@@ -18,10 +18,12 @@ export function Toolbar({
   borderBottom = true,
   padding = "20px 28px",
 }: ToolbarProps) {
+  const { theme } = useTheme();
+
   return (
     <div style={{
       padding,
-      borderBottom: borderBottom ? `1px solid ${border.default}` : undefined,
+      borderBottom: borderBottom ? `1px solid ${theme.border.default}` : undefined,
     }}>
       {children}
     </div>

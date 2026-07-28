@@ -1,4 +1,4 @@
-import { surface, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface CardProps {
   children: React.ReactNode;
@@ -13,18 +13,20 @@ export function Card({
   children,
   padding = 24,
   borderRadius = 12,
-  borderColor = border.subtle,
+  borderColor,
   onClick,
   style,
 }: CardProps) {
+  const { theme } = useTheme();
+
   return (
     <div
       onClick={onClick}
       style={{
         padding,
         borderRadius,
-        background: surface.card,
-        border: `1px solid ${borderColor}`,
+        background: theme.surface.card,
+        border: `1px solid ${borderColor ?? theme.border.subtle}`,
         cursor: onClick ? "pointer" : undefined,
         ...style,
       }}

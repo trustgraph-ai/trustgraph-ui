@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { DAGLayout } from "../../hooks/useExplainDAG";
-import { text, withGlow } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import { withGlow, palette as staticPalette } from "../../theme";
 
 const NODE_W = 140;
 const NODE_H = 40;
@@ -26,7 +27,16 @@ interface ExplainDAGProps {
  * answer/synthesis at the bottom.
  */
 export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGProps) {
+  const { theme, sz } = useTheme();
   const { nodes, edges, maxDepth, maxColumns } = layout;
+
+  const remapColor = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const key of Object.keys(staticPalette) as Array<keyof typeof staticPalette>) {
+      map.set(staticPalette[key], theme.palette[key]);
+    }
+    return (color: string) => map.get(color) ?? color;
+  }, [theme.palette]);
 
   const horizontal = maxColumns <= LINEAR_THRESHOLD;
 
@@ -91,8 +101,8 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: text.hint,
-        fontSize: 13,
+        color: theme.text.hint,
+        fontSize: sz(13),
         fontStyle: "italic",
       }}>
         The explainability DAG will appear here as the query progresses.
@@ -142,12 +152,14 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
               <path
                 d={pathD}
                 fill="none"
-                stroke="rgba(255,255,255,0.15)"
+                stroke={theme.text.primary}
+                strokeOpacity={0.15}
                 strokeWidth={1.5}
               />
               <polygon
                 points={arrowPoints}
-                fill="rgba(255,255,255,0.15)"
+                fill={theme.text.primary}
+                fillOpacity={0.15}
               />
             </g>
           );
@@ -159,7 +171,7 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
           if (!pos) return null;
 
           const isSelected = selectedNodeId === node.id;
-          const nodeColor = node.color;
+          const nodeColor = remapColor(node.color);
 
           return (
             <g
@@ -191,8 +203,8 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
                 height={NODE_H}
                 rx={8}
                 ry={8}
-                fill={withGlow(nodeColor, 0.1)}
-                stroke={withGlow(nodeColor, isSelected ? 0.6 : 0.3)}
+                fill={withGlow(nodeColor, 0.12)}
+                stroke={withGlow(nodeColor, isSelected ? 0.6 : 0.4)}
                 strokeWidth={1}
               />
 
@@ -208,7 +220,7 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
                       textAnchor="middle"
                       dominantBaseline="central"
                       fill={nodeColor}
-                      fontSize={10}
+                      fontSize={sz(10)}
                       fontWeight={600}
                       fontFamily="'IBM Plex Mono', monospace"
                       style={{ pointerEvents: "none" }}
@@ -227,7 +239,7 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
                     textAnchor="middle"
                     dominantBaseline="central"
                     fill={nodeColor}
-                    fontSize={10}
+                    fontSize={sz(10)}
                     fontWeight={600}
                     fontFamily="'IBM Plex Mono', monospace"
                     style={{ pointerEvents: "none" }}

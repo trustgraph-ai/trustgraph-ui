@@ -1,7 +1,8 @@
 import { useRef, useEffect } from "react";
 import { AgentStepCard } from "./AgentStepCard";
 import type { AgentStep } from "../../hooks/useAgent";
-import { text, withGlow, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import { withGlow } from "../../theme";
 
 interface AgentStepListProps {
   /** Agent reasoning steps */
@@ -16,6 +17,7 @@ interface AgentStepListProps {
  * Scrollable list of agent reasoning steps with auto-scroll.
  */
 export function AgentStepList({ steps, isQuerying, error }: AgentStepListProps) {
+  const { theme, sz } = useTheme();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,14 +33,14 @@ export function AgentStepList({ steps, isQuerying, error }: AgentStepListProps) 
         border: "1px solid rgba(239,68,68,0.2)",
       }}>
         <div style={{
-          fontSize: 10,
+          fontSize: sz(10),
           color: "rgba(239,68,68,0.53)",
           fontFamily: "'IBM Plex Mono', monospace",
           marginBottom: 6,
         }}>
           ERROR
         </div>
-        <div style={{ fontSize: 13, color: text.secondary, lineHeight: 1.6 }}>
+        <div style={{ fontSize: sz(13), color: theme.text.secondary, lineHeight: 1.6 }}>
           {error}
         </div>
       </div>
@@ -62,8 +64,8 @@ export function AgentStepList({ steps, isQuerying, error }: AgentStepListProps) 
       {isQuerying && steps.length === 0 && (
         <div style={{
           padding: "8px 12px",
-          fontSize: 11,
-          color: withGlow(palette.amber, 0.6),
+          fontSize: sz(11),
+          color: withGlow(theme.palette.amber, 0.6),
           fontFamily: "'IBM Plex Mono', monospace",
         }}>
           Agent is thinking...

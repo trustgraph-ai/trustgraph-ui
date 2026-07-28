@@ -1,4 +1,4 @@
-import { text, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface FilterButtonProps {
   label: string;
@@ -9,6 +9,7 @@ interface FilterButtonProps {
 }
 
 export function FilterButton({ label, icon, color, isActive, onClick }: FilterButtonProps) {
+  const { theme, sz } = useTheme();
   const activeColor = color || "#fff";
 
   return (
@@ -17,10 +18,10 @@ export function FilterButton({ label, icon, color, isActive, onClick }: FilterBu
       style={{
         padding: "5px 12px",
         borderRadius: 20,
-        border: `1px solid ${isActive ? activeColor + "88" : border.medium}`,
+        border: `1px solid ${isActive ? activeColor + "88" : theme.border.medium}`,
         background: isActive ? activeColor + "15" : "transparent",
-        color: isActive ? activeColor : text.subtle,
-        fontSize: 11,
+        color: isActive ? activeColor : theme.text.subtle,
+        fontSize: sz(11),
         cursor: "pointer",
         fontFamily: "'IBM Plex Mono', monospace",
       }}

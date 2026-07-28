@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { PromptData } from "../../hooks/usePromptDetail";
-import { text, border, surface, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface PromptEditorProps {
   data: PromptData;
@@ -17,6 +17,7 @@ export function PromptEditor({
   saveError,
   readOnly,
 }: PromptEditorProps) {
+  const { theme, sz } = useTheme();
   const [promptText, setPromptText] = useState(data.prompt);
   const [responseType, setResponseType] = useState(data.responseType);
   const [schemaText, setSchemaText] = useState(
@@ -28,7 +29,6 @@ export function PromptEditor({
   );
   const [schemaError, setSchemaError] = useState<string | null>(null);
 
-  // Reset when data changes (different prompt selected)
   useEffect(() => {
     setPromptText(data.prompt);
     setResponseType(data.responseType);
@@ -88,10 +88,10 @@ export function PromptEditor({
         marginBottom: 16,
       }}>
         <div style={{
-          fontSize: 10,
+          fontSize: sz(10),
           fontFamily: "'IBM Plex Mono', monospace",
           fontWeight: 600,
-          color: text.faint,
+          color: theme.text.faint,
           letterSpacing: "0.1em",
         }}>
           TEMPLATE
@@ -100,7 +100,7 @@ export function PromptEditor({
         {!readOnly && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {saveError && (
-              <span style={{ fontSize: 11, color: palette.red }}>{saveError}</span>
+              <span style={{ fontSize: sz(11), color: theme.palette.red }}>{saveError}</span>
             )}
             <button
               onClick={handleSave}
@@ -108,10 +108,10 @@ export function PromptEditor({
               style={{
                 padding: "5px 14px",
                 borderRadius: 6,
-                border: `1px solid ${isDirty ? palette.emerald + "44" : border.default}`,
-                background: isDirty ? `${palette.emerald}1a` : "transparent",
-                color: isDirty ? palette.emerald : text.faint,
-                fontSize: 11,
+                border: `1px solid ${isDirty ? theme.palette.emerald + "44" : theme.border.default}`,
+                background: isDirty ? `${theme.palette.emerald}1a` : "transparent",
+                color: isDirty ? theme.palette.emerald : theme.text.faint,
+                fontSize: sz(11),
                 fontFamily: "'IBM Plex Mono', monospace",
                 fontWeight: 600,
                 cursor: isSaving ? "wait" : "pointer",
@@ -135,10 +135,10 @@ export function PromptEditor({
           minHeight: 200,
           padding: 14,
           borderRadius: 8,
-          border: `1px solid ${border.default}`,
-          background: surface.card,
-          color: text.primary,
-          fontSize: 12,
+          border: `1px solid ${theme.border.default}`,
+          background: theme.surface.card,
+          color: theme.text.primary,
+          fontSize: sz(12),
           fontFamily: "'IBM Plex Mono', monospace",
           lineHeight: 1.6,
           resize: "none",
@@ -155,9 +155,9 @@ export function PromptEditor({
         marginTop: 12,
       }}>
         <span style={{
-          fontSize: 10,
+          fontSize: sz(10),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: text.faint,
+          color: theme.text.faint,
           letterSpacing: "0.1em",
         }}>
           RESPONSE TYPE
@@ -170,10 +170,10 @@ export function PromptEditor({
             style={{
               padding: "4px 10px",
               borderRadius: 4,
-              border: `1px solid ${responseType === rt ? palette.cyan + "44" : border.default}`,
-              background: responseType === rt ? `${palette.cyan}1a` : "transparent",
-              color: responseType === rt ? palette.cyan : text.subtle,
-              fontSize: 10,
+              border: `1px solid ${responseType === rt ? theme.palette.cyan + "44" : theme.border.default}`,
+              background: responseType === rt ? `${theme.palette.cyan}1a` : "transparent",
+              color: responseType === rt ? theme.palette.cyan : theme.text.subtle,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
               cursor: readOnly ? "default" : "pointer",
               transition: "all 0.15s",
@@ -194,15 +194,15 @@ export function PromptEditor({
             marginBottom: 6,
           }}>
             <span style={{
-              fontSize: 10,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
-              color: text.faint,
+              color: theme.text.faint,
               letterSpacing: "0.1em",
             }}>
               {responseType === "json" ? "RESPONSE SCHEMA" : "OBJECT SCHEMA"}
             </span>
             {schemaError && (
-              <span style={{ fontSize: 10, color: palette.red }}>{schemaError}</span>
+              <span style={{ fontSize: sz(10), color: theme.palette.red }}>{schemaError}</span>
             )}
           </div>
           <textarea
@@ -216,10 +216,10 @@ export function PromptEditor({
               height: 120,
               padding: 10,
               borderRadius: 6,
-              border: `1px solid ${schemaError ? palette.red + "44" : border.default}`,
-              background: surface.card,
-              color: text.secondary,
-              fontSize: 11,
+              border: `1px solid ${schemaError ? theme.palette.red + "44" : theme.border.default}`,
+              background: theme.surface.card,
+              color: theme.text.secondary,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
               lineHeight: 1.5,
               resize: "vertical",

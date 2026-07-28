@@ -1,4 +1,4 @@
-import { border, text as textColors } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface TextInputProps {
   /** Controlled value */
@@ -29,6 +29,8 @@ export function TextInput({
   autoFocus,
   type = "text",
 }: TextInputProps) {
+  const { theme, sz } = useTheme();
+
   return (
     <input
       type={type}
@@ -46,11 +48,11 @@ export function TextInput({
       style={{
         width: "100%",
         padding: "10px 14px",
-        fontSize: 14,
+        fontSize: sz(14),
         fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
-        color: textColors.primary,
+        color: theme.text.primary,
         background: "transparent",
-        border: `1px solid ${border.medium}`,
+        border: `1px solid ${theme.border.medium}`,
         borderRadius: 8,
         outline: "none",
         opacity: disabled ? 0.5 : 1,

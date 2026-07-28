@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import type { PromptListItem } from "../../hooks/usePromptList";
-import { text, border, surface, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface PromptListProps {
   prompts: PromptListItem[];
@@ -19,6 +19,7 @@ export function PromptList({
   isLoading,
   error,
 }: PromptListProps) {
+  const { theme, sz } = useTheme();
   const systemPrompts = prompts.filter(p => p.isSystem);
   const templates = prompts.filter(p => !p.isSystem);
   const [showCreate, setShowCreate] = useState(false);
@@ -45,10 +46,10 @@ export function PromptList({
         marginBottom: 12,
       }}>
         <div style={{
-          fontSize: 10,
+          fontSize: sz(10),
           fontFamily: "'IBM Plex Mono', monospace",
           fontWeight: 600,
-          color: text.faint,
+          color: theme.text.faint,
           letterSpacing: "0.1em",
         }}>
           PROMPTS
@@ -63,10 +64,10 @@ export function PromptList({
             style={{
               padding: "3px 8px",
               borderRadius: 4,
-              border: `1px solid ${showCreate ? palette.emerald + "44" : border.default}`,
-              background: showCreate ? `${palette.emerald}1a` : "transparent",
-              color: showCreate ? palette.emerald : text.faint,
-              fontSize: 10,
+              border: `1px solid ${showCreate ? theme.palette.emerald + "44" : theme.border.default}`,
+              background: showCreate ? `${theme.palette.emerald}1a` : "transparent",
+              color: showCreate ? theme.palette.emerald : theme.text.faint,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
               cursor: "pointer",
               transition: "all 0.15s",
@@ -95,10 +96,10 @@ export function PromptList({
               flex: 1,
               padding: "5px 8px",
               borderRadius: 4,
-              border: `1px solid ${border.default}`,
-              background: surface.card,
-              color: text.primary,
-              fontSize: 11,
+              border: `1px solid ${theme.border.default}`,
+              background: theme.surface.card,
+              color: theme.text.primary,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
               outline: "none",
             }}
@@ -109,10 +110,10 @@ export function PromptList({
             style={{
               padding: "5px 10px",
               borderRadius: 4,
-              border: `1px solid ${palette.emerald}44`,
-              background: `${palette.emerald}1a`,
-              color: !newName.trim() ? text.disabled : palette.emerald,
-              fontSize: 10,
+              border: `1px solid ${theme.palette.emerald}44`,
+              background: `${theme.palette.emerald}1a`,
+              color: !newName.trim() ? theme.text.disabled : theme.palette.emerald,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
               fontWeight: 600,
               cursor: creating ? "wait" : "pointer",
@@ -125,9 +126,9 @@ export function PromptList({
 
       {isLoading && (
         <div style={{
-          fontSize: 11,
+          fontSize: sz(11),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: palette.amber,
+          color: theme.palette.amber,
           marginBottom: 8,
         }}>
           loading...
@@ -136,8 +137,8 @@ export function PromptList({
 
       {error && (
         <div style={{
-          fontSize: 11,
-          color: palette.red,
+          fontSize: sz(11),
+          color: theme.palette.red,
           marginBottom: 8,
         }}>
           {error}
@@ -149,9 +150,9 @@ export function PromptList({
         {systemPrompts.length > 0 && (
           <div style={{ marginBottom: 16 }}>
             <div style={{
-              fontSize: 9,
+              fontSize: sz(9),
               fontFamily: "'IBM Plex Mono', monospace",
-              color: text.hint,
+              color: theme.text.hint,
               letterSpacing: "0.1em",
               marginBottom: 6,
               textTransform: "uppercase",
@@ -164,6 +165,8 @@ export function PromptList({
                 item={p}
                 isSelected={selectedId === p.id}
                 onSelect={onSelect}
+                theme={theme}
+                sz={sz}
               />
             ))}
           </div>
@@ -173,9 +176,9 @@ export function PromptList({
         {templates.length > 0 && (
           <div>
             <div style={{
-              fontSize: 9,
+              fontSize: sz(9),
               fontFamily: "'IBM Plex Mono', monospace",
-              color: text.hint,
+              color: theme.text.hint,
               letterSpacing: "0.1em",
               marginBottom: 6,
               textTransform: "uppercase",
@@ -188,6 +191,8 @@ export function PromptList({
                 item={p}
                 isSelected={selectedId === p.id}
                 onSelect={onSelect}
+                theme={theme}
+                sz={sz}
               />
             ))}
           </div>
@@ -201,10 +206,14 @@ function PromptItem({
   item,
   isSelected,
   onSelect,
+  theme,
+  sz,
 }: {
   item: PromptListItem;
   isSelected: boolean;
   onSelect: (id: string) => void;
+  theme: ReturnType<typeof import("../../theme/ThemeContext").useTheme>["theme"];
+  sz: (px: number) => number;
 }) {
   return (
     <button
@@ -216,17 +225,17 @@ function PromptItem({
         padding: "7px 10px",
         marginBottom: 2,
         borderRadius: 6,
-        border: isSelected ? `1px solid ${palette.cyan}44` : "1px solid transparent",
-        background: isSelected ? `${palette.cyan}1a` : "transparent",
-        color: isSelected ? palette.cyan : text.secondary,
-        fontSize: 11,
+        border: isSelected ? `1px solid ${theme.palette.cyan}44` : "1px solid transparent",
+        background: isSelected ? `${theme.palette.cyan}1a` : "transparent",
+        color: isSelected ? theme.palette.cyan : theme.text.secondary,
+        fontSize: sz(11),
         fontFamily: "'IBM Plex Mono', monospace",
         cursor: "pointer",
         transition: "all 0.15s",
       }}
       onMouseEnter={(e) => {
         if (!isSelected) {
-          e.currentTarget.style.background = surface.cardHover;
+          e.currentTarget.style.background = theme.surface.cardHover;
         }
       }}
       onMouseLeave={(e) => {

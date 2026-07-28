@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { SearchInput, SearchPreset, SectionLabel, Toolbar, EmptyState } from "../common";
 import { StreamingResponse } from "./StreamingResponse";
 import { useGraphRag } from "../../hooks/useGraphRag";
-import { palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useSettings } from "@trustgraph/react-state";
 
 interface SimpleRagViewProps {
@@ -15,6 +15,7 @@ interface SimpleRagViewProps {
  * Just a query input and a streaming response.
  */
 export function SimpleRagView({ collection: collectionProp, presets }: SimpleRagViewProps) {
+  const { theme } = useTheme();
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -43,7 +44,7 @@ export function SimpleRagView({ collection: collectionProp, presets }: SimpleRag
           placeholder="Ask a question..."
           buttonText="Query"
           isLoading={isQuerying}
-          buttonColor={palette.cyan}
+          buttonColor={theme.palette.cyan}
           presets={presets}
         />
       </Toolbar>

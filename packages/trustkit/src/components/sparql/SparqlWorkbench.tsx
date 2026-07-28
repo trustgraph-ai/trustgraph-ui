@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from "react";
-import { text, border, palette, surface } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { SectionLabel } from "../common";
 
 export interface SparqlResult {
@@ -95,6 +95,7 @@ function shortenUri(uri: string): string {
 }
 
 export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
+  const { theme, sz } = useTheme();
   const [query, setQuery] = useState(DEFAULT_QUERY);
   const [result, setResult] = useState<SparqlResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -155,7 +156,7 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
       {/* Toolbar */}
       <div style={{
         padding: "8px 16px",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
         gap: 8,
@@ -168,10 +169,10 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
             style={{
               padding: "4px 10px",
               borderRadius: 4,
-              border: `1px solid ${border.default}`,
+              border: `1px solid ${theme.border.default}`,
               background: "transparent",
-              color: text.subtle,
-              fontSize: 10,
+              color: theme.text.subtle,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
               cursor: "pointer",
             }}
@@ -184,8 +185,8 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
               top: "100%",
               left: 0,
               marginTop: 4,
-              background: "#1a1a22",
-              border: `1px solid ${border.default}`,
+              background: theme.surface.overlay,
+              border: `1px solid ${theme.border.default}`,
               borderRadius: 6,
               padding: 4,
               zIndex: 20,
@@ -203,13 +204,13 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
                     border: "none",
                     borderRadius: 4,
                     background: "transparent",
-                    color: text.muted,
-                    fontSize: 11,
+                    color: theme.text.muted,
+                    fontSize: sz(11),
                     fontFamily: "'IBM Plex Mono', monospace",
                     cursor: "pointer",
                     textAlign: "left",
                   }}
-                  onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+                  onMouseEnter={(e) => { (e.target as HTMLElement).style.background = theme.surface.cardHover; }}
                   onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
                 >
                   {ex.label}
@@ -226,10 +227,10 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
               style={{
                 padding: "4px 10px",
                 borderRadius: 4,
-                border: `1px solid ${border.default}`,
+                border: `1px solid ${theme.border.default}`,
                 background: "transparent",
-                color: text.subtle,
-                fontSize: 10,
+                color: theme.text.subtle,
+                fontSize: sz(10),
                 fontFamily: "'IBM Plex Mono', monospace",
                 cursor: "pointer",
               }}
@@ -242,8 +243,8 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
                 top: "100%",
                 left: 0,
                 marginTop: 4,
-                background: "#1a1a22",
-                border: `1px solid ${border.default}`,
+                background: theme.surface.overlay,
+                border: `1px solid ${theme.border.default}`,
                 borderRadius: 6,
                 padding: 4,
                 zIndex: 20,
@@ -261,13 +262,13 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
                       border: "none",
                       borderRadius: 4,
                       background: "transparent",
-                      color: text.muted,
-                      fontSize: 11,
+                      color: theme.text.muted,
+                      fontSize: sz(11),
                       fontFamily: "'IBM Plex Mono', monospace",
                       cursor: "pointer",
                       textAlign: "left",
                     }}
-                    onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+                    onMouseEnter={(e) => { (e.target as HTMLElement).style.background = theme.surface.cardHover; }}
                     onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
                     title={p.description}
                   >
@@ -286,10 +287,10 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
           style={{
             padding: "4px 10px",
             borderRadius: 4,
-            border: `1px solid ${border.default}`,
+            border: `1px solid ${theme.border.default}`,
             background: "transparent",
-            color: text.faint,
-            fontSize: 10,
+            color: theme.text.faint,
+            fontSize: sz(10),
             fontFamily: "'IBM Plex Mono', monospace",
             cursor: "pointer",
           }}
@@ -303,10 +304,10 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
           style={{
             padding: "4px 14px",
             borderRadius: 4,
-            border: `1px solid ${onExecute ? palette.emerald + "66" : border.default}`,
-            background: onExecute ? palette.emerald + "18" : "transparent",
-            color: onExecute ? palette.emerald : text.disabled,
-            fontSize: 10,
+            border: `1px solid ${onExecute ? theme.palette.emerald + "66" : theme.border.default}`,
+            background: onExecute ? theme.palette.emerald + "18" : "transparent",
+            color: onExecute ? theme.palette.emerald : theme.text.disabled,
+            fontSize: sz(10),
             fontFamily: "'IBM Plex Mono', monospace",
             cursor: onExecute ? "pointer" : "default",
             fontWeight: 600,
@@ -323,7 +324,7 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
         maxHeight: "40%",
         minHeight: 120,
         display: "flex",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
       }}>
         {/* Line numbers */}
         <div style={{
@@ -331,12 +332,12 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
           width: 40,
           textAlign: "right",
           paddingRight: 8,
-          color: text.hint,
-          fontSize: 11,
+          color: theme.text.hint,
+          fontSize: sz(11),
           fontFamily: "'IBM Plex Mono', monospace",
           lineHeight: "1.5",
           userSelect: "none",
-          borderRight: `1px solid ${border.default}`,
+          borderRight: `1px solid ${theme.border.default}`,
           overflow: "hidden",
         }}>
           {Array.from({ length: lineCount }, (_, i) => (
@@ -356,8 +357,8 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
             background: "transparent",
             border: "none",
             outline: "none",
-            color: text.primary,
-            fontSize: 12,
+            color: theme.text.primary,
+            fontSize: sz(12),
             fontFamily: "'IBM Plex Mono', monospace",
             lineHeight: "1.5",
             resize: "none",
@@ -371,22 +372,22 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
         {/* Results header */}
         <div style={{
           padding: "6px 16px",
-          borderBottom: `1px solid ${border.default}`,
+          borderBottom: `1px solid ${theme.border.default}`,
           display: "flex",
           alignItems: "center",
           gap: 8,
         }}>
-          <span style={{ fontSize: 9, color: text.hint, fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Results
           </span>
           {result && (
-            <span style={{ fontSize: 9, color: text.faint, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <span style={{ fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace" }}>
               {result.rows.length} row{result.rows.length !== 1 ? "s" : ""}
               {elapsed !== null && ` · ${(elapsed / 1000).toFixed(2)}s`}
             </span>
           )}
           {error && (
-            <span style={{ fontSize: 9, color: palette.rose, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <span style={{ fontSize: sz(9), color: theme.palette.rose, fontFamily: "'IBM Plex Mono', monospace" }}>
               Error{elapsed !== null && ` · ${(elapsed / 1000).toFixed(2)}s`}
             </span>
           )}
@@ -395,7 +396,7 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
         {/* Results content */}
         <div style={{ flex: 1, overflow: "auto" }}>
           {isRunning && (
-            <div style={{ padding: 32, textAlign: "center", color: text.faint, fontSize: 12, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ padding: 32, textAlign: "center", color: theme.text.faint, fontSize: sz(12), fontFamily: "'IBM Plex Mono', monospace" }}>
               Executing query…
             </div>
           )}
@@ -405,17 +406,17 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
               margin: 16,
               padding: 16,
               borderRadius: 8,
-              background: palette.rose + "10",
-              border: `1px solid ${palette.rose}33`,
+              background: theme.palette.rose + "10",
+              border: `1px solid ${theme.palette.rose}33`,
             }}>
-              <div style={{ fontSize: 11, color: palette.rose, fontFamily: "'IBM Plex Mono', monospace", whiteSpace: "pre-wrap" }}>
+              <div style={{ fontSize: sz(11), color: theme.palette.rose, fontFamily: "'IBM Plex Mono', monospace", whiteSpace: "pre-wrap" }}>
                 {error}
               </div>
             </div>
           )}
 
           {!isRunning && !error && !result && (
-            <div style={{ padding: 32, textAlign: "center", color: text.hint, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ padding: 32, textAlign: "center", color: theme.text.hint, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
               {onExecute
                 ? "Write a query and press Ctrl+Enter to execute."
                 : "SPARQL endpoint not connected."}
@@ -423,7 +424,7 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
           )}
 
           {result && result.rows.length === 0 && (
-            <div style={{ padding: 32, textAlign: "center", color: text.faint, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ padding: 32, textAlign: "center", color: theme.text.faint, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
               Query returned no results.
             </div>
           )}
@@ -432,7 +433,7 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
             <table style={{
               width: "100%",
               borderCollapse: "collapse",
-              fontSize: 11,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
             }}>
               <thead>
@@ -443,13 +444,13 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
                       style={{
                         padding: "8px 12px",
                         textAlign: "left",
-                        color: palette.cyan,
+                        color: theme.palette.cyan,
                         fontWeight: 600,
-                        fontSize: 10,
-                        borderBottom: `1px solid ${border.default}`,
+                        fontSize: sz(10),
+                        borderBottom: `1px solid ${theme.border.default}`,
                         position: "sticky",
                         top: 0,
-                        background: surface.base,
+                        background: theme.surface.base,
                         zIndex: 1,
                       }}
                     >
@@ -462,7 +463,7 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
                 {result.rows.map((row, i) => (
                   <tr
                     key={i}
-                    style={{ background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)" }}
+                    style={{ background: i % 2 === 0 ? "transparent" : theme.surface.card }}
                   >
                     {result.columns.map(col => {
                       const val = row[col] || "";
@@ -473,8 +474,8 @@ export function SparqlWorkbench({ onExecute, presets }: SparqlWorkbenchProps) {
                           title={val}
                           style={{
                             padding: "6px 12px",
-                            color: isUri ? palette.blue : text.muted,
-                            borderBottom: `1px solid rgba(255,255,255,0.03)`,
+                            color: isUri ? theme.palette.blue : theme.text.muted,
+                            borderBottom: `1px solid ${theme.border.subtle}`,
                             maxWidth: 400,
                             overflow: "hidden",
                             textOverflow: "ellipsis",

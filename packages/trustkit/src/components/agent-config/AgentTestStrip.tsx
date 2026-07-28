@@ -5,7 +5,7 @@ import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import type { ExplainEvent } from "@trustgraph/react-state";
 import { AgentStepCard } from "../explain/AgentStepCard";
 import { ExplainEventCard } from "../explain/ExplainEventCard";
-import { text, border, surface, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface AgentTestStripProps {
   height?: number;
@@ -17,6 +17,7 @@ interface AgentTestStripProps {
  * out, debug events on the right.
  */
 export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
+  const { theme, sz } = useTheme();
   const [question, setQuestion] = useState("");
   const [selectedEventIdx, setSelectedEventIdx] = useState<number | null>(null);
 
@@ -47,24 +48,24 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
   return (
     <div style={{
       height,
-      borderTop: `1px solid ${border.default}`,
+      borderTop: `1px solid ${theme.border.default}`,
       display: "flex",
       flexDirection: "column",
-      background: surface.base,
+      background: theme.surface.base,
     }}>
       {/* Header + input */}
       <div style={{
         padding: "10px 20px",
-        borderBottom: `1px solid ${border.subtle}`,
+        borderBottom: `1px solid ${theme.border.subtle}`,
         display: "flex",
         alignItems: "center",
         gap: 10,
       }}>
         <span style={{
-          fontSize: 10,
+          fontSize: sz(10),
           fontFamily: "'IBM Plex Mono', monospace",
           fontWeight: 600,
-          color: text.faint,
+          color: theme.text.faint,
           letterSpacing: "0.1em",
           flexShrink: 0,
         }}>
@@ -82,10 +83,10 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
             flex: 1,
             padding: "7px 12px",
             borderRadius: 6,
-            border: `1px solid ${border.default}`,
-            background: surface.card,
-            color: text.primary,
-            fontSize: 12,
+            border: `1px solid ${theme.border.default}`,
+            background: theme.surface.card,
+            color: theme.text.primary,
+            fontSize: sz(12),
             fontFamily: "'IBM Plex Sans', sans-serif",
             outline: "none",
           }}
@@ -97,10 +98,10 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
           style={{
             padding: "7px 16px",
             borderRadius: 6,
-            border: `1px solid ${palette.amber}44`,
-            background: !question.trim() || isQuerying ? "transparent" : `${palette.amber}1a`,
-            color: !question.trim() || isQuerying ? text.disabled : palette.amber,
-            fontSize: 11,
+            border: `1px solid ${theme.palette.amber}44`,
+            background: !question.trim() || isQuerying ? "transparent" : `${theme.palette.amber}1a`,
+            color: !question.trim() || isQuerying ? theme.text.disabled : theme.palette.amber,
+            fontSize: sz(11),
             fontFamily: "'IBM Plex Mono', monospace",
             fontWeight: 600,
             cursor: !question.trim() || isQuerying ? "default" : "pointer",
@@ -115,10 +116,10 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
           style={{
             padding: "7px 12px",
             borderRadius: 6,
-            border: `1px solid ${border.default}`,
+            border: `1px solid ${theme.border.default}`,
             background: "transparent",
-            color: text.disabled,
-            fontSize: 11,
+            color: theme.text.disabled,
+            fontSize: sz(11),
             fontFamily: "'IBM Plex Mono', monospace",
             cursor: "not-allowed",
           }}
@@ -142,8 +143,8 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
         }}>
           {error && (
             <div style={{
-              fontSize: 12,
-              color: palette.red,
+              fontSize: sz(12),
+              color: theme.palette.red,
               fontFamily: "'IBM Plex Mono', monospace",
               marginBottom: 8,
             }}>
@@ -153,8 +154,8 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
 
           {steps.length === 0 && !isQuerying && !error && (
             <div style={{
-              fontSize: 12,
-              color: text.hint,
+              fontSize: sz(12),
+              color: theme.text.hint,
               fontStyle: "italic",
             }}>
               Type a question and click Run to test the agent.
@@ -176,31 +177,31 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
         <div style={{
           width: 220,
           flexShrink: 0,
-          borderLeft: `1px solid ${border.default}`,
+          borderLeft: `1px solid ${theme.border.default}`,
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
         }}>
           <div style={{
             padding: "8px 14px",
-            borderBottom: `1px solid ${border.subtle}`,
+            borderBottom: `1px solid ${theme.border.subtle}`,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
           }}>
             <span style={{
-              fontSize: 9,
+              fontSize: sz(9),
               fontFamily: "'IBM Plex Mono', monospace",
               fontWeight: 600,
-              color: text.faint,
+              color: theme.text.faint,
               letterSpacing: "0.1em",
             }}>
               EXPLAIN EVENTS
             </span>
             <span style={{
-              fontSize: 9,
+              fontSize: sz(9),
               fontFamily: "'IBM Plex Mono', monospace",
-              color: text.hint,
+              color: theme.text.hint,
             }}>
               {events.length}
             </span>
@@ -212,8 +213,8 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
           }}>
             {events.length === 0 && (
               <div style={{
-                fontSize: 10,
-                color: text.hint,
+                fontSize: sz(10),
+                color: theme.text.hint,
                 fontStyle: "italic",
               }}>
                 Events appear as the agent runs.
@@ -232,21 +233,21 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
                     marginBottom: 3,
                     padding: "5px 8px",
                     borderRadius: 4,
-                    background: isSelected ? `${palette.cyan}1a` : surface.card,
-                    border: `1px solid ${isSelected ? palette.cyan + "44" : border.subtle}`,
-                    fontSize: 10,
+                    background: isSelected ? `${theme.palette.cyan}1a` : theme.surface.card,
+                    border: `1px solid ${isSelected ? theme.palette.cyan + "44" : theme.border.subtle}`,
+                    fontSize: sz(10),
                     fontFamily: "'IBM Plex Mono', monospace",
-                    color: text.secondary,
+                    color: theme.text.secondary,
                     cursor: "pointer",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
-                    <span style={{ color: isSelected ? palette.cyan : text.faint }}>
+                    <span style={{ color: isSelected ? theme.palette.cyan : theme.text.faint }}>
                       #{i + 1}
                     </span>
                     <span style={{
-                      color: evt.fetched ? palette.emerald : text.hint,
-                      fontSize: 9,
+                      color: evt.fetched ? theme.palette.emerald : theme.text.hint,
+                      fontSize: sz(9),
                     }}>
                       {evt.eventType}
                     </span>
@@ -262,7 +263,7 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
           <div style={{
             width: 360,
             flexShrink: 0,
-            borderLeft: `1px solid ${border.default}`,
+            borderLeft: `1px solid ${theme.border.default}`,
             overflowY: "auto",
             padding: "12px 16px",
           }}>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import type { DomainKey, Entity, GraphNode, OntologyType, Relationship } from "../../types";
 import { ZoomControls } from "./ZoomControls";
-import { border, text, surface } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 function truncateLabel(label: string, maxLength = 30): string {
   if (label.length <= maxLength) return label;
@@ -103,6 +103,7 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
   const [hovered, setHovered] = useState<string | null>(null);
   const [time, setTime] = useState(0);
   const animRef = useRef<number>(0);
+  const { theme, sz } = useTheme();
 
   const [camera, setCamera] = useState<Camera>(() => ({
     rot: mat3Multiply(mat3RotX(0.3), mat3RotY(0.5)),
@@ -233,13 +234,13 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
     const { width, height } = containerSize;
     if (width === 0) return lines;
     for (let x = 0; x < width; x += 30) {
-      lines.push(<line key={`v-${x}`} x1={x} y1={0} x2={x} y2={height} stroke={border.grid} strokeWidth={0.5} />);
+      lines.push(<line key={`v-${x}`} x1={x} y1={0} x2={x} y2={height} stroke={theme.border.grid} strokeWidth={0.5} />);
     }
     for (let y = 0; y < height; y += 30) {
-      lines.push(<line key={`h-${y}`} x1={0} y1={y} x2={width} y2={y} stroke={border.grid} strokeWidth={0.5} />);
+      lines.push(<line key={`h-${y}`} x1={0} y1={y} x2={width} y2={y} stroke={theme.border.grid} strokeWidth={0.5} />);
     }
     return lines;
-  }, [containerSize]);
+  }, [containerSize, theme]);
 
   // ── Mouse handlers ────────────────────────────────────────────
 
@@ -353,7 +354,7 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
                 y={dc.sy}
                 fill={dc.color + "44"}
                 fillOpacity={clamp(dc.scale * 0.8, 0.05, 1)}
-                fontSize={11 * dc.scale}
+                fontSize={sz(11) * dc.scale}
                 fontWeight="bold"
                 fontFamily="'IBM Plex Mono', monospace"
                 textAnchor="middle"
@@ -407,7 +408,7 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
                   fill="none"
                 />
                 {showParticle && (
-                  <circle cx={px} cy={py} r={1.5 * avgScale} fill="#fff" fillOpacity={depthAlpha} />
+                  <circle cx={px} cy={py} r={1.5 * avgScale} fill={theme.text.primary} fillOpacity={depthAlpha} />
                 )}
               </g>
             );
@@ -468,8 +469,9 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
                   <text
                     x={sx}
                     y={sy + r + 8 * scale}
-                    fill={`rgba(255,255,255,${alpha * (isHighlighted ? 1 : 0.7)})`}
-                    fontSize={(isHovered ? 8.5 : 7) * scale}
+                    fill={theme.text.primary}
+                    fillOpacity={alpha * (isHighlighted ? 1 : 0.7)}
+                    fontSize={sz(isHovered ? 8.5 : 7) * scale}
                     fontWeight={isHighlighted ? "bold" : "normal"}
                     fontFamily="'IBM Plex Sans', sans-serif"
                     textAnchor="middle"
@@ -495,9 +497,9 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
         position: "absolute",
         bottom: 16,
         left: 16,
-        fontSize: 10,
+        fontSize: sz(10),
         fontFamily: "'IBM Plex Mono', monospace",
-        color: text.hint,
+        color: theme.text.hint,
       }}>
         drag to rotate · scroll to zoom · right-drag to pan
       </div>
@@ -512,7 +514,7 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
             position: "absolute",
             left: p.sx + 20,
             top: p.sy - 20,
-            background: surface.overlay,
+            background: theme.surface.overlay,
             border: `1px solid ${p.node.color}44`,
             borderRadius: 8,
             padding: "10px 14px",
@@ -521,10 +523,10 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
             zIndex: 10,
             minWidth: 180,
           }}>
-            <div style={{ color: p.node.color, fontWeight: 700, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: p.node.color, fontWeight: 700, fontSize: sz(13), fontFamily: "'IBM Plex Mono', monospace" }}>
               {p.node.icon} {p.node.label}
             </div>
-            <div style={{ color: "#888", fontSize: 11, marginTop: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: "#888", fontSize: sz(11), marginTop: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
               {Object.entries(p.node.props || {}).map(([k, v]) => (
                 <div key={k}><span style={{ color: "#666" }}>{k}:</span> <span style={{ color: "#ccc" }}>{String(v)}</span></div>
               ))}
