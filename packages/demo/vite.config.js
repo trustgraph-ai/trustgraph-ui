@@ -10,8 +10,7 @@ export default defineConfig({
     host: true,
     proxy: {
       "/api/v1": {
-//        target: "http://localhost:8088/",
-        target: "https://azure-play.dev.trustgraph.ai/",
+        target: "http://localhost:8088/",
         changeOrigin: true,
         secure: false,
         ws: true,
