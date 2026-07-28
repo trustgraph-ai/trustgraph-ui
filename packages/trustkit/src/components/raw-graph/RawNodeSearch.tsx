@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { RawNode } from "../../hooks/useRawGraphData";
-import { text, palette, border, surface } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface RawNodeSearchProps {
   /** Called with search results when the user types */
@@ -22,6 +22,7 @@ export function RawNodeSearch({
   stats,
   isFetching,
 }: RawNodeSearchProps) {
+  const { theme, sz } = useTheme();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<RawNode[]>([]);
   const [ready, setReady] = useState(false);
@@ -71,10 +72,10 @@ export function RawNodeSearch({
             width: "100%",
             padding: "8px 12px",
             borderRadius: 6,
-            border: `1px solid ${border.default}`,
-            background: surface.card,
-            color: text.primary,
-            fontSize: 13,
+            border: `1px solid ${theme.border.default}`,
+            background: theme.surface.card,
+            color: theme.text.primary,
+            fontSize: sz(13),
             fontFamily: "'IBM Plex Sans', sans-serif",
             outline: "none",
           }}
@@ -84,9 +85,9 @@ export function RawNodeSearch({
       {/* Stats */}
       {stats && (
         <div style={{
-          fontSize: 10,
+          fontSize: sz(10),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: text.hint,
+          color: theme.text.hint,
           marginBottom: 12,
           padding: "0 2px",
         }}>
@@ -97,9 +98,9 @@ export function RawNodeSearch({
       {/* Loading */}
       {(isFetching || (!ready && query)) && (
         <div style={{
-          fontSize: 11,
+          fontSize: sz(11),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: palette.amber,
+          color: theme.palette.amber,
           marginBottom: 8,
           padding: "0 2px",
         }}>
@@ -126,7 +127,7 @@ export function RawNodeSearch({
               transition: "all 0.15s",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = surface.cardHover;
+              e.currentTarget.style.background = theme.surface.cardHover;
               e.currentTarget.style.borderColor = `${node.color}44`;
             }}
             onMouseLeave={(e) => {
@@ -135,7 +136,7 @@ export function RawNodeSearch({
             }}
           >
             <div style={{
-              fontSize: 12,
+              fontSize: sz(12),
               color: node.color,
               fontWeight: 600,
               fontFamily: "'IBM Plex Sans', sans-serif",
@@ -147,8 +148,8 @@ export function RawNodeSearch({
         {query && ready && results.length === 0 && (
           <div style={{
             padding: "20px 4px",
-            fontSize: 12,
-            color: text.hint,
+            fontSize: sz(12),
+            color: theme.text.hint,
             fontStyle: "italic",
           }}>
             {query.startsWith("http") ? "Press Enter to navigate to this URI" : "No matches"}
@@ -157,8 +158,8 @@ export function RawNodeSearch({
         {!query && (
           <div style={{
             padding: "20px 4px",
-            fontSize: 12,
-            color: text.hint,
+            fontSize: sz(12),
+            color: theme.text.hint,
             fontStyle: "italic",
             lineHeight: 1.6,
           }}>

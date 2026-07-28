@@ -1,4 +1,4 @@
-import { border, text } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface Mode {
   key: string;
@@ -25,11 +25,14 @@ export function ModeSelector({
   modes,
   activeMode,
   onChange,
-  color = "#67E8F9",
+  color,
   disabled,
 }: ModeSelectorProps) {
+  const { theme, sz } = useTheme();
+  const accent = color ?? theme.palette.cyan;
+
   return (
-    <div style={{ display: "flex", gap: 4 }}>
+    <div style={{ display: "flex", gap: sz(4) }}>
       {modes.map((mode) => {
         const isActive = activeMode === mode.key;
         return (
@@ -38,15 +41,15 @@ export function ModeSelector({
             onClick={() => onChange(mode.key)}
             disabled={disabled}
             style={{
-              padding: "5px 14px",
+              padding: `${sz(5)}px ${sz(14)}px`,
               borderRadius: 6,
-              fontSize: 11,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
               fontWeight: 600,
               cursor: disabled ? "default" : "pointer",
-              background: isActive ? `${color}26` : "transparent",
-              border: `1px solid ${isActive ? `${color}66` : border.default}`,
-              color: isActive ? color : text.muted,
+              background: isActive ? `${accent}26` : "transparent",
+              border: `1px solid ${isActive ? `${accent}66` : theme.border.default}`,
+              color: isActive ? accent : theme.text.muted,
               opacity: disabled ? 0.5 : 1,
               transition: "all 0.15s ease",
             }}

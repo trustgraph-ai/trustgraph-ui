@@ -1,4 +1,4 @@
-import { surface, border, text } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface ZoomControlsProps {
   zoom: number;
@@ -8,15 +8,17 @@ interface ZoomControlsProps {
 }
 
 export function ZoomControls({ zoom, onZoomIn, onZoomOut, onReset }: ZoomControlsProps) {
+  const { theme, sz } = useTheme();
+
   const buttonStyle: React.CSSProperties = {
-    width: 28,
-    height: 28,
+    width: sz(28),
+    height: sz(28),
     border: "none",
     borderRadius: 4,
-    background: border.medium,
-    color: text.subtle,
+    background: theme.border.medium,
+    color: theme.text.subtle,
     cursor: "pointer",
-    fontSize: 16,
+    fontSize: sz(16),
     fontWeight: "bold",
   };
 
@@ -30,10 +32,10 @@ export function ZoomControls({ zoom, onZoomIn, onZoomOut, onReset }: ZoomControl
         display: "flex",
         flexDirection: "column",
         gap: 4,
-        background: surface.overlayLight,
+        background: theme.surface.overlayLight,
         borderRadius: 8,
         padding: 4,
-        border: `1px solid ${border.medium}`,
+        border: `1px solid ${theme.border.medium}`,
       }}>
         <button
           onClick={onZoomIn}
@@ -47,7 +49,7 @@ export function ZoomControls({ zoom, onZoomIn, onZoomOut, onReset }: ZoomControl
         >−</button>
         <button
           onClick={onReset}
-          style={{ ...buttonStyle, fontSize: 10 }}
+          style={{ ...buttonStyle, fontSize: sz(10) }}
           title="Reset view"
         >⟲</button>
       </div>
@@ -58,10 +60,10 @@ export function ZoomControls({ zoom, onZoomIn, onZoomOut, onReset }: ZoomControl
           position: "absolute",
           bottom: 16,
           left: 16,
-          fontSize: 11,
+          fontSize: sz(11),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: text.faint,
-          background: surface.overlayLight,
+          color: theme.text.faint,
+          background: theme.surface.overlayLight,
           padding: "4px 8px",
           borderRadius: 4,
         }}>

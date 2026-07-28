@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface SplitPaneProps {
   /** Primary content */
@@ -28,6 +28,8 @@ export function SplitPane({
   panelBorder = true,
   height = "var(--page-height)",
 }: SplitPaneProps) {
+  const { theme } = useTheme();
+
   return (
     <div style={{ position: "relative", height }}>
       {/* Primary content — always full width */}
@@ -43,9 +45,9 @@ export function SplitPane({
           bottom: 0,
           [panelSide]: 0,
           width: panelWidth,
-          borderLeft: panelSide === "right" && panelBorder ? `1px solid ${border.default}` : undefined,
-          borderRight: panelSide === "left" && panelBorder ? `1px solid ${border.default}` : undefined,
-          background: "rgba(12,12,18,0.95)",
+          borderLeft: panelSide === "right" && panelBorder ? `1px solid ${theme.border.default}` : undefined,
+          borderRight: panelSide === "left" && panelBorder ? `1px solid ${theme.border.default}` : undefined,
+          background: theme.surface.overlay,
           backdropFilter: "blur(12px)",
           overflowY: "auto",
           zIndex: 10,

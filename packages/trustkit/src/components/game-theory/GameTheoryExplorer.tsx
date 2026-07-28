@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { useGameTheoryData } from "../../hooks/useGameTheoryData";
 import type { GTNode } from "../../hooks/useGameTheoryData";
-import { text, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import type { Theme } from "../../theme/types";
 
 const GT_SPINNER_ID = "gt-spinner-keyframes";
 function ensureSpinnerStyles() {
@@ -43,10 +44,9 @@ interface BackwardResult {
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const PLAYER_COLORS = [
-  palette.cyan, palette.amber, palette.rose, palette.emerald,
-  palette.purple, palette.pink, palette.blue, palette.orange,
-];
+function getPlayerColors(p: Theme["palette"]) {
+  return [p.cyan, p.amber, p.rose, p.emerald, p.purple, p.pink, p.blue, p.orange];
+}
 
 const LEVEL_WIDTH = 220;
 const NODE_SPACING = 100;
@@ -57,14 +57,14 @@ const NODE_SIZE = 30;
 /*  Helper: Section header                                             */
 /* ------------------------------------------------------------------ */
 
-function Section({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
+function Section({ title, color, borderColor, sz, children }: { title: string; color: string; borderColor?: string; sz: (px: number) => number; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div style={{ marginBottom: sz(16) }}>
       <div style={{
-        fontSize: 8, color, fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(8), color, fontFamily: "'IBM Plex Mono', monospace",
         textTransform: "uppercase", letterSpacing: "0.06em",
-        marginBottom: 6, paddingBottom: 4,
-        borderBottom: `1px solid ${color}22`,
+        marginBottom: sz(6), paddingBottom: sz(4),
+        borderBottom: `1px solid ${borderColor ?? `${color}22`}`,
       }}>
         {title}
       </div>
@@ -78,6 +78,7 @@ function Section({ title, color, children }: { title: string; color: string; chi
 /* ------------------------------------------------------------------ */
 
 export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
+  const { theme, sz } = useTheme();
   const data = useGameTheoryData();
   const [mode, setMode] = useState<ExplorerMode>("tree");
   const [selectedGameUri, setSelectedGameUri] = useState<string | null>(null);
@@ -108,10 +109,11 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
   }, [data.nodes]);
 
   const playerColorMap = useMemo(() => {
+    const colors = getPlayerColors(theme.palette);
     const m = new Map<string, string>();
-    players.forEach((p, i) => m.set(p.uri, PLAYER_COLORS[i % PLAYER_COLORS.length]));
+    players.forEach((p, i) => m.set(p.uri, colors[i % colors.length]));
     return m;
-  }, [players]);
+  }, [players, theme.palette]);
 
   const playerLabel = useCallback((uri: string): string => {
     const n = data.nodes.get(uri);
@@ -664,7 +666,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
     onClickNode?: (id: string) => void,
     mini?: boolean,
   ) => {
-    if (!tree) return <div style={{ padding: 24, color: text.muted, fontSize: 11 }}>No tree data available.</div>;
+    if (!tree) return <div style={{ padding: sz(24), color: theme.text.muted, fontSize: sz(11) }}>No tree data available.</div>;
 
     // Compute SVG dimensions
     let maxDepth = 0;
@@ -707,7 +709,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             key={`edge-${edgeKey}`}
             d={pathD}
             fill="none"
-            stroke={isOptimal ? palette.emerald : "rgba(255,255,255,0.35)"}
+            stroke={isOptimal ? theme.palette.emerald : theme.text.faint}
             strokeWidth={isOptimal ? 2.5 : 1.5}
             opacity={isOptimal ? 0.9 : 0.8}
           />,
@@ -721,8 +723,8 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             key={`elabel-${edgeKey}`}
             x={labelX}
             y={labelY}
-            fill={isOptimal ? palette.emerald : text.muted}
-            fontSize={mini ? 7 : 9}
+            fill={isOptimal ? theme.palette.emerald : theme.text.muted}
+            fontSize={sz(mini ? 7 : 9)}
             fontFamily="'IBM Plex Mono', monospace"
             textAnchor="middle"
           >
@@ -737,8 +739,8 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               key={`prob-${edgeKey}`}
               x={labelX}
               y={labelY + (mini ? 10 : 12)}
-              fill={text.subtle}
-              fontSize={mini ? 6 : 8}
+              fill={theme.text.subtle}
+              fontSize={sz(mini ? 6 : 8)}
               fontFamily="'IBM Plex Mono', monospace"
               textAnchor="middle"
             >
@@ -751,7 +753,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
       }
 
       // Render node shape
-      const pColor = node.playerUri ? (playerColorMap.get(node.playerUri) || text.muted) : text.muted;
+      const pColor = node.playerUri ? (playerColorMap.get(node.playerUri) || theme.text.muted) : theme.text.muted;
 
       if (node.kind === "DecisionNode") {
         nodes.push(
@@ -773,7 +775,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               x={cx}
               y={cy - NODE_SIZE / 2 - 6}
               fill={pColor}
-              fontSize={mini ? 7 : 10}
+              fontSize={sz(mini ? 7 : 10)}
               fontFamily="'IBM Plex Mono', monospace"
               textAnchor="middle"
               fontWeight={600}
@@ -792,16 +794,16 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               cx={cx}
               cy={cy}
               r={NODE_SIZE / 2}
-              fill="rgba(255,255,255,0.06)"
-              stroke="rgba(255,255,255,0.3)"
+              fill={theme.surface.card}
+              stroke={theme.text.faint}
               strokeWidth={1}
               strokeDasharray="4 2"
             />
             <text
               x={cx}
               y={cy + 3}
-              fill={text.muted}
-              fontSize={mini ? 7 : 9}
+              fill={theme.text.muted}
+              fontSize={sz(mini ? 7 : 9)}
               fontFamily="'IBM Plex Mono', monospace"
               textAnchor="middle"
             >
@@ -810,8 +812,8 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             <text
               x={cx}
               y={cy - NODE_SIZE / 2 - 6}
-              fill={text.secondary}
-              fontSize={mini ? 7 : 10}
+              fill={theme.text.secondary}
+              fontSize={sz(mini ? 7 : 10)}
               fontFamily="'IBM Plex Mono', monospace"
               textAnchor="middle"
               fontWeight={600}
@@ -827,7 +829,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
 
         // Determine best payoff color
         const payoffUris = data.outcomePayoffs.get(node.uri) || [];
-        let bestColor = "rgba(255,255,255,0.06)";
+        let bestColor = theme.surface.card;
         let bestVal = -Infinity;
         for (const pu of payoffUris) {
           const plUri = data.payoffPlayer.get(pu);
@@ -852,8 +854,8 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             <text
               x={cx}
               y={cy - NODE_SIZE / 2 - 6}
-              fill={text.secondary}
-              fontSize={mini ? 7 : 10}
+              fill={theme.text.secondary}
+              fontSize={sz(mini ? 7 : 10)}
               fontFamily="'IBM Plex Mono', monospace"
               textAnchor="middle"
               fontWeight={600}
@@ -870,7 +872,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             const plUri = data.payoffPlayer.get(pu);
             const val = data.utilities.get(pu) ?? 0;
             if (!plUri) continue;
-            const col = playerColorMap.get(plUri) || text.muted;
+            const col = playerColorMap.get(plUri) || theme.text.muted;
             const pName = playerLabel(plUri);
             const shortName = pName.length > 12 ? pName.substring(0, 12) + "…" : pName;
             const badgeText = `${shortName}: ${val}`;
@@ -880,8 +882,8 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
 
             nodes.push(
               <g key={`payoff-${node.id}-${pu}`}>
-                <rect x={bx} y={by - 8} width={badgeW} height={14} rx={3} fill={`${col}22`} stroke={`${col}44`} strokeWidth={0.5} />
-                <text x={cx} y={by + 1} fill={col} fontSize={9} fontFamily="'IBM Plex Mono', monospace" textAnchor="middle">
+                <rect x={bx} y={by - 8} width={badgeW} height={14} rx={3} fill={`${col}33`} stroke={`${col}66`} strokeWidth={0.5} />
+                <text x={cx} y={by + 1} fill={col} fontSize={sz(9)} fontFamily="'IBM Plex Mono', monospace" textAnchor="middle">
                   {badgeText}
                 </text>
               </g>,
@@ -907,7 +909,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
         </svg>
       </div>
     );
-  }, [playerColorMap, playerLabel, data.outcomePayoffs, data.payoffPlayer, data.utilities]);
+  }, [playerColorMap, playerLabel, data.outcomePayoffs, data.payoffPlayer, data.utilities, theme, sz]);
 
   /* ---- Payoff matrix renderer -------------------------------------- */
 
@@ -919,10 +921,10 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
     const { profiles, playerUris } = md;
     const strategySets = (md as any).strategySets as Map<string, { plan: Map<string, string>; label: string }[]> | undefined;
     if (!profiles || profiles.length === 0) {
-      return <div style={{ padding: 24, color: text.muted, fontSize: 11 }}>No strategy profiles available.</div>;
+      return <div style={{ padding: sz(24), color: theme.text.muted, fontSize: sz(11) }}>No strategy profiles available.</div>;
     }
 
-    const fs = mini ? 9 : 11;
+    const fs = sz(mini ? 9 : 11);
     const cellPad = mini ? "4px 6px" : "8px 12px";
 
     // 2-player matrix layout
@@ -931,8 +933,8 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
       const colPlayer = playerUris[1];
       const rowStrats = strategySets.get(rowPlayer) || [];
       const colStrats = strategySets.get(colPlayer) || [];
-      const rowColor = playerColorMap.get(rowPlayer) || text.muted;
-      const colColor = playerColorMap.get(colPlayer) || text.muted;
+      const rowColor = playerColorMap.get(rowPlayer) || theme.text.muted;
+      const colColor = playerColorMap.get(colPlayer) || theme.text.muted;
 
       // Build lookup: (rowLabel, colLabel) -> profile index
       const lookup = new Map<string, number>();
@@ -953,16 +955,16 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               <tr>
                 <th style={{
                   padding: cellPad,
-                  borderBottom: `1px solid ${border.medium}`,
-                  borderRight: `1px solid ${border.medium}`,
-                  color: text.subtle,
+                  borderBottom: `1px solid ${theme.border.medium}`,
+                  borderRight: `1px solid ${theme.border.medium}`,
+                  color: theme.text.subtle,
                 }}>
                   {playerLabel(rowPlayer)} \ {playerLabel(colPlayer)}
                 </th>
                 {colStrats.map((cs, ci) => (
                   <th key={ci} style={{
                     padding: cellPad,
-                    borderBottom: `1px solid ${border.medium}`,
+                    borderBottom: `1px solid ${theme.border.medium}`,
                     color: colColor,
                     fontWeight: 600,
                     textAlign: "center",
@@ -977,7 +979,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
                 <tr key={ri}>
                   <td style={{
                     padding: cellPad,
-                    borderRight: `1px solid ${border.medium}`,
+                    borderRight: `1px solid ${theme.border.medium}`,
                     color: rowColor,
                     fontWeight: 600,
                   }}>
@@ -994,16 +996,16 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
                       <td key={ci} style={{
                         padding: cellPad,
                         textAlign: "center",
-                        border: `1px solid ${border.subtle}`,
-                        background: isNE ? `${palette.emerald}11` : "transparent",
-                        boxShadow: isNE ? `inset 0 0 0 1.5px ${palette.emerald}88` : "none",
+                        border: `1px solid ${theme.border.subtle}`,
+                        background: isNE ? `${theme.palette.emerald}11` : "transparent",
+                        boxShadow: isNE ? `inset 0 0 0 1.5px ${theme.palette.emerald}88` : "none",
                       }}>
                         <span style={{ color: rowColor }}>{rp.toFixed(1)}</span>
-                        <span style={{ color: text.faint }}>{", "}</span>
+                        <span style={{ color: theme.text.faint }}>{", "}</span>
                         <span style={{ color: colColor }}>{cp.toFixed(1)}</span>
                         {isNE && !mini && (
                           <div style={{
-                            fontSize: 7, color: palette.emerald, marginTop: 2,
+                            fontSize: sz(7), color: theme.palette.emerald, marginTop: 2,
                             fontWeight: 600,
                           }}>
                             NE
@@ -1033,8 +1035,8 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               {playerUris.map(pu => (
                 <th key={`strat-${pu}`} style={{
                   padding: cellPad,
-                  borderBottom: `1px solid ${border.medium}`,
-                  color: playerColorMap.get(pu) || text.muted,
+                  borderBottom: `1px solid ${theme.border.medium}`,
+                  color: playerColorMap.get(pu) || theme.text.muted,
                   fontWeight: 600,
                 }}>
                   {playerLabel(pu)} Strategy
@@ -1043,8 +1045,8 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               {playerUris.map(pu => (
                 <th key={`pay-${pu}`} style={{
                   padding: cellPad,
-                  borderBottom: `1px solid ${border.medium}`,
-                  color: playerColorMap.get(pu) || text.muted,
+                  borderBottom: `1px solid ${theme.border.medium}`,
+                  color: playerColorMap.get(pu) || theme.text.muted,
                   fontWeight: 600,
                 }}>
                   {playerLabel(pu)} Payoff
@@ -1057,14 +1059,14 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               const isNE = neSet.has(pi);
               return (
                 <tr key={pi} style={{
-                  background: isNE ? `${palette.emerald}11` : "transparent",
-                  boxShadow: isNE ? `inset 0 0 0 1.5px ${palette.emerald}88` : "none",
+                  background: isNE ? `${theme.palette.emerald}11` : "transparent",
+                  boxShadow: isNE ? `inset 0 0 0 1.5px ${theme.palette.emerald}88` : "none",
                 }}>
                   {playerUris.map(pu => (
                     <td key={`s-${pu}`} style={{
                       padding: cellPad,
-                      borderBottom: `1px solid ${border.subtle}`,
-                      color: text.secondary,
+                      borderBottom: `1px solid ${theme.border.subtle}`,
+                      color: theme.text.secondary,
                     }}>
                       {p.stratLabel.get(pu) || "---"}
                     </td>
@@ -1072,13 +1074,13 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
                   {playerUris.map(pu => (
                     <td key={`p-${pu}`} style={{
                       padding: cellPad,
-                      borderBottom: `1px solid ${border.subtle}`,
-                      color: playerColorMap.get(pu) || text.muted,
+                      borderBottom: `1px solid ${theme.border.subtle}`,
+                      color: playerColorMap.get(pu) || theme.text.muted,
                       fontWeight: 500,
                     }}>
                       {(p.payoffs.get(pu) ?? 0).toFixed(1)}
                       {isNE && pu === playerUris[playerUris.length - 1] && !mini && (
-                        <span style={{ marginLeft: 8, fontSize: 7, color: palette.emerald, fontWeight: 600 }}>NE</span>
+                        <span style={{ marginLeft: 8, fontSize: sz(7), color: theme.palette.emerald, fontWeight: 600 }}>NE</span>
                       )}
                     </td>
                   ))}
@@ -1089,7 +1091,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
         </table>
       </div>
     );
-  }, [playerColorMap, playerLabel]);
+  }, [playerColorMap, playerLabel, theme, sz]);
 
   /* ---- Node detail panel ------------------------------------------- */
 
@@ -1101,45 +1103,45 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
     if (!node) return null;
 
     const desc = data.descriptions.get(layoutNode.uri);
-    const pColor = layoutNode.playerUri ? (playerColorMap.get(layoutNode.playerUri) || text.muted) : text.muted;
+    const pColor = layoutNode.playerUri ? (playerColorMap.get(layoutNode.playerUri) || theme.text.muted) : theme.text.muted;
     const actions = data.nodeActions.get(layoutNode.uri) || [];
     const payoffUris = data.outcomePayoffs.get(layoutNode.uri) || [];
 
     return (
       <div style={{
-        padding: 12, borderTop: `1px solid ${border.subtle}`,
-        fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 12,
-        background: "rgba(255,255,255,0.02)",
+        padding: 12, borderTop: `1px solid ${theme.border.subtle}`,
+        fontFamily: "'IBM Plex Sans', sans-serif", fontSize: sz(12),
+        background: theme.surface.card,
         maxHeight: 180, overflow: "auto",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-          <span style={{ color: text.primary, fontWeight: 600, fontSize: 13 }}>
+          <span style={{ color: theme.text.primary, fontWeight: 600, fontSize: sz(13) }}>
             {node.label}
           </span>
           <span style={{
-            padding: "1px 6px", borderRadius: 3, fontSize: 9,
-            background: `${pColor}22`, color: pColor, border: `1px solid ${pColor}44`,
+            padding: "1px 6px", borderRadius: 3, fontSize: sz(9),
+            background: `${pColor}33`, color: pColor, border: `1px solid ${pColor}55`,
             fontFamily: "'IBM Plex Mono', monospace",
           }}>
             {layoutNode.kind}
           </span>
         </div>
         {desc && (
-          <div style={{ color: text.muted, fontSize: 11, marginBottom: 6 }}>{desc}</div>
+          <div style={{ color: theme.text.muted, fontSize: sz(11), marginBottom: 6 }}>{desc}</div>
         )}
         {layoutNode.playerUri && (
-          <div style={{ fontSize: 11, color: pColor, marginBottom: 6 }}>
+          <div style={{ fontSize: sz(11), color: pColor, marginBottom: 6 }}>
             Player: {playerLabel(layoutNode.playerUri)}
           </div>
         )}
         {actions.length > 0 && (
-          <Section title="Actions" color={text.subtle}>
+          <Section title="Actions" color={theme.text.subtle} sz={sz}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
               {actions.map(au => (
                 <span key={au} style={{
-                  padding: "2px 8px", borderRadius: 3, fontSize: 10,
-                  background: "rgba(255,255,255,0.04)", border: `1px solid ${border.medium}`,
-                  color: text.secondary, fontFamily: "'IBM Plex Mono', monospace",
+                  padding: "2px 8px", borderRadius: 3, fontSize: sz(10),
+                  background: theme.surface.cardHover, border: `1px solid ${theme.border.medium}`,
+                  color: theme.text.secondary, fontFamily: "'IBM Plex Mono', monospace",
                 }}>
                   {getActionLabel(au)}
                 </span>
@@ -1148,16 +1150,16 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
           </Section>
         )}
         {payoffUris.length > 0 && (
-          <Section title="Payoffs" color={text.subtle}>
+          <Section title="Payoffs" color={theme.text.subtle} sz={sz}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {payoffUris.map(pu => {
                 const plUri = data.payoffPlayer.get(pu);
                 const val = data.utilities.get(pu) ?? 0;
-                const col = plUri ? (playerColorMap.get(plUri) || text.muted) : text.muted;
+                const col = plUri ? (playerColorMap.get(plUri) || theme.text.muted) : theme.text.muted;
                 return (
                   <span key={pu} style={{
-                    padding: "2px 8px", borderRadius: 3, fontSize: 10,
-                    background: `${col}11`, border: `1px solid ${col}33`, color: col,
+                    padding: "2px 8px", borderRadius: 3, fontSize: sz(10),
+                    background: `${col}22`, border: `1px solid ${col}55`, color: col,
                     fontFamily: "'IBM Plex Mono', monospace",
                   }}>
                     {plUri ? playerLabel(plUri) : "?"}: {val}
@@ -1169,7 +1171,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
         )}
       </div>
     );
-  }, [allTreeNodes, data.nodes, data.descriptions, data.nodeActions, data.outcomePayoffs, data.payoffPlayer, data.utilities, playerColorMap, playerLabel, getActionLabel]);
+  }, [allTreeNodes, data.nodes, data.descriptions, data.nodeActions, data.outcomePayoffs, data.payoffPlayer, data.utilities, playerColorMap, playerLabel, getActionLabel, theme, sz]);
 
   /* ---- Player legend ----------------------------------------------- */
 
@@ -1178,12 +1180,12 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
     return (
       <div style={{
         display: "flex", gap: 12, padding: "4px 16px",
-        borderBottom: `1px solid ${border.subtle}`,
-        fontFamily: "'IBM Plex Mono', monospace", fontSize: 10,
+        borderBottom: `1px solid ${theme.border.subtle}`,
+        fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(10),
         alignItems: "center",
       }}>
         {players.map(p => {
-          const col = playerColorMap.get(p.uri) || text.muted;
+          const col = playerColorMap.get(p.uri) || theme.text.muted;
           return (
             <div key={p.uri} style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <div style={{
@@ -1196,7 +1198,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
         })}
       </div>
     );
-  }, [players, playerColorMap]);
+  }, [players, playerColorMap, theme, sz]);
 
   /* ---- Loading / Error states -------------------------------------- */
 
@@ -1210,12 +1212,12 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
       }}>
         <div style={{
           width: 36, height: 36, borderRadius: "50%",
-          border: `2.5px solid ${palette.cyan}15`,
-          borderTopColor: palette.cyan,
+          border: `2.5px solid ${theme.palette.cyan}15`,
+          borderTopColor: theme.palette.cyan,
           animation: "gt-spin 0.8s linear infinite",
         }} />
         <div style={{
-          fontSize: 12, color: text.subtle,
+          fontSize: sz(12), color: theme.text.subtle,
           animation: "gt-pulse 1.5s ease-in-out infinite",
         }}>
           Loading game theory data...
@@ -1226,9 +1228,9 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
 
   if (data.error) {
     return (
-      <div style={{ padding: 48, textAlign: "center", color: palette.rose }}>
-        <div style={{ fontSize: 14, marginBottom: 8 }}>Failed to load data</div>
-        <div style={{ fontSize: 11, color: text.muted }}>{data.error.message}</div>
+      <div style={{ padding: 48, textAlign: "center", color: theme.palette.rose }}>
+        <div style={{ fontSize: sz(14), marginBottom: 8 }}>Failed to load data</div>
+        <div style={{ fontSize: sz(11), color: theme.text.muted }}>{data.error.message}</div>
       </div>
     );
   }
@@ -1238,13 +1240,13 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
   return (
     <div style={{
       display: "flex", flexDirection: "column", height: "var(--page-height)", overflow: "hidden",
-      borderTop: `1px solid ${border.default}`,
+      borderTop: `1px solid ${theme.border.default}`,
     }}>
       {/* Mode toggle + game selector */}
       <div style={{
         display: "flex", gap: 4, padding: "8px 16px",
-        borderBottom: `1px solid ${border.subtle}`,
-        fontFamily: "'IBM Plex Mono', monospace", fontSize: 11,
+        borderBottom: `1px solid ${theme.border.subtle}`,
+        fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(11),
         alignItems: "center",
       }}>
         {([["tree", "\u229E Game Tree"], ["matrix", "\u229E Payoff Matrix"], ["sandbox", "\u229E Sandbox"]] as const).map(([m, label]) => (
@@ -1253,9 +1255,9 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             onClick={() => setMode(m as ExplorerMode)}
             style={{
               padding: "5px 14px", borderRadius: 5, border: "none", cursor: "pointer",
-              background: mode === m ? "rgba(255,255,255,0.08)" : "transparent",
-              color: mode === m ? text.primary : text.faint,
-              fontFamily: "'IBM Plex Mono', monospace", fontSize: 11,
+              background: mode === m ? theme.surface.cardHover : "transparent",
+              color: mode === m ? theme.text.primary : theme.text.faint,
+              fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(11),
               fontWeight: mode === m ? 600 : 400, transition: "all 0.15s",
             }}
           >
@@ -1270,9 +1272,9 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             value={activeGameUri || ""}
             onChange={e => setSelectedGameUri(e.target.value || null)}
             style={{
-              background: "rgba(255,255,255,0.04)", border: `1px solid ${border.medium}`,
-              borderRadius: 4, padding: "3px 8px", color: text.secondary,
-              fontFamily: "'IBM Plex Mono', monospace", fontSize: 10,
+              background: theme.surface.cardHover, border: `1px solid ${theme.border.medium}`,
+              borderRadius: 4, padding: "3px 8px", color: theme.text.secondary,
+              fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(10),
               outline: "none",
             }}
           >
@@ -1296,10 +1298,10 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
         <div style={{ flex: 1, overflow: "auto" }}>
           <div style={{ padding: "12px 16px" }}>
             <div style={{
-              fontSize: 8, color: text.subtle, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(8), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace",
               textTransform: "uppercase", letterSpacing: "0.06em",
               marginBottom: 8, paddingBottom: 4,
-              borderBottom: `1px solid ${text.subtle}22`,
+              borderBottom: `1px solid ${theme.text.subtle}22`,
             }}>
               Normal-Form Payoff Matrix
             </div>
@@ -1307,7 +1309,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
           {renderPayoffMatrix(matrixData, nashEquilibria)}
           {nashEquilibria.size > 0 && (
             <div style={{
-              padding: "8px 16px", fontSize: 10, color: palette.emerald,
+              padding: "8px 16px", fontSize: sz(10), color: theme.palette.emerald,
               fontFamily: "'IBM Plex Mono', monospace",
             }}>
               {nashEquilibria.size} Nash Equilibri{nashEquilibria.size === 1 ? "um" : "a"} found (highlighted)
@@ -1320,13 +1322,13 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
           {/* Left: sliders */}
           <div style={{
             width: 320, minWidth: 280, overflow: "auto",
-            borderRight: `1px solid ${border.subtle}`,
+            borderRight: `1px solid ${theme.border.subtle}`,
             padding: 12,
             fontFamily: "'IBM Plex Sans', sans-serif",
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div style={{
-                fontSize: 8, color: text.subtle, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(8), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace",
                 textTransform: "uppercase", letterSpacing: "0.06em",
               }}>
                 Parameter Sandbox
@@ -1334,9 +1336,9 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               <button
                 onClick={resetOverrides}
                 style={{
-                  padding: "2px 8px", borderRadius: 3, border: `1px solid ${border.medium}`,
-                  background: "rgba(255,255,255,0.04)", color: text.muted,
-                  fontFamily: "'IBM Plex Mono', monospace", fontSize: 9,
+                  padding: "2px 8px", borderRadius: 3, border: `1px solid ${theme.border.medium}`,
+                  background: theme.surface.cardHover, color: theme.text.muted,
+                  fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(9),
                   cursor: "pointer",
                 }}
               >
@@ -1346,17 +1348,17 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
 
             {/* Probability sliders */}
             {chanceActions.length > 0 && (
-              <Section title="Probabilities" color={palette.cyan}>
+              <Section title="Probabilities" color={theme.palette.cyan} sz={sz}>
                 {chanceActions.map(ca => {
                   const val = probOverrides.get(ca.actionUri) ?? data.probabilities.get(ca.actionUri) ?? 0;
                   return (
                     <div key={ca.actionUri} style={{ marginBottom: 10 }}>
                       <div style={{
                         display: "flex", justifyContent: "space-between",
-                        fontSize: 10, color: text.secondary, marginBottom: 2,
+                        fontSize: sz(10), color: theme.text.secondary, marginBottom: 2,
                       }}>
                         <span>{ca.label}</span>
-                        <span style={{ color: palette.cyan, fontFamily: "'IBM Plex Mono', monospace" }}>
+                        <span style={{ color: theme.palette.cyan, fontFamily: "'IBM Plex Mono', monospace" }}>
                           {val.toFixed(2)}
                         </span>
                       </div>
@@ -1367,7 +1369,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
                         onChange={e => handleProbChange(ca.actionUri, parseFloat(e.target.value), ca.siblings)}
                         style={{
                           width: "100%", height: 4,
-                          accentColor: palette.cyan,
+                          accentColor: theme.palette.cyan,
                         }}
                       />
                     </div>
@@ -1378,15 +1380,15 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
 
             {/* Payoff sliders */}
             {payoffEntries.length > 0 && (
-              <Section title="Payoffs" color={palette.amber}>
+              <Section title="Payoffs" color={theme.palette.amber} sz={sz}>
                 {payoffEntries.map(pe => {
                   const val = utilOverrides.get(pe.payoffUri) ?? data.utilities.get(pe.payoffUri) ?? 0;
-                  const col = playerColorMap.get(pe.playerUri) || text.muted;
+                  const col = playerColorMap.get(pe.playerUri) || theme.text.muted;
                   return (
                     <div key={pe.payoffUri} style={{ marginBottom: 10 }}>
                       <div style={{
                         display: "flex", justifyContent: "space-between",
-                        fontSize: 10, color: text.secondary, marginBottom: 2,
+                        fontSize: sz(10), color: theme.text.secondary, marginBottom: 2,
                       }}>
                         <span>{pe.label}</span>
                         <span style={{ color: col, fontFamily: "'IBM Plex Mono', monospace" }}>
@@ -1414,12 +1416,12 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
           <div style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
             <div style={{
               flex: 1, minHeight: 200, overflow: "auto",
-              borderBottom: `1px solid ${border.subtle}`,
+              borderBottom: `1px solid ${theme.border.subtle}`,
             }}>
               <div style={{
-                fontSize: 8, color: text.subtle, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(8), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace",
                 textTransform: "uppercase", letterSpacing: "0.06em",
-                padding: "8px 12px", borderBottom: `1px solid ${text.subtle}22`,
+                padding: "8px 12px", borderBottom: `1px solid ${theme.text.subtle}22`,
               }}>
                 Game Tree (Live)
               </div>
@@ -1427,16 +1429,16 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             </div>
             <div style={{ flex: 1, minHeight: 160, overflow: "auto" }}>
               <div style={{
-                fontSize: 8, color: text.subtle, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(8), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace",
                 textTransform: "uppercase", letterSpacing: "0.06em",
-                padding: "8px 12px", borderBottom: `1px solid ${text.subtle}22`,
+                padding: "8px 12px", borderBottom: `1px solid ${theme.text.subtle}22`,
               }}>
                 Payoff Matrix (Live)
               </div>
               {renderPayoffMatrix(sandboxMatrixData, sandboxNashEquilibria, true)}
               {sandboxNashEquilibria.size > 0 && (
                 <div style={{
-                  padding: "4px 12px", fontSize: 9, color: palette.emerald,
+                  padding: "4px 12px", fontSize: sz(9), color: theme.palette.emerald,
                   fontFamily: "'IBM Plex Mono', monospace",
                 }}>
                   {sandboxNashEquilibria.size} NE
