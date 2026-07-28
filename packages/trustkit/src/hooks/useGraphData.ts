@@ -244,7 +244,7 @@ export function useGraphData(domain?: DomainKey) {
     relationships,
     ontology,
     propertyLabels,
-    isLoading,
+    isLoading: isLoading || !isSocketReady,
     isError,
     error,
   };

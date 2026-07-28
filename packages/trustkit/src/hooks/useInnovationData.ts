@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useSocket } from "@trustgraph/react-provider";
+import { useSocket, useConnectionState } from "@trustgraph/react-provider";
 import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
 
 const II = "http://pivotlabs.vc/ontology/innovation-intelligence/";
@@ -18,6 +18,8 @@ export type IIRelation = [string, string];
 
 export function useInnovationData() {
   const socket = useSocket();
+  const connectionState = useConnectionState();
+  const isSocketReady = connectionState?.status === "authenticated";
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
   const { settings } = useSettings();
@@ -54,6 +56,7 @@ export function useInnovationData() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    if (!isSocketReady) return;
     let cancelled = false;
 
     (async () => {
@@ -195,7 +198,7 @@ export function useInnovationData() {
     })();
 
     return () => { cancelled = true; };
-  }, [socket, flowId, generation, collection]);
+  }, [socket, isSocketReady, flowId, generation, collection]);
 
   const orgChildren = useMemo(() => {
     const m = new Map<string, string[]>();
@@ -289,6 +292,6 @@ export function useInnovationData() {
     orgSectors, orgSegments,
     personRoles, personExpertise, roleOrg,
     allianceMembers, nationAreas, segmentScope,
-    isLoading, error,
+    isLoading: isLoading || !isSocketReady, error,
   };
 }

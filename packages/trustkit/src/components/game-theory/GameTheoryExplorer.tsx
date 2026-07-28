@@ -2,7 +2,19 @@ import { useState, useMemo, useCallback } from "react";
 import { useGameTheoryData } from "../../hooks/useGameTheoryData";
 import type { GTNode } from "../../hooks/useGameTheoryData";
 import { text, border, palette } from "../../theme";
-import { LoadingState } from "../common";
+
+const GT_SPINNER_ID = "gt-spinner-keyframes";
+function ensureSpinnerStyles() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(GT_SPINNER_ID)) return;
+  const style = document.createElement("style");
+  style.id = GT_SPINNER_ID;
+  style.textContent = `
+    @keyframes gt-spin { to { transform: rotate(360deg); } }
+    @keyframes gt-pulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+  `;
+  document.head.appendChild(style);
+}
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -1189,9 +1201,25 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
   /* ---- Loading / Error states -------------------------------------- */
 
   if (data.isLoading) {
+    ensureSpinnerStyles();
     return (
-      <div style={{ padding: 48, display: "flex", justifyContent: "center" }}>
-        <LoadingState message="Loading game theory data..." />
+      <div style={{
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        height: "var(--page-height)", gap: 16, padding: 48,
+      }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: "50%",
+          border: `2.5px solid ${palette.cyan}15`,
+          borderTopColor: palette.cyan,
+          animation: "gt-spin 0.8s linear infinite",
+        }} />
+        <div style={{
+          fontSize: 12, color: text.subtle,
+          animation: "gt-pulse 1.5s ease-in-out infinite",
+        }}>
+          Loading game theory data...
+        </div>
       </div>
     );
   }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useSocket } from "@trustgraph/react-provider";
+import { useSocket, useConnectionState } from "@trustgraph/react-provider";
 import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
 
 const GT = "http://trustgraph.ai/schemas/gametheory#";
@@ -18,6 +18,8 @@ export type GTRelation = [string, string];
 
 export function useGameTheoryData() {
   const socket = useSocket();
+  const connectionState = useConnectionState();
+  const isSocketReady = connectionState?.status === "authenticated";
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
   const { settings } = useSettings();
@@ -40,6 +42,7 @@ export function useGameTheoryData() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    if (!isSocketReady) return;
     let cancelled = false;
 
     (async () => {
@@ -133,7 +136,7 @@ export function useGameTheoryData() {
     })();
 
     return () => { cancelled = true; };
-  }, [socket, flowId, generation, collection]);
+  }, [socket, isSocketReady, flowId, generation, collection]);
 
   const buildRelMap = (rels: GTRelation[]) => {
     const m = new Map<string, string[]>();
@@ -168,6 +171,6 @@ export function useGameTheoryData() {
     probabilities, utilities, actionLabels,
     gameRoots, nodePlayer, nodeActions,
     actionTarget, outcomePayoffs, payoffPlayer,
-    isLoading, error,
+    isLoading: isLoading || !isSocketReady, error,
   };
 }

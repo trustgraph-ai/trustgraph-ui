@@ -2,7 +2,19 @@ import { useState, useMemo, useCallback } from "react";
 import { useSolarMissions } from "../../hooks/useSolarMissions";
 import type { SolarMission, MissionEvent, CelestialBody } from "../../hooks/useSolarMissions";
 import { text, border, palette } from "../../theme";
-import { LoadingState } from "../common";
+
+const SOLAR_SPINNER_ID = "solar-spinner-keyframes";
+function ensureSpinnerStyles() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(SOLAR_SPINNER_ID)) return;
+  const style = document.createElement("style");
+  style.id = SOLAR_SPINNER_ID;
+  style.textContent = `
+    @keyframes solar-spin { to { transform: rotate(360deg); } }
+    @keyframes solar-pulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+  `;
+  document.head.appendChild(style);
+}
 
 const SVG_W = 1400;
 const SVG_H = 800;
@@ -142,9 +154,25 @@ export function SolarSystemExplorer({
   }, []);
 
   if (isLoading) {
+    ensureSpinnerStyles();
     return (
-      <div style={{ height: "var(--page-height)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <LoadingState message="Loading solar system data..." />
+      <div style={{
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        height: "var(--page-height)", gap: 16,
+      }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: "50%",
+          border: `2.5px solid ${palette.amber}15`,
+          borderTopColor: palette.amber,
+          animation: "solar-spin 0.8s linear infinite",
+        }} />
+        <div style={{
+          fontSize: 12, color: text.subtle,
+          animation: "solar-pulse 1.5s ease-in-out infinite",
+        }}>
+          Loading solar system data...
+        </div>
       </div>
     );
   }
