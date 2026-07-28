@@ -7,7 +7,8 @@ import { useGraphRag } from "../../hooks/useGraphRag";
 import { useExplainSession } from "../../hooks/useExplainSession";
 import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import { useExplainGraph } from "../../hooks/useExplainGraph";
-import { text, border, palette, withGlow } from "../../theme";
+import { withGlow } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useSettings } from "@trustgraph/react-state";
 
 interface GraphRagViewProps {
@@ -20,6 +21,7 @@ interface GraphRagViewProps {
  * explain event timeline, and provenance graph.
  */
 export function GraphRagView({ collection: collectionProp }: GraphRagViewProps) {
+  const { theme, sz } = useTheme();
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -76,10 +78,10 @@ export function GraphRagView({ collection: collectionProp }: GraphRagViewProps) 
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        borderRight: `1px solid ${border.default}`,
+        borderRight: `1px solid ${theme.border.default}`,
       }}>
         {/* Input */}
-        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${border.default}` }}>
+        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${theme.border.default}` }}>
           <SectionLabel marginBottom={12}>GRAPH RAG QUERY</SectionLabel>
           <SearchInput
             value={input}
@@ -88,14 +90,14 @@ export function GraphRagView({ collection: collectionProp }: GraphRagViewProps) 
             placeholder="Ask a question..."
             buttonText="Query"
             isLoading={isQuerying}
-            buttonColor={palette.cyan}
+            buttonColor={theme.palette.cyan}
           />
         </div>
 
         {/* Response */}
         <div style={{ flex: 1, padding: "24px 28px", overflowY: "auto" }}>
           {!response && !isQuerying && !error && (
-            <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+            <div style={{ color: theme.text.hint, fontSize: sz(13), fontStyle: "italic" }}>
               Ask a question to see Graph RAG in action with live explainability.
             </div>
           )}
@@ -115,7 +117,7 @@ export function GraphRagView({ collection: collectionProp }: GraphRagViewProps) 
         {/* Provenance graph */}
         <div style={{
           height: "45%",
-          borderBottom: `1px solid ${border.default}`,
+          borderBottom: `1px solid ${theme.border.default}`,
           position: "relative",
         }}>
           <ExplainGraph
@@ -138,11 +140,11 @@ export function GraphRagView({ collection: collectionProp }: GraphRagViewProps) 
 
         {/* Event timeline */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-          <div style={{ padding: "12px 20px", borderBottom: `1px solid ${border.default}` }}>
+          <div style={{ padding: "12px 20px", borderBottom: `1px solid ${theme.border.default}` }}>
             <SectionLabel>
               EVENTS
               {explainSession.events.length > 0 && (
-                <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
+                <span style={{ color: theme.text.muted, fontWeight: 400, marginLeft: 8 }}>
                   {explainSession.events.length} event{explainSession.events.length !== 1 ? "s" : ""}
                 </span>
               )}
@@ -151,7 +153,7 @@ export function GraphRagView({ collection: collectionProp }: GraphRagViewProps) 
 
           <div style={{ flex: 1, padding: "12px 16px", overflowY: "auto" }}>
             {explainSession.events.length === 0 && !isQuerying && (
-              <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+              <div style={{ color: theme.text.hint, fontSize: sz(13), fontStyle: "italic" }}>
                 Explain events will appear here as the query progresses.
               </div>
             )}
@@ -159,8 +161,8 @@ export function GraphRagView({ collection: collectionProp }: GraphRagViewProps) 
             {isQuerying && explainSession.events.length === 0 && (
               <div style={{
                 padding: "8px 12px",
-                fontSize: 11,
-                color: withGlow(palette.cyan, 0.6),
+                fontSize: sz(11),
+                color: withGlow(theme.palette.cyan, 0.6),
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 Waiting for explain events...

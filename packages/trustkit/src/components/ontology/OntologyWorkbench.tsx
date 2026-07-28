@@ -12,12 +12,13 @@ import { OntologyValidator } from "../../utils/ontology-validator";
 import { OntologyExporter } from "../../utils/ontology-exporter";
 import { OntologyImporter } from "../../utils/ontology-importer";
 import { LoadingState } from "../common";
-import { text, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 type View = "metadata" | "class" | "property";
 
 export function OntologyWorkbench() {
   const { ontologies, ontologiesLoading, ontologiesError, createOntology, updateOntology, deleteOntology } = useOntologies();
+  const { theme, sz } = useTheme();
 
   const [selectedOntologyId, setSelectedOntologyId] = useState<string | null>(null);
   const [view, setView] = useState<View>("metadata");
@@ -152,16 +153,16 @@ export function OntologyWorkbench() {
   return (
     <div style={{ display: "flex", height: "calc(100vh - 160px)" }}>
       {/* Ontology list */}
-      <div style={{ width: 240, flexShrink: 0, borderRight: `1px solid ${border.default}`, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+      <div style={{ width: 240, flexShrink: 0, borderRight: `1px solid ${theme.border.default}`, overflowY: "auto", display: "flex", flexDirection: "column" }}>
         <OntologyList ontologies={typedOntologies} selectedId={selectedOntologyId} onSelect={(id) => { setSelectedOntologyId(id); setSelectedClassId(null); setSelectedPropertyId(null); setView("metadata"); }} onCreate={handleCreate} />
-        <div style={{ marginTop: "auto", padding: "8px 16px", borderTop: `1px solid ${border.default}` }}>
+        <div style={{ marginTop: "auto", padding: "8px 16px", borderTop: `1px solid ${theme.border.default}` }}>
           <input ref={fileInputRef} type="file" accept=".owl,.rdf,.ttl,.xml" onChange={handleImportFile} style={{ display: "none" }} />
           <button onClick={() => fileInputRef.current?.click()}
-            style={{ width: "100%", padding: "5px 10px", borderRadius: 4, border: `1px solid ${border.default}`, background: "transparent", color: text.faint, fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+            style={{ width: "100%", padding: "5px 10px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: "transparent", color: theme.text.faint, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
             Import OWL/Turtle...
           </button>
           {importError && (
-            <div style={{ marginTop: 6, padding: "4px 8px", borderRadius: 4, background: `${palette.red}1a`, color: palette.red, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.4 }}>
+            <div style={{ marginTop: 6, padding: "4px 8px", borderRadius: 4, background: `${theme.palette.red}1a`, color: theme.palette.red, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.4 }}>
               {importError}
             </div>
           )}
@@ -169,7 +170,7 @@ export function OntologyWorkbench() {
       </div>
 
       {!ontology && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, color: theme.text.hint, fontSize: sz(13), fontStyle: "italic" }}>
           Select an ontology to edit
         </div>
       )}
@@ -177,8 +178,8 @@ export function OntologyWorkbench() {
       {ontology && (
         <>
           {/* Class/Property tree sidebar */}
-          <div style={{ width: 220, flexShrink: 0, borderRight: `1px solid ${border.default}`, overflowY: "auto", display: "flex", flexDirection: "column" }}>
-            <div style={{ borderBottom: `1px solid ${border.default}` }}>
+          <div style={{ width: 220, flexShrink: 0, borderRight: `1px solid ${theme.border.default}`, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+            <div style={{ borderBottom: `1px solid ${theme.border.default}` }}>
               <OntologyClassTree classes={ontology.classes} selectedClassId={view === "class" ? selectedClassId : null}
                 onSelectClass={(id) => { setSelectedClassId(id); setView("class"); }}
                 onCreateClass={handleCreateClass} />
@@ -189,24 +190,24 @@ export function OntologyWorkbench() {
               onCreateObjectProperty={handleCreateObjectProperty} onCreateDatatypeProperty={handleCreateDatatypeProperty} />
 
             {/* Toolbar */}
-            <div style={{ marginTop: "auto", padding: 12, borderTop: `1px solid ${border.default}`, display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <div style={{ marginTop: "auto", padding: 12, borderTop: `1px solid ${theme.border.default}`, display: "flex", gap: 6, flexWrap: "wrap" }}>
               <button onClick={() => setView("metadata")}
-                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${view === "metadata" ? palette.cyan + "44" : border.default}`, background: view === "metadata" ? `${palette.cyan}1a` : "transparent", color: view === "metadata" ? palette.cyan : text.faint, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${view === "metadata" ? theme.palette.cyan + "44" : theme.border.default}`, background: view === "metadata" ? `${theme.palette.cyan}1a` : "transparent", color: view === "metadata" ? theme.palette.cyan : theme.text.faint, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
                 Metadata
               </button>
               <button onClick={() => setShowValidation(!showValidation)}
-                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${showValidation ? palette.amber + "44" : border.default}`, background: showValidation ? `${palette.amber}1a` : "transparent", color: showValidation ? palette.amber : text.faint, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${showValidation ? theme.palette.amber + "44" : theme.border.default}`, background: showValidation ? `${theme.palette.amber}1a` : "transparent", color: showValidation ? theme.palette.amber : theme.text.faint, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
                 Validate
               </button>
               <select onChange={(e) => { if (e.target.value) handleExport(e.target.value as "owl" | "rdf" | "turtle"); e.target.value = ""; }}
-                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${border.default}`, background: "transparent", color: text.faint, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: "transparent", color: theme.text.faint, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
                 <option value="">Export...</option>
                 <option value="owl">OWL/XML</option>
                 <option value="rdf">RDF/XML</option>
                 <option value="turtle">Turtle</option>
               </select>
               <button onClick={() => { if (selectedOntologyId && window.confirm(`Delete ontology "${ontology.metadata.name || selectedOntologyId}"? This cannot be undone.`)) handleDelete(selectedOntologyId); }}
-                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${palette.red}44`, background: "transparent", color: palette.red, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${theme.palette.red}44`, background: "transparent", color: theme.palette.red, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
                 Delete
               </button>
             </div>
@@ -241,10 +242,10 @@ export function OntologyWorkbench() {
                   onDeleteProperty={handleDeleteProperty} />
               )}
               {view === "class" && !selectedClassId && (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: text.hint, fontSize: 12, fontStyle: "italic" }}>Select a class to edit</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: theme.text.hint, fontSize: sz(12), fontStyle: "italic" }}>Select a class to edit</div>
               )}
               {view === "property" && !selectedPropertyId && (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: text.hint, fontSize: 12, fontStyle: "italic" }}>Select a property to edit</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: theme.text.hint, fontSize: sz(12), fontStyle: "italic" }}>Select a property to edit</div>
               )}
             </div>
           </div>

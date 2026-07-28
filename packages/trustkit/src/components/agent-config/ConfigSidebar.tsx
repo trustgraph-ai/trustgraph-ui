@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useConfigItems } from "../../hooks/useConfigItems";
 import type { ConfigKind, SelectedItem } from "./types";
-import { text, border, surface, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import type { Theme } from "../../theme/types";
 
 interface ConfigSidebarProps {
   selected: SelectedItem | null;
@@ -12,18 +13,20 @@ interface ConfigSidebarProps {
 interface SectionDef {
   kind: ConfigKind;
   label: string;
-  color: string;
+  paletteKey: keyof Theme["palette"];
 }
 
 const sections: SectionDef[] = [
-  { kind: "agent-pattern", label: "Patterns", color: palette.cyan },
-  { kind: "agent-task-type", label: "Task Types", color: palette.amber },
-  { kind: "tool", label: "Tools", color: palette.emerald },
-  { kind: "mcp", label: "MCP Tools", color: palette.purple },
-  { kind: "tool-service", label: "Tool Services", color: palette.pink },
+  { kind: "agent-pattern", label: "Patterns", paletteKey: "cyan" },
+  { kind: "agent-task-type", label: "Task Types", paletteKey: "amber" },
+  { kind: "tool", label: "Tools", paletteKey: "emerald" },
+  { kind: "mcp", label: "MCP Tools", paletteKey: "purple" },
+  { kind: "tool-service", label: "Tool Services", paletteKey: "pink" },
 ];
 
 export function ConfigSidebar({ selected, onSelect, generation }: ConfigSidebarProps) {
+  const { theme, sz } = useTheme();
+
   return (
     <div style={{
       padding: 16,
@@ -34,10 +37,10 @@ export function ConfigSidebar({ selected, onSelect, generation }: ConfigSidebarP
       gap: 16,
     }}>
       <div style={{
-        fontSize: 10,
+        fontSize: sz(10),
         fontFamily: "'IBM Plex Mono', monospace",
         fontWeight: 600,
-        color: text.faint,
+        color: theme.text.faint,
         letterSpacing: "0.1em",
       }}>
         AGENT CONFIG
@@ -47,6 +50,7 @@ export function ConfigSidebar({ selected, onSelect, generation }: ConfigSidebarP
         <ConfigSection
           key={section.kind}
           section={section}
+          sectionColor={theme.palette[section.paletteKey]}
           selected={selected}
           onSelect={onSelect}
           generation={generation}
@@ -58,15 +62,18 @@ export function ConfigSidebar({ selected, onSelect, generation }: ConfigSidebarP
 
 function ConfigSection({
   section,
+  sectionColor,
   selected,
   onSelect,
   generation,
 }: {
   section: SectionDef;
+  sectionColor: string;
   selected: SelectedItem | null;
   onSelect: (item: SelectedItem) => void;
   generation?: number;
 }) {
+  const { theme, sz } = useTheme();
   const { keys, isLoading, error, create, reload } = useConfigItems(section.kind);
 
   useEffect(() => {
@@ -77,7 +84,6 @@ function ConfigSection({
 
   const handleCreate = async () => {
     if (!newKey.trim()) return;
-    // Stub default values per kind
     const defaults: Record<ConfigKind, object> = {
       "agent-pattern": { name: newKey, description: "", max_iterations: 10 },
       "agent-task-type": { name: newKey, description: "", framing: "", valid_patterns: [] },
@@ -96,7 +102,6 @@ function ConfigSection({
 
   return (
     <div>
-      {/* Section header */}
       <div style={{
         display: "flex",
         alignItems: "center",
@@ -104,9 +109,9 @@ function ConfigSection({
         marginBottom: 6,
       }}>
         <div style={{
-          fontSize: 9,
+          fontSize: sz(9),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: section.color,
+          color: sectionColor,
           letterSpacing: "0.1em",
           textTransform: "uppercase",
         }}>
@@ -117,10 +122,10 @@ function ConfigSection({
           style={{
             padding: "1px 6px",
             borderRadius: 3,
-            border: `1px solid ${showCreate ? section.color + "44" : border.default}`,
-            background: showCreate ? `${section.color}1a` : "transparent",
-            color: showCreate ? section.color : text.faint,
-            fontSize: 9,
+            border: `1px solid ${showCreate ? sectionColor + "44" : theme.border.default}`,
+            background: showCreate ? `${sectionColor}1a` : "transparent",
+            color: showCreate ? sectionColor : theme.text.faint,
+            fontSize: sz(9),
             fontFamily: "'IBM Plex Mono', monospace",
             cursor: "pointer",
           }}
@@ -129,7 +134,6 @@ function ConfigSection({
         </button>
       </div>
 
-      {/* New item input */}
       {showCreate && (
         <div style={{ marginBottom: 6, display: "flex", gap: 4 }}>
           <input
@@ -146,10 +150,10 @@ function ConfigSection({
               flex: 1,
               padding: "3px 6px",
               borderRadius: 3,
-              border: `1px solid ${border.default}`,
-              background: surface.card,
-              color: text.primary,
-              fontSize: 10,
+              border: `1px solid ${theme.border.default}`,
+              background: theme.surface.card,
+              color: theme.text.primary,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
               outline: "none",
             }}
@@ -160,10 +164,10 @@ function ConfigSection({
             style={{
               padding: "3px 8px",
               borderRadius: 3,
-              border: `1px solid ${section.color}44`,
-              background: `${section.color}1a`,
-              color: !newKey.trim() ? text.disabled : section.color,
-              fontSize: 9,
+              border: `1px solid ${sectionColor}44`,
+              background: `${sectionColor}1a`,
+              color: !newKey.trim() ? theme.text.disabled : sectionColor,
+              fontSize: sz(9),
               fontFamily: "'IBM Plex Mono', monospace",
               cursor: "pointer",
             }}
@@ -173,17 +177,15 @@ function ConfigSection({
         </div>
       )}
 
-      {/* Loading / error */}
       {isLoading && (
-        <div style={{ fontSize: 10, color: text.hint, fontStyle: "italic" }}>
+        <div style={{ fontSize: sz(10), color: theme.text.hint, fontStyle: "italic" }}>
           loading...
         </div>
       )}
       {error && (
-        <div style={{ fontSize: 10, color: palette.red }}>{error}</div>
+        <div style={{ fontSize: sz(10), color: theme.palette.red }}>{error}</div>
       )}
 
-      {/* Items */}
       {keys.map((key) => {
         const isSelected = selected?.kind === section.kind && selected?.key === key;
         return (
@@ -197,16 +199,16 @@ function ConfigSection({
               padding: "4px 8px",
               marginBottom: 1,
               borderRadius: 4,
-              border: isSelected ? `1px solid ${section.color}44` : "1px solid transparent",
-              background: isSelected ? `${section.color}1a` : "transparent",
-              color: isSelected ? section.color : text.secondary,
-              fontSize: 10,
+              border: isSelected ? `1px solid ${sectionColor}44` : "1px solid transparent",
+              background: isSelected ? `${sectionColor}1a` : "transparent",
+              color: isSelected ? sectionColor : theme.text.secondary,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
               cursor: "pointer",
               transition: "all 0.15s",
             }}
             onMouseEnter={(e) => {
-              if (!isSelected) e.currentTarget.style.background = surface.cardHover;
+              if (!isSelected) e.currentTarget.style.background = theme.surface.cardHover;
             }}
             onMouseLeave={(e) => {
               if (!isSelected) e.currentTarget.style.background = "transparent";

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState, MouseEvent } from "react";
 import type { DomainKey, Entity, GraphNode, OntologyType, Relationship } from "../../types";
 import { ZoomControls } from "./ZoomControls";
-import { border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 function truncateLabel(label: string, maxLength = 30): string {
   if (label.length <= maxLength) return label;
@@ -41,6 +41,8 @@ export function GraphCanvas({ entities, relationships, ontology, highlightedEnti
 
   const [hovered, setHovered] = useState<string | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+  const { theme, sz } = useTheme();
 
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -95,7 +97,7 @@ export function GraphCanvas({ entities, relationships, ontology, highlightedEnti
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Grid stays fixed (no transform)
-    ctx.strokeStyle = border.grid;
+    ctx.strokeStyle = theme.border.grid;
     ctx.lineWidth = 1;
     for (let x = 0; x < canvas.width; x += 60) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
@@ -112,14 +114,14 @@ export function GraphCanvas({ entities, relationships, ontology, highlightedEnti
     const currentOntology = ontologyRef.current;
     (Object.entries(domainPositions) as [DomainKey, { x: number; y: number }][]).forEach(([domain, pos]) => {
       const data = currentOntology[domain];
-      ctx.font = "bold 22px 'IBM Plex Mono', monospace";
+      ctx.font = `bold ${sz(22)}px 'IBM Plex Mono', monospace`;
       ctx.fillStyle = data.color + "44";
       ctx.textAlign = "center";
       ctx.fillText(data.label.toUpperCase(), pos.x, pos.y - Math.min(canvas.width, canvas.height) * 0.14);
     });
 
     ctx.restore();
-  }, []);
+  }, [theme, sz]);
 
   // Draw nodes layer - reads from refs
   const drawNodesLayer = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, time: number) => {
@@ -169,10 +171,12 @@ export function GraphCanvas({ entities, relationships, ontology, highlightedEnti
       ctx.stroke();
 
       // Label
-      ctx.font = `${isHighlighted ? "bold " : ""}${isHovered ? 17 : 14}px 'IBM Plex Sans', sans-serif`;
-      ctx.fillStyle = `rgba(255,255,255,${alpha * (isHighlighted ? 1 : 0.75)})`;
+      ctx.font = `${isHighlighted ? "bold " : ""}${sz(isHovered ? 17 : 14)}px 'IBM Plex Sans', sans-serif`;
+      ctx.globalAlpha = alpha * (isHighlighted ? 1 : 0.75);
+      ctx.fillStyle = theme.text.primary;
       ctx.textAlign = "center";
       ctx.fillText(truncateLabel(node.label), node.x, node.y + r + 18);
+      ctx.globalAlpha = 1;
 
       // Update node positions (spring physics + drift) - only if not settled
       if (!settled) {
@@ -184,7 +188,7 @@ export function GraphCanvas({ entities, relationships, ontology, highlightedEnti
     });
 
     ctx.restore();
-  }, []);
+  }, [theme, sz]);
 
   // Draw edges layer - reads from refs
   const drawEdgesLayer = useCallback((ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, time: number) => {
@@ -238,13 +242,13 @@ export function GraphCanvas({ entities, relationships, ontology, highlightedEnti
         const py = (1 - t) * (1 - t) * fromNode.y + 2 * (1 - t) * t * my + t * t * toNode.y;
         ctx.beginPath();
         ctx.arc(px, py, 3, 0, Math.PI * 2);
-        ctx.fillStyle = "#fff";
+        ctx.fillStyle = theme.text.primary;
         ctx.fill();
       }
     });
 
     ctx.restore();
-  }, []);
+  }, [theme]);
 
   // Animation loop function - separate from setup
   const runAnimation = useCallback(() => {
@@ -581,16 +585,16 @@ export function GraphCanvas({ entities, relationships, ontology, highlightedEnti
         return (
           <div style={{
             position: "absolute", left: sx + 20, top: sy - 20,
-            background: "rgba(15,15,20,0.95)", border: `1px solid ${node.color}44`,
+            background: theme.surface.overlay, border: `1px solid ${node.color}44`,
             borderRadius: 8, padding: "10px 14px", pointerEvents: "none",
             backdropFilter: "blur(12px)", zIndex: 10, minWidth: 180,
           }}>
-            <div style={{ color: node.color, fontWeight: 700, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: node.color, fontWeight: 700, fontSize: sz(13), fontFamily: "'IBM Plex Mono', monospace" }}>
               {node.icon} {node.label}
             </div>
-            <div style={{ color: "#888", fontSize: 11, marginTop: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: theme.text.muted, fontSize: sz(11), marginTop: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
               {Object.entries(node.props || {}).map(([k, v]) => (
-                <div key={k}><span style={{ color: "#666" }}>{k}:</span> <span style={{ color: "#ccc" }}>{String(v)}</span></div>
+                <div key={k}><span style={{ color: theme.text.faint }}>{k}:</span> <span style={{ color: theme.text.secondary }}>{String(v)}</span></div>
               ))}
             </div>
           </div>

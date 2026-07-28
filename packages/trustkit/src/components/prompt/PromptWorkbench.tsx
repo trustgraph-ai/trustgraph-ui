@@ -6,14 +6,10 @@ import { PromptList } from "./PromptList";
 import { PromptEditor } from "./PromptEditor";
 import { PromptTestPanel } from "./PromptTestPanel";
 import { LoadingState } from "../common";
-import { border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
-/**
- * Full prompt workbench — list on the left, editor in the middle,
- * test panel on the right. Edit prompts and test them with real
- * variable substitution.
- */
 export function PromptWorkbench() {
+  const { theme, sz } = useTheme();
   const { prompts, isLoading, error, create } = usePromptList();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data, isLoading: detailLoading, save, isSaving, saveError } = usePromptDetail(selectedId);
@@ -27,11 +23,10 @@ export function PromptWorkbench() {
       display: "flex",
       height: "calc(100vh - 160px)",
     }}>
-      {/* Prompt list */}
       <div style={{
         width: 260,
         flexShrink: 0,
-        borderRight: `1px solid ${border.default}`,
+        borderRight: `1px solid ${theme.border.default}`,
         overflowY: "auto",
       }}>
         <PromptList
@@ -45,7 +40,6 @@ export function PromptWorkbench() {
         />
       </div>
 
-      {/* Main area */}
       <div style={{ flex: 1, minWidth: 0, display: "flex" }}>
         {detailLoading && <LoadingState />}
 
@@ -55,8 +49,8 @@ export function PromptWorkbench() {
             alignItems: "center",
             justifyContent: "center",
             flex: 1,
-            color: "#444",
-            fontSize: 13,
+            color: theme.text.hint,
+            fontSize: sz(13),
             fontStyle: "italic",
           }}>
             Select a prompt to edit and test
@@ -65,11 +59,10 @@ export function PromptWorkbench() {
 
         {data && !detailLoading && selectedId && (
           <>
-            {/* Editor */}
             <div style={{
               flex: 1,
               minWidth: 0,
-              borderRight: `1px solid ${border.default}`,
+              borderRight: `1px solid ${theme.border.default}`,
               overflowY: "auto",
             }}>
               <PromptEditor
@@ -80,7 +73,6 @@ export function PromptWorkbench() {
               />
             </div>
 
-            {/* Test panel */}
             <div style={{
               width: 400,
               flexShrink: 0,

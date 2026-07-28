@@ -10,7 +10,7 @@ import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 import { useExplainGraph } from "../../hooks/useExplainGraph";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
-import { palette, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useSettings } from "@trustgraph/react-state";
 
 interface RagExplainViewProps {
@@ -24,6 +24,7 @@ interface RagExplainViewProps {
  * timeline with full source chains on the right.
  */
 export function RagExplainView({ collection: collectionProp, presets }: RagExplainViewProps) {
+  const { theme } = useTheme();
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -82,7 +83,7 @@ export function RagExplainView({ collection: collectionProp, presets }: RagExpla
   return (
     <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Response + Source */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${theme.border.default}` }}>
         <Toolbar>
           <SectionLabel marginBottom={12}>GRAPH RAG QUERY</SectionLabel>
           <SearchInput
@@ -92,7 +93,7 @@ export function RagExplainView({ collection: collectionProp, presets }: RagExpla
             placeholder="Ask a question..."
             buttonText="Query"
             isLoading={isQuerying}
-            buttonColor={palette.cyan}
+            buttonColor={theme.palette.cyan}
           presets={presets}
           />
         </Toolbar>
@@ -122,7 +123,7 @@ export function RagExplainView({ collection: collectionProp, presets }: RagExpla
           left: 0,
           right: 0,
           height: "50%",
-          borderBottom: `1px solid ${border.default}`,
+          borderBottom: `1px solid ${theme.border.default}`,
         }}>
           <ExplainGraph
             nodes={graphNodes}

@@ -1,4 +1,4 @@
-import { text, border, surface } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface SchemaBasicInfoProps {
   id: string;
@@ -10,11 +10,11 @@ interface SchemaBasicInfoProps {
   isNew?: boolean;
 }
 
-const labelStyle = { fontSize: 10, fontFamily: "'IBM Plex Mono', monospace" as const, fontWeight: 600 as const, color: text.faint, letterSpacing: "0.1em", marginBottom: 4 };
-const inputStyle = { width: "100%", padding: "6px 8px", borderRadius: 4, border: `1px solid ${border.default}`, background: surface.card, color: text.primary, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" as const, outline: "none" };
-const hintStyle = { fontSize: 9, color: text.hint, marginTop: 2, marginBottom: 16 };
-
 export function SchemaBasicInfo({ id, name, description, onIdChange, onNameChange, onDescriptionChange, isNew }: SchemaBasicInfoProps) {
+  const { theme, sz } = useTheme();
+  const labelStyle = { fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace" as const, fontWeight: 600 as const, color: theme.text.faint, letterSpacing: "0.1em", marginBottom: 4 };
+  const inputStyle = { width: "100%", padding: "6px 8px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: theme.surface.card, color: theme.text.primary, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" as const, outline: "none" };
+  const hintStyle = { fontSize: sz(9), color: theme.text.hint, marginTop: 2, marginBottom: 16 };
   return (
     <div>
       {isNew && onIdChange && (

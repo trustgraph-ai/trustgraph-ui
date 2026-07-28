@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { ZoomControls } from "./ZoomControls";
-import { border, palette, text, withGlow } from "../../theme";
+import { withGlow } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 // ── Types ───────────────────────────────────────────────────────────
 
@@ -142,6 +143,7 @@ export function ExplainGraph({
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const { theme, sz } = useTheme();
   const [hovered, setHovered] = useState<string | null>(null);
 
   // Zoom and pan
@@ -181,13 +183,13 @@ export function ExplainGraph({
     const { width, height } = containerSize;
     if (width === 0) return lines;
     for (let x = 0; x < width; x += 30) {
-      lines.push(<line key={`v-${x}`} x1={x} y1={0} x2={x} y2={height} stroke={border.grid} strokeWidth={0.5} />);
+      lines.push(<line key={`v-${x}`} x1={x} y1={0} x2={x} y2={height} stroke={theme.border.grid} strokeWidth={0.5} />);
     }
     for (let y = 0; y < height; y += 30) {
-      lines.push(<line key={`h-${y}`} x1={0} y1={y} x2={width} y2={y} stroke={border.grid} strokeWidth={0.5} />);
+      lines.push(<line key={`h-${y}`} x1={0} y1={y} x2={width} y2={y} stroke={theme.border.grid} strokeWidth={0.5} />);
     }
     return lines;
-  }, [containerSize]);
+  }, [containerSize, theme]);
 
   // Zoom
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -266,7 +268,7 @@ export function ExplainGraph({
             const path = `M ${from.x} ${from.y} Q ${mx} ${my} ${to.x} ${to.y}`;
 
             const alpha = isDimmed ? 0.15 : isHighlighted || isEdgeHovered ? 0.8 : 0.35;
-            const edgeColor = palette.cyan;
+            const edgeColor = theme.palette.cyan;
 
             return (
               <g
@@ -289,8 +291,9 @@ export function ExplainGraph({
                 <text
                   x={mx}
                   y={my - 6}
-                  fill={`rgba(255,255,255,${isDimmed ? 0.15 : isHighlighted || isEdgeHovered ? 0.9 : 0.5})`}
-                  fontSize={8}
+                  fill={theme.text.primary}
+                  fillOpacity={isDimmed ? 0.15 : isHighlighted || isEdgeHovered ? 0.9 : 0.5}
+                  fontSize={sz(8)}
                   fontFamily="'IBM Plex Mono', monospace"
                   textAnchor="middle"
                 >
@@ -332,7 +335,7 @@ export function ExplainGraph({
             const isHighlighted = highlightedNodeIds.includes(node.id);
             const isHovered = hovered === node.id;
             const isDimmed = hasHighlights && !isHighlighted;
-            const nodeColor = node.color || palette.blue;
+            const nodeColor = node.color || theme.palette.blue;
             const alpha = isDimmed ? 0.25 : 1;
             const r = isHighlighted || isHovered ? NODE_R * 1.3 : NODE_R;
 
@@ -363,8 +366,9 @@ export function ExplainGraph({
                 <text
                   x={node.x}
                   y={node.y + r + 12}
-                  fill={`rgba(255,255,255,${alpha * (isHighlighted ? 1 : 0.7)})`}
-                  fontSize={isHovered ? 9 : 8}
+                  fill={theme.text.primary}
+                  fillOpacity={alpha * (isHighlighted ? 1 : 0.7)}
+                  fontSize={sz(isHovered ? 9 : 8)}
                   fontWeight={isHighlighted ? "bold" : "normal"}
                   fontFamily="'IBM Plex Sans', sans-serif"
                   textAnchor="middle"
@@ -389,7 +393,7 @@ export function ExplainGraph({
         <div style={{
           position: "absolute", inset: 0,
           display: "flex", alignItems: "center", justifyContent: "center",
-          color: text.hint, fontSize: 13, fontStyle: "italic",
+          color: theme.text.hint, fontSize: sz(13), fontStyle: "italic",
           pointerEvents: "none",
         }}>
           Graph will populate as explain events arrive
@@ -405,12 +409,12 @@ export function ExplainGraph({
             position: "absolute",
             left: node.x * zoom + pan.x + 20,
             top: node.y * zoom + pan.y - 20,
-            background: "rgba(15,15,20,0.95)",
-            border: `1px solid ${withGlow(node.color || palette.blue, 0.3)}`,
+            background: theme.surface.overlay,
+            border: `1px solid ${withGlow(node.color || theme.palette.blue, 0.3)}`,
             borderRadius: 8, padding: "8px 12px",
             pointerEvents: "none", backdropFilter: "blur(12px)", zIndex: 10,
           }}>
-            <div style={{ color: node.color || palette.blue, fontWeight: 700, fontSize: 12, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: node.color || theme.palette.blue, fontWeight: 700, fontSize: sz(12), fontFamily: "'IBM Plex Mono', monospace" }}>
               {node.label}
             </div>
           </div>
@@ -430,22 +434,22 @@ export function ExplainGraph({
         return (
           <div style={{
             position: "absolute", left: mx + 15, top: my - 15,
-            background: "rgba(15,15,20,0.95)",
-            border: `1px solid ${withGlow(palette.cyan, 0.3)}`,
+            background: theme.surface.overlay,
+            border: `1px solid ${withGlow(theme.palette.cyan, 0.3)}`,
             borderRadius: 8, padding: "8px 12px",
             pointerEvents: "none", backdropFilter: "blur(12px)", zIndex: 10,
             maxWidth: 280,
           }}>
-            <div style={{ color: palette.cyan, fontWeight: 700, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: theme.palette.cyan, fontWeight: 700, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
               {edge.label}
             </div>
             {(edge.concept || edge.score != null) && (
-              <div style={{ color: text.muted, fontSize: 10, marginTop: 4, lineHeight: 1.4, fontFamily: "'IBM Plex Mono', monospace" }}>
+              <div style={{ color: theme.text.muted, fontSize: sz(10), marginTop: 4, lineHeight: 1.4, fontFamily: "'IBM Plex Mono', monospace" }}>
                 {edge.concept && (
-                  <div><span style={{ color: text.faint }}>concept: </span><span style={{ color: palette.orange }}>{edge.concept}</span></div>
+                  <div><span style={{ color: theme.text.faint }}>concept: </span><span style={{ color: theme.palette.orange }}>{edge.concept}</span></div>
                 )}
                 {edge.score != null && (
-                  <div><span style={{ color: text.faint }}>score: </span><span style={{ color: palette.cyan }}>{edge.score.toFixed(4)}</span></div>
+                  <div><span style={{ color: theme.text.faint }}>score: </span><span style={{ color: theme.palette.cyan }}>{edge.score.toFixed(4)}</span></div>
                 )}
               </div>
             )}

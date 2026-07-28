@@ -1,4 +1,4 @@
-import { semantic, text } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface LoadingStateProps {
   message?: string;
@@ -6,6 +6,7 @@ interface LoadingStateProps {
 }
 
 export function LoadingState({ message, variant = "loading" }: LoadingStateProps) {
+  const { theme } = useTheme();
   const isError = variant === "error";
   const defaultMessage = isError ? "Error loading data" : "Loading...";
 
@@ -15,7 +16,7 @@ export function LoadingState({ message, variant = "loading" }: LoadingStateProps
       alignItems: "center",
       justifyContent: "center",
       height: "100%",
-      color: isError ? semantic.error : text.faint,
+      color: isError ? theme.semantic.error : theme.text.faint,
     }}>
       {message || defaultMessage}
     </div>

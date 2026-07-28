@@ -1,14 +1,16 @@
 import { useToastStore, Toast, ToastType } from "../../hooks/toastStore";
-import { semantic, surface, text } from "../../theme";
-
-const typeStyles: Record<ToastType, { color: string; icon: string }> = {
-  success: { color: semantic.success, icon: "✓" },
-  error: { color: semantic.error, icon: "✕" },
-  warning: { color: semantic.warning, icon: "!" },
-  info: { color: semantic.info, icon: "i" },
-};
+import { useTheme } from "../../theme/ThemeContext";
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
+  const { theme, sz } = useTheme();
+
+  const typeStyles: Record<ToastType, { color: string; icon: string }> = {
+    success: { color: theme.semantic.success, icon: "✓" },
+    error: { color: theme.semantic.error, icon: "✕" },
+    warning: { color: theme.semantic.warning, icon: "!" },
+    info: { color: theme.semantic.info, icon: "i" },
+  };
+
   const style = typeStyles[toast.type];
 
   return (
@@ -18,7 +20,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
         alignItems: "center",
         gap: 12,
         padding: "12px 16px",
-        background: surface.overlay,
+        background: theme.surface.overlay,
         borderRadius: 8,
         borderLeft: `3px solid ${style.color}`,
         backdropFilter: "blur(12px)",
@@ -31,7 +33,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
       <span
         style={{
           color: style.color,
-          fontSize: 12,
+          fontSize: sz(12),
           fontWeight: 700,
           width: 18,
           height: 18,
@@ -48,8 +50,8 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
       <span
         style={{
           flex: 1,
-          fontSize: 12,
-          color: text.secondary,
+          fontSize: sz(12),
+          color: theme.text.secondary,
           fontFamily: "'IBM Plex Sans', sans-serif",
           lineHeight: 1.4,
         }}
@@ -61,9 +63,9 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
         style={{
           background: "none",
           border: "none",
-          color: text.faint,
+          color: theme.text.faint,
           cursor: "pointer",
-          fontSize: 16,
+          fontSize: sz(16),
           padding: 4,
           lineHeight: 1,
         }}

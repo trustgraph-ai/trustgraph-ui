@@ -10,7 +10,7 @@ import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 import { useExplainDAG } from "../../hooks/useExplainDAG";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
-import { text, palette, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useSettings } from "@trustgraph/react-state";
 
 interface DocRagFullExplainViewProps {
@@ -22,6 +22,7 @@ interface DocRagFullExplainViewProps {
  * DAG on the left with response below, event detail on the right.
  */
 export function DocRagFullExplainView({ collection: collectionProp }: DocRagFullExplainViewProps) {
+  const { theme, sz } = useTheme();
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -67,7 +68,7 @@ export function DocRagFullExplainView({ collection: collectionProp }: DocRagFull
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        borderRight: selectedEvent ? `1px solid ${border.default}` : undefined,
+        borderRight: selectedEvent ? `1px solid ${theme.border.default}` : undefined,
       }}>
         <Toolbar>
           <SectionLabel marginBottom={12}>DOCUMENT RAG QUERY</SectionLabel>
@@ -78,14 +79,14 @@ export function DocRagFullExplainView({ collection: collectionProp }: DocRagFull
             placeholder="Ask a question..."
             buttonText="Query"
             isLoading={isQuerying}
-            buttonColor={palette.purple}
+            buttonColor={theme.palette.purple}
           />
         </Toolbar>
 
         {/* DAG */}
         <div style={{
           flex: 1,
-          borderBottom: `1px solid ${border.default}`,
+          borderBottom: `1px solid ${theme.border.default}`,
           position: "relative",
           minHeight: 200,
         }}>
@@ -101,7 +102,7 @@ export function DocRagFullExplainView({ collection: collectionProp }: DocRagFull
         {/* Response */}
         <div style={{ maxHeight: "35%", padding: "20px 28px", overflowY: "auto" }}>
           {!response && !isQuerying && !error && (
-            <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+            <div style={{ color: theme.text.hint, fontSize: sz(13), fontStyle: "italic" }}>
               Response will appear here.
             </div>
           )}
@@ -124,13 +125,13 @@ export function DocRagFullExplainView({ collection: collectionProp }: DocRagFull
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
-          background: "rgba(12,12,18,0.95)",
+          background: theme.surface.overlay,
           backdropFilter: "blur(12px)",
         }}>
           <div style={{
             flexShrink: 0,
             padding: "16px 20px",
-            borderBottom: `1px solid ${border.default}`,
+            borderBottom: `1px solid ${theme.border.default}`,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -140,7 +141,7 @@ export function DocRagFullExplainView({ collection: collectionProp }: DocRagFull
               onClick={() => setSelectedEventId(null)}
               style={{
                 background: "none", border: "none",
-                color: text.faint, cursor: "pointer", fontSize: 18,
+                color: theme.text.faint, cursor: "pointer", fontSize: sz(18),
               }}
             >
               ×

@@ -10,7 +10,7 @@ import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 import { useExplainGraph } from "../../hooks/useExplainGraph";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
-import { palette, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useSettings } from "@trustgraph/react-state";
 
 interface AgentExplainViewProps {
@@ -24,6 +24,7 @@ interface AgentExplainViewProps {
  * timeline with full source chains on the right.
  */
 export function AgentExplainView({ collection: collectionProp, presets }: AgentExplainViewProps) {
+  const { theme } = useTheme();
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -77,7 +78,7 @@ export function AgentExplainView({ collection: collectionProp, presets }: AgentE
   return (
     <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Agent Steps + Source */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${theme.border.default}` }}>
         <Toolbar>
           <SectionLabel marginBottom={12}>AGENT QUERY</SectionLabel>
           <SearchInput
@@ -87,7 +88,7 @@ export function AgentExplainView({ collection: collectionProp, presets }: AgentE
             placeholder="Ask a question..."
             buttonText="Ask"
             isLoading={isQuerying}
-            buttonColor={palette.amber}
+            buttonColor={theme.palette.amber}
             presets={presets}
           />
         </Toolbar>
@@ -116,7 +117,7 @@ export function AgentExplainView({ collection: collectionProp, presets }: AgentE
           left: 0,
           right: 0,
           height: "50%",
-          borderBottom: `1px solid ${border.default}`,
+          borderBottom: `1px solid ${theme.border.default}`,
         }}>
           <ExplainGraph
             nodes={graphNodes}

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from "react";
-import { text, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { SectionLabel } from "../common";
 
 type ResultView = "raw" | "table";
@@ -84,6 +84,7 @@ const EXAMPLE_QUERIES: { label: string; query: string }[] = [
 const DEFAULT_QUERY = EXAMPLE_QUERIES[0].query;
 
 export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) {
+  const { theme, sz } = useTheme();
   const [query, setQuery] = useState(DEFAULT_QUERY);
   const [result, setResult] = useState<GraphqlResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -158,7 +159,7 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
       {/* Toolbar */}
       <div style={{
         padding: "8px 16px",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
         gap: 8,
@@ -171,10 +172,10 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
             style={{
               padding: "4px 10px",
               borderRadius: 4,
-              border: `1px solid ${border.default}`,
+              border: `1px solid ${theme.border.default}`,
               background: "transparent",
-              color: text.subtle,
-              fontSize: 10,
+              color: theme.text.subtle,
+              fontSize: sz(10),
               fontFamily: "'IBM Plex Mono', monospace",
               cursor: "pointer",
             }}
@@ -187,8 +188,8 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
               top: "100%",
               left: 0,
               marginTop: 4,
-              background: "#1a1a22",
-              border: `1px solid ${border.default}`,
+              background: theme.surface.overlay,
+              border: `1px solid ${theme.border.default}`,
               borderRadius: 6,
               padding: 4,
               zIndex: 20,
@@ -206,13 +207,13 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
                     border: "none",
                     borderRadius: 4,
                     background: "transparent",
-                    color: text.muted,
-                    fontSize: 11,
+                    color: theme.text.muted,
+                    fontSize: sz(11),
                     fontFamily: "'IBM Plex Mono', monospace",
                     cursor: "pointer",
                     textAlign: "left",
                   }}
-                  onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+                  onMouseEnter={(e) => { (e.target as HTMLElement).style.background = theme.surface.cardHover; }}
                   onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
                 >
                   {ex.label}
@@ -229,10 +230,10 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
               style={{
                 padding: "4px 10px",
                 borderRadius: 4,
-                border: `1px solid ${border.default}`,
+                border: `1px solid ${theme.border.default}`,
                 background: "transparent",
-                color: text.subtle,
-                fontSize: 10,
+                color: theme.text.subtle,
+                fontSize: sz(10),
                 fontFamily: "'IBM Plex Mono', monospace",
                 cursor: "pointer",
               }}
@@ -245,8 +246,8 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
                 top: "100%",
                 left: 0,
                 marginTop: 4,
-                background: "#1a1a22",
-                border: `1px solid ${border.default}`,
+                background: theme.surface.overlay,
+                border: `1px solid ${theme.border.default}`,
                 borderRadius: 6,
                 padding: 4,
                 zIndex: 20,
@@ -264,13 +265,13 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
                       border: "none",
                       borderRadius: 4,
                       background: "transparent",
-                      color: text.muted,
-                      fontSize: 11,
+                      color: theme.text.muted,
+                      fontSize: sz(11),
                       fontFamily: "'IBM Plex Mono', monospace",
                       cursor: "pointer",
                       textAlign: "left",
                     }}
-                    onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
+                    onMouseEnter={(e) => { (e.target as HTMLElement).style.background = theme.surface.cardHover; }}
                     onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
                     title={p.description}
                   >
@@ -289,10 +290,10 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
           style={{
             padding: "4px 10px",
             borderRadius: 4,
-            border: `1px solid ${border.default}`,
+            border: `1px solid ${theme.border.default}`,
             background: "transparent",
-            color: text.faint,
-            fontSize: 10,
+            color: theme.text.faint,
+            fontSize: sz(10),
             fontFamily: "'IBM Plex Mono', monospace",
             cursor: "pointer",
           }}
@@ -306,10 +307,10 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
           style={{
             padding: "4px 14px",
             borderRadius: 4,
-            border: `1px solid ${onExecute ? palette.emerald + "66" : border.default}`,
-            background: onExecute ? palette.emerald + "18" : "transparent",
-            color: onExecute ? palette.emerald : text.disabled,
-            fontSize: 10,
+            border: `1px solid ${onExecute ? theme.palette.emerald + "66" : theme.border.default}`,
+            background: onExecute ? theme.palette.emerald + "18" : "transparent",
+            color: onExecute ? theme.palette.emerald : theme.text.disabled,
+            fontSize: sz(10),
             fontFamily: "'IBM Plex Mono', monospace",
             cursor: onExecute ? "pointer" : "default",
             fontWeight: 600,
@@ -326,19 +327,19 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
         maxHeight: "40%",
         minHeight: 120,
         display: "flex",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
       }}>
         <div style={{
           padding: "12px 0",
           width: 40,
           textAlign: "right",
           paddingRight: 8,
-          color: text.hint,
-          fontSize: 11,
+          color: theme.text.hint,
+          fontSize: sz(11),
           fontFamily: "'IBM Plex Mono', monospace",
           lineHeight: "1.5",
           userSelect: "none",
-          borderRight: `1px solid ${border.default}`,
+          borderRight: `1px solid ${theme.border.default}`,
           overflow: "hidden",
         }}>
           {Array.from({ length: lineCount }, (_, i) => (
@@ -358,8 +359,8 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
             background: "transparent",
             border: "none",
             outline: "none",
-            color: text.primary,
-            fontSize: 12,
+            color: theme.text.primary,
+            fontSize: sz(12),
             fontFamily: "'IBM Plex Mono', monospace",
             lineHeight: "1.5",
             resize: "none",
@@ -372,22 +373,22 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{
           padding: "6px 16px",
-          borderBottom: `1px solid ${border.default}`,
+          borderBottom: `1px solid ${theme.border.default}`,
           display: "flex",
           alignItems: "center",
           gap: 8,
         }}>
-          <span style={{ fontSize: 9, color: text.hint, fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Results
           </span>
           {result && !error && (
-            <span style={{ fontSize: 9, color: text.faint, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <span style={{ fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace" }}>
               {elapsed !== null && `${(elapsed / 1000).toFixed(2)}s`}
               {tableData && ` · ${tableData.rows.length} rows`}
             </span>
           )}
           {error && (
-            <span style={{ fontSize: 9, color: palette.rose, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <span style={{ fontSize: sz(9), color: theme.palette.rose, fontFamily: "'IBM Plex Mono', monospace" }}>
               Error{elapsed !== null && ` · ${(elapsed / 1000).toFixed(2)}s`}
             </span>
           )}
@@ -401,10 +402,10 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
                   style={{
                     padding: "2px 8px",
                     borderRadius: 3,
-                    border: `1px solid ${resultView === v ? border.default : "transparent"}`,
-                    background: resultView === v ? "rgba(255,255,255,0.06)" : "transparent",
-                    color: resultView === v ? text.muted : text.hint,
-                    fontSize: 9,
+                    border: `1px solid ${resultView === v ? theme.border.default : "transparent"}`,
+                    background: resultView === v ? theme.surface.cardHover : "transparent",
+                    color: resultView === v ? theme.text.muted : theme.text.hint,
+                    fontSize: sz(9),
                     fontFamily: "'IBM Plex Mono', monospace",
                     cursor: "pointer",
                     textTransform: "capitalize",
@@ -419,7 +420,7 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
 
         <div style={{ flex: 1, overflow: "auto" }}>
           {isRunning && (
-            <div style={{ padding: 32, textAlign: "center", color: text.faint, fontSize: 12, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ padding: 32, textAlign: "center", color: theme.text.faint, fontSize: sz(12), fontFamily: "'IBM Plex Mono', monospace" }}>
               Executing query…
             </div>
           )}
@@ -429,17 +430,17 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
               margin: 16,
               padding: 16,
               borderRadius: 8,
-              background: palette.rose + "10",
-              border: `1px solid ${palette.rose}33`,
+              background: theme.palette.rose + "10",
+              border: `1px solid ${theme.palette.rose}33`,
             }}>
-              <div style={{ fontSize: 11, color: palette.rose, fontFamily: "'IBM Plex Mono', monospace", whiteSpace: "pre-wrap" }}>
+              <div style={{ fontSize: sz(11), color: theme.palette.rose, fontFamily: "'IBM Plex Mono', monospace", whiteSpace: "pre-wrap" }}>
                 {error}
               </div>
             </div>
           )}
 
           {!isRunning && !error && !result && (
-            <div style={{ padding: 32, textAlign: "center", color: text.hint, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ padding: 32, textAlign: "center", color: theme.text.hint, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
               {onExecute
                 ? "Write a query and press Ctrl+Enter to execute."
                 : "GraphQL endpoint not connected."}
@@ -450,9 +451,9 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
             <pre style={{
               margin: 0,
               padding: "12px 16px",
-              fontSize: 11,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
-              color: text.muted,
+              color: theme.text.muted,
               lineHeight: "1.5",
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
@@ -466,7 +467,7 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
               <table style={{
                 width: "100%",
                 borderCollapse: "collapse",
-                fontSize: 11,
+                fontSize: sz(11),
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 <thead>
@@ -475,9 +476,9 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
                       <th key={col} style={{
                         padding: "6px 10px",
                         textAlign: "left",
-                        color: text.subtle,
+                        color: theme.text.subtle,
                         fontWeight: 600,
-                        borderBottom: `1px solid ${border.default}`,
+                        borderBottom: `1px solid ${theme.border.default}`,
                         whiteSpace: "nowrap",
                       }}>
                         {col}
@@ -487,11 +488,11 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
                 </thead>
                 <tbody>
                   {tableData.rows.map((row, i) => (
-                    <tr key={i} style={{ borderBottom: `1px solid ${border.default}22` }}>
+                    <tr key={i} style={{ borderBottom: `1px solid ${theme.border.subtle}` }}>
                       {tableData.columns.map((col) => (
                         <td key={col} style={{
                           padding: "5px 10px",
-                          color: text.muted,
+                          color: theme.text.muted,
                           maxWidth: 400,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -511,9 +512,9 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
             <pre style={{
               margin: 0,
               padding: "12px 16px",
-              fontSize: 11,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
-              color: text.muted,
+              color: theme.text.muted,
               lineHeight: "1.5",
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",

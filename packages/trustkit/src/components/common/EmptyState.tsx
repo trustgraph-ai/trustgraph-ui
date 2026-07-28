@@ -1,4 +1,4 @@
-import { text } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface EmptyStateProps {
   /** Descriptive text */
@@ -13,6 +13,8 @@ interface EmptyStateProps {
  * Standardised empty state display. Italic muted text, centered.
  */
 export function EmptyState({ message, icon, action }: EmptyStateProps) {
+  const { theme, sz } = useTheme();
+
   return (
     <div style={{
       display: "flex",
@@ -23,13 +25,13 @@ export function EmptyState({ message, icon, action }: EmptyStateProps) {
       gap: 12,
     }}>
       {icon && (
-        <div style={{ fontSize: 24, color: text.disabled }}>
+        <div style={{ fontSize: sz(24), color: theme.text.disabled }}>
           {icon}
         </div>
       )}
       <div style={{
-        fontSize: 13,
-        color: text.hint,
+        fontSize: sz(13),
+        color: theme.text.hint,
         fontStyle: "italic",
         textAlign: "center",
         lineHeight: 1.6,
@@ -40,10 +42,10 @@ export function EmptyState({ message, icon, action }: EmptyStateProps) {
         <button
           onClick={action.onClick}
           style={{
-            fontSize: 12,
-            color: text.muted,
+            fontSize: sz(12),
+            color: theme.text.muted,
             background: "none",
-            border: `1px solid ${text.disabled}`,
+            border: `1px solid ${theme.text.disabled}`,
             borderRadius: 6,
             padding: "6px 14px",
             cursor: "pointer",

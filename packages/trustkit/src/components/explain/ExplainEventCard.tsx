@@ -1,7 +1,18 @@
 import { Badge } from "../common";
 import { SourceLinkBadge } from "./SourceLinkBadge";
 import { text, withGlow, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import type { Theme } from "../../theme/types";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
+
+const staticPaletteMap = new Map(
+  (Object.keys(palette) as Array<keyof typeof palette>).map(k => [palette[k], k])
+);
+
+function remapPaletteColor(color: string, theme: Theme): string {
+  const key = staticPaletteMap.get(color);
+  return key ? theme.palette[key] : color;
+}
 
 export function eventTypeColor(eventType: string): string {
   switch (eventType) {
@@ -54,14 +65,15 @@ export function ExplainEventCard({
   onSourceClick,
   sourceLevel = "full",
 }: ExplainEventCardProps) {
-  const typeColor = eventTypeColor(eventType);
+  const { theme, sz } = useTheme();
+  const typeColor = remapPaletteColor(eventTypeColor(eventType), theme);
 
   return (
     <div style={{
       padding: "12px 16px",
       borderRadius: 8,
-      background: withGlow(typeColor, 0.06),
-      border: `1px solid ${withGlow(typeColor, 0.15)}`,
+      background: withGlow(typeColor, 0.08),
+      border: `1px solid ${withGlow(typeColor, 0.25)}`,
     }}>
       {/* Header */}
       <div style={{
@@ -71,7 +83,7 @@ export function ExplainEventCard({
         marginBottom: loading || error ? 0 : 8,
       }}>
         <span style={{
-          fontSize: 10,
+          fontSize: sz(10),
           color: typeColor,
           fontFamily: "'IBM Plex Mono', monospace",
           fontWeight: 600,
@@ -79,7 +91,7 @@ export function ExplainEventCard({
           {index + 1}.
         </span>
         <span style={{
-          fontSize: 10,
+          fontSize: sz(10),
           color: typeColor,
           fontFamily: "'IBM Plex Mono', monospace",
           fontWeight: 600,
@@ -92,8 +104,8 @@ export function ExplainEventCard({
       {/* Loading */}
       {loading && (
         <div style={{
-          fontSize: 11,
-          color: text.disabled,
+          fontSize: sz(11),
+          color: theme.text.disabled,
           fontFamily: "'IBM Plex Mono', monospace",
           marginTop: 6,
         }}>
@@ -104,8 +116,8 @@ export function ExplainEventCard({
       {/* Error */}
       {error && (
         <div style={{
-          fontSize: 11,
-          color: text.disabled,
+          fontSize: sz(11),
+          color: theme.text.disabled,
           fontFamily: "'IBM Plex Mono', monospace",
           marginTop: 6,
         }}>
@@ -146,12 +158,13 @@ function ExplainEventData({
   onSourceClick?: (source: ProvenanceChain) => void;
   sourceLevel: "none" | "document" | "full";
 }) {
+  const { theme, sz } = useTheme();
   const d = data as Record<string, unknown>;
 
   switch (eventType) {
     case "question":
       return (
-        <div style={{ fontSize: 12, color: text.secondary, lineHeight: 1.5 }}>
+        <div style={{ fontSize: sz(12), color: theme.text.secondary, lineHeight: 1.5 }}>
           {String(d.query || "")}
         </div>
       );
@@ -177,8 +190,8 @@ function ExplainEventData({
         <div>
           {(edgeCount || chunkCount) && (
             <div style={{
-              fontSize: 11,
-              color: text.subtle,
+              fontSize: sz(11),
+              color: theme.text.subtle,
               fontFamily: "'IBM Plex Mono', monospace",
               marginBottom: 6,
             }}>
@@ -231,28 +244,28 @@ function ExplainEventData({
                 <div
                   onClick={isEdgeClickable ? () => onEdgeClick!(sel.edge!, sel.edgeUri) : undefined}
                   style={{
-                    fontSize: 11,
-                    color: text.secondary,
+                    fontSize: sz(11),
+                    color: theme.text.secondary,
                     marginBottom: 2,
                     cursor: isEdgeClickable ? "pointer" : "default",
                     padding: isEdgeClickable ? "3px 6px" : undefined,
                     borderRadius: 4,
                     transition: "background 0.15s ease",
                   }}
-                  onMouseEnter={e => { if (isEdgeClickable) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+                  onMouseEnter={e => { if (isEdgeClickable) (e.currentTarget as HTMLElement).style.background = theme.surface.overlay; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                 >
-                  <span style={{ color: palette.pink }}>{sel.edgeLabels.s}</span>
-                  <span style={{ color: text.faint }}> → </span>
-                  <span style={{ color: text.subtle, fontFamily: "'IBM Plex Mono', monospace" }}>{sel.edgeLabels.p}</span>
-                  <span style={{ color: text.faint }}> → </span>
-                  <span style={{ color: palette.pink }}>{sel.edgeLabels.o}</span>
+                  <span style={{ color: theme.palette.pink }}>{sel.edgeLabels.s}</span>
+                  <span style={{ color: theme.text.faint }}> → </span>
+                  <span style={{ color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace" }}>{sel.edgeLabels.p}</span>
+                  <span style={{ color: theme.text.faint }}> → </span>
+                  <span style={{ color: theme.palette.pink }}>{sel.edgeLabels.o}</span>
                 </div>
               )}
               {(sel.concept || sel.score != null) && (
                 <div style={{
-                  fontSize: 10,
-                  color: text.subtle,
+                  fontSize: sz(10),
+                  color: theme.text.subtle,
                   lineHeight: 1.4,
                   marginTop: 2,
                   fontFamily: "'IBM Plex Mono', monospace",
@@ -262,14 +275,14 @@ function ExplainEventData({
                 }}>
                   {sel.concept && (
                     <span>
-                      <span style={{ color: text.faint }}>concept: </span>
-                      <span style={{ color: palette.orange }}>{sel.concept}</span>
+                      <span style={{ color: theme.text.faint }}>concept: </span>
+                      <span style={{ color: theme.palette.orange }}>{sel.concept}</span>
                     </span>
                   )}
                   {sel.score != null && (
                     <span>
-                      <span style={{ color: text.faint }}>score: </span>
-                      <span style={{ color: palette.cyan }}>{sel.score.toFixed(4)}</span>
+                      <span style={{ color: theme.text.faint }}>score: </span>
+                      <span style={{ color: theme.palette.cyan }}>{sel.score.toFixed(4)}</span>
                     </span>
                   )}
                 </div>
@@ -295,7 +308,7 @@ function ExplainEventData({
 
     case "synthesis":
       return (
-        <div style={{ fontSize: 11, color: text.subtle, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ fontSize: sz(11), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace" }}>
           {d.contentLength ? `Content: ${String(d.contentLength)} chars` : null}
           {d.documentUri ? `Answer document: ${String(d.documentUri).split(/[/#:]/).pop()}` : null}
           {!d.contentLength && !d.documentUri ? "Synthesis complete" : null}
@@ -304,7 +317,7 @@ function ExplainEventData({
 
     case "analysis":
       return (
-        <div style={{ fontSize: 11, color: text.subtle }}>
+        <div style={{ fontSize: sz(11), color: theme.text.subtle }}>
           {d.action ? <div><span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Action:</span> {String(d.action)}</div> : null}
           {d.arguments ? <div style={{ marginTop: 2 }}><span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Args:</span> {String(d.arguments)}</div> : null}
         </div>
@@ -314,13 +327,13 @@ function ExplainEventData({
       const goals = (d.goals as string[]) || [];
       return (
         <div>
-          <div style={{ fontSize: 11, color: text.subtle, fontFamily: "'IBM Plex Mono', monospace", marginBottom: goals.length > 0 ? 6 : 0 }}>
+          <div style={{ fontSize: sz(11), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace", marginBottom: goals.length > 0 ? 6 : 0 }}>
             {goals.length} sub-agent thread{goals.length !== 1 ? "s" : ""}
           </div>
           {goals.map((goal, i) => (
             <div key={i} style={{
-              fontSize: 11,
-              color: text.secondary,
+              fontSize: sz(11),
+              color: theme.text.secondary,
               lineHeight: 1.5,
               padding: "4px 8px",
               marginBottom: 4,
@@ -336,14 +349,14 @@ function ExplainEventData({
     case "conclusion":
     case "reflection":
       return (
-        <div style={{ fontSize: 11, color: text.subtle, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ fontSize: sz(11), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace" }}>
           {d.documentUri ? `Document: ${String(d.documentUri).split(/[/#]/).pop()}` : "Complete"}
         </div>
       );
 
     default:
       return (
-        <div style={{ fontSize: 11, color: text.disabled }}>
+        <div style={{ fontSize: sz(11), color: theme.text.disabled }}>
           {eventType}
         </div>
       );

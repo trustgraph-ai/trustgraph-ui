@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { SearchInput, SearchPreset, SectionLabel, Toolbar, EmptyState } from "../common";
 import { AgentStepList } from "./AgentStepList";
 import { useAgent } from "../../hooks/useAgent";
-import { palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useSettings } from "@trustgraph/react-state";
 
 interface SimpleAgentViewProps {
@@ -15,6 +15,7 @@ interface SimpleAgentViewProps {
  * Just a query input and the agent's reasoning steps.
  */
 export function SimpleAgentView({ collection: collectionProp, presets }: SimpleAgentViewProps) {
+  const { theme } = useTheme();
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -38,7 +39,7 @@ export function SimpleAgentView({ collection: collectionProp, presets }: SimpleA
           placeholder="Ask a question..."
           buttonText="Ask"
           isLoading={isQuerying}
-          buttonColor={palette.amber}
+          buttonColor={theme.palette.amber}
           presets={presets}
         />
       </Toolbar>

@@ -8,7 +8,7 @@ import { useExplainSession } from "../../hooks/useExplainSession";
 import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 import { useSourceDocument } from "../../hooks/useSourceDocument";
-import { palette, text, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useSettings } from "@trustgraph/react-state";
 
 interface RagWithSourcesViewProps {
@@ -22,6 +22,7 @@ interface RagWithSourcesViewProps {
  * Clicking a source shows chunk text.
  */
 export function RagWithSourcesView({ collection: collectionProp, presets }: RagWithSourcesViewProps) {
+  const { theme, sz } = useTheme();
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -87,7 +88,7 @@ export function RagWithSourcesView({ collection: collectionProp, presets }: RagW
   return (
     <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Response */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${theme.border.default}` }}>
         <Toolbar>
           <SectionLabel marginBottom={12}>GRAPH RAG QUERY</SectionLabel>
           <SearchInput
@@ -97,7 +98,7 @@ export function RagWithSourcesView({ collection: collectionProp, presets }: RagW
             placeholder="Ask a question..."
             buttonText="Query"
             isLoading={isQuerying}
-            buttonColor={palette.cyan}
+            buttonColor={theme.palette.cyan}
           presets={presets}
           />
         </Toolbar>
@@ -120,11 +121,11 @@ export function RagWithSourcesView({ collection: collectionProp, presets }: RagW
 
       {/* Right: Sources */}
       <div style={{ width: 320, display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "20px 20px", borderBottom: `1px solid ${border.default}` }}>
+        <div style={{ padding: "20px 20px", borderBottom: `1px solid ${theme.border.default}` }}>
           <SectionLabel>
             SOURCES
             {sources.length > 0 && (
-              <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
+              <span style={{ color: theme.text.muted, fontWeight: 400, marginLeft: 8 }}>
                 {sources.length}
               </span>
             )}
@@ -132,7 +133,7 @@ export function RagWithSourcesView({ collection: collectionProp, presets }: RagW
         </div>
         <div style={{ flex: 1, padding: "12px 16px", overflowY: "auto" }}>
           {sources.length === 0 && !isQuerying && (
-            <div style={{ color: text.hint, fontSize: 12, fontStyle: "italic" }}>
+            <div style={{ color: theme.text.hint, fontSize: sz(12), fontStyle: "italic" }}>
               Sources will appear here after a query.
             </div>
           )}

@@ -1,17 +1,14 @@
 import { useState, useEffect } from "react";
 import type { OntologyMetadata } from "@trustgraph/react-state";
-import { text, border, surface, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface OntologyMetadataEditorProps {
   metadata: OntologyMetadata;
   onUpdateMetadata: (metadata: OntologyMetadata) => void;
 }
 
-const labelStyle = { fontSize: 10, fontFamily: "'IBM Plex Mono', monospace" as const, fontWeight: 600 as const, color: text.faint, letterSpacing: "0.1em", marginBottom: 4 };
-const inputStyle = { width: "100%", padding: "6px 8px", borderRadius: 4, border: `1px solid ${border.default}`, background: surface.card, color: text.primary, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" as const, outline: "none" };
-const hintStyle = { fontSize: 9, color: text.hint, marginTop: 2, marginBottom: 16 };
-
 export function OntologyMetadataEditor({ metadata, onUpdateMetadata }: OntologyMetadataEditorProps) {
+  const { theme, sz } = useTheme();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [version, setVersion] = useState("");
@@ -32,13 +29,17 @@ export function OntologyMetadataEditor({ metadata, onUpdateMetadata }: OntologyM
     onUpdateMetadata({ ...metadata, name: name.trim(), description: description.trim(), version: version.trim(), namespace: namespace.trim(), creator: creator.trim(), modified: new Date().toISOString() });
   };
 
+  const labelStyle = { fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace" as const, fontWeight: 600 as const, color: theme.text.faint, letterSpacing: "0.1em", marginBottom: 4 };
+  const inputStyle = { width: "100%", padding: "6px 8px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: theme.surface.card, color: theme.text.primary, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" as const, outline: "none" };
+  const hintStyle = { fontSize: sz(9), color: theme.text.hint, marginTop: 2, marginBottom: 16 };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: 20 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, color: text.faint, letterSpacing: "0.1em" }}>METADATA</div>
+        <div style={{ fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, color: theme.text.faint, letterSpacing: "0.1em" }}>METADATA</div>
         {isDirty && (
           <button onClick={handleSave}
-            style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${palette.emerald}44`, background: `${palette.emerald}1a`, color: palette.emerald, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+            style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${theme.palette.emerald}44`, background: `${theme.palette.emerald}1a`, color: theme.palette.emerald, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
             Save
           </button>
         )}

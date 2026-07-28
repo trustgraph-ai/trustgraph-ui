@@ -1,5 +1,6 @@
 import type { AgentStepType } from "../../hooks/useAgent";
-import { semantic, text, withGlow, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import { withGlow } from "../../theme";
 
 interface AgentStepCardProps {
   /** Step type */
@@ -12,24 +13,26 @@ interface AgentStepCardProps {
   index: number;
 }
 
-const stepMeta: Record<AgentStepType, { label: string; color: string; icon: string }> = {
-  thought:     { label: "THOUGHT",     color: semantic.thinking,    icon: "◆" },
-  observation: { label: "OBSERVATION", color: semantic.observation, icon: "◈" },
-  answer:      { label: "ANSWER",      color: semantic.answer,      icon: "✓" },
-};
-
 /**
  * Renders a single agent reasoning step (thought, observation, or answer).
  */
 export function AgentStepCard({ type, content, streaming, index }: AgentStepCardProps) {
+  const { theme, sz } = useTheme();
+
+  const stepMeta: Record<AgentStepType, { label: string; color: string; icon: string }> = {
+    thought:     { label: "THOUGHT",     color: theme.semantic.thinking,    icon: "◆" },
+    observation: { label: "OBSERVATION", color: theme.semantic.observation, icon: "◈" },
+    answer:      { label: "ANSWER",      color: theme.semantic.answer,      icon: "✓" },
+  };
+
   const meta = stepMeta[type];
 
   return (
     <div style={{
       padding: "12px 16px",
       borderRadius: 10,
-      background: withGlow(meta.color, 0.06),
-      border: `1px solid ${withGlow(meta.color, 0.15)}`,
+      background: withGlow(meta.color, 0.08),
+      border: `1px solid ${withGlow(meta.color, 0.25)}`,
     }}>
       {/* Header */}
       <div style={{
@@ -37,20 +40,20 @@ export function AgentStepCard({ type, content, streaming, index }: AgentStepCard
         alignItems: "center",
         gap: 6,
         marginBottom: 8,
-        fontSize: 10,
+        fontSize: sz(10),
         fontFamily: "'IBM Plex Mono', monospace",
-        color: withGlow(meta.color, 0.53),
+        color: meta.color,
         letterSpacing: "0.05em",
       }}>
         <span style={{ color: meta.color }}>{meta.icon}</span>
         {meta.label}
-        <span style={{ color: text.faint, marginLeft: "auto" }}>#{index + 1}</span>
+        <span style={{ color: theme.text.faint, marginLeft: "auto" }}>#{index + 1}</span>
       </div>
 
       {/* Content */}
       <div style={{
-        fontSize: 13,
-        color: type === "answer" ? text.primary : text.secondary,
+        fontSize: sz(13),
+        color: type === "answer" ? theme.text.primary : theme.text.secondary,
         lineHeight: 1.65,
         whiteSpace: "pre-wrap",
       }}>
@@ -61,8 +64,8 @@ export function AgentStepCard({ type, content, streaming, index }: AgentStepCard
       {streaming && (
         <div style={{
           marginTop: 8,
-          fontSize: 10,
-          color: withGlow(palette.cyan, 0.5),
+          fontSize: sz(10),
+          color: withGlow(theme.palette.cyan, 0.5),
           fontFamily: "'IBM Plex Mono', monospace",
         }}>
           streaming...

@@ -5,7 +5,7 @@ import { ExplainTimeline } from "./ExplainTimeline";
 import { useGraphRag } from "../../hooks/useGraphRag";
 import { useExplainSession } from "../../hooks/useExplainSession";
 import { useExplainEventFetcher } from "../../hooks/useExplainEventFetcher";
-import { palette, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useSettings } from "@trustgraph/react-state";
 
 interface RagWithTimelineViewProps {
@@ -19,6 +19,7 @@ interface RagWithTimelineViewProps {
  * document-level sources (no chunks, collapsed to documents).
  */
 export function RagWithTimelineView({ collection: collectionProp, presets }: RagWithTimelineViewProps) {
+  const { theme } = useTheme();
   const { settings } = useSettings();
   const collection = collectionProp ?? settings.collection;
   const [input, setInput] = useState("");
@@ -45,7 +46,7 @@ export function RagWithTimelineView({ collection: collectionProp, presets }: Rag
   return (
     <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* Left: Query + Response */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${theme.border.default}` }}>
         <Toolbar>
           <SectionLabel marginBottom={12}>GRAPH RAG QUERY</SectionLabel>
           <SearchInput
@@ -55,7 +56,7 @@ export function RagWithTimelineView({ collection: collectionProp, presets }: Rag
             placeholder="Ask a question..."
             buttonText="Query"
             isLoading={isQuerying}
-            buttonColor={palette.cyan}
+            buttonColor={theme.palette.cyan}
           presets={presets}
           />
         </Toolbar>

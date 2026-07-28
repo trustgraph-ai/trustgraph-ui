@@ -1,4 +1,5 @@
-import { text, palette, withGlow } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import { withGlow } from "../../theme";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 
 interface SourceLinkBadgeProps {
@@ -13,6 +14,7 @@ interface SourceLinkBadgeProps {
  * When onClick is omitted, renders as a static label.
  */
 export function SourceLinkBadge({ source, onClick }: SourceLinkBadgeProps) {
+  const { theme, sz } = useTheme();
   const chainLabel = source.chain.map(c => c.label).join(" → ");
   const isClickable = !!onClick;
 
@@ -26,12 +28,12 @@ export function SourceLinkBadge({ source, onClick }: SourceLinkBadgeProps) {
       }}
       title={isClickable ? `View source: ${chainLabel}` : chainLabel}
       style={{
-        fontSize: 10,
+        fontSize: sz(10),
         padding: "2px 7px",
         borderRadius: 4,
-        background: withGlow(palette.amber, 0.08),
-        border: `1px solid ${withGlow(palette.amber, 0.2)}`,
-        color: text.hint,
+        background: withGlow(theme.palette.amber, 0.08),
+        border: `1px solid ${withGlow(theme.palette.amber, 0.2)}`,
+        color: theme.text.hint,
         fontFamily: "'IBM Plex Mono', monospace",
         cursor: isClickable ? "pointer" : "default",
         transition: "all 0.15s ease",
@@ -39,13 +41,13 @@ export function SourceLinkBadge({ source, onClick }: SourceLinkBadgeProps) {
       }}
       onMouseEnter={e => {
         if (isClickable) {
-          (e.currentTarget as HTMLElement).style.background = withGlow(palette.amber, 0.2);
-          (e.currentTarget as HTMLElement).style.color = palette.amber;
+          (e.currentTarget as HTMLElement).style.background = withGlow(theme.palette.amber, 0.2);
+          (e.currentTarget as HTMLElement).style.color = theme.palette.amber;
         }
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLElement).style.background = withGlow(palette.amber, 0.08);
-        (e.currentTarget as HTMLElement).style.color = text.hint;
+        (e.currentTarget as HTMLElement).style.background = withGlow(theme.palette.amber, 0.08);
+        (e.currentTarget as HTMLElement).style.color = theme.text.hint;
       }}
     >
       {chainLabel}

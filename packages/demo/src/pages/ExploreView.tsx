@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { GraphExplorer, ModeSelector, SectionLabel, text, border, palette } from "@trustgraph/trustkit";
+import { GraphExplorer, ModeSelector, SectionLabel, useTheme } from "@trustgraph/trustkit";
 import { DevPanel } from "../components/DevPanel";
 
 const RENDERER_MODES = [
@@ -14,28 +14,29 @@ const RENDERER_MODES = [
  */
 export function ExploreView() {
   const [renderer, setRenderer] = useState<"svg" | "3d">("svg");
+  const { theme, sz } = useTheme();
 
   return (
     <>
       <div style={{
-        padding: "10px 28px",
-        borderBottom: `1px solid ${border.default}`,
+        padding: `${sz(10)}px ${sz(28)}px`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
-        gap: 16,
+        gap: sz(16),
       }}>
         <SectionLabel>VIEW</SectionLabel>
         <ModeSelector
           modes={RENDERER_MODES}
           activeMode={renderer}
           onChange={(key) => setRenderer(key as "svg" | "3d")}
-          color={palette.emerald}
+          color={theme.palette.emerald}
         />
         <span style={{
-          fontSize: 11,
-          color: text.subtle,
+          fontSize: sz(11),
+          color: theme.text.subtle,
           fontStyle: "italic",
-          marginLeft: 8,
+          marginLeft: sz(8),
         }}>
           {renderer === "3d" ? "3D graph with perspective projection." : "2D graph with domain clustering."}
         </span>

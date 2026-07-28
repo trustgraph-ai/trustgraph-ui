@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import type { OWLObjectProperty, OWLDatatypeProperty } from "@trustgraph/react-state";
-import { text, border, surface, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface OntologyPropertyTreeProps {
   objectProperties: Record<string, OWLObjectProperty>;
@@ -22,6 +22,7 @@ function PropertySection({ label, count, items, type, selectedId, selectedType, 
   onSelect: (id: string, type: "object" | "datatype") => void;
   onCreate: (name: string) => void;
 }) {
+  const { theme, sz } = useTheme();
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -36,9 +37,9 @@ function PropertySection({ label, count, items, type, selectedId, selectedType, 
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-        <div style={{ fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", color: text.hint, letterSpacing: "0.1em" }}>{label} ({count})</div>
+        <div style={{ fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.hint, letterSpacing: "0.1em" }}>{label} ({count})</div>
         <button onClick={() => { setShowCreate(!showCreate); setTimeout(() => inputRef.current?.focus(), 50); }}
-          style={{ padding: "2px 6px", borderRadius: 3, border: `1px solid ${showCreate ? palette.emerald + "44" : border.default}`, background: showCreate ? `${palette.emerald}1a` : "transparent", color: showCreate ? palette.emerald : text.faint, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+          style={{ padding: "2px 6px", borderRadius: 3, border: `1px solid ${showCreate ? theme.palette.emerald + "44" : theme.border.default}`, background: showCreate ? `${theme.palette.emerald}1a` : "transparent", color: showCreate ? theme.palette.emerald : theme.text.faint, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
           + New
         </button>
       </div>
@@ -48,9 +49,9 @@ function PropertySection({ label, count, items, type, selectedId, selectedType, 
           <input ref={inputRef} type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setShowCreate(false); setNewName(""); } }}
             placeholder="Property name"
-            style={{ flex: 1, padding: "4px 6px", borderRadius: 4, border: `1px solid ${border.default}`, background: surface.card, color: text.primary, fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", outline: "none" }} />
+            style={{ flex: 1, padding: "4px 6px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: theme.surface.card, color: theme.text.primary, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", outline: "none" }} />
           <button onClick={handleCreate} disabled={!newName.trim()}
-            style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${palette.emerald}44`, background: `${palette.emerald}1a`, color: !newName.trim() ? text.disabled : palette.emerald, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+            style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${theme.palette.emerald}44`, background: `${theme.palette.emerald}1a`, color: !newName.trim() ? theme.text.disabled : theme.palette.emerald, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
             Add
           </button>
         </div>
@@ -60,8 +61,8 @@ function PropertySection({ label, count, items, type, selectedId, selectedType, 
         const isSelected = selectedId === id && selectedType === type;
         return (
           <button key={id} onClick={() => onSelect(id, type)}
-            style={{ display: "block", width: "100%", textAlign: "left", padding: "5px 8px", marginBottom: 1, borderRadius: 4, border: isSelected ? `1px solid ${palette.cyan}44` : "1px solid transparent", background: isSelected ? `${palette.cyan}1a` : "transparent", color: isSelected ? palette.cyan : text.secondary, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", transition: "all 0.15s" }}
-            onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = surface.cardHover; }}
+            style={{ display: "block", width: "100%", textAlign: "left", padding: "5px 8px", marginBottom: 1, borderRadius: 4, border: isSelected ? `1px solid ${theme.palette.cyan}44` : "1px solid transparent", background: isSelected ? `${theme.palette.cyan}1a` : "transparent", color: isSelected ? theme.palette.cyan : theme.text.secondary, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", transition: "all 0.15s" }}
+            onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = theme.surface.cardHover; }}
             onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}>
             {getLabel(prop, id)}
           </button>
@@ -69,7 +70,7 @@ function PropertySection({ label, count, items, type, selectedId, selectedType, 
       })}
 
       {items.length === 0 && (
-        <div style={{ padding: 8, textAlign: "center", color: text.hint, fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", fontStyle: "italic" }}>None</div>
+        <div style={{ padding: 8, textAlign: "center", color: theme.text.hint, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", fontStyle: "italic" }}>None</div>
       )}
     </div>
   );

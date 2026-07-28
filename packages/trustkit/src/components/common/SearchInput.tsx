@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { text, surface, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 export interface SearchPreset {
   key: string;
@@ -26,10 +26,12 @@ export function SearchInput({
   placeholder = "Search...",
   buttonText = "Search",
   isLoading = false,
-  buttonColor = palette.blue,
+  buttonColor,
   disabled = false,
   presets,
 }: SearchInputProps) {
+  const { theme, sz } = useTheme();
+  const resolvedButtonColor = buttonColor ?? theme.palette.blue;
   const [showPresets, setShowPresets] = useState(false);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -50,10 +52,10 @@ export function SearchInput({
             style={{
               padding: "12px 14px",
               borderRadius: 8,
-              border: `1px solid ${border.medium}`,
-              background: surface.card,
-              color: text.subtle,
-              fontSize: 11,
+              border: `1px solid ${theme.border.medium}`,
+              background: theme.surface.card,
+              color: theme.text.subtle,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
               cursor: "pointer",
               whiteSpace: "nowrap",
@@ -68,7 +70,7 @@ export function SearchInput({
               left: 0,
               marginTop: 4,
               background: "#1a1a22",
-              border: `1px solid ${border.default}`,
+              border: `1px solid ${theme.border.default}`,
               borderRadius: 6,
               padding: 4,
               zIndex: 20,
@@ -90,8 +92,8 @@ export function SearchInput({
                     border: "none",
                     borderRadius: 4,
                     background: "transparent",
-                    color: text.muted,
-                    fontSize: 11,
+                    color: theme.text.muted,
+                    fontSize: sz(11),
                     fontFamily: "'IBM Plex Mono', monospace",
                     cursor: "pointer",
                     textAlign: "left",
@@ -117,10 +119,10 @@ export function SearchInput({
           flex: 1,
           padding: "12px 16px",
           borderRadius: 8,
-          border: `1px solid ${border.medium}`,
-          background: surface.card,
-          color: text.primary,
-          fontSize: 14,
+          border: `1px solid ${theme.border.medium}`,
+          background: theme.surface.card,
+          color: theme.text.primary,
+          fontSize: sz(14),
           fontFamily: "'IBM Plex Sans', sans-serif",
           outline: "none",
         }}
@@ -131,11 +133,11 @@ export function SearchInput({
         style={{
           padding: "12px 20px",
           borderRadius: 8,
-          border: `1px solid ${buttonColor}44`,
-          background: isDisabled ? surface.card : `${buttonColor}1a`,
-          color: isDisabled ? text.disabled : buttonColor,
+          border: `1px solid ${resolvedButtonColor}44`,
+          background: isDisabled ? theme.surface.card : `${resolvedButtonColor}1a`,
+          color: isDisabled ? theme.text.disabled : resolvedButtonColor,
           cursor: isDisabled ? "not-allowed" : "pointer",
-          fontSize: 13,
+          fontSize: sz(13),
           fontWeight: 600,
           fontFamily: "'IBM Plex Mono', monospace",
         }}

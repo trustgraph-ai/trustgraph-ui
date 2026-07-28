@@ -5,7 +5,7 @@ import { SchemaBasicInfo } from "./SchemaBasicInfo";
 import { SchemaFieldsList } from "./SchemaFieldsList";
 import { SchemaIndexesSection } from "./SchemaIndexesSection";
 import { SchemaValidationErrors } from "./SchemaValidationErrors";
-import { text, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface SchemaEditorProps {
   schemaId: string;
@@ -16,6 +16,7 @@ interface SchemaEditorProps {
 }
 
 export function SchemaEditor({ schemaId, schema, existingSchemas, onSave, onDelete }: SchemaEditorProps) {
+  const { theme, sz } = useTheme();
   const form = useSchemaForm({ schemaId, initialSchema: schema });
 
   const handleSave = () => {
@@ -34,18 +35,18 @@ export function SchemaEditor({ schemaId, schema, existingSchemas, onSave, onDele
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: 20 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 14, color: text.primary, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>{form.name || schemaId}</div>
-          <div style={{ fontSize: 10, color: text.hint, fontFamily: "'IBM Plex Mono', monospace", marginTop: 2 }}>{schemaId}</div>
+          <div style={{ fontSize: sz(14), color: theme.text.primary, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>{form.name || schemaId}</div>
+          <div style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace", marginTop: 2 }}>{schemaId}</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           {isDirty && (
             <button onClick={handleSave}
-              style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${palette.emerald}44`, background: `${palette.emerald}1a`, color: palette.emerald, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+              style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${theme.palette.emerald}44`, background: `${theme.palette.emerald}1a`, color: theme.palette.emerald, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
               Save
             </button>
           )}
           <button onClick={() => { if (window.confirm(`Delete schema "${form.name || schemaId}"?`)) onDelete(schemaId); }}
-            style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${palette.red}44`, background: "transparent", color: palette.red, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+            style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${theme.palette.red}44`, background: "transparent", color: theme.palette.red, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
             Delete
           </button>
         </div>
@@ -58,12 +59,12 @@ export function SchemaEditor({ schemaId, schema, existingSchemas, onSave, onDele
           <SchemaBasicInfo id={schemaId} name={form.name} description={form.description}
             onNameChange={form.setName} onDescriptionChange={form.setDescription} />
 
-          <div style={{ borderTop: `1px solid ${border.subtle}`, margin: "8px 0 16px" }} />
+          <div style={{ borderTop: `1px solid ${theme.border.subtle}`, margin: "8px 0 16px" }} />
 
           <SchemaFieldsList fields={form.fields} onChange={form.handleFieldChange} onRemove={form.handleRemoveField} onAdd={form.handleAddField}
             onAddEnumValue={form.handleAddEnumValue} onRemoveEnumValue={form.handleRemoveEnumValue} />
 
-          <div style={{ borderTop: `1px solid ${border.subtle}`, margin: "16px 0" }} />
+          <div style={{ borderTop: `1px solid ${theme.border.subtle}`, margin: "16px 0" }} />
 
           <SchemaIndexesSection queryIndexes={form.queryIndexes} vectorIndexes={form.vectorIndexes} fields={form.fields}
             onAddQueryIndex={form.handleAddQueryIndex} onRemoveQueryIndex={form.handleRemoveQueryIndex}
