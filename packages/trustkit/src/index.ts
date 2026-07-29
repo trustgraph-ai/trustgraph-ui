@@ -146,7 +146,7 @@ export { useToastStore, toast } from "./hooks/toastStore";
 export type { Toast, ToastType } from "./hooks/toastStore";
 
 // Theme
-export { palette, semantic, text, surface, border, withGlow, domainColors } from "./theme/colors";
+export { withGlow } from "./theme/glow";
 export { defaultTheme } from "./theme/defaultTheme";
 export { ThemeProvider, useTheme } from "./theme/ThemeContext";
 export type { ThemeProviderProps, ThemeContextValue } from "./theme/ThemeContext";

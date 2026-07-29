@@ -3,7 +3,7 @@ import { useSocket, useConnectionState } from "@trustgraph/react-provider";
 import type { Triple } from "@trustgraph/react-state";
 import { useSessionStore, useSettings, useWorkspaceStore } from "@trustgraph/react-state";
 import type { Entity, Relationship, DomainKey, OntologyType } from "../types";
-import { domainColors } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
@@ -42,6 +42,7 @@ export function predicateToName(uri: string): string {
 }
 
 export function useGraphData(domain?: DomainKey) {
+  const { domainColors } = useTheme();
   const socket = useSocket();
   const connectionState = useConnectionState();
   const isSocketReady = connectionState?.status === "authenticated";
@@ -237,7 +238,7 @@ export function useGraphData(domain?: DomainKey) {
     }
 
     return { entities, relationships, ontology, propertyLabels };
-  }, [isLoading, triples, domain]);
+  }, [isLoading, triples, domain, domainColors]);
 
   return {
     entities,

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import type { RawNode, RawEdge } from "../../hooks/useRawGraphData";
 import { ZoomControls } from "../graph/ZoomControls";
 import { useTheme } from "../../theme/ThemeContext";
-import { domainColors as staticDomainColors } from "../../theme/colors";
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -193,15 +192,7 @@ export function RawGraphCanvas3D({
   onNodeClick,
   onNodeNavigate,
 }: RawGraphCanvas3DProps) {
-  const { theme, sz, domainColors: themeDomainColors } = useTheme();
-
-  const remapColor = useMemo(() => {
-    const map = new Map<string, string>();
-    for (let i = 0; i < staticDomainColors.length; i++) {
-      map.set(staticDomainColors[i].color, themeDomainColors[i].color);
-    }
-    return (color: string) => map.get(color) ?? color;
-  }, [themeDomainColors]);
+  const { theme, sz } = useTheme();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -538,7 +529,7 @@ export function RawGraphCanvas3D({
               <g key={`${edge.from}-${edge.predicate}-${edge.to}-${i}`} filter={isHighlighted ? "url(#bloom-edge)" : undefined}>
                 <path
                   d={path}
-                  stroke={remapColor(edge.color)}
+                  stroke={edge.color}
                   strokeOpacity={alpha}
                   strokeWidth={isHighlighted ? 1.5 * avgScale : 0.75 * avgScale}
                   fill="none"
@@ -546,7 +537,7 @@ export function RawGraphCanvas3D({
                 {avgScale > 0.4 && (
                   <text
                     x={mx} y={my - 5 * avgScale}
-                    fill={remapColor(edge.color)}
+                    fill={edge.color}
                     fillOpacity={(isHighlighted ? 0.6 : 0.35) * depthAlpha}
                     fontSize={sz(7) * avgScale}
                     fontFamily="'IBM Plex Mono', monospace"
@@ -597,7 +588,7 @@ export function RawGraphCanvas3D({
                     cx={sx} cy={sy}
                     r={r + 6 * scale + pulseR}
                     fill="none"
-                    stroke={remapColor(node.color)}
+                    stroke={node.color}
                     strokeOpacity={isCenter ? 0.12 * depthAlpha : 0.2 * depthAlpha}
                     strokeWidth={(isCenter ? 3 : 2) * scale}
                   />
@@ -607,9 +598,9 @@ export function RawGraphCanvas3D({
                 <circle
                   cx={sx} cy={sy}
                   r={r + pulseR}
-                  fill={remapColor(node.color)}
+                  fill={node.color}
                   fillOpacity={alpha * (isCenter ? 0.35 : 0.2)}
-                  stroke={remapColor(node.color)}
+                  stroke={node.color}
                   strokeOpacity={alpha}
                   strokeWidth={(isCenter ? 1.5 : isHighlighted ? 1.25 : 0.75) * scale}
                 />
@@ -665,7 +656,7 @@ export function RawGraphCanvas3D({
             left: p.sx + 20,
             top: p.sy - 20,
             background: theme.surface.overlay,
-            border: `1px solid ${remapColor(p.node.color)}44`,
+            border: `1px solid ${p.node.color}44`,
             borderRadius: 8,
             padding: "10px 14px",
             pointerEvents: "none",
@@ -675,7 +666,7 @@ export function RawGraphCanvas3D({
             maxWidth: 320,
           }}>
             <div style={{
-              color: remapColor(p.node.color),
+              color: p.node.color,
               fontWeight: 700,
               fontSize: sz(12),
               fontFamily: "'IBM Plex Sans', sans-serif",

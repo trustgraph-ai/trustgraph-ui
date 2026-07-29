@@ -2,7 +2,8 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useSocket } from "@trustgraph/react-provider";
 import type { Triple } from "@trustgraph/react-state";
 import { useSessionStore, useSettings, useWorkspaceStore } from "@trustgraph/react-state";
-import { domainColors } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
+import type { ThemeContextValue } from "../theme/ThemeContext";
 import { getLocalName } from "../utils/uri";
 
 // ── Types ────────────────────────────────────────────────────────
@@ -56,7 +57,9 @@ export function hashString(s: string): number {
   return Math.abs(hash);
 }
 
-export function colorForUri(uri: string): { color: string; glow: string } {
+type DomainColorEntry = ThemeContextValue["domainColors"][number];
+
+export function colorForUri(uri: string, domainColors: DomainColorEntry[]): { color: string; glow: string } {
   const idx = hashString(uri) % domainColors.length;
   return domainColors[idx];
 }
@@ -78,6 +81,7 @@ export function processTriples(
   edgeSet: Set<string>,
   edgeList: RawEdge[],
   predMap: Map<string, PredicateInfo>,
+  domainColors: DomainColorEntry[],
 ) {
   // First pass: collect labels
   const labels = new Map<string, string>();
@@ -97,7 +101,7 @@ export function processTriples(
 
   function ensureNode(uri: string): void {
     if (nodeMap.has(uri)) return;
-    const { color, glow } = colorForUri(uri);
+    const { color, glow } = colorForUri(uri, domainColors);
     nodeMap.set(uri, {
       id: uri,
       label: labels.get(uri) || getLocalName(uri),
@@ -130,7 +134,7 @@ export function processTriples(
       const predName = predicateLabel(predUri);
 
       if (!predMap.has(predUri)) {
-        const { color } = colorForUri(predUri);
+        const { color } = colorForUri(predUri, domainColors);
         predMap.set(predUri, { uri: predUri, label: predName, color, count: 0 });
       }
       predMap.get(predUri)!.count++;
@@ -164,6 +168,7 @@ export function processTriples(
 // ── Hook ─────────────────────────────────────────────────────────
 
 export function useRawGraphData() {
+  const { domainColors } = useTheme();
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
   const { settings } = useSettings();
@@ -232,11 +237,12 @@ export function useRawGraphData() {
         edgeSetRef.current,
         edgeListRef.current,
         predMapRef.current,
+        domainColors,
       );
 
       // Ensure the fetched node itself exists, even if it has no edges
       if (!nodeMapRef.current.has(uri)) {
-        const { color, glow } = colorForUri(uri);
+        const { color, glow } = colorForUri(uri, domainColors);
         // Check if we got a label from the outgoing triples
         let label = getLocalName(uri);
         for (const t of outgoing) {
@@ -379,7 +385,7 @@ export function useRawGraphData() {
     const results: RawNode[] = [];
     for (const [uri, label] of labels) {
       if (label.toLowerCase().includes(q)) {
-        const { color, glow } = colorForUri(uri);
+        const { color, glow } = colorForUri(uri, domainColors);
         results.push({
           id: uri,
           label,

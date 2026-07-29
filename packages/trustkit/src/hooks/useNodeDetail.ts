@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSocket } from "@trustgraph/react-provider";
 import { useSessionStore, useSettings, useWorkspaceStore } from "@trustgraph/react-state";
-import { domainColors } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 import { getLocalName } from "../utils/uri";
 
 // ── Types ────────────────────────────────────────────────────────
@@ -58,13 +58,14 @@ function hashString(s: string): number {
   return Math.abs(hash);
 }
 
-function colorForUri(uri: string): string {
+function colorForUri(uri: string, domainColors: Array<{ color: string }>): string {
   return domainColors[hashString(uri) % domainColors.length].color;
 }
 
 // ── Hook ─────────────────────────────────────────────────────────
 
 export function useNodeDetail(uri: string | null): NodeDetail | null {
+  const { domainColors } = useTheme();
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
   const { settings } = useSettings();
@@ -184,7 +185,7 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
             targets: Array.from(targets).map(u => ({
               uri: u,
               label: labels.get(u) || getLocalName(u),
-              color: colorForUri(u),
+              color: colorForUri(u, domainColors),
             })),
           })),
           ...Array.from(inRelMap.values()).map(({ predicate, predicateUri, targets }) => ({
@@ -194,7 +195,7 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
             targets: Array.from(targets).map(u => ({
               uri: u,
               label: labels.get(u) || getLocalName(u),
-              color: colorForUri(u),
+              color: colorForUri(u, domainColors),
             })),
           })),
         ];

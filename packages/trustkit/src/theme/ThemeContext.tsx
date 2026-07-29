@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo } from "react";
 import { defaultTheme } from "./defaultTheme";
-import { withGlow } from "./colors";
+import { withGlow } from "./glow";
 import type { Theme, DeepPartial } from "./types";
 
 export interface ThemeContextValue {

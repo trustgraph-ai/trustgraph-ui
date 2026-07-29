@@ -1,4 +1,4 @@
-export * from "./colors";
+export * from "./glow";
 export * from "./types";
 export { defaultTheme } from "./defaultTheme";
 export { ThemeProvider, useTheme } from "./ThemeContext";

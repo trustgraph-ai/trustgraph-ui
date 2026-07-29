@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import type { ExplainGraphNode, ExplainGraphEdge } from "../components/graph/ExplainGraph";
 import type { ExplainNode } from "./useExplainSession";
-import { palette } from "../theme";
+import { useTheme } from "../theme/ThemeContext";
 
 /**
  * Derives graph visualization data (nodes and edges) from explain events.
  */
 export function useExplainGraph(events: ExplainNode[]) {
+  const { theme } = useTheme();
   return useMemo(() => {
     const nodeMap = new Map<string, ExplainGraphNode>();
     const edgeList: ExplainGraphEdge[] = [];
@@ -21,7 +22,7 @@ export function useExplainGraph(events: ExplainNode[]) {
         entities.forEach((uri, i) => {
           if (!nodeMap.has(uri)) {
             const shortLabel = labels[i] || uri.split(/[/#]/).pop() || uri;
-            nodeMap.set(uri, { id: uri, label: shortLabel, color: palette.blue });
+            nodeMap.set(uri, { id: uri, label: shortLabel, color: theme.palette.blue });
           }
         });
       }
@@ -42,8 +43,8 @@ export function useExplainGraph(events: ExplainNode[]) {
           const pLabel = sel.edgeLabels?.p || p.split(/[/#]/).pop() || p;
           const oLabel = sel.edgeLabels?.o || o.split(/[/#]/).pop() || o;
 
-          if (!nodeMap.has(s)) nodeMap.set(s, { id: s, label: sLabel, color: palette.pink });
-          if (!nodeMap.has(o)) nodeMap.set(o, { id: o, label: oLabel, color: palette.pink });
+          if (!nodeMap.has(s)) nodeMap.set(s, { id: s, label: sLabel, color: theme.palette.pink });
+          if (!nodeMap.has(o)) nodeMap.set(o, { id: o, label: oLabel, color: theme.palette.pink });
 
           edgeList.push({
             id: sel.edgeUri,
@@ -61,5 +62,5 @@ export function useExplainGraph(events: ExplainNode[]) {
       graphNodes: Array.from(nodeMap.values()),
       graphEdges: edgeList,
     };
-  }, [events]);
+  }, [events, theme]);
 }

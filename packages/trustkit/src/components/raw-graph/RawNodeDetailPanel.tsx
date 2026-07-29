@@ -1,8 +1,6 @@
-import { useMemo } from "react";
 import { useNodeDetail } from "../../hooks/useNodeDetail";
 import type { NodeRelationship } from "../../hooks/useNodeDetail";
 import { useTheme } from "../../theme/ThemeContext";
-import { domainColors as staticDomainColors } from "../../theme/colors";
 
 interface RawNodeDetailPanelProps {
   uri: string;
@@ -18,15 +16,7 @@ export function RawNodeDetailPanel({
   onNodeNavigate,
 }: RawNodeDetailPanelProps) {
   const detail = useNodeDetail(uri);
-  const { theme, sz, domainColors: themeDomainColors } = useTheme();
-
-  const remapColor = useMemo(() => {
-    const map = new Map<string, string>();
-    for (let i = 0; i < staticDomainColors.length; i++) {
-      map.set(staticDomainColors[i].color, themeDomainColors[i].color);
-    }
-    return (color: string) => map.get(color) ?? color;
-  }, [themeDomainColors]);
+  const { theme, sz } = useTheme();
 
   if (!detail) return null;
 
@@ -40,7 +30,7 @@ export function RawNodeDetailPanel({
         marginBottom: 16,
       }}>
         <div style={{
-          color: remapColor(nodeColor),
+          color: nodeColor,
           fontSize: sz(11),
           fontFamily: "'IBM Plex Mono', monospace",
           fontWeight: 600,
@@ -139,7 +129,7 @@ export function RawNodeDetailPanel({
                 rel={rel}
                 theme={theme}
                 sz={sz}
-                remapColor={remapColor}
+
                 onNavigate={onNodeNavigate}
               />
             ))}
@@ -158,7 +148,7 @@ export function RawNodeDetailPanel({
                 rel={rel}
                 theme={theme}
                 sz={sz}
-                remapColor={remapColor}
+
                 onNavigate={onNodeNavigate}
               />
             ))}
@@ -193,13 +183,11 @@ function RelationshipGroup({
   rel,
   theme,
   sz,
-  remapColor,
   onNavigate,
 }: {
   rel: NodeRelationship;
   theme: Theme;
   sz: (n: number) => number;
-  remapColor: (c: string) => string;
   onNavigate?: (uri: string) => void;
 }) {
   const arrow = rel.direction === "outgoing" ? "→" : "←";
@@ -214,7 +202,7 @@ function RelationshipGroup({
         {arrow} {rel.predicate}
       </div>
       {rel.targets.map((target) => {
-        const c = remapColor(target.color);
+        const c = target.color;
         return (
         <button
           key={target.uri}

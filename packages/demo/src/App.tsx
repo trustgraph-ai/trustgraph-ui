@@ -58,7 +58,7 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
         <button
           onClick={logout}
           style={{
-            marginRight: sz(20), padding: `${sz(6)}px ${sz(14)}px`, borderRadius: 6,
+            margin: `0 ${sz(20)}px 0 ${sz(12)}px`, padding: `${sz(6)}px ${sz(14)}px`, borderRadius: 6,
             background: theme.surface.card,
             border: `1px solid ${theme.border.medium}`,
             color: theme.text.subtle, fontSize: sz(12), cursor: "pointer",
