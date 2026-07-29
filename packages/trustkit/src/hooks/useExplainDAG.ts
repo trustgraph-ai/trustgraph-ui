@@ -125,7 +125,7 @@ export function useExplainDAG(events: ExplainNode[]): DAGLayout {
       id: e.explainId,
       label: e.label || e.eventType,
       eventType: e.eventType,
-      color: eventTypeColor(e.eventType),
+      color: eventTypeColor(e.eventType) ?? "cyan",
       depth: depthMap.get(e.explainId) ?? 0,
       column: columnMap.get(e.explainId) ?? 0,
       explainNode: e,

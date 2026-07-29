@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import type { DAGLayout } from "../../hooks/useExplainDAG";
 import { useTheme } from "../../theme/ThemeContext";
-import { withGlow, palette as staticPalette } from "../../theme";
+import { withGlow } from "../../theme";
+import type { ThemePalette } from "../../theme/types";
 
 const NODE_W = 140;
 const NODE_H = 40;
@@ -30,13 +31,8 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
   const { theme, sz } = useTheme();
   const { nodes, edges, maxDepth, maxColumns } = layout;
 
-  const remapColor = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const key of Object.keys(staticPalette) as Array<keyof typeof staticPalette>) {
-      map.set(staticPalette[key], theme.palette[key]);
-    }
-    return (color: string) => map.get(color) ?? color;
-  }, [theme.palette]);
+  const resolveColor = (paletteKey: string) =>
+    theme.palette[paletteKey as keyof ThemePalette] ?? theme.text.muted;
 
   const horizontal = maxColumns <= LINEAR_THRESHOLD;
 
@@ -171,7 +167,7 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
           if (!pos) return null;
 
           const isSelected = selectedNodeId === node.id;
-          const nodeColor = remapColor(node.color);
+          const nodeColor = resolveColor(node.color);
 
           return (
             <g

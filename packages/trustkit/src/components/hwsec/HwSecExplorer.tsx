@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { useHwSecData } from "../../hooks/useHwSecData";
 import type { HwNode } from "../../hooks/useHwSecData";
-import { text, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import type { Theme } from "../../theme/types";
 import { LoadingState } from "../common";
 
 export interface HwSecExplorerProps {}
@@ -12,26 +13,28 @@ const TYPE_TIER: Record<string, number> = {
   System: 0, Subsystem: 1, Component: 2, SubComponent: 3, Element: 4, HardwareEntity: 5,
 };
 
-const KIND_COLORS: Record<string, string> = {
-  System: palette.blue,
-  Subsystem: palette.purple,
-  Component: palette.emerald,
-  SubComponent: palette.cyan,
-  Element: palette.amber,
-  HardwareEntity: "#888",
-  Interface: palette.cyan,
-  NetworkInterface: palette.cyan,
-  PhysicalInterface: palette.orange,
-  LogicalInterface: palette.purple,
-  Firmware: palette.blue,
-  Vulnerability: palette.rose,
-  AttackSurface: palette.orange,
-  Countermeasure: palette.emerald,
-  SideChannel: palette.purple,
-  ThreatModel: palette.amber,
-  SecurityProperty: palette.rose,
-  TrustBoundary: palette.pink,
-};
+function buildKindColors(p: Theme["palette"]): Record<string, string> {
+  return {
+    System: p.blue,
+    Subsystem: p.purple,
+    Component: p.emerald,
+    SubComponent: p.cyan,
+    Element: p.amber,
+    HardwareEntity: "#888",
+    Interface: p.cyan,
+    NetworkInterface: p.cyan,
+    PhysicalInterface: p.orange,
+    LogicalInterface: p.purple,
+    Firmware: p.blue,
+    Vulnerability: p.rose,
+    AttackSurface: p.orange,
+    Countermeasure: p.emerald,
+    SideChannel: p.purple,
+    ThreatModel: p.amber,
+    SecurityProperty: p.rose,
+    TrustBoundary: p.pink,
+  };
+}
 
 const KIND_ICONS: Record<string, string> = {
   System: "◆",
@@ -53,13 +56,13 @@ const KIND_ICONS: Record<string, string> = {
   SecurityProperty: "◐",
 };
 
-function trustColor(level: number): string {
-  if (level >= 5) return palette.emerald;
-  if (level >= 4) return palette.cyan;
-  if (level >= 3) return palette.blue;
-  if (level >= 2) return palette.amber;
-  if (level >= 1) return palette.orange;
-  return palette.rose;
+function trustColor(p: Theme["palette"], level: number): string {
+  if (level >= 5) return p.emerald;
+  if (level >= 4) return p.cyan;
+  if (level >= 3) return p.blue;
+  if (level >= 2) return p.amber;
+  if (level >= 1) return p.orange;
+  return p.rose;
 }
 
 function securityKindLabel(kind: string): string {
@@ -75,10 +78,11 @@ function securityKindLabel(kind: string): string {
 }
 
 function Section({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
+  const { sz } = useTheme();
   return (
     <div style={{ marginBottom: 18 }}>
       <div style={{
-        fontSize: 8, color, fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(8), color, fontFamily: "'IBM Plex Mono', monospace",
         textTransform: "uppercase", letterSpacing: "0.06em",
         marginBottom: 8, paddingBottom: 4,
         borderBottom: `1px solid ${color}22`,
@@ -91,7 +95,9 @@ function Section({ title, color, children }: { title: string; color: string; chi
 }
 
 export function HwSecExplorer(_props: HwSecExplorerProps) {
+  const { theme, sz } = useTheme();
   const data = useHwSecData();
+  const KIND_COLORS = useMemo(() => buildKindColors(theme.palette), [theme.palette]);
   const [selectedUri, setSelectedUri] = useState<string | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() => new Set());
   const [searchTerm, setSearchTerm] = useState("");
@@ -265,9 +271,9 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
   if (data.error) {
     return (
-      <div style={{ padding: 48, textAlign: "center", color: palette.rose }}>
-        <div style={{ fontSize: 14, marginBottom: 8 }}>Failed to load data</div>
-        <div style={{ fontSize: 11, color: text.muted }}>{data.error.message}</div>
+      <div style={{ padding: 48, textAlign: "center", color: theme.palette.rose }}>
+        <div style={{ fontSize: sz(14), marginBottom: 8 }}>Failed to load data</div>
+        <div style={{ fontSize: sz(11), color: theme.text.muted }}>{data.error.message}</div>
       </div>
     );
   }
@@ -279,7 +285,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
     const hasChildren = kids.length > 0;
     const isExpanded = expandedNodes.has(node.uri);
     const isSelected = selectedUri === node.uri;
-    const color = KIND_COLORS[node.kind] || text.muted;
+    const color = KIND_COLORS[node.kind] || theme.text.muted;
     const sc = securityCount(node.uri);
     const ic = interfaceCount(node.uri);
     const trust = data.trustLevels.get(node.uri);
@@ -308,7 +314,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
             <span
               onClick={e => { e.stopPropagation(); toggleNode(node.uri); }}
               style={{
-                fontSize: 8, color: text.faint, cursor: "pointer",
+                fontSize: sz(8), color: theme.text.faint, cursor: "pointer",
                 width: 10, textAlign: "center", userSelect: "none",
               }}
             >
@@ -318,12 +324,12 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
             <span style={{ width: 10 }} />
           )}
 
-          <span style={{ fontSize: 10, color, opacity: 0.7 }}>
+          <span style={{ fontSize: sz(10), color, opacity: 0.7 }}>
             {KIND_ICONS[node.kind] || "●"}
           </span>
 
           <span style={{
-            fontSize: 11, color: isSelected ? color : text.primary,
+            fontSize: sz(11), color: isSelected ? color : theme.text.primary,
             fontWeight: isSelected ? 600 : 400,
             flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
@@ -332,9 +338,9 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
           {isInferred && (
             <span style={{
-              fontSize: 6, padding: "1px 3px", borderRadius: 3,
+              fontSize: sz(6), padding: "1px 3px", borderRadius: 3,
               background: "rgba(255,255,255,0.06)",
-              color: text.hint,
+              color: theme.text.hint,
               fontFamily: "'IBM Plex Mono', monospace",
             }}>
               ~
@@ -343,9 +349,9 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
           {trust !== undefined && (
             <span style={{
-              fontSize: 7, padding: "1px 4px", borderRadius: 4,
-              background: trustColor(trust) + "18",
-              color: trustColor(trust),
+              fontSize: sz(7), padding: "1px 4px", borderRadius: 4,
+              background: trustColor(theme.palette, trust) + "18",
+              color: trustColor(theme.palette, trust),
               fontFamily: "'IBM Plex Mono', monospace",
             }}>
               T{trust}
@@ -354,9 +360,9 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
           {sc > 0 && (
             <span style={{
-              fontSize: 7, padding: "1px 4px", borderRadius: 4,
-              background: palette.rose + "18",
-              color: palette.rose,
+              fontSize: sz(7), padding: "1px 4px", borderRadius: 4,
+              background: theme.palette.rose + "18",
+              color: theme.palette.rose,
               fontFamily: "'IBM Plex Mono', monospace",
             }}>
               {sc}
@@ -365,9 +371,9 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
           {ic > 0 && (
             <span style={{
-              fontSize: 7, padding: "1px 4px", borderRadius: 4,
-              background: palette.cyan + "18",
-              color: palette.cyan,
+              fontSize: sz(7), padding: "1px 4px", borderRadius: 4,
+              background: theme.palette.cyan + "18",
+              color: theme.palette.cyan,
               fontFamily: "'IBM Plex Mono', monospace",
             }}>
               {ic}
@@ -393,7 +399,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
       return (
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "center",
-          height: "100%", color: text.hint, fontSize: 12,
+          height: "100%", color: theme.text.hint, fontSize: sz(12),
           fontFamily: "'IBM Plex Mono', monospace",
         }}>
           Select an entity to view details
@@ -401,7 +407,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
       );
     }
 
-    const color = KIND_COLORS[selected.kind] || text.muted;
+    const color = KIND_COLORS[selected.kind] || theme.text.muted;
     const trust = data.trustLevels.get(selected.uri);
     const descs = data.descriptions.get(selected.uri) || [];
     const ifaces = data.entityInterfaces.get(selected.uri) || [];
@@ -433,7 +439,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
             display: "flex", alignItems: "center", gap: 8, marginBottom: 6,
           }}>
             <span style={{
-              fontSize: 8, padding: "2px 6px", borderRadius: 4,
+              fontSize: sz(8), padding: "2px 6px", borderRadius: 4,
               background: color + "18", color, border: `1px solid ${color}33`,
               fontFamily: "'IBM Plex Mono', monospace",
               textTransform: "uppercase", letterSpacing: "0.06em",
@@ -442,10 +448,10 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
             </span>
             {trust !== undefined && (
               <span style={{
-                fontSize: 8, padding: "2px 6px", borderRadius: 4,
-                background: trustColor(trust) + "18",
-                color: trustColor(trust),
-                border: `1px solid ${trustColor(trust)}33`,
+                fontSize: sz(8), padding: "2px 6px", borderRadius: 4,
+                background: trustColor(theme.palette, trust) + "18",
+                color: trustColor(theme.palette, trust),
+                border: `1px solid ${trustColor(theme.palette, trust)}33`,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 Trust Level {trust}
@@ -453,7 +459,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
             )}
           </div>
           <div style={{
-            fontSize: 16, fontWeight: 700, color,
+            fontSize: sz(16), fontWeight: 700, color,
             lineHeight: 1.3,
           }}>
             {selected.label}
@@ -465,7 +471,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
           <Section title="Description" color={color}>
             {descs.map((d, i) => (
               <div key={i} style={{
-                fontSize: 11, color: text.secondary, lineHeight: 1.5,
+                fontSize: sz(11), color: theme.text.secondary, lineHeight: 1.5,
                 marginBottom: 4,
               }}>
                 {d}
@@ -478,27 +484,27 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
         {parentUri && (() => {
           const parent = data.nodes.get(parentUri);
           if (!parent) return null;
-          const pc = KIND_COLORS[parent.kind] || text.muted;
+          const pc = KIND_COLORS[parent.kind] || theme.text.muted;
           const isInferred = !data.parentOf.has(selected.uri);
           return (
-            <Section title={isInferred ? "Contained By (inferred)" : "Contained By"} color={palette.blue}>
+            <Section title={isInferred ? "Contained By (inferred)" : "Contained By"} color={theme.palette.blue}>
               <div
                 onClick={() => navigateTo(parentUri)}
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
                   padding: "4px 8px", borderRadius: 6, cursor: "pointer",
                   background: "rgba(255,255,255,0.02)",
-                  border: `1px solid ${border.subtle}`,
+                  border: `1px solid ${theme.border.subtle}`,
                 }}
               >
-                <span style={{ fontSize: 9, color: pc }}>
+                <span style={{ fontSize: sz(9), color: pc }}>
                   {KIND_ICONS[parent.kind] || "●"}
                 </span>
-                <span style={{ fontSize: 11, color: pc }}>
+                <span style={{ fontSize: sz(11), color: pc }}>
                   {parent.label}
                 </span>
                 <span style={{
-                  fontSize: 8, color: text.hint,
+                  fontSize: sz(8), color: theme.text.hint,
                   fontFamily: "'IBM Plex Mono', monospace",
                 }}>
                   {parent.kind}
@@ -510,12 +516,12 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
         {/* Children */}
         {childUris.length > 0 && (
-          <Section title={`Contains (${childUris.length})`} color={palette.emerald}>
+          <Section title={`Contains (${childUris.length})`} color={theme.palette.emerald}>
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               {childUris.map(uri => {
                 const child = data.nodes.get(uri);
                 if (!child) return null;
-                const cc = KIND_COLORS[child.kind] || text.muted;
+                const cc = KIND_COLORS[child.kind] || theme.text.muted;
                 return (
                   <div
                     key={uri}
@@ -528,14 +534,14 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                     onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
-                    <span style={{ fontSize: 9, color: cc }}>
+                    <span style={{ fontSize: sz(9), color: cc }}>
                       {KIND_ICONS[child.kind] || "●"}
                     </span>
-                    <span style={{ fontSize: 11, color: text.primary }}>
+                    <span style={{ fontSize: sz(11), color: theme.text.primary }}>
                       {child.label}
                     </span>
                     <span style={{
-                      fontSize: 8, color: text.hint,
+                      fontSize: sz(8), color: theme.text.hint,
                       fontFamily: "'IBM Plex Mono', monospace",
                     }}>
                       {child.kind}
@@ -549,27 +555,27 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
         {/* Interfaces */}
         {ifaces.length > 0 && (
-          <Section title={`Interfaces (${ifaces.length})`} color={palette.cyan}>
+          <Section title={`Interfaces (${ifaces.length})`} color={theme.palette.cyan}>
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               {ifaces.map(uri => {
                 const iface = data.nodes.get(uri);
                 if (!iface) return null;
                 const proto = data.protocols.get(uri);
-                const ic = KIND_COLORS[iface.kind] || palette.cyan;
+                const ic = KIND_COLORS[iface.kind] || theme.palette.cyan;
                 return (
                   <div key={uri} style={{
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "3px 8px", borderRadius: 4,
                   }}>
-                    <span style={{ fontSize: 9, color: ic }}>
+                    <span style={{ fontSize: sz(9), color: ic }}>
                       {KIND_ICONS[iface.kind] || "⊘"}
                     </span>
-                    <span style={{ fontSize: 11, color: text.primary }}>
+                    <span style={{ fontSize: sz(11), color: theme.text.primary }}>
                       {iface.label}
                     </span>
                     {proto && (
                       <span style={{
-                        fontSize: 8, padding: "1px 5px", borderRadius: 4,
+                        fontSize: sz(8), padding: "1px 5px", borderRadius: 4,
                         background: ic + "18", color: ic, border: `1px solid ${ic}33`,
                         fontFamily: "'IBM Plex Mono', monospace",
                       }}>
@@ -577,7 +583,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                       </span>
                     )}
                     <span style={{
-                      fontSize: 8, color: text.hint,
+                      fontSize: sz(8), color: theme.text.hint,
                       fontFamily: "'IBM Plex Mono', monospace",
                     }}>
                       {iface.kind.replace("Interface", "").toLowerCase() || "generic"}
@@ -591,7 +597,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
         {/* Firmware */}
         {fws.length > 0 && (
-          <Section title={`Firmware (${fws.length})`} color={palette.blue}>
+          <Section title={`Firmware (${fws.length})`} color={theme.palette.blue}>
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               {fws.map(uri => {
                 const fw = data.nodes.get(uri);
@@ -603,15 +609,15 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "3px 8px", borderRadius: 4,
                   }}>
-                    <span style={{ fontSize: 9, color: palette.blue }}>▧</span>
-                    <span style={{ fontSize: 11, color: text.primary }}>
+                    <span style={{ fontSize: sz(9), color: theme.palette.blue }}>▧</span>
+                    <span style={{ fontSize: sz(11), color: theme.text.primary }}>
                       {fw.label}
                     </span>
                     {ver && (
                       <span style={{
-                        fontSize: 8, padding: "1px 5px", borderRadius: 4,
-                        background: palette.blue + "18", color: palette.blue,
-                        border: `1px solid ${palette.blue}33`,
+                        fontSize: sz(8), padding: "1px 5px", borderRadius: 4,
+                        background: theme.palette.blue + "18", color: theme.palette.blue,
+                        border: `1px solid ${theme.palette.blue}33`,
                         fontFamily: "'IBM Plex Mono', monospace",
                       }}>
                         v{ver}
@@ -619,10 +625,10 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                     )}
                     {signed !== undefined && (
                       <span style={{
-                        fontSize: 8, padding: "1px 5px", borderRadius: 4,
-                        background: (signed ? palette.emerald : palette.rose) + "18",
-                        color: signed ? palette.emerald : palette.rose,
-                        border: `1px solid ${(signed ? palette.emerald : palette.rose)}33`,
+                        fontSize: sz(8), padding: "1px 5px", borderRadius: 4,
+                        background: (signed ? theme.palette.emerald : theme.palette.rose) + "18",
+                        color: signed ? theme.palette.emerald : theme.palette.rose,
+                        border: `1px solid ${(signed ? theme.palette.emerald : theme.palette.rose)}33`,
                         fontFamily: "'IBM Plex Mono', monospace",
                       }}>
                         {signed ? "signed" : "unsigned"}
@@ -637,24 +643,24 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
         {/* Security Annotations */}
         {secs.length > 0 && (
-          <Section title={`Security Annotations (${secs.length})`} color={palette.rose}>
+          <Section title={`Security Annotations (${secs.length})`} color={theme.palette.rose}>
             {Array.from(secByKind.entries()).map(([kind, nodes]) => {
-              const kc = KIND_COLORS[kind] || palette.rose;
+              const kc = KIND_COLORS[kind] || theme.palette.rose;
               return (
                 <div key={kind} style={{ marginBottom: 10 }}>
                   <div style={{
-                    fontSize: 9, color: kc, marginBottom: 4,
+                    fontSize: sz(9), color: kc, marginBottom: 4,
                     fontFamily: "'IBM Plex Mono', monospace",
                     display: "flex", alignItems: "center", gap: 4,
                   }}>
                     <span>{KIND_ICONS[kind] || "●"}</span>
                     <span>{securityKindLabel(kind)}</span>
-                    <span style={{ color: text.hint }}>({nodes.length})</span>
+                    <span style={{ color: theme.text.hint }}>({nodes.length})</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     {nodes.map(n => (
                       <div key={n.uri} style={{
-                        fontSize: 11, color: text.secondary,
+                        fontSize: sz(11), color: theme.text.secondary,
                         padding: "2px 8px 2px 16px",
                         borderLeft: `2px solid ${kc}33`,
                       }}>
@@ -670,12 +676,12 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
 
         {/* Interactions */}
         {interactions.length > 0 && (
-          <Section title={`Interacts With (${interactions.length})`} color={palette.amber}>
+          <Section title={`Interacts With (${interactions.length})`} color={theme.palette.amber}>
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               {interactions.map(uri => {
                 const other = data.nodes.get(uri);
                 if (!other) return null;
-                const oc = KIND_COLORS[other.kind] || text.muted;
+                const oc = KIND_COLORS[other.kind] || theme.text.muted;
                 return (
                   <div
                     key={uri}
@@ -688,14 +694,14 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                     onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
-                    <span style={{ fontSize: 9, color: oc }}>
+                    <span style={{ fontSize: sz(9), color: oc }}>
                       {KIND_ICONS[other.kind] || "●"}
                     </span>
-                    <span style={{ fontSize: 11, color: text.primary }}>
+                    <span style={{ fontSize: sz(11), color: theme.text.primary }}>
                       {other.label}
                     </span>
                     <span style={{
-                      fontSize: 8, color: text.hint,
+                      fontSize: sz(8), color: theme.text.hint,
                       fontFamily: "'IBM Plex Mono', monospace",
                     }}>
                       {other.kind}
@@ -720,10 +726,10 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
       <div style={{
         display: "flex", alignItems: "center", gap: 12,
         padding: "12px 0",
-        borderBottom: `1px solid ${border.subtle}`,
+        borderBottom: `1px solid ${theme.border.subtle}`,
       }}>
         <div style={{
-          fontSize: 13, fontWeight: 700, color: palette.blue,
+          fontSize: sz(13), fontWeight: 700, color: theme.palette.blue,
           fontFamily: "'IBM Plex Sans', sans-serif",
           whiteSpace: "nowrap",
         }}>
@@ -739,8 +745,8 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
             flex: 1, maxWidth: 300,
             padding: "5px 10px", borderRadius: 6,
             background: "rgba(255,255,255,0.03)",
-            border: `1px solid ${border.default}`,
-            color: text.primary, fontSize: 11,
+            border: `1px solid ${theme.border.default}`,
+            color: theme.text.primary, fontSize: sz(11),
             fontFamily: "'IBM Plex Sans', sans-serif",
             outline: "none",
           }}
@@ -750,12 +756,12 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
           display: "flex", gap: 8, marginLeft: "auto",
         }}>
           {[
-            { label: "Entities", count: hwEntities.length, color: palette.blue },
-            { label: "Interfaces", count: Array.from(data.nodes.values()).filter(n => n.kind.includes("Interface")).length, color: palette.cyan },
-            { label: "Security", count: Array.from(data.nodes.values()).filter(n => ["Vulnerability", "AttackSurface", "Countermeasure", "SideChannel", "ThreatModel", "SecurityProperty"].includes(n.kind)).length, color: palette.rose },
+            { label: "Entities", count: hwEntities.length, color: theme.palette.blue },
+            { label: "Interfaces", count: Array.from(data.nodes.values()).filter(n => n.kind.includes("Interface")).length, color: theme.palette.cyan },
+            { label: "Security", count: Array.from(data.nodes.values()).filter(n => ["Vulnerability", "AttackSurface", "Countermeasure", "SideChannel", "ThreatModel", "SecurityProperty"].includes(n.kind)).length, color: theme.palette.rose },
           ].map(s => (
             <div key={s.label} style={{
-              fontSize: 9, color: text.hint,
+              fontSize: sz(9), color: theme.text.hint,
               fontFamily: "'IBM Plex Mono', monospace",
               display: "flex", alignItems: "center", gap: 4,
             }}>
@@ -776,7 +782,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
         {/* Tree panel */}
         <div style={{
           width: 380, minWidth: 300,
-          borderRight: `1px solid ${border.subtle}`,
+          borderRight: `1px solid ${theme.border.subtle}`,
           overflowY: "auto",
           paddingTop: 4,
         }}>
@@ -785,11 +791,11 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
           {/* Legend */}
           <div style={{
             padding: "12px 12px 16px",
-            borderTop: `1px solid ${border.subtle}`,
+            borderTop: `1px solid ${theme.border.subtle}`,
             marginTop: 8,
           }}>
             <div style={{
-              fontSize: 8, color: text.hint, marginBottom: 6,
+              fontSize: sz(8), color: theme.text.hint, marginBottom: 6,
               fontFamily: "'IBM Plex Mono', monospace",
               textTransform: "uppercase", letterSpacing: "0.06em",
             }}>
@@ -798,7 +804,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
               {["System", "Subsystem", "Component", "Element"].map(kind => (
                 <span key={kind} style={{
-                  fontSize: 7, padding: "1px 5px", borderRadius: 4,
+                  fontSize: sz(7), padding: "1px 5px", borderRadius: 4,
                   background: (KIND_COLORS[kind] || "#888") + "18",
                   color: KIND_COLORS[kind] || "#888",
                   fontFamily: "'IBM Plex Mono', monospace",
@@ -811,29 +817,29 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               <span style={{
-                fontSize: 7, padding: "1px 5px", borderRadius: 4,
-                background: palette.emerald + "18", color: palette.emerald,
+                fontSize: sz(7), padding: "1px 5px", borderRadius: 4,
+                background: theme.palette.emerald + "18", color: theme.palette.emerald,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 T5 = trust
               </span>
               <span style={{
-                fontSize: 7, padding: "1px 5px", borderRadius: 4,
-                background: palette.rose + "18", color: palette.rose,
+                fontSize: sz(7), padding: "1px 5px", borderRadius: 4,
+                background: theme.palette.rose + "18", color: theme.palette.rose,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 3 = security
               </span>
               <span style={{
-                fontSize: 7, padding: "1px 5px", borderRadius: 4,
-                background: palette.cyan + "18", color: palette.cyan,
+                fontSize: sz(7), padding: "1px 5px", borderRadius: 4,
+                background: theme.palette.cyan + "18", color: theme.palette.cyan,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 2 = interfaces
               </span>
               <span style={{
-                fontSize: 7, padding: "1px 5px", borderRadius: 4,
-                background: "rgba(255,255,255,0.06)", color: text.hint,
+                fontSize: sz(7), padding: "1px 5px", borderRadius: 4,
+                background: "rgba(255,255,255,0.06)", color: theme.text.hint,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 ~ = inferred

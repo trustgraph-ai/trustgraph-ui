@@ -2,8 +2,7 @@ import { useState } from "react";
 import {
   SectionLabel,
   GeoMap,
-  text,
-  border,
+  useTheme,
 } from "@trustgraph/trustkit";
 import type { MapMarker } from "@trustgraph/trustkit";
 
@@ -37,21 +36,22 @@ const SAMPLE_MARKERS: Record<string, MapMarker[]> = {
 };
 
 export function PlaygroundPage() {
+  const { theme, sz } = useTheme();
   const [preset, setPreset] = useState("world");
 
   return (
     <>
       <div style={{
         padding: "10px 28px",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
         gap: 16,
       }}>
         <SectionLabel>PLAYGROUND</SectionLabel>
         <span style={{
-          fontSize: 11,
-          color: text.subtle,
+          fontSize: sz(11),
+          color: theme.text.subtle,
           fontStyle: "italic",
           marginLeft: 8,
         }}>

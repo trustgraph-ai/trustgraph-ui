@@ -1,21 +1,24 @@
 import { useState, useMemo, useCallback } from "react";
 import { useRiskData } from "../../hooks/useRiskData";
 import type { RiskNode } from "../../hooks/useRiskData";
-import { text, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import type { Theme } from "../../theme/types";
 import { LoadingState } from "../common";
 
 export interface RiskExplorerProps {}
 
 /* ── category colours ─────────────────────────────────────────────── */
 
-const KIND_COLORS: Record<string, string> = {
-  Risk: palette.rose,
-  Actor: palette.amber,
-  Asset: palette.blue,
-  Event: palette.cyan,
-  Process: palette.emerald,
-  ProcessStep: palette.purple,
-};
+function kindColors(theme: Theme): Record<string, string> {
+  return {
+    Risk: theme.palette.rose,
+    Actor: theme.palette.amber,
+    Asset: theme.palette.blue,
+    Event: theme.palette.cyan,
+    Process: theme.palette.emerald,
+    ProcessStep: theme.palette.purple,
+  };
+}
 
 const KIND_ICONS: Record<string, string> = {
   Risk: "⚠",
@@ -30,10 +33,10 @@ type EntityKind = "Actor" | "Risk" | "Asset" | "Event";
 
 /* ── helpers ──────────────────────────────────────────────────────── */
 
-function riskColor(score: number): string {
-  if (score >= 0.8) return palette.rose;
-  if (score >= 0.6) return palette.amber;
-  return palette.emerald;
+function riskColor(score: number, theme: Theme): string {
+  if (score >= 0.8) return theme.palette.rose;
+  if (score >= 0.6) return theme.palette.amber;
+  return theme.palette.emerald;
 }
 
 function formatDate(iso: string): string {
@@ -51,11 +54,11 @@ function kindLabel(kind: string): string {
 
 /* ── shared sub-components ────────────────────────────────────────── */
 
-function Section({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
+function Section({ title, color, children, sz }: { title: string; color: string; children: React.ReactNode; sz: (n: number) => number }) {
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{
-        fontSize: 8, color, fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(8), color, fontFamily: "'IBM Plex Mono', monospace",
         textTransform: "uppercase", letterSpacing: "0.06em",
         marginBottom: 6, paddingBottom: 4,
         borderBottom: `1px solid ${color}22`,
@@ -67,12 +70,12 @@ function Section({ title, color, children }: { title: string; color: string; chi
   );
 }
 
-function RelLink({ uri, label, color, onClick }: { uri: string; label: string; color: string; onClick: (uri: string) => void }) {
+function RelLink({ uri, label, color, onClick, sz }: { uri: string; label: string; color: string; onClick: (uri: string) => void; sz: (n: number) => number }) {
   return (
     <span
       onClick={() => onClick(uri)}
       style={{
-        display: "inline-block", padding: "2px 8px", borderRadius: 4, fontSize: 11,
+        display: "inline-block", padding: "2px 8px", borderRadius: 4, fontSize: sz(11),
         background: `${color}11`, border: `1px solid ${color}33`, color,
         cursor: "pointer", marginRight: 4, marginBottom: 4,
         transition: "all 0.15s",
@@ -88,7 +91,10 @@ function RelLink({ uri, label, color, onClick }: { uri: string; label: string; c
 /* ── main component ───────────────────────────────────────────────── */
 
 export function RiskExplorer(_props: RiskExplorerProps) {
+  const { theme, sz } = useTheme();
   const data = useRiskData();
+
+  const KIND_COLORS = useMemo(() => kindColors(theme), [theme]);
 
   const [selectedUri, setSelectedUri] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -356,9 +362,9 @@ export function RiskExplorer(_props: RiskExplorerProps) {
 
   if (data.error) {
     return (
-      <div style={{ padding: 48, textAlign: "center", color: palette.rose }}>
-        <div style={{ fontSize: 14, marginBottom: 8 }}>Failed to load data</div>
-        <div style={{ fontSize: 11, color: text.muted }}>{data.error.message}</div>
+      <div style={{ padding: 48, textAlign: "center", color: theme.palette.rose }}>
+        <div style={{ fontSize: sz(14), marginBottom: 8 }}>Failed to load data</div>
+        <div style={{ fontSize: sz(11), color: theme.text.muted }}>{data.error.message}</div>
       </div>
     );
   }
@@ -371,11 +377,11 @@ export function RiskExplorer(_props: RiskExplorerProps) {
     return (
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-          <span style={{ fontSize: 24, opacity: 0.6 }}>🛡</span>
+          <span style={{ fontSize: sz(24), opacity: 0.6 }}>🛡</span>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 600, color: text.primary }}>Risk Overview</div>
+            <div style={{ fontSize: sz(18), fontWeight: 600, color: theme.text.primary }}>Risk Overview</div>
             <div style={{
-              fontSize: 10, color: text.faint, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(10), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
               textTransform: "uppercase", letterSpacing: "0.05em",
             }}>
               {stats.events} events in time window
@@ -384,14 +390,14 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         </div>
 
         {/* Risk heat grid */}
-        <Section title="Risk Scores" color={palette.rose}>
+        <Section title="Risk Scores" color={theme.palette.rose} sz={sz}>
           {sortedRisksByScore.length === 0 ? (
-            <div style={{ fontSize: 11, color: text.faint }}>No risks loaded</div>
+            <div style={{ fontSize: sz(11), color: theme.text.faint }}>No risks loaded</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {sortedRisksByScore.map(r => {
                 const score = data.riskScores.get(r.uri) || 0;
-                const color = riskColor(score);
+                const color = riskColor(score, theme);
                 return (
                   <div
                     key={r.uri}
@@ -401,11 +407,11 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                       padding: "4px 6px", borderRadius: 4, cursor: "pointer",
                       transition: "all 0.12s",
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = theme.surface.card; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                   >
                     <span style={{
-                      fontSize: 11, color: text.secondary, minWidth: 120,
+                      fontSize: sz(11), color: theme.text.secondary, minWidth: 120,
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
                       {r.label}
@@ -424,7 +430,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                       }} />
                     </div>
                     <span style={{
-                      fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
                       color, minWidth: 28, textAlign: "right",
                     }}>
                       {(score * 100).toFixed(0)}%
@@ -437,9 +443,9 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         </Section>
 
         {/* Top actors */}
-        <Section title="Top Actors by Event Count" color={palette.amber}>
+        <Section title="Top Actors by Event Count" color={theme.palette.amber} sz={sz}>
           {topActorsByEventCount.length === 0 ? (
-            <div style={{ fontSize: 11, color: text.faint }}>No actors in time window</div>
+            <div style={{ fontSize: sz(11), color: theme.text.faint }}>No actors in time window</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               {topActorsByEventCount.map(([uri, count]) => {
@@ -453,11 +459,11 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                       padding: "3px 6px", borderRadius: 4, cursor: "pointer",
                       transition: "all 0.12s",
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = theme.surface.card; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                   >
                     <span style={{
-                      fontSize: 11, color: text.secondary, minWidth: 120,
+                      fontSize: sz(11), color: theme.text.secondary, minWidth: 120,
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
                       {nodeLabel(uri)}
@@ -470,13 +476,13 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                       <div style={{
                         width: `${(count / maxCount) * 100}%`,
                         height: "100%", borderRadius: 3,
-                        background: palette.amber,
+                        background: theme.palette.amber,
                         opacity: 0.5,
                       }} />
                     </div>
                     <span style={{
-                      fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
-                      color: palette.amber, minWidth: 20, textAlign: "right",
+                      fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+                      color: theme.palette.amber, minWidth: 20, textAlign: "right",
                     }}>
                       {count}
                     </span>
@@ -488,9 +494,9 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         </Section>
 
         {/* Most impacted assets */}
-        <Section title="Most Impacted Assets" color={palette.blue}>
+        <Section title="Most Impacted Assets" color={theme.palette.blue} sz={sz}>
           {topAssetsByEventCount.length === 0 ? (
-            <div style={{ fontSize: 11, color: text.faint }}>No assets in time window</div>
+            <div style={{ fontSize: sz(11), color: theme.text.faint }}>No assets in time window</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               {topAssetsByEventCount.map(([uri, count]) => {
@@ -504,11 +510,11 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                       padding: "3px 6px", borderRadius: 4, cursor: "pointer",
                       transition: "all 0.12s",
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = theme.surface.card; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                   >
                     <span style={{
-                      fontSize: 11, color: text.secondary, minWidth: 120,
+                      fontSize: sz(11), color: theme.text.secondary, minWidth: 120,
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
                       {nodeLabel(uri)}
@@ -521,13 +527,13 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                       <div style={{
                         width: `${(count / maxCount) * 100}%`,
                         height: "100%", borderRadius: 3,
-                        background: palette.blue,
+                        background: theme.palette.blue,
                         opacity: 0.5,
                       }} />
                     </div>
                     <span style={{
-                      fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
-                      color: palette.blue, minWidth: 20, textAlign: "right",
+                      fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+                      color: theme.palette.blue, minWidth: 20, textAlign: "right",
                     }}>
                       {count}
                     </span>
@@ -549,9 +555,9 @@ export function RiskExplorer(_props: RiskExplorerProps) {
       <div>
         {renderDetailHeader(node)}
 
-        <Section title="Connected Risks" color={palette.rose}>
+        <Section title="Connected Risks" color={theme.palette.rose} sz={sz}>
           {conn.connRisks.size === 0 ? (
-            <div style={{ fontSize: 11, color: text.faint }}>No risks in time window</div>
+            <div style={{ fontSize: sz(11), color: theme.text.faint }}>No risks in time window</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {[...conn.connRisks.entries()]
@@ -568,23 +574,23 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                         padding: "4px 8px", borderRadius: 4, cursor: "pointer",
                         transition: "all 0.12s",
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                      onMouseEnter={e => { e.currentTarget.style.background = theme.surface.card; }}
                       onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                     >
-                      <span style={{ fontSize: 11, color: text.secondary, flex: 1 }}>
+                      <span style={{ fontSize: sz(11), color: theme.text.secondary, flex: 1 }}>
                         {nodeLabel(uri)}
                       </span>
                       <span style={{
-                        fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
-                        color: text.faint, marginRight: 6,
+                        fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                        color: theme.text.faint, marginRight: 6,
                       }}>
                         {count} event{count !== 1 ? "s" : ""}
                       </span>
                       <span style={{
-                        fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
+                        fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
                         padding: "1px 6px", borderRadius: 3,
-                        background: `${riskColor(score)}22`,
-                        color: riskColor(score),
+                        background: `${riskColor(score, theme)}22`,
+                        color: riskColor(score, theme),
                       }}>
                         {(score * 100).toFixed(0)}%
                       </span>
@@ -595,16 +601,16 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           )}
         </Section>
 
-        <Section title="Impacted Assets" color={palette.blue}>
+        <Section title="Impacted Assets" color={theme.palette.blue} sz={sz}>
           {conn.connAssets.size === 0 ? (
-            <div style={{ fontSize: 11, color: text.faint }}>No assets in time window</div>
+            <div style={{ fontSize: sz(11), color: theme.text.faint }}>No assets in time window</div>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap" }}>
               {[...conn.connAssets.entries()]
                 .sort((a, b) => b[1] - a[1])
                 .map(([uri, count]) => (
                   <div key={uri} style={{ marginRight: 4, marginBottom: 4 }}>
-                    <RelLink uri={uri} label={`${nodeLabel(uri)} (${count})`} color={palette.blue} onClick={selectNode} />
+                    <RelLink uri={uri} label={`${nodeLabel(uri)} (${count})`} color={theme.palette.blue} onClick={selectNode} sz={sz} />
                   </div>
                 ))}
             </div>
@@ -626,13 +632,13 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         {/* Custom header with risk score badge */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <span style={{ fontSize: 20 }}>⚠</span>
+            <span style={{ fontSize: sz(20) }}>⚠</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 18, fontWeight: 600, color: text.primary }}>
+              <div style={{ fontSize: sz(18), fontWeight: 600, color: theme.text.primary }}>
                 {node.label}
               </div>
               <div style={{
-                fontSize: 10, color: KIND_COLORS[node.kind] || text.muted,
+                fontSize: sz(10), color: KIND_COLORS[node.kind] || theme.text.muted,
                 fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase",
                 letterSpacing: "0.05em",
               }}>
@@ -641,10 +647,10 @@ export function RiskExplorer(_props: RiskExplorerProps) {
             </div>
             <div style={{
               padding: "6px 14px", borderRadius: 6,
-              background: `${riskColor(score)}22`,
-              border: `1px solid ${riskColor(score)}44`,
-              color: riskColor(score),
-              fontSize: 16, fontWeight: 700,
+              background: `${riskColor(score, theme)}22`,
+              border: `1px solid ${riskColor(score, theme)}44`,
+              color: riskColor(score, theme),
+              fontSize: sz(16), fontWeight: 700,
               fontFamily: "'IBM Plex Mono', monospace",
             }}>
               {(score * 100).toFixed(0)}%
@@ -653,9 +659,9 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           {renderDescription(node.uri)}
         </div>
 
-        <Section title="Threat Actors" color={palette.amber}>
+        <Section title="Threat Actors" color={theme.palette.amber} sz={sz}>
           {conn.connActors.size === 0 ? (
-            <div style={{ fontSize: 11, color: text.faint }}>No actors in time window</div>
+            <div style={{ fontSize: sz(11), color: theme.text.faint }}>No actors in time window</div>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap" }}>
               {[...conn.connActors.entries()]
@@ -664,16 +670,16 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                   <RelLink
                     key={uri} uri={uri}
                     label={`${nodeLabel(uri)} (${count})`}
-                    color={palette.amber} onClick={selectNode}
+                    color={theme.palette.amber} onClick={selectNode} sz={sz}
                   />
                 ))}
             </div>
           )}
         </Section>
 
-        <Section title="Impacted Assets" color={palette.blue}>
+        <Section title="Impacted Assets" color={theme.palette.blue} sz={sz}>
           {conn.connAssets.size === 0 ? (
-            <div style={{ fontSize: 11, color: text.faint }}>No assets in time window</div>
+            <div style={{ fontSize: sz(11), color: theme.text.faint }}>No assets in time window</div>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap" }}>
               {[...conn.connAssets.entries()]
@@ -682,7 +688,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                   <RelLink
                     key={uri} uri={uri}
                     label={`${nodeLabel(uri)} (${count})`}
-                    color={palette.blue} onClick={selectNode}
+                    color={theme.palette.blue} onClick={selectNode} sz={sz}
                   />
                 ))}
             </div>
@@ -702,9 +708,9 @@ export function RiskExplorer(_props: RiskExplorerProps) {
       <div>
         {renderDetailHeader(node)}
 
-        <Section title="Threat Actors" color={palette.amber}>
+        <Section title="Threat Actors" color={theme.palette.amber} sz={sz}>
           {conn.connActors.size === 0 ? (
-            <div style={{ fontSize: 11, color: text.faint }}>No actors in time window</div>
+            <div style={{ fontSize: sz(11), color: theme.text.faint }}>No actors in time window</div>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap" }}>
               {[...conn.connActors.entries()]
@@ -713,16 +719,16 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                   <RelLink
                     key={uri} uri={uri}
                     label={`${nodeLabel(uri)} (${count})`}
-                    color={palette.amber} onClick={selectNode}
+                    color={theme.palette.amber} onClick={selectNode} sz={sz}
                   />
                 ))}
             </div>
           )}
         </Section>
 
-        <Section title="Associated Risks" color={palette.rose}>
+        <Section title="Associated Risks" color={theme.palette.rose} sz={sz}>
           {conn.connRisks.size === 0 ? (
-            <div style={{ fontSize: 11, color: text.faint }}>No risks in time window</div>
+            <div style={{ fontSize: sz(11), color: theme.text.faint }}>No risks in time window</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {[...conn.connRisks.entries()]
@@ -738,23 +744,23 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                         padding: "4px 8px", borderRadius: 4, cursor: "pointer",
                         transition: "all 0.12s",
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                      onMouseEnter={e => { e.currentTarget.style.background = theme.surface.card; }}
                       onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                     >
-                      <span style={{ fontSize: 11, color: text.secondary, flex: 1 }}>
+                      <span style={{ fontSize: sz(11), color: theme.text.secondary, flex: 1 }}>
                         {nodeLabel(uri)}
                       </span>
                       <span style={{
-                        fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
-                        color: text.faint, marginRight: 6,
+                        fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                        color: theme.text.faint, marginRight: 6,
                       }}>
                         {count} event{count !== 1 ? "s" : ""}
                       </span>
                       <span style={{
-                        fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
+                        fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
                         padding: "1px 6px", borderRadius: 3,
-                        background: `${riskColor(score)}22`,
-                        color: riskColor(score),
+                        background: `${riskColor(score, theme)}22`,
+                        color: riskColor(score, theme),
                       }}>
                         {(score * 100).toFixed(0)}%
                       </span>
@@ -782,13 +788,13 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         {/* Event header */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <span style={{ fontSize: 20 }}>⚡</span>
+            <span style={{ fontSize: sz(20) }}>⚡</span>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 600, color: text.primary }}>
+              <div style={{ fontSize: sz(18), fontWeight: 600, color: theme.text.primary }}>
                 {node.label}
               </div>
               <div style={{
-                fontSize: 10, color: KIND_COLORS.Event,
+                fontSize: sz(10), color: KIND_COLORS.Event,
                 fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase",
                 letterSpacing: "0.05em",
               }}>
@@ -800,43 +806,43 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         </div>
 
         {/* Actor / Risk / Asset badges */}
-        <Section title="Actor" color={palette.amber}>
+        <Section title="Actor" color={theme.palette.amber} sz={sz}>
           <div style={{ display: "flex", flexWrap: "wrap" }}>
             {eventActors.length === 0
-              ? <span style={{ fontSize: 11, color: text.faint }}>None</span>
+              ? <span style={{ fontSize: sz(11), color: theme.text.faint }}>None</span>
               : eventActors.map(uri => (
-                  <RelLink key={uri} uri={uri} label={nodeLabel(uri)} color={palette.amber} onClick={selectNode} />
+                  <RelLink key={uri} uri={uri} label={nodeLabel(uri)} color={theme.palette.amber} onClick={selectNode} sz={sz} />
                 ))}
           </div>
         </Section>
 
-        <Section title="Risk" color={palette.rose}>
+        <Section title="Risk" color={theme.palette.rose} sz={sz}>
           <div style={{ display: "flex", flexWrap: "wrap" }}>
             {eventRisks.length === 0
-              ? <span style={{ fontSize: 11, color: text.faint }}>None</span>
+              ? <span style={{ fontSize: sz(11), color: theme.text.faint }}>None</span>
               : eventRisks.map(uri => {
                   const score = data.riskScores.get(uri);
                   const scoreStr = score != null ? ` (${(score * 100).toFixed(0)}%)` : "";
                   return (
-                    <RelLink key={uri} uri={uri} label={`${nodeLabel(uri)}${scoreStr}`} color={palette.rose} onClick={selectNode} />
+                    <RelLink key={uri} uri={uri} label={`${nodeLabel(uri)}${scoreStr}`} color={theme.palette.rose} onClick={selectNode} sz={sz} />
                   );
                 })}
           </div>
         </Section>
 
-        <Section title="Asset" color={palette.blue}>
+        <Section title="Asset" color={theme.palette.blue} sz={sz}>
           <div style={{ display: "flex", flexWrap: "wrap" }}>
             {eventAssets.length === 0
-              ? <span style={{ fontSize: 11, color: text.faint }}>None</span>
+              ? <span style={{ fontSize: sz(11), color: theme.text.faint }}>None</span>
               : eventAssets.map(uri => (
-                  <RelLink key={uri} uri={uri} label={nodeLabel(uri)} color={palette.blue} onClick={selectNode} />
+                  <RelLink key={uri} uri={uri} label={nodeLabel(uri)} color={theme.palette.blue} onClick={selectNode} sz={sz} />
                 ))}
           </div>
         </Section>
 
         {/* Incident Response */}
         {processes.length > 0 && (
-          <Section title="Incident Response" color={palette.emerald}>
+          <Section title="Incident Response" color={theme.palette.emerald} sz={sz}>
             {processes.map(procUri => renderProcessDetail(procUri))}
           </Section>
         )}
@@ -863,25 +869,25 @@ export function RiskExplorer(_props: RiskExplorerProps) {
     const progress = steps.length > 0 ? completedSteps / steps.length : 0;
 
     const statusColor =
-      status === "resolved" ? palette.emerald :
-      status === "in-progress" ? palette.amber :
-      palette.rose;
+      status === "resolved" ? theme.palette.emerald :
+      status === "in-progress" ? theme.palette.amber :
+      theme.palette.rose;
 
     return (
       <div key={procUri} style={{
         padding: "10px 12px", borderRadius: 6,
         background: "rgba(255,255,255,0.02)",
-        border: `1px solid ${border.subtle}`,
+        border: `1px solid ${theme.border.subtle}`,
         marginBottom: 10,
       }}>
         {/* Process header */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-          <span style={{ fontSize: 12 }}>⟳</span>
-          <span style={{ fontSize: 12, color: text.primary, fontWeight: 600, flex: 1 }}>
+          <span style={{ fontSize: sz(12) }}>⟳</span>
+          <span style={{ fontSize: sz(12), color: theme.text.primary, fontWeight: 600, flex: 1 }}>
             {procNode?.label || procUri.split("/").pop()}
           </span>
           <span style={{
-            fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
             padding: "2px 8px", borderRadius: 4,
             background: `${statusColor}22`,
             border: `1px solid ${statusColor}33`,
@@ -894,16 +900,16 @@ export function RiskExplorer(_props: RiskExplorerProps) {
 
         {/* Meta */}
         <div style={{
-          display: "flex", gap: 16, fontSize: 10, color: text.faint,
+          display: "flex", gap: 16, fontSize: sz(10), color: theme.text.faint,
           fontFamily: "'IBM Plex Mono', monospace", marginBottom: 10,
         }}>
-          {invBy && <span>invoked by: <span style={{ color: text.secondary }}>{invBy}</span></span>}
-          {assignee && <span>assigned to: <span style={{ color: text.secondary }}>{assignee}</span></span>}
+          {invBy && <span>invoked by: <span style={{ color: theme.text.secondary }}>{invBy}</span></span>}
+          {assignee && <span>assigned to: <span style={{ color: theme.text.secondary }}>{assignee}</span></span>}
         </div>
 
         {/* Progress bar */}
         <div style={{
-          height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)",
+          height: 4, borderRadius: 2, background: theme.surface.cardHover,
           marginBottom: 10, overflow: "hidden",
         }}>
           <div style={{
@@ -915,7 +921,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           }} />
         </div>
         <div style={{
-          fontSize: 9, color: text.faint, fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
           marginBottom: 8, textAlign: "right",
         }}>
           {completedSteps}/{steps.length} steps ({(progress * 100).toFixed(0)}%)
@@ -925,33 +931,33 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         {steps.map(step => (
           <div key={step.uri} style={{
             display: "flex", alignItems: "center", gap: 8,
-            padding: "3px 0", fontSize: 11,
+            padding: "3px 0", fontSize: sz(11),
           }}>
             <span style={{
               width: 14, height: 14, borderRadius: "50%",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 9, flexShrink: 0,
-              background: step.complete ? `${palette.emerald}22` : "rgba(255,255,255,0.04)",
-              border: `1px solid ${step.complete ? `${palette.emerald}44` : "rgba(255,255,255,0.1)"}`,
-              color: step.complete ? palette.emerald : text.faint,
+              fontSize: sz(9), flexShrink: 0,
+              background: step.complete ? `${theme.palette.emerald}22` : "rgba(255,255,255,0.04)",
+              border: `1px solid ${step.complete ? `${theme.palette.emerald}44` : "rgba(255,255,255,0.1)"}`,
+              color: step.complete ? theme.palette.emerald : theme.text.faint,
             }}>
               {step.complete ? "✓" : ""}
             </span>
             <span style={{
-              fontSize: 9, color: text.faint, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
               minWidth: 16,
             }}>
               {step.number}.
             </span>
             <span style={{
-              flex: 1, color: step.complete ? text.secondary : text.muted,
-              fontSize: 11,
+              flex: 1, color: step.complete ? theme.text.secondary : theme.text.muted,
+              fontSize: sz(11),
             }}>
               {step.label}
             </span>
             {step.assignedTo && (
               <span style={{
-                fontSize: 9, color: text.faint, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 {step.assignedTo}
               </span>
@@ -968,13 +974,13 @@ export function RiskExplorer(_props: RiskExplorerProps) {
     return (
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-          <span style={{ fontSize: 20 }}>{KIND_ICONS[node.kind] || "●"}</span>
+          <span style={{ fontSize: sz(20) }}>{KIND_ICONS[node.kind] || "●"}</span>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 600, color: text.primary }}>
+            <div style={{ fontSize: sz(18), fontWeight: 600, color: theme.text.primary }}>
               {node.label}
             </div>
             <div style={{
-              fontSize: 10, color: KIND_COLORS[node.kind] || text.muted,
+              fontSize: sz(10), color: KIND_COLORS[node.kind] || theme.text.muted,
               fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase",
               letterSpacing: "0.05em",
             }}>
@@ -992,10 +998,10 @@ export function RiskExplorer(_props: RiskExplorerProps) {
     if (!desc) return null;
     return (
       <div style={{
-        fontSize: 12, color: text.secondary, lineHeight: 1.6,
+        fontSize: sz(12), color: theme.text.secondary, lineHeight: 1.6,
         padding: "12px 14px", borderRadius: 6,
         background: "rgba(255,255,255,0.02)",
-        border: `1px solid ${border.subtle}`,
+        border: `1px solid ${theme.border.subtle}`,
       }}>
         {desc}
       </div>
@@ -1004,9 +1010,9 @@ export function RiskExplorer(_props: RiskExplorerProps) {
 
   function renderEventList(title: string, eventUris: string[]) {
     return (
-      <Section title={title} color={palette.cyan}>
+      <Section title={title} color={theme.palette.cyan} sz={sz}>
         {eventUris.length === 0 ? (
-          <div style={{ fontSize: 11, color: text.faint }}>No events in time window</div>
+          <div style={{ fontSize: sz(11), color: theme.text.faint }}>No events in time window</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {eventUris.slice(0, 50).map(uri => {
@@ -1022,30 +1028,30 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                     padding: "4px 8px", borderRadius: 4, cursor: "pointer",
                     transition: "all 0.12s",
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = theme.surface.card; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                 >
                   <span style={{
-                    fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
-                    color: text.faint, minWidth: 72,
+                    fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                    color: theme.text.faint, minWidth: 72,
                   }}>
                     {date ? formatDate(date) : "--"}
                   </span>
-                  <span style={{ fontSize: 11, color: text.secondary, flex: 1 }}>
+                  <span style={{ fontSize: sz(11), color: theme.text.secondary, flex: 1 }}>
                     {nodeLabel(uri)}
                   </span>
                   {evRisks.length > 0 && (
                     <span style={{
-                      fontSize: 9, padding: "1px 5px", borderRadius: 3,
-                      background: `${palette.rose}11`, color: palette.rose,
+                      fontSize: sz(9), padding: "1px 5px", borderRadius: 3,
+                      background: `${theme.palette.rose}11`, color: theme.palette.rose,
                     }}>
                       {nodeLabel(evRisks[0])}
                     </span>
                   )}
                   {evAssets.length > 0 && (
                     <span style={{
-                      fontSize: 9, padding: "1px 5px", borderRadius: 3,
-                      background: `${palette.blue}11`, color: palette.blue,
+                      fontSize: sz(9), padding: "1px 5px", borderRadius: 3,
+                      background: `${theme.palette.blue}11`, color: theme.palette.blue,
                     }}>
                       {nodeLabel(evAssets[0])}
                     </span>
@@ -1054,7 +1060,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
               );
             })}
             {eventUris.length > 50 && (
-              <div style={{ fontSize: 10, color: text.faint, padding: "4px 8px" }}>
+              <div style={{ fontSize: sz(10), color: theme.text.faint, padding: "4px 8px" }}>
                 ... and {eventUris.length - 50} more
               </div>
             )}
@@ -1102,21 +1108,21 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
           onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
         >
-          <span style={{ fontSize: 10 }}>{icon}</span>
+          <span style={{ fontSize: sz(10) }}>{icon}</span>
           <span style={{
-            fontSize: 9, color, fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(9), color, fontFamily: "'IBM Plex Mono', monospace",
             textTransform: "uppercase", letterSpacing: "0.06em", flex: 1,
           }}>
             {label}
           </span>
           <span style={{
-            fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
-            color: text.faint,
+            fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+            color: theme.text.faint,
           }}>
             {items.length}
           </span>
           <span style={{
-            fontSize: 8, color: text.faint,
+            fontSize: sz(8), color: theme.text.faint,
             transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
             transition: "transform 0.15s",
           }}>
@@ -1128,7 +1134,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         {!isCollapsed && (
           <div style={{ padding: "4px 0" }}>
             {items.length === 0 ? (
-              <div style={{ fontSize: 10, color: text.faint, padding: "6px 16px" }}>
+              <div style={{ fontSize: sz(10), color: theme.text.faint, padding: "6px 16px" }}>
                 No matches
               </div>
             ) : (
@@ -1140,15 +1146,15 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                     onClick={() => selectNode(node.uri)}
                     style={{
                       padding: "5px 8px", paddingLeft: 16, borderRadius: 4, cursor: "pointer",
-                      fontSize: 12, lineHeight: 1.3,
+                      fontSize: sz(12), lineHeight: 1.3,
                       background: isSelected ? `${color}15` : "transparent",
-                      color: isSelected ? color : text.secondary,
+                      color: isSelected ? color : theme.text.secondary,
                       borderLeft: isSelected ? `2px solid ${color}` : "2px solid transparent",
                       transition: "all 0.12s",
                       display: "flex", alignItems: "center", gap: 6,
                     }}
                     onMouseEnter={e => {
-                      if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                      if (!isSelected) e.currentTarget.style.background = theme.surface.card;
                     }}
                     onMouseLeave={e => {
                       if (!isSelected) e.currentTarget.style.background = "transparent";
@@ -1191,19 +1197,19 @@ export function RiskExplorer(_props: RiskExplorerProps) {
   return (
     <div style={{
       display: "flex", flexDirection: "column", height: "var(--page-height)", overflow: "hidden",
-      borderTop: `1px solid ${border.default}`,
+      borderTop: `1px solid ${theme.border.default}`,
     }}>
       {/* ── TOP BAR: time range slider + stats ── */}
       <div style={{
         padding: "10px 16px",
-        borderBottom: `1px solid ${border.subtle}`,
+        borderBottom: `1px solid ${theme.border.subtle}`,
         display: "flex", alignItems: "center", gap: 16,
       }}>
         {/* Date labels & slider */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{
-            fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
-            color: text.faint, minWidth: 80, whiteSpace: "nowrap",
+            fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+            color: theme.text.faint, minWidth: 80, whiteSpace: "nowrap",
           }}>
             {formatDate(new Date(rangeStartDate).toISOString())}
           </span>
@@ -1216,8 +1222,8 @@ export function RiskExplorer(_props: RiskExplorerProps) {
             <div style={{
               ...sliderTrackStyle,
               top: 8, height: 4, borderRadius: 2,
-              background: "rgba(255,255,255,0.06)",
-              border: `1px solid ${border.subtle}`,
+              background: theme.surface.cardHover,
+              border: `1px solid ${theme.border.subtle}`,
             }} />
             {/* Active range highlight */}
             <div style={{
@@ -1225,7 +1231,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
               top: 8, height: 4, borderRadius: 2,
               left: `${timeRange[0]}%`,
               right: `${100 - timeRange[1]}%`,
-              background: `${palette.cyan}33`,
+              background: `${theme.palette.cyan}33`,
               pointerEvents: "none",
             }} />
             {/* Min slider */}
@@ -1256,7 +1262,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                 -webkit-appearance: none;
                 width: 12px; height: 12px; border-radius: 50%;
                 background: #0A0A0F;
-                border: 2px solid ${palette.cyan};
+                border: 2px solid ${theme.palette.cyan};
                 cursor: pointer;
                 position: relative;
                 z-index: 2;
@@ -1265,7 +1271,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
               .risk-explorer-slider::-moz-range-thumb {
                 width: 12px; height: 12px; border-radius: 50%;
                 background: #0A0A0F;
-                border: 2px solid ${palette.cyan};
+                border: 2px solid ${theme.palette.cyan};
                 cursor: pointer;
                 pointer-events: auto;
               }
@@ -1279,8 +1285,8 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           </div>
 
           <span style={{
-            fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
-            color: text.faint, minWidth: 80, whiteSpace: "nowrap", textAlign: "right",
+            fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+            color: theme.text.faint, minWidth: 80, whiteSpace: "nowrap", textAlign: "right",
           }}>
             {formatDate(new Date(rangeEndDate).toISOString())}
           </span>
@@ -1288,14 +1294,14 @@ export function RiskExplorer(_props: RiskExplorerProps) {
 
         {/* Stats */}
         <div style={{
-          display: "flex", gap: 12, fontSize: 10, color: text.faint,
+          display: "flex", gap: 12, fontSize: sz(10), color: theme.text.faint,
           fontFamily: "'IBM Plex Mono', monospace",
-          borderLeft: `1px solid ${border.subtle}`, paddingLeft: 16,
+          borderLeft: `1px solid ${theme.border.subtle}`, paddingLeft: 16,
         }}>
-          <span><span style={{ color: palette.cyan }}>{stats.events}</span> events</span>
-          <span><span style={{ color: palette.amber }}>{stats.actors}</span> actors</span>
-          <span><span style={{ color: palette.rose }}>{stats.risks}</span> risks</span>
-          <span><span style={{ color: palette.blue }}>{stats.assets}</span> assets</span>
+          <span><span style={{ color: theme.palette.cyan }}>{stats.events}</span> events</span>
+          <span><span style={{ color: theme.palette.amber }}>{stats.actors}</span> actors</span>
+          <span><span style={{ color: theme.palette.rose }}>{stats.risks}</span> risks</span>
+          <span><span style={{ color: theme.palette.blue }}>{stats.assets}</span> assets</span>
         </div>
       </div>
 
@@ -1304,20 +1310,20 @@ export function RiskExplorer(_props: RiskExplorerProps) {
 
         {/* ── LEFT PANEL: Three-Category Entity Browser ── */}
         <div style={{
-          width: 340, minWidth: 340, borderRight: `1px solid ${border.default}`,
+          width: 340, minWidth: 340, borderRight: `1px solid ${theme.border.default}`,
           display: "flex", flexDirection: "column", overflow: "hidden",
         }}>
           {/* Search */}
-          <div style={{ padding: "10px 12px 8px", borderBottom: `1px solid ${border.subtle}` }}>
+          <div style={{ padding: "10px 12px 8px", borderBottom: `1px solid ${theme.border.subtle}` }}>
             <input
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Search actors, risks, assets..."
               className="risk-explorer-search"
               style={{
-                width: "100%", padding: "7px 10px", borderRadius: 6, fontSize: 12,
-                background: "rgba(255,255,255,0.04)", border: `1px solid ${border.default}`,
-                color: text.primary, outline: "none",
+                width: "100%", padding: "7px 10px", borderRadius: 6, fontSize: sz(12),
+                background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
+                color: theme.text.primary, outline: "none",
                 fontFamily: "'IBM Plex Sans', sans-serif",
               }}
             />
@@ -1325,16 +1331,16 @@ export function RiskExplorer(_props: RiskExplorerProps) {
 
           {/* Scrollable category list */}
           <div style={{ flex: 1, overflow: "auto" }}>
-            {renderCategorySection("Actors", "👤", palette.amber, displayActors, "actors")}
-            {renderCategorySection("Risks", "⚠", palette.rose, displayRisks, "risks", (node) => {
+            {renderCategorySection("Actors", "👤", theme.palette.amber, displayActors, "actors")}
+            {renderCategorySection("Risks", "⚠", theme.palette.rose, displayRisks, "risks", (node) => {
               const score = data.riskScores.get(node.uri);
               if (score == null) return null;
-              const color = riskColor(score);
+              const color = riskColor(score, theme);
               return (
                 <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                   <div style={{
                     width: 32, height: 4, borderRadius: 2,
-                    background: "rgba(255,255,255,0.06)", overflow: "hidden",
+                    background: theme.surface.cardHover, overflow: "hidden",
                   }}>
                     <div style={{
                       width: `${score * 100}%`, height: "100%",
@@ -1342,7 +1348,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                     }} />
                   </div>
                   <span style={{
-                    fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
                     color, minWidth: 22, textAlign: "right",
                   }}>
                     {(score * 100).toFixed(0)}
@@ -1350,14 +1356,14 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                 </div>
               );
             })}
-            {renderCategorySection("Assets", "◆", palette.blue, displayAssets, "assets")}
-            {renderCategorySection("Events", "⚡", palette.cyan, displayEvents, "events", (node) => {
+            {renderCategorySection("Assets", "◆", theme.palette.blue, displayAssets, "assets")}
+            {renderCategorySection("Events", "⚡", theme.palette.cyan, displayEvents, "events", (node) => {
               const date = data.eventDates.get(node.uri) || data.timestamps.get(node.uri);
               if (!date) return null;
               return (
                 <span style={{
-                  fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
-                  color: text.faint, flexShrink: 0, whiteSpace: "nowrap",
+                  fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                  color: theme.text.faint, flexShrink: 0, whiteSpace: "nowrap",
                 }}>
                   {formatDate(date)}
                 </span>

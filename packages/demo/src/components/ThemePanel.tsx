@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useTheme, palette } from "@trustgraph/trustkit";
+import { useTheme } from "@trustgraph/trustkit";
 import type { DeepPartial, Theme } from "@trustgraph/trustkit";
 
 const STORAGE_KEY = "trustkit-theme-settings";
@@ -272,7 +272,7 @@ export function ThemePanel({ settings }: { settings: ThemeSettings }) {
             style={{
               width: "100%",
               marginBottom: 4,
-              accentColor: palette.emerald,
+              accentColor: theme.palette.emerald,
             }}
           />
           <div style={{
@@ -294,10 +294,10 @@ export function ThemePanel({ settings }: { settings: ThemeSettings }) {
           width: 40,
           height: 40,
           borderRadius: 10,
-          border: `1px solid ${open ? palette.emerald + "88" : theme.border.medium}`,
-          background: open ? palette.emerald + "20" : theme.surface.overlay,
+          border: `1px solid ${open ? theme.palette.emerald + "88" : theme.border.medium}`,
+          background: open ? theme.palette.emerald + "20" : theme.surface.overlay,
           backdropFilter: "blur(8px)",
-          color: open ? palette.emerald : theme.text.subtle,
+          color: open ? theme.palette.emerald : theme.text.subtle,
           fontSize: 18,
           cursor: "pointer",
           display: "flex",

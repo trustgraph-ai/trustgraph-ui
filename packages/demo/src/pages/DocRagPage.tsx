@@ -5,9 +5,7 @@ import {
   DocRagFullExplainView,
   ModeSelector,
   SectionLabel,
-  text,
-  border,
-  palette,
+  useTheme,
 } from "@trustgraph/trustkit";
 import { DevPanel } from "../components/DevPanel";
 
@@ -29,6 +27,7 @@ const optionDescriptions: Record<DocRagOption, string> = {
  * Document RAG Query workflow.
  */
 export function DocRagPage() {
+  const { theme, sz } = useTheme();
   const [option, setOption] = useState<DocRagOption>("explain");
 
   return (
@@ -36,7 +35,7 @@ export function DocRagPage() {
       {/* Option selector bar */}
       <div style={{
         padding: "10px 28px",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
         gap: 16,
@@ -46,11 +45,11 @@ export function DocRagPage() {
           modes={modes}
           activeMode={option}
           onChange={(key) => setOption(key as DocRagOption)}
-          color={palette.purple}
+          color={theme.palette.purple}
         />
         <span style={{
-          fontSize: 11,
-          color: text.subtle,
+          fontSize: sz(11),
+          color: theme.text.subtle,
           fontStyle: "italic",
           marginLeft: 8,
         }}>

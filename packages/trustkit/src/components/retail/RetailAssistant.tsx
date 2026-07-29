@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 import { useRetailOrchestrator } from "../../hooks/useRetailOrchestrator";
 import { useRetailContext } from "../../hooks/useRetailContext";
 import { ChatPanel } from "./ChatPanel";
@@ -43,6 +43,7 @@ function detectFlow(history: HistoryEntry[]) {
 }
 
 export function RetailAssistant(_props: RetailAssistantProps) {
+  const { theme } = useTheme();
   const orch = useRetailOrchestrator();
   const context = useRetailContext();
 
@@ -125,7 +126,7 @@ export function RetailAssistant(_props: RetailAssistantProps) {
           minWidth: 300,
           display: "flex",
           flexDirection: "column",
-          borderRight: `1px solid ${border.default}`,
+          borderRight: `1px solid ${theme.border.default}`,
         }}
       >
         <ChatPanel
@@ -145,7 +146,7 @@ export function RetailAssistant(_props: RetailAssistantProps) {
             minWidth: 0,
             display: "flex",
             flexDirection: "column",
-            borderRight: `1px solid ${border.default}`,
+            borderRight: `1px solid ${theme.border.default}`,
             overflow: "hidden",
           }}
         >
@@ -169,7 +170,7 @@ export function RetailAssistant(_props: RetailAssistantProps) {
             minWidth: 0,
             display: "flex",
             flexDirection: "column",
-            borderRight: `1px solid ${border.default}`,
+            borderRight: `1px solid ${theme.border.default}`,
             overflow: "hidden",
           }}
         >
@@ -197,7 +198,7 @@ export function RetailAssistant(_props: RetailAssistantProps) {
             minWidth: 0,
             display: "flex",
             flexDirection: "column",
-            borderRight: `1px solid ${border.default}`,
+            borderRight: `1px solid ${theme.border.default}`,
             overflow: "auto",
           }}
         >
@@ -211,7 +212,7 @@ export function RetailAssistant(_props: RetailAssistantProps) {
           width: 280,
           flexShrink: 0,
           overflowY: "auto",
-          background: "rgba(12,12,18,0.6)",
+          background: theme.surface.card,
         }}
       >
         <ContextPanel flow={flow} context={context} />

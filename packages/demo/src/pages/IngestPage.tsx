@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useRef } from "react";
-import { SectionLabel, DetailPanel, LoadingState, Badge, text, border, palette, surface, withGlow } from "@trustgraph/trustkit";
+import { SectionLabel, DetailPanel, LoadingState, Badge, withGlow, useTheme } from "@trustgraph/trustkit";
+import type { Theme } from "@trustgraph/trustkit";
 import { useLibrary, useProcessing, useFlows, useFlowBlueprints, useFlowParameters, useCollections, useSchemas, useOntologies, useChunkedUpload } from "@trustgraph/react-state";
 import { SubmitDialog } from "../components/SubmitDialog";
 import type { SubmitParams } from "../components/SubmitDialog";
@@ -93,15 +94,20 @@ function blueprintOutputPaths(bp: BlueprintDef | undefined): string[] {
   return paths;
 }
 
-const storeConfig: Record<string, { label: string; color: string }> = {
-  "kg-graphrag": { label: "KG (Schemaless)", color: palette.blue },
-  "kg-ontology": { label: "KG (Ontology)", color: palette.emerald },
-  "row-store": { label: "Row Store", color: palette.purple },
-  "chunk-store": { label: "Chunk Store", color: palette.rose },
-  "kgcore": { label: "Context Core", color: palette.cyan },
-};
+function buildStoreConfig(theme: Theme): Record<string, { label: string; color: string }> {
+  return {
+    "kg-graphrag": { label: "KG (Schemaless)", color: theme.palette.blue },
+    "kg-ontology": { label: "KG (Ontology)", color: theme.palette.emerald },
+    "row-store": { label: "Row Store", color: theme.palette.purple },
+    "chunk-store": { label: "Chunk Store", color: theme.palette.rose },
+    "kgcore": { label: "Context Core", color: theme.palette.cyan },
+  };
+}
 
 export function IngestPage() {
+  const { theme, sz } = useTheme();
+  const storeConfig = useMemo(() => buildStoreConfig(theme), [theme]);
+
   const { documents, isLoading: docsLoading, uploadTexts, submitDocuments, isSubmitting, deleteDocuments, isDeleting, refetch: refetchLibrary } = useLibrary();
   const chunkedUpload = useChunkedUpload({
     onProgress: (p) => {
@@ -190,7 +196,7 @@ export function IngestPage() {
         y: docY,
         w: COL_WIDTH,
         h: NODE_H,
-        color: palette.cyan,
+        color: theme.palette.cyan,
         column: "doc",
       };
       nodes.push(node);
@@ -206,10 +212,10 @@ export function IngestPage() {
         : draft.status === "uploading" ? "Uploading..."
         : draft.status === "complete" ? "Complete"
         : "New document";
-      const statusColor = draft.status === "uploading" ? palette.amber
-        : draft.status === "complete" ? palette.emerald
-        : draft.status === "error" ? palette.red
-        : palette.cyan;
+      const statusColor = draft.status === "uploading" ? theme.palette.amber
+        : draft.status === "complete" ? theme.palette.emerald
+        : draft.status === "error" ? theme.palette.red
+        : theme.palette.cyan;
       const node: DiagramNode = {
         id: nodeId,
         label,
@@ -253,7 +259,7 @@ export function IngestPage() {
           y: procY,
           w: COL_WIDTH,
           h: NODE_H + 14,
-          color: palette.amber,
+          color: theme.palette.amber,
           column: "proc",
         };
         nodes.push(procNode);
@@ -265,7 +271,7 @@ export function IngestPage() {
         const outputPaths = blueprintOutputPaths(bp);
 
         for (const path of outputPaths) {
-          const cfg = storeConfig[path] || { label: path, color: text.muted };
+          const cfg = storeConfig[path] || { label: path, color: theme.text.muted };
 
           // Build destination nodes — one per unique (store, collection, ontology/schema)
           if (path === "kg-ontology") {
@@ -478,7 +484,7 @@ export function IngestPage() {
     const maxX = COL_X.dest + COL_WIDTH + 20 + LEFT_PAD;
 
     return { nodes, edges, svgHeight: Math.max(maxY, 300), svgWidth: Math.max(maxX, 800) };
-  }, [docs, drafts, procs, flowToBlueprintMap, bpMap, schemaNames, ontoNames]);
+  }, [docs, drafts, procs, flowToBlueprintMap, bpMap, schemaNames, ontoNames, storeConfig, theme]);
 
   // Deduplicate edges
   const uniqueEdges = useMemo(() => {
@@ -691,13 +697,13 @@ export function IngestPage() {
       {/* Header */}
       <div style={{
         padding: "12px 28px",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
         flexShrink: 0,
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <SectionLabel>
             DATA LINEAGE
-            <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
+            <span style={{ color: theme.text.muted, fontWeight: 400, marginLeft: 8 }}>
               {docs.length} documents · {procs.length} submissions
             </span>
           </SectionLabel>
@@ -706,13 +712,13 @@ export function IngestPage() {
             style={{
               padding: "5px 14px",
               borderRadius: 6,
-              fontSize: 11,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
               fontWeight: 600,
               cursor: "pointer",
-              background: withGlow(palette.cyan, 0.15),
-              border: `1px solid ${withGlow(palette.cyan, 0.4)}`,
-              color: palette.cyan,
+              background: withGlow(theme.palette.cyan, 0.15),
+              border: `1px solid ${withGlow(theme.palette.cyan, 0.4)}`,
+              color: theme.palette.cyan,
             }}
           >
             + Add Document
@@ -728,17 +734,17 @@ export function IngestPage() {
         >
           {/* Column headers */}
           <text x={COL_X.doc + COL_WIDTH / 2} y={24} textAnchor="middle"
-            fill={text.faint} fontSize={10} fontFamily="'IBM Plex Mono', monospace"
+            fill={theme.text.faint} fontSize={sz(10)} fontFamily="'IBM Plex Mono', monospace"
             fontWeight={600} letterSpacing="0.1em">
             DOCUMENTS
           </text>
           <text x={COL_X.proc + COL_WIDTH / 2} y={24} textAnchor="middle"
-            fill={text.faint} fontSize={10} fontFamily="'IBM Plex Mono', monospace"
+            fill={theme.text.faint} fontSize={sz(10)} fontFamily="'IBM Plex Mono', monospace"
             fontWeight={600} letterSpacing="0.1em">
             FLOWS
           </text>
           <text x={COL_X.dest + (COL_WIDTH + 20) / 2} y={24} textAnchor="middle"
-            fill={text.faint} fontSize={10} fontFamily="'IBM Plex Mono', monospace"
+            fill={theme.text.faint} fontSize={sz(10)} fontFamily="'IBM Plex Mono', monospace"
             fontWeight={600} letterSpacing="0.1em">
             STORAGE
           </text>
@@ -858,7 +864,7 @@ export function IngestPage() {
                     height={node.h - 2}
                     rx={5}
                     ry={5}
-                    fill={withGlow(palette.amber, 0.2)}
+                    fill={withGlow(theme.palette.amber, 0.2)}
                     style={{ transition: "width 0.3s ease" }}
                   />
                 );
@@ -871,7 +877,7 @@ export function IngestPage() {
                     y={node.y + 16 + li * 14}
                     textAnchor="middle"
                     fill={node.color}
-                    fontSize={10}
+                    fontSize={sz(10)}
                     fontWeight={600}
                     fontFamily="'IBM Plex Mono', monospace"
                   >
@@ -885,7 +891,7 @@ export function IngestPage() {
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill={node.color}
-                  fontSize={10}
+                  fontSize={sz(10)}
                   fontWeight={600}
                   fontFamily="'IBM Plex Mono', monospace"
                 >
@@ -903,26 +909,26 @@ export function IngestPage() {
         <div style={{
           width: 360,
           flexShrink: 0,
-          borderLeft: `1px solid ${border.default}`,
-          background: "rgba(12,12,18,0.95)",
+          borderLeft: `1px solid ${theme.border.default}`,
+          background: theme.surface.overlay,
           backdropFilter: "blur(12px)",
           overflowY: "auto",
         }}>
           <DetailPanel
             title={selectedDraft.status === "uploading" ? "Uploading..." : selectedDraft.status === "complete" ? "Upload Complete" : "New Document"}
             subtitle="UPLOAD"
-            subtitleColor={selectedDraft.status === "complete" ? palette.emerald : palette.cyan}
+            subtitleColor={selectedDraft.status === "complete" ? theme.palette.emerald : theme.palette.cyan}
             onClose={() => setSelectedDraftId(null)}
           >
             {selectedDraft.status === "complete" ? (
-              <div style={{ fontSize: 13, color: palette.emerald }}>
+              <div style={{ fontSize: sz(13), color: theme.palette.emerald }}>
                 Document uploaded successfully.
               </div>
             ) : selectedDraft.status === "uploading" ? (
               <div>
                 <div style={{
-                  fontSize: 13,
-                  color: palette.amber,
+                  fontSize: sz(13),
+                  color: theme.palette.amber,
                   marginBottom: 12,
                 }}>
                   Uploading... {selectedDraft.progress || 0}%
@@ -931,14 +937,14 @@ export function IngestPage() {
                 <div style={{
                   height: 6,
                   borderRadius: 3,
-                  background: withGlow(palette.amber, 0.1),
+                  background: withGlow(theme.palette.amber, 0.1),
                   overflow: "hidden",
                 }}>
                   <div style={{
                     height: "100%",
                     width: `${selectedDraft.progress || 0}%`,
                     borderRadius: 3,
-                    background: palette.amber,
+                    background: theme.palette.amber,
                     transition: "width 0.3s ease",
                   }} />
                 </div>
@@ -954,13 +960,13 @@ export function IngestPage() {
                       style={{
                         padding: "5px 14px",
                         borderRadius: 6,
-                        fontSize: 11,
+                        fontSize: sz(11),
                         fontFamily: "'IBM Plex Mono', monospace",
                         fontWeight: 600,
                         cursor: "pointer",
-                        background: selectedDraft.inputMode === mode ? withGlow(palette.cyan, 0.15) : "transparent",
-                        border: `1px solid ${selectedDraft.inputMode === mode ? withGlow(palette.cyan, 0.4) : border.default}`,
-                        color: selectedDraft.inputMode === mode ? palette.cyan : text.muted,
+                        background: selectedDraft.inputMode === mode ? withGlow(theme.palette.cyan, 0.15) : "transparent",
+                        border: `1px solid ${selectedDraft.inputMode === mode ? withGlow(theme.palette.cyan, 0.4) : theme.border.default}`,
+                        color: selectedDraft.inputMode === mode ? theme.palette.cyan : theme.text.muted,
                       }}
                     >
                       {mode === "file" ? "File" : "Text"}
@@ -987,10 +993,10 @@ export function IngestPage() {
                         width: "100%",
                         padding: "12px 16px",
                         borderRadius: 8,
-                        border: `1px dashed ${border.medium}`,
+                        border: `1px dashed ${theme.border.medium}`,
                         background: "transparent",
-                        color: selectedDraft.file ? text.primary : text.hint,
-                        fontSize: 12,
+                        color: selectedDraft.file ? theme.text.primary : theme.text.hint,
+                        fontSize: sz(12),
                         cursor: "pointer",
                         textAlign: "center",
                       }}
@@ -1012,11 +1018,11 @@ export function IngestPage() {
                         width: "100%",
                         minHeight: 100,
                         padding: "10px 14px",
-                        fontSize: 12,
+                        fontSize: sz(12),
                         fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
-                        color: text.primary,
+                        color: theme.text.primary,
                         background: "transparent",
-                        border: `1px solid ${border.medium}`,
+                        border: `1px solid ${theme.border.medium}`,
                         borderRadius: 8,
                         outline: "none",
                         resize: "vertical",
@@ -1036,11 +1042,11 @@ export function IngestPage() {
                     style={{
                       width: "100%",
                       padding: "8px 12px",
-                      fontSize: 13,
+                      fontSize: sz(13),
                       fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
-                      color: text.primary,
+                      color: theme.text.primary,
                       background: "transparent",
-                      border: `1px solid ${border.medium}`,
+                      border: `1px solid ${theme.border.medium}`,
                       borderRadius: 6,
                       outline: "none",
                     }}
@@ -1058,11 +1064,11 @@ export function IngestPage() {
                     style={{
                       width: "100%",
                       padding: "8px 12px",
-                      fontSize: 12,
+                      fontSize: sz(12),
                       fontFamily: "'IBM Plex Mono', monospace",
-                      color: text.secondary,
+                      color: theme.text.secondary,
                       background: "transparent",
-                      border: `1px solid ${border.medium}`,
+                      border: `1px solid ${theme.border.medium}`,
                       borderRadius: 6,
                       outline: "none",
                     }}
@@ -1080,11 +1086,11 @@ export function IngestPage() {
                       width: "100%",
                       minHeight: 60,
                       padding: "8px 12px",
-                      fontSize: 12,
+                      fontSize: sz(12),
                       fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
-                      color: text.secondary,
+                      color: theme.text.secondary,
                       background: "transparent",
-                      border: `1px solid ${border.medium}`,
+                      border: `1px solid ${theme.border.medium}`,
                       borderRadius: 6,
                       outline: "none",
                       resize: "vertical",
@@ -1110,11 +1116,11 @@ export function IngestPage() {
                     style={{
                       width: "100%",
                       padding: "8px 12px",
-                      fontSize: 12,
+                      fontSize: sz(12),
                       fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
-                      color: text.primary,
+                      color: theme.text.primary,
                       background: "transparent",
-                      border: `1px solid ${border.medium}`,
+                      border: `1px solid ${theme.border.medium}`,
                       borderRadius: 6,
                       outline: "none",
                       marginBottom: 6,
@@ -1125,7 +1131,7 @@ export function IngestPage() {
                       {selectedDraft.tags.map((tag, i) => (
                         <Badge
                           key={i}
-                          color={palette.cyan}
+                          color={theme.palette.cyan}
                           size="small"
                           onClick={() => updateDraft(selectedDraft.draftId, {
                             tags: selectedDraft.tags.filter((_, j) => j !== i),
@@ -1147,12 +1153,12 @@ export function IngestPage() {
                       width: "100%",
                       padding: "10px 16px",
                       borderRadius: 8,
-                      fontSize: 13,
+                      fontSize: sz(13),
                       fontWeight: 600,
                       cursor: (!selectedDraft.title || (selectedDraft.inputMode === "file" ? !selectedDraft.file : !selectedDraft.textContent)) ? "not-allowed" : "pointer",
-                      background: palette.cyan + "20",
-                      border: `1px solid ${palette.cyan}66`,
-                      color: palette.cyan,
+                      background: theme.palette.cyan + "20",
+                      border: `1px solid ${theme.palette.cyan}66`,
+                      color: theme.palette.cyan,
                       opacity: (!selectedDraft.title || (selectedDraft.inputMode === "file" ? !selectedDraft.file : !selectedDraft.textContent)) ? 0.4 : 1,
                     }}
                   >
@@ -1164,12 +1170,12 @@ export function IngestPage() {
                       width: "100%",
                       padding: "10px 16px",
                       borderRadius: 8,
-                      fontSize: 13,
+                      fontSize: sz(13),
                       fontWeight: 600,
                       cursor: "pointer",
-                      background: palette.rose + "20",
-                      border: `1px solid ${palette.rose}66`,
-                      color: palette.rose,
+                      background: theme.palette.rose + "20",
+                      border: `1px solid ${theme.palette.rose}66`,
+                      color: theme.palette.rose,
                     }}
                   >
                     Discard
@@ -1177,7 +1183,7 @@ export function IngestPage() {
                 </div>
 
                 {selectedDraft.error && (
-                  <div style={{ fontSize: 12, color: palette.red, marginTop: 8 }}>
+                  <div style={{ fontSize: sz(12), color: theme.palette.red, marginTop: 8 }}>
                     {selectedDraft.error}
                   </div>
                 )}
@@ -1191,7 +1197,7 @@ export function IngestPage() {
         // Format: "dest:storetype:collection" or "dest:storetype:collection:onto/schema:name" or "dest:kgcore"
         const destParts = selectedDestId.replace("dest:", "").split(":");
         const storeType = destParts[0];
-        const cfg = storeConfig[storeType] || { label: storeType, color: text.muted };
+        const cfg = storeConfig[storeType] || { label: storeType, color: theme.text.muted };
         const collection = destParts[1] || undefined;
 
         // Find associated ontology or schema name from parts
@@ -1209,8 +1215,8 @@ export function IngestPage() {
         <div style={{
           width: 360,
           flexShrink: 0,
-          borderLeft: `1px solid ${border.default}`,
-          background: "rgba(12,12,18,0.95)",
+          borderLeft: `1px solid ${theme.border.default}`,
+          background: theme.surface.overlay,
           backdropFilter: "blur(12px)",
           overflowY: "auto",
         }}>
@@ -1224,9 +1230,9 @@ export function IngestPage() {
               <div style={{ marginBottom: 16 }}>
                 <SectionLabel marginBottom={8}>COLLECTION</SectionLabel>
                 <div style={{
-                  fontSize: 12,
+                  fontSize: sz(12),
                   fontFamily: "'IBM Plex Mono', monospace",
-                  color: palette.emerald,
+                  color: theme.palette.emerald,
                 }}>
                   {collection}
                 </div>
@@ -1237,7 +1243,7 @@ export function IngestPage() {
               <div style={{ marginBottom: 16 }}>
                 <SectionLabel marginBottom={8}>{extraType.toUpperCase()}</SectionLabel>
                 <div style={{
-                  fontSize: 12,
+                  fontSize: sz(12),
                   fontFamily: "'IBM Plex Mono', monospace",
                   color: cfg.color,
                 }}>
@@ -1249,8 +1255,8 @@ export function IngestPage() {
             <div style={{ marginBottom: 16 }}>
               <SectionLabel marginBottom={8}>STORE TYPE</SectionLabel>
               <div style={{
-                fontSize: 12,
-                color: text.subtle,
+                fontSize: sz(12),
+                color: theme.text.subtle,
                 lineHeight: 1.5,
               }}>
                 {storeType === "kg-graphrag" && "Entities, triples, and embeddings extracted by LLM reasoning."}
@@ -1266,13 +1272,13 @@ export function IngestPage() {
             )}
 
             {storeType === "kgcore" && (
-              <div style={{ fontSize: 12, color: text.hint, fontStyle: "italic" }}>
+              <div style={{ fontSize: sz(12), color: theme.text.hint, fontStyle: "italic" }}>
                 Context core contents available via export.
               </div>
             )}
 
             {storeType === "row-store" && (
-              <div style={{ fontSize: 12, color: text.hint, fontStyle: "italic" }}>
+              <div style={{ fontSize: sz(12), color: theme.text.hint, fontStyle: "italic" }}>
                 Row store contents available via Table Explorer.
               </div>
             )}
@@ -1284,31 +1290,31 @@ export function IngestPage() {
         <div style={{
           width: 360,
           flexShrink: 0,
-          borderLeft: `1px solid ${border.default}`,
-          background: "rgba(12,12,18,0.95)",
+          borderLeft: `1px solid ${theme.border.default}`,
+          background: theme.surface.overlay,
           backdropFilter: "blur(12px)",
           overflowY: "auto",
         }}>
           <DetailPanel
             title={selectedFlow.flowId}
             subtitle="FLOW"
-            subtitleColor={palette.amber}
+            subtitleColor={theme.palette.amber}
             onClose={() => setSelectedProcKey(null)}
           >
             {/* Blueprint */}
             <div style={{ marginBottom: 16 }}>
               <SectionLabel marginBottom={8}>BLUEPRINT</SectionLabel>
               <div style={{
-                fontSize: 12,
+                fontSize: sz(12),
                 fontFamily: "'IBM Plex Mono', monospace",
-                color: palette.amber,
+                color: theme.palette.amber,
               }}>
                 {selectedFlow.blueprintId}
               </div>
               {selectedFlow.blueprint?.description && (
                 <div style={{
-                  fontSize: 12,
-                  color: text.subtle,
+                  fontSize: sz(12),
+                  color: theme.text.subtle,
                   lineHeight: 1.5,
                   marginTop: 4,
                 }}>
@@ -1323,7 +1329,7 @@ export function IngestPage() {
                 <SectionLabel marginBottom={8}>TAGS</SectionLabel>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                   {selectedFlow.blueprint.tags.map((tag: string, i: number) => (
-                    <Badge key={i} color={palette.amber} size="small">{tag}</Badge>
+                    <Badge key={i} color={theme.palette.amber} size="small">{tag}</Badge>
                   ))}
                 </div>
               </div>
@@ -1333,9 +1339,9 @@ export function IngestPage() {
             <div style={{ marginBottom: 16 }}>
               <SectionLabel marginBottom={8}>COLLECTION</SectionLabel>
               <div style={{
-                fontSize: 12,
+                fontSize: sz(12),
                 fontFamily: "'IBM Plex Mono', monospace",
-                color: palette.emerald,
+                color: theme.palette.emerald,
               }}>
                 {selectedFlow.collection}
               </div>
@@ -1369,12 +1375,12 @@ export function IngestPage() {
                         display: "flex",
                         justifyContent: "space-between",
                         padding: "6px 0",
-                        borderBottom: `1px solid ${border.subtle}`,
-                        fontSize: 11,
+                        borderBottom: `1px solid ${theme.border.subtle}`,
+                        fontSize: sz(11),
                       }}>
-                        <span style={{ color: text.subtle }}>{label}</span>
+                        <span style={{ color: theme.text.subtle }}>{label}</span>
                         <span style={{
-                          color: text.primary,
+                          color: theme.text.primary,
                           fontFamily: "'IBM Plex Mono', monospace",
                           textAlign: "right",
                           maxWidth: "60%",
@@ -1391,7 +1397,7 @@ export function IngestPage() {
             {/* Submissions in this group */}
             <SectionLabel marginBottom={8}>
               SUBMISSIONS
-              <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
+              <span style={{ color: theme.text.muted, fontWeight: 400, marginLeft: 8 }}>
                 {selectedFlow.submissions.length}
               </span>
             </SectionLabel>
@@ -1402,18 +1408,18 @@ export function IngestPage() {
                   <div key={proc.id} style={{
                     padding: "8px 10px",
                     borderRadius: 6,
-                    background: withGlow(palette.cyan, 0.06),
-                    border: `1px solid ${withGlow(palette.cyan, 0.15)}`,
-                    fontSize: 11,
-                    color: text.secondary,
+                    background: withGlow(theme.palette.cyan, 0.06),
+                    border: `1px solid ${withGlow(theme.palette.cyan, 0.15)}`,
+                    fontSize: sz(11),
+                    color: theme.text.secondary,
                   }}>
                     {truncate(docTitle, 30)}
                     {proc.time && (
                       <span style={{
-                        color: text.disabled,
+                        color: theme.text.disabled,
                         fontFamily: "'IBM Plex Mono', monospace",
                         marginLeft: 8,
-                        fontSize: 10,
+                        fontSize: sz(10),
                       }}>
                         {new Date(proc.time * 1000).toLocaleDateString()}
                       </span>
@@ -1429,28 +1435,28 @@ export function IngestPage() {
         <div style={{
           width: 360,
           flexShrink: 0,
-          borderLeft: `1px solid ${border.default}`,
-          background: "rgba(12,12,18,0.95)",
+          borderLeft: `1px solid ${theme.border.default}`,
+          background: theme.surface.overlay,
           backdropFilter: "blur(12px)",
           overflowY: "auto",
         }}>
           <DetailPanel
             title={selectedDoc.title || selectedDoc.id}
             subtitle="DOCUMENT"
-            subtitleColor={palette.cyan}
+            subtitleColor={theme.palette.cyan}
             onClose={() => setSelectedDocId(null)}
           >
             {/* Metadata */}
             {selectedDoc.kind && (
               <div style={{ marginBottom: 12 }}>
                 <span style={{
-                  fontSize: 10,
+                  fontSize: sz(10),
                   fontFamily: "'IBM Plex Mono', monospace",
-                  color: text.faint,
+                  color: theme.text.faint,
                   padding: "2px 6px",
                   borderRadius: 3,
-                  background: surface.card,
-                  border: `1px solid ${border.subtle}`,
+                  background: theme.surface.card,
+                  border: `1px solid ${theme.border.subtle}`,
                 }}>
                   {selectedDoc.kind}
                 </span>
@@ -1459,8 +1465,8 @@ export function IngestPage() {
 
             {selectedDoc.comments && (
               <div style={{
-                fontSize: 13,
-                color: text.secondary,
+                fontSize: sz(13),
+                color: theme.text.secondary,
                 lineHeight: 1.6,
                 marginBottom: 16,
               }}>
@@ -1473,7 +1479,7 @@ export function IngestPage() {
                 <SectionLabel marginBottom={8}>TAGS</SectionLabel>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                   {selectedDoc.tags.map((tag, i) => (
-                    <Badge key={i} color={palette.cyan} size="small">{tag}</Badge>
+                    <Badge key={i} color={theme.palette.cyan} size="small">{tag}</Badge>
                   ))}
                 </div>
               </div>
@@ -1483,9 +1489,9 @@ export function IngestPage() {
               <div style={{ marginBottom: 16 }}>
                 <SectionLabel marginBottom={8}>UPLOADED</SectionLabel>
                 <div style={{
-                  fontSize: 12,
+                  fontSize: sz(12),
                   fontFamily: "'IBM Plex Mono', monospace",
-                  color: text.subtle,
+                  color: theme.text.subtle,
                 }}>
                   {new Date(selectedDoc.time * 1000).toLocaleString()}
                 </div>
@@ -1495,9 +1501,9 @@ export function IngestPage() {
             <div style={{ marginBottom: 16 }}>
               <SectionLabel marginBottom={8}>DOCUMENT ID</SectionLabel>
               <div style={{
-                fontSize: 10,
+                fontSize: sz(10),
                 fontFamily: "'IBM Plex Mono', monospace",
-                color: text.faint,
+                color: theme.text.faint,
                 wordBreak: "break-all",
               }}>
                 {selectedDoc.id}
@@ -1508,13 +1514,13 @@ export function IngestPage() {
             <SectionLabel marginBottom={8}>
               PROCESSING
               {selectedDocProcs.length > 0 && (
-                <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
+                <span style={{ color: theme.text.muted, fontWeight: 400, marginLeft: 8 }}>
                   {selectedDocProcs.length}
                 </span>
               )}
             </SectionLabel>
             {selectedDocProcs.length === 0 ? (
-              <div style={{ fontSize: 12, color: text.hint, fontStyle: "italic" }}>
+              <div style={{ fontSize: sz(12), color: theme.text.hint, fontStyle: "italic" }}>
                 Not submitted for processing.
               </div>
             ) : (
@@ -1523,29 +1529,29 @@ export function IngestPage() {
                   <div key={proc.id} style={{
                     padding: "10px 12px",
                     borderRadius: 6,
-                    background: withGlow(palette.amber, 0.06),
-                    border: `1px solid ${withGlow(palette.amber, 0.15)}`,
+                    background: withGlow(theme.palette.amber, 0.06),
+                    border: `1px solid ${withGlow(theme.palette.amber, 0.15)}`,
                   }}>
                     <div style={{
-                      fontSize: 11,
+                      fontSize: sz(11),
                       fontFamily: "'IBM Plex Mono', monospace",
                     }}>
-                      <span style={{ color: text.faint }}>flow: </span>
-                      <span style={{ color: palette.amber }}>{proc.flow || "default"}</span>
+                      <span style={{ color: theme.text.faint }}>flow: </span>
+                      <span style={{ color: theme.palette.amber }}>{proc.flow || "default"}</span>
                     </div>
                     <div style={{
-                      fontSize: 11,
+                      fontSize: sz(11),
                       fontFamily: "'IBM Plex Mono', monospace",
                       marginTop: 2,
                     }}>
-                      <span style={{ color: text.faint }}>collection: </span>
-                      <span style={{ color: palette.emerald }}>{proc.collection || "default"}</span>
+                      <span style={{ color: theme.text.faint }}>collection: </span>
+                      <span style={{ color: theme.palette.emerald }}>{proc.collection || "default"}</span>
                     </div>
                     {proc.time && (
                       <div style={{
-                        fontSize: 10,
+                        fontSize: sz(10),
                         fontFamily: "'IBM Plex Mono', monospace",
-                        color: text.disabled,
+                        color: theme.text.disabled,
                         marginTop: 4,
                       }}>
                         {new Date(proc.time * 1000).toLocaleString()}
@@ -1565,12 +1571,12 @@ export function IngestPage() {
                   width: "100%",
                   padding: "10px 16px",
                   borderRadius: 8,
-                  fontSize: 13,
+                  fontSize: sz(13),
                   fontWeight: 600,
                   cursor: isSubmitting ? "not-allowed" : "pointer",
-                  background: palette.amber + "20",
-                  border: `1px solid ${palette.amber}66`,
-                  color: palette.amber,
+                  background: theme.palette.amber + "20",
+                  border: `1px solid ${theme.palette.amber}66`,
+                  color: theme.palette.amber,
                   opacity: isSubmitting ? 0.5 : 1,
                 }}
               >
@@ -1583,12 +1589,12 @@ export function IngestPage() {
                   width: "100%",
                   padding: "10px 16px",
                   borderRadius: 8,
-                  fontSize: 13,
+                  fontSize: sz(13),
                   fontWeight: 600,
                   cursor: isDeleting ? "not-allowed" : "pointer",
-                  background: palette.rose + "20",
-                  border: `1px solid ${palette.rose}66`,
-                  color: palette.rose,
+                  background: theme.palette.rose + "20",
+                  border: `1px solid ${theme.palette.rose}66`,
+                  color: theme.palette.rose,
                   opacity: isDeleting ? 0.5 : 1,
                 }}
               >
@@ -1602,8 +1608,8 @@ export function IngestPage() {
         <div style={{
           width: 400,
           flexShrink: 0,
-          borderLeft: `1px solid ${border.default}`,
-          background: "rgba(12,12,18,0.95)",
+          borderLeft: `1px solid ${theme.border.default}`,
+          background: theme.surface.overlay,
           backdropFilter: "blur(12px)",
           overflowY: "auto",
         }}>

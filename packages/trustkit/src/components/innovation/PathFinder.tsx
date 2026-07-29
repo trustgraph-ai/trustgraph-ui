@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import type { IINode } from "../../hooks/useInnovationData";
-import { text, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import type { Theme } from "../../theme/types";
 
 interface PathFinderProps {
   nodes: Map<string, IINode>;
@@ -72,6 +73,7 @@ function EntityPicker({
   onChange: (uri: string | null) => void;
   placeholder: string;
 }) {
+  const { theme, sz } = useTheme();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -106,16 +108,16 @@ function EntityPicker({
         <div
           onClick={() => { setOpen(true); setSearch(""); }}
           style={{
-            padding: "8px 12px", borderRadius: 6, fontSize: 13,
-            background: "rgba(255,255,255,0.06)", border: `1px solid ${border.medium}`,
-            color: text.primary, cursor: "pointer",
+            padding: "8px 12px", borderRadius: 6, fontSize: sz(13),
+            background: "rgba(255,255,255,0.06)", border: `1px solid ${theme.border.medium}`,
+            color: theme.text.primary, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}
         >
           <span>{selected.label}</span>
           <span
             onClick={(e) => { e.stopPropagation(); onChange(null); setSearch(""); }}
-            style={{ color: text.faint, cursor: "pointer", fontSize: 11, marginLeft: 8 }}
+            style={{ color: theme.text.faint, cursor: "pointer", fontSize: sz(11), marginLeft: 8 }}
           >✕</span>
         </div>
       ) : (
@@ -126,9 +128,9 @@ function EntityPicker({
           placeholder={placeholder}
           autoFocus={open}
           style={{
-            width: "100%", padding: "8px 12px", borderRadius: 6, fontSize: 13,
-            background: "rgba(255,255,255,0.04)", border: `1px solid ${border.default}`,
-            color: text.primary, outline: "none",
+            width: "100%", padding: "8px 12px", borderRadius: 6, fontSize: sz(13),
+            background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
+            color: theme.text.primary, outline: "none",
             fontFamily: "'IBM Plex Sans', sans-serif",
           }}
         />
@@ -137,7 +139,7 @@ function EntityPicker({
         <div style={{
           position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100,
           marginTop: 4, borderRadius: 6, overflow: "hidden",
-          background: "#15151F", border: `1px solid ${border.medium}`,
+          background: "#15151F", border: `1px solid ${theme.border.medium}`,
           maxHeight: 240, overflowY: "auto",
           boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
         }}>
@@ -146,15 +148,15 @@ function EntityPicker({
               key={node.uri}
               onClick={() => { onChange(node.uri); setOpen(false); setSearch(""); }}
               style={{
-                padding: "6px 12px", cursor: "pointer", fontSize: 12,
-                color: text.secondary, borderBottom: `1px solid ${border.subtle}`,
+                padding: "6px 12px", cursor: "pointer", fontSize: sz(12),
+                color: theme.text.secondary, borderBottom: `1px solid ${theme.border.subtle}`,
                 transition: "background 0.1s",
               }}
               onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
-              <span style={{ color: text.primary }}>{node.label}</span>
-              <span style={{ color: text.faint, fontSize: 10, marginLeft: 8 }}>
+              <span style={{ color: theme.text.primary }}>{node.label}</span>
+              <span style={{ color: theme.text.faint, fontSize: sz(10), marginLeft: 8 }}>
                 {node.kind.replace(/([A-Z])/g, " $1").trim()}
               </span>
             </div>
@@ -165,31 +167,29 @@ function EntityPicker({
   );
 }
 
-const EDGE_COLORS: Record<string, string> = {
-  "delivers capability in": palette.emerald,
-  "seeks capability in": palette.rose,
-  "sub-organisation of": palette.blue,
-  "parent of": palette.blue,
-  "member of": palette.cyan,
-  "partner": palette.pink,
-  "operates framework": palette.purple,
-  "listed on framework": palette.purple,
-  "provides access to": palette.cyan,
-  "holds role at": palette.amber,
-  "has expertise in": palette.emerald,
-  "sub-domain of": palette.emerald,
-  "located in": "#67E8F9",
-  "funded by": palette.pink,
-  "operates in sector": palette.orange,
-  "targets segment": palette.rose,
-  "belongs to segment": palette.rose,
-  "member nation": palette.cyan,
-  "within nation": "#67E8F9",
-  "scoped to": palette.cyan,
-};
-
-function edgeColor(label: string): string {
-  return EDGE_COLORS[label] || text.faint;
+function buildEdgeColors(theme: Theme): Record<string, string> {
+  return {
+    "delivers capability in": theme.palette.emerald,
+    "seeks capability in": theme.palette.rose,
+    "sub-organisation of": theme.palette.blue,
+    "parent of": theme.palette.blue,
+    "member of": theme.palette.cyan,
+    "partner": theme.palette.pink,
+    "operates framework": theme.palette.purple,
+    "listed on framework": theme.palette.purple,
+    "provides access to": theme.palette.cyan,
+    "holds role at": theme.palette.amber,
+    "has expertise in": theme.palette.emerald,
+    "sub-domain of": theme.palette.emerald,
+    "located in": "#67E8F9",
+    "funded by": theme.palette.pink,
+    "operates in sector": theme.palette.orange,
+    "targets segment": theme.palette.rose,
+    "belongs to segment": theme.palette.rose,
+    "member nation": theme.palette.cyan,
+    "within nation": "#67E8F9",
+    "scoped to": theme.palette.cyan,
+  };
 }
 
 // --- Subway map visualization (DAG layout — each entity appears once) ---
@@ -366,13 +366,16 @@ function SubwayMap({
   nodeKindColor,
   nodes: nodeMap,
   onSelectNode,
+  edgeColorFn,
 }: {
   paths: FoundPath[];
   nodeLabel: (uri: string) => string;
   nodeKindColor: (uri: string) => string;
   nodes: Map<string, IINode>;
   onSelectNode: (uri: string) => void;
+  edgeColorFn: (label: string) => string;
 }) {
+  const { theme, sz } = useTheme();
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
   const { dagNodes, dagEdges, svgWidth, svgHeight, bypassBaseY, nodeW } = useMemo(() => {
@@ -443,7 +446,7 @@ function SubwayMap({
       ref={containerRef}
       style={{
         borderRadius: 8, background: "rgba(255,255,255,0.02)",
-        border: `1px solid ${border.subtle}`,
+        border: `1px solid ${theme.border.subtle}`,
         overflowX: needsScroll ? "auto" : "hidden",
         overflowY: "hidden",
       }}
@@ -466,7 +469,7 @@ function SubwayMap({
           const x2 = nodeX(to.layer) - nodeW / 2;
           const y2 = nodeY(to.order);
 
-          const color = edgeColor(edge.label);
+          const color = edgeColorFn(edge.label);
           const layerSpan = to.layer - from.layer;
 
           const bendR = Math.min(20, Math.abs(y2 - y1) / 2, COL_GAP / 4);
@@ -548,7 +551,7 @@ function SubwayMap({
                 x={labelX}
                 y={labelY + 3.5 + labelOffset}
                 textAnchor="middle"
-                fontSize={8}
+                fontSize={sz(8)}
                 fontFamily="'IBM Plex Mono', monospace"
                 fill={color}
                 fillOpacity={isBypass ? 0.65 : 0.85}
@@ -601,7 +604,7 @@ function SubwayMap({
                 x={x}
                 y={y - 4}
                 textAnchor="middle"
-                fontSize={10}
+                fontSize={sz(10)}
                 fontWeight={500}
                 fill={color}
               >
@@ -612,9 +615,9 @@ function SubwayMap({
                 x={x}
                 y={y + 10}
                 textAnchor="middle"
-                fontSize={7}
+                fontSize={sz(7)}
                 fontFamily="'IBM Plex Mono', monospace"
-                fill={text.hint}
+                fill={theme.text.hint}
               >
                 {kind.replace(/([A-Z])/g, " $1").trim()}
               </text>
@@ -627,11 +630,18 @@ function SubwayMap({
 }
 
 export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: PathFinderProps) {
+  const { theme, sz } = useTheme();
   const [startUri, setStartUri] = useState<string | null>(null);
   const [endUri, setEndUri] = useState<string | null>(null);
   const [paths, setPaths] = useState<FoundPath[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const EDGE_COLORS = useMemo(() => buildEdgeColors(theme), [theme]);
+
+  const edgeColor = useCallback((label: string): string => {
+    return EDGE_COLORS[label] || theme.text.faint;
+  }, [EDGE_COLORS, theme.text.faint]);
 
   const allEdgeLabels = useMemo(() => {
     const labels = new Set<string>();
@@ -680,32 +690,32 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
 
   const nodeKindColor = useCallback((uri: string): string => {
     const n = nodes.get(uri);
-    if (!n) return text.muted;
+    if (!n) return theme.text.muted;
     const KIND_COLORS: Record<string, string> = {
-      GovernmentDepartment: palette.blue, MilitaryCommand: "#5B8DEF",
-      Agency: palette.cyan, InnovationHub: palette.emerald,
-      PrimeContractor: palette.orange, SME: palette.amber,
-      Startup: "#FCD34D", Investor: palette.pink,
-      Accelerator: palette.emerald, ResearchOrganisation: palette.purple,
-      University: "#C4B5FD", Person: palette.amber,
-      CapabilityDomain: palette.emerald, Framework: palette.purple,
-      InnovationChallenge: "#C4B5FD", CustomerSegment: palette.rose,
-      Nation: palette.cyan, Region: "#67E8F9",
-      IndustrySector: palette.orange,
+      GovernmentDepartment: theme.palette.blue, MilitaryCommand: "#5B8DEF",
+      Agency: theme.palette.cyan, InnovationHub: theme.palette.emerald,
+      PrimeContractor: theme.palette.orange, SME: theme.palette.amber,
+      Startup: "#FCD34D", Investor: theme.palette.pink,
+      Accelerator: theme.palette.emerald, ResearchOrganisation: theme.palette.purple,
+      University: "#C4B5FD", Person: theme.palette.amber,
+      CapabilityDomain: theme.palette.emerald, Framework: theme.palette.purple,
+      InnovationChallenge: "#C4B5FD", CustomerSegment: theme.palette.rose,
+      Nation: theme.palette.cyan, Region: "#67E8F9",
+      IndustrySector: theme.palette.orange,
     };
-    return KIND_COLORS[n.kind] || text.muted;
-  }, [nodes]);
+    return KIND_COLORS[n.kind] || theme.text.muted;
+  }, [nodes, theme]);
 
   return (
     <div style={{ padding: 24, height: "100%", overflowY: "auto" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <div style={{ marginBottom: 24 }}>
           <div style={{
-            fontSize: 16, fontWeight: 600, color: text.primary, marginBottom: 6,
+            fontSize: sz(16), fontWeight: 600, color: theme.text.primary, marginBottom: 6,
           }}>
             Pathway Finder
           </div>
-          <div style={{ fontSize: 12, color: text.faint, lineHeight: 1.5 }}>
+          <div style={{ fontSize: sz(12), color: theme.text.faint, lineHeight: 1.5 }}>
             Find connection paths between any two entities in the ecosystem.
             Discover how organisations, capabilities, procurement routes, and people are linked.
           </div>
@@ -719,7 +729,7 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
         }}>
           <div style={{ flex: 1 }}>
             <div style={{
-              fontSize: 9, color: palette.emerald, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(9), color: theme.palette.emerald, fontFamily: "'IBM Plex Mono', monospace",
               textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6,
             }}>From</div>
             <EntityPicker
@@ -730,10 +740,10 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
               placeholder="Search start entity..."
             />
           </div>
-          <div style={{ color: text.faint, fontSize: 18, paddingTop: 16 }}>→</div>
+          <div style={{ color: theme.text.faint, fontSize: sz(18), paddingTop: 16 }}>→</div>
           <div style={{ flex: 1 }}>
             <div style={{
-              fontSize: 9, color: palette.rose, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(9), color: theme.palette.rose, fontFamily: "'IBM Plex Mono', monospace",
               textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6,
             }}>To</div>
             <EntityPicker
@@ -751,13 +761,13 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
               style={{
                 padding: "8px 20px", borderRadius: 6,
                 background: startUri && endUri && startUri !== endUri
-                  ? `${palette.emerald}22` : "rgba(255,255,255,0.04)",
+                  ? `${theme.palette.emerald}22` : "rgba(255,255,255,0.04)",
                 color: startUri && endUri && startUri !== endUri
-                  ? palette.emerald : text.faint,
-                fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  ? theme.palette.emerald : theme.text.faint,
+                fontSize: sz(12), fontWeight: 600, cursor: "pointer",
                 fontFamily: "'IBM Plex Mono', monospace",
                 transition: "all 0.15s",
-                border: `1px solid ${startUri && endUri ? palette.emerald + "44" : border.default}`,
+                border: `1px solid ${startUri && endUri ? theme.palette.emerald + "44" : theme.border.default}`,
               }}
             >
               {searching ? "Searching..." : "Find Paths"}
@@ -773,20 +783,20 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
               style={{
                 display: "flex", alignItems: "center", gap: 6,
                 cursor: "pointer", userSelect: "none",
-                fontSize: 10, color: text.faint,
+                fontSize: sz(10), color: theme.text.faint,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}
             >
               <span style={{
                 display: "inline-block", transition: "transform 0.15s",
                 transform: filtersOpen ? "rotate(90deg)" : "rotate(0deg)",
-                fontSize: 8,
+                fontSize: sz(8),
               }}>▶</span>
               Relationship filters
               {disabledEdges.size > 0 && (
                 <span style={{
-                  fontSize: 9, color: palette.amber,
-                  background: `${palette.amber}15`, padding: "1px 6px",
+                  fontSize: sz(9), color: theme.palette.amber,
+                  background: `${theme.palette.amber}15`, padding: "1px 6px",
                   borderRadius: 3,
                 }}>
                   {disabledEdges.size} excluded
@@ -797,20 +807,20 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
               <div style={{
                 marginTop: 8, padding: 12, borderRadius: 8,
                 background: "rgba(255,255,255,0.02)",
-                border: `1px solid ${border.subtle}`,
+                border: `1px solid ${theme.border.subtle}`,
               }}>
                 <div style={{
                   display: "flex", gap: 8, marginBottom: 10,
-                  fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
                 }}>
                   <span
                     onClick={() => setDisabledEdges(new Set())}
-                    style={{ color: palette.emerald, cursor: "pointer" }}
+                    style={{ color: theme.palette.emerald, cursor: "pointer" }}
                   >Enable all</span>
-                  <span style={{ color: border.medium }}>|</span>
+                  <span style={{ color: theme.border.medium }}>|</span>
                   <span
                     onClick={() => setDisabledEdges(new Set(NOISY_EDGES))}
-                    style={{ color: text.faint, cursor: "pointer" }}
+                    style={{ color: theme.text.faint, cursor: "pointer" }}
                   >Reset defaults</span>
                 </div>
                 <div style={{
@@ -825,10 +835,10 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
                         onClick={() => toggleEdge(label)}
                         style={{
                           padding: "3px 8px", borderRadius: 4, cursor: "pointer",
-                          fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
+                          fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
                           background: disabled ? "rgba(255,255,255,0.02)" : `${color}15`,
-                          border: `1px solid ${disabled ? border.subtle : color + "44"}`,
-                          color: disabled ? text.hint : color,
+                          border: `1px solid ${disabled ? theme.border.subtle : color + "44"}`,
+                          color: disabled ? theme.text.hint : color,
                           opacity: disabled ? 0.5 : 1,
                           transition: "all 0.12s",
                           textDecoration: disabled ? "line-through" : "none",
@@ -846,7 +856,7 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
 
         {paths === null && startUri && endUri && (
           <div style={{
-            padding: 32, textAlign: "center", color: text.hint, fontSize: 12,
+            padding: 32, textAlign: "center", color: theme.text.hint, fontSize: sz(12),
           }}>
             Click "Find Paths" to discover connections
           </div>
@@ -859,21 +869,21 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
           {paths.length === 0 ? (
             <div style={{
               padding: 32, textAlign: "center", borderRadius: 8,
-              background: "rgba(255,255,255,0.02)", border: `1px solid ${border.subtle}`,
+              background: "rgba(255,255,255,0.02)", border: `1px solid ${theme.border.subtle}`,
               maxWidth: 900, margin: "0 auto",
             }}>
-              <div style={{ fontSize: 24, opacity: 0.3, marginBottom: 8 }}>∅</div>
-              <div style={{ color: text.faint, fontSize: 13 }}>
+              <div style={{ fontSize: sz(24), opacity: 0.3, marginBottom: 8 }}>∅</div>
+              <div style={{ color: theme.text.faint, fontSize: sz(13) }}>
                 No paths found within {MAX_DEPTH} steps
               </div>
-              <div style={{ color: text.hint, fontSize: 11, marginTop: 4 }}>
+              <div style={{ color: theme.text.hint, fontSize: sz(11), marginTop: 4 }}>
                 These entities may not be connected in the current dataset
               </div>
             </div>
           ) : (
             <div>
               <div style={{
-                fontSize: 10, color: text.faint, marginBottom: 12,
+                fontSize: sz(10), color: theme.text.faint, marginBottom: 12,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 {paths.length} path{paths.length !== 1 ? "s" : ""} found
@@ -886,6 +896,7 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
                 nodeKindColor={nodeKindColor}
                 nodes={nodes}
                 onSelectNode={onSelectNode}
+                edgeColorFn={edgeColor}
               />
             </div>
           )}

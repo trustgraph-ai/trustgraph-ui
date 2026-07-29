@@ -3,7 +3,8 @@ import { geoMercator, geoPath, geoNaturalEarth1, geoOrthographic } from "d3-geo"
 import type { GeoProjection, GeoPermissibleObjects } from "d3-geo";
 import { feature } from "topojson-client";
 import type { Topology } from "topojson-specification";
-import { text, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import type { Theme } from "../../theme/types";
 
 import worldTopo from "world-atlas/countries-110m.json";
 import usTopo from "us-atlas/states-10m.json";
@@ -86,7 +87,7 @@ function circleCoords(lng: number, lat: number, radius: number): number[][] {
   return pts;
 }
 
-function getMapData(preset: string): { geo: GeoJSON.FeatureCollection; projection: GeoProjection; fillColor: string; strokeColor: string } {
+function getMapData(preset: string, theme: Theme): { geo: GeoJSON.FeatureCollection; projection: GeoProjection; fillColor: string; strokeColor: string } {
   const worldGeo = feature(worldTopo as unknown as Topology, (worldTopo as any).objects.countries) as unknown as GeoJSON.FeatureCollection;
   const usGeo = feature(usTopo as unknown as Topology, (usTopo as any).objects.states) as unknown as GeoJSON.FeatureCollection;
 
@@ -99,8 +100,8 @@ function getMapData(preset: string): { geo: GeoJSON.FeatureCollection; projectio
       return {
         geo,
         projection: geoMercator().center([15, 52]).scale(600),
-        fillColor: palette.emerald + "18",
-        strokeColor: palette.emerald + "66",
+        fillColor: theme.palette.emerald + "18",
+        strokeColor: theme.palette.emerald + "66",
       };
     }
     case "uk": {
@@ -111,40 +112,40 @@ function getMapData(preset: string): { geo: GeoJSON.FeatureCollection; projectio
       return {
         geo,
         projection: geoMercator().center([-3, 54.5]).scale(2000),
-        fillColor: palette.cyan + "18",
-        strokeColor: palette.cyan + "66",
+        fillColor: theme.palette.cyan + "18",
+        strokeColor: theme.palette.cyan + "66",
       };
     }
     case "us": {
       return {
         geo: usGeo,
         projection: geoMercator().center([-98, 38]).scale(800),
-        fillColor: palette.blue + "18",
-        strokeColor: palette.blue + "66",
+        fillColor: theme.palette.blue + "18",
+        strokeColor: theme.palette.blue + "66",
       };
     }
     case "london": {
       return {
         geo: londonData as unknown as GeoJSON.FeatureCollection,
         projection: geoMercator(),
-        fillColor: palette.amber + "08",
-        strokeColor: palette.amber + "aa",
+        fillColor: theme.palette.amber + "08",
+        strokeColor: theme.palette.amber + "aa",
       };
     }
     case "moon": {
       return {
         geo: MOON_FEATURES,
         projection: geoOrthographic().rotate([0, 0]).scale(250).clipAngle(90),
-        fillColor: palette.purple + "28",
-        strokeColor: palette.purple + "66",
+        fillColor: theme.palette.purple + "28",
+        strokeColor: theme.palette.purple + "66",
       };
     }
     default: {
       return {
         geo: worldGeo,
         projection: geoNaturalEarth1().scale(150),
-        fillColor: palette.emerald + "12",
-        strokeColor: palette.emerald + "44",
+        fillColor: theme.palette.emerald + "12",
+        strokeColor: theme.palette.emerald + "44",
       };
     }
   }
@@ -159,11 +160,12 @@ export function GeoMap({
   onPresetChange,
   showPresetSelector = true,
 }: GeoMapProps) {
+  const { theme, sz } = useTheme();
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
   const [hoveredMarker, setHoveredMarker] = useState<string | null>(null);
 
-  const { geo, projection, fillColor, strokeColor } = useMemo(() => getMapData(preset), [preset]);
+  const { geo, projection, fillColor, strokeColor } = useMemo(() => getMapData(preset, theme), [preset, theme]);
 
   const fitProjection = useMemo(() => {
     const p = projection.translate([width / 2, height / 2]);
@@ -227,7 +229,7 @@ export function GeoMap({
           display: "flex",
           gap: 4,
           padding: "8px 12px",
-          borderBottom: `1px solid ${border.default}`,
+          borderBottom: `1px solid ${theme.border.default}`,
         }}>
           {MAP_PRESETS.map(p => (
             <button
@@ -236,10 +238,10 @@ export function GeoMap({
               style={{
                 padding: "4px 10px",
                 borderRadius: 4,
-                border: `1px solid ${preset === p.id ? strokeColor : border.default}`,
+                border: `1px solid ${preset === p.id ? strokeColor : theme.border.default}`,
                 background: preset === p.id ? fillColor : "transparent",
-                color: preset === p.id ? "#fff" : text.faint,
-                fontSize: 10,
+                color: preset === p.id ? theme.text.primary : theme.text.faint,
+                fontSize: sz(10),
                 fontFamily: "'IBM Plex Mono', monospace",
                 cursor: "pointer",
                 transition: "all 0.15s",
@@ -275,7 +277,7 @@ export function GeoMap({
             cy={height / 2}
             r={250}
             fill="rgba(255,255,255,0.02)"
-            stroke={palette.purple + "33"}
+            stroke={theme.palette.purple + "33"}
             strokeWidth={1}
           />
         )}
@@ -288,14 +290,14 @@ export function GeoMap({
                 type: "LineString",
                 coordinates: Array.from({ length: 73 }, (_, i) => [i * 5 - 180, lat]),
               } as GeoPermissibleObjects);
-              return gratPath ? <path key={`lat-${lat}`} d={gratPath} fill="none" stroke={palette.purple} strokeWidth={0.5} /> : null;
+              return gratPath ? <path key={`lat-${lat}`} d={gratPath} fill="none" stroke={theme.palette.purple} strokeWidth={0.5} /> : null;
             })}
             {[-120, -60, 0, 60, 120].map(lng => {
               const gratPath = pathGenerator({
                 type: "LineString",
                 coordinates: Array.from({ length: 37 }, (_, i) => [lng, i * 5 - 90]),
               } as GeoPermissibleObjects);
-              return gratPath ? <path key={`lng-${lng}`} d={gratPath} fill="none" stroke={palette.purple} strokeWidth={0.5} /> : null;
+              return gratPath ? <path key={`lng-${lng}`} d={gratPath} fill="none" stroke={theme.palette.purple} strokeWidth={0.5} /> : null;
             })}
           </g>
         )}
@@ -319,12 +321,12 @@ export function GeoMap({
         {/* Point features (moon landing sites etc.) */}
         {pointFeatures.map(pf => (
           <g key={pf.name}>
-            <circle cx={pf.x} cy={pf.y} r={3} fill={palette.amber} opacity={0.8} />
+            <circle cx={pf.x} cy={pf.y} r={3} fill={theme.palette.amber} opacity={0.8} />
             <text
               x={pf.x + 6}
               y={pf.y + 3}
-              fill={palette.amber}
-              fontSize={8}
+              fill={theme.palette.amber}
+              fontSize={sz(8)}
               fontFamily="'IBM Plex Mono', monospace"
               opacity={0.7}
             >
@@ -347,7 +349,7 @@ export function GeoMap({
               cx={m.x}
               cy={m.y}
               r={hoveredMarker === m.id ? (m.size || 4) + 4 : (m.size || 4) + 2}
-              fill={m.color || palette.amber}
+              fill={m.color || theme.palette.amber}
               opacity={hoveredMarker === m.id ? 0.3 : 0.15}
               style={{ transition: "all 0.15s" }}
             />
@@ -356,7 +358,7 @@ export function GeoMap({
               cx={m.x}
               cy={m.y}
               r={m.size || 4}
-              fill={m.color || palette.amber}
+              fill={m.color || theme.palette.amber}
               opacity={0.9}
             />
             {/* Label */}
@@ -364,8 +366,8 @@ export function GeoMap({
               <text
                 x={m.x + (m.size || 4) + 4}
                 y={m.y + 3}
-                fill={m.color || palette.amber}
-                fontSize={9}
+                fill={m.color || theme.palette.amber}
+                fontSize={sz(9)}
                 fontFamily="'IBM Plex Mono', monospace"
                 opacity={hoveredMarker === m.id ? 1 : 0.7}
               >
@@ -380,8 +382,8 @@ export function GeoMap({
           <text
             x={12}
             y={height - 12}
-            fill={text.subtle}
-            fontSize={10}
+            fill={theme.text.subtle}
+            fontSize={sz(10)}
             fontFamily="'IBM Plex Mono', monospace"
           >
             {hoveredFeature}

@@ -1,4 +1,5 @@
-import { text, surface, border, palette, withGlow } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import { withGlow } from "../../theme";
 import type { RecommendedProduct } from "../../hooks/useRetailBuild";
 
 interface BrowseGridProps {
@@ -6,6 +7,7 @@ interface BrowseGridProps {
 }
 
 function Stars({ rating }: { rating: number }) {
+  const { theme, sz } = useTheme();
   const full = Math.floor(rating);
   const half = rating - full >= 0.5;
   const stars = [];
@@ -15,24 +17,25 @@ function Stars({ rating }: { rating: number }) {
     else stars.push("\u2606");
   }
   return (
-    <span style={{ color: palette.amber, fontSize: 10, letterSpacing: 1 }}>
+    <span style={{ color: theme.palette.amber, fontSize: sz(10), letterSpacing: 1 }}>
       {stars.join("")}
     </span>
   );
 }
 
 function BrowseProductCard({ product }: { product: RecommendedProduct }) {
+  const { theme, sz } = useTheme();
   return (
     <div
       style={{
         borderRadius: 8,
-        background: surface.card,
-        border: `1px solid ${border.subtle}`,
+        background: theme.surface.card,
+        border: `1px solid ${theme.border.subtle}`,
         overflow: "hidden",
         transition: "border-color 0.15s",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = withGlow(palette.cyan, 0.4))}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = border.subtle)}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = withGlow(theme.palette.cyan, 0.4))}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = theme.border.subtle)}
     >
       {product.imageUrl && (
         <img
@@ -42,13 +45,13 @@ function BrowseProductCard({ product }: { product: RecommendedProduct }) {
             width: "100%",
             aspectRatio: "3 / 2",
             objectFit: "contain",
-            background: "rgba(255,255,255,0.03)",
+            background: theme.surface.cardHover,
           }}
         />
       )}
       <div style={{ padding: "12px 14px" }}>
         <div style={{
-          fontSize: 13, fontWeight: 600, color: text.primary,
+          fontSize: sz(13), fontWeight: 600, color: theme.text.primary,
           lineHeight: 1.3, marginBottom: 6,
         }}>
           {product.name}
@@ -56,20 +59,20 @@ function BrowseProductCard({ product }: { product: RecommendedProduct }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <Stars rating={product.rating} />
           {product.reviewCount > 0 && (
-            <span style={{ fontSize: 9, color: text.hint }}>
+            <span style={{ fontSize: sz(9), color: theme.text.hint }}>
               ({product.reviewCount})
             </span>
           )}
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{
-            fontSize: 18, fontWeight: 700, color: palette.emerald,
+            fontSize: sz(18), fontWeight: 700, color: theme.palette.emerald,
             fontFamily: "'IBM Plex Mono', monospace",
           }}>
             ${product.price.toFixed(2)}
           </div>
           <div style={{
-            fontSize: 9, color: product.inStock ? palette.emerald : palette.red,
+            fontSize: sz(9), color: product.inStock ? theme.palette.emerald : theme.palette.red,
             fontFamily: "'IBM Plex Mono', monospace",
           }}>
             {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
@@ -81,14 +84,15 @@ function BrowseProductCard({ product }: { product: RecommendedProduct }) {
 }
 
 export function BrowseGrid({ products }: BrowseGridProps) {
+  const { theme, sz } = useTheme();
   if (products.length === 0) return null;
 
   return (
     <div style={{ padding: 20 }}>
       <div style={{
-        fontSize: 10,
+        fontSize: sz(10),
         fontFamily: "'IBM Plex Mono', monospace",
-        color: text.subtle,
+        color: theme.text.subtle,
         textTransform: "uppercase",
         letterSpacing: 0.5,
         marginBottom: 12,

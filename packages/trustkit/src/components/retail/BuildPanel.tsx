@@ -1,4 +1,5 @@
-import { text, surface, border, palette, withGlow } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import { withGlow } from "../../theme";
 import type { BuildState, BuildPhase } from "../../hooks/useRetailBuild";
 import type { RecommendedProduct } from "../../hooks/useRetailBuild";
 import { ProductCard } from "./ProductCard";
@@ -13,11 +14,13 @@ interface BuildPanelProps {
   onSelectProduct: (slot: string, product: RecommendedProduct) => void;
 }
 
-const PHASE_META: Record<BuildPhase, { label: string; icon: string; color: string }> = {
-  configure: { label: "Configure", icon: "\u2630", color: palette.cyan },
-  recommend: { label: "Recommend", icon: "\u2699", color: palette.blue },
-  refine: { label: "Refine", icon: "\u27F3", color: palette.amber },
-  complete: { label: "Complete", icon: "\u2713", color: palette.emerald },
+type PhaseColorKey = "cyan" | "blue" | "amber" | "emerald";
+
+const PHASE_META: Record<BuildPhase, { label: string; icon: string; colorKey: PhaseColorKey }> = {
+  configure: { label: "Configure", icon: "\u2630", colorKey: "cyan" },
+  recommend: { label: "Recommend", icon: "\u2699", colorKey: "blue" },
+  refine: { label: "Refine", icon: "\u27F3", colorKey: "amber" },
+  complete: { label: "Complete", icon: "\u2713", colorKey: "emerald" },
 };
 
 const PHASE_ORDER: BuildPhase[] = ["configure", "recommend", "refine", "complete"];
@@ -38,37 +41,39 @@ const SLOT_LABELS: Record<string, { label: string; icon: string }> = {
 };
 
 function PhaseIndicator({ phase }: { phase: BuildPhase }) {
+  const { theme, sz } = useTheme();
   const idx = PHASE_ORDER.indexOf(phase);
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 16 }}>
       {PHASE_ORDER.map((p, i) => {
         const meta = PHASE_META[p];
+        const metaColor = theme.palette[meta.colorKey];
         const active = p === phase;
         const done = i < idx;
-        const color = active ? meta.color : done ? palette.emerald : text.hint;
+        const color = active ? metaColor : done ? theme.palette.emerald : theme.text.hint;
 
         return (
           <div key={p} style={{ display: "flex", alignItems: "center", gap: 4 }}>
             {i > 0 && (
               <div style={{
                 width: 20, height: 1,
-                background: done ? palette.emerald : border.subtle,
+                background: done ? theme.palette.emerald : theme.border.subtle,
               }} />
             )}
             <div style={{
               display: "flex", alignItems: "center", gap: 4,
               padding: "3px 8px", borderRadius: 4,
-              background: active ? withGlow(meta.color, 0.1) : "transparent",
-              border: active ? `1px solid ${withGlow(meta.color, 0.25)}` : "1px solid transparent",
+              background: active ? withGlow(metaColor, 0.1) : "transparent",
+              border: active ? `1px solid ${withGlow(metaColor, 0.25)}` : "1px solid transparent",
             }}>
               <span style={{
-                fontSize: 10, color,
+                fontSize: sz(10), color,
               }}>
                 {done ? "\u2713" : meta.icon}
               </span>
               <span style={{
-                fontSize: 10, fontWeight: active ? 600 : 400,
+                fontSize: sz(10), fontWeight: active ? 600 : 400,
                 color, fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 {meta.label}
@@ -82,9 +87,10 @@ function PhaseIndicator({ phase }: { phase: BuildPhase }) {
 }
 
 function BudgetBar({ budget, total }: { budget: number; total: number }) {
+  const { theme, sz } = useTheme();
   const pct = budget > 0 ? Math.min(100, (total / budget) * 100) : 0;
   const over = total > budget;
-  const color = over ? palette.red : pct > 85 ? palette.amber : palette.emerald;
+  const color = over ? theme.palette.red : pct > 85 ? theme.palette.amber : theme.palette.emerald;
 
   return (
     <div style={{ marginBottom: 16 }}>
@@ -93,14 +99,14 @@ function BudgetBar({ budget, total }: { budget: number; total: number }) {
         marginBottom: 4,
       }}>
         <span style={{
-          fontSize: 10, color: text.subtle,
+          fontSize: sz(10), color: theme.text.subtle,
           fontFamily: "'IBM Plex Mono', monospace",
         }}>
           ${total.toFixed(0)} / ${budget.toFixed(0)}
         </span>
         {over && (
           <span style={{
-            fontSize: 10, color: palette.red, fontWeight: 600,
+            fontSize: sz(10), color: theme.palette.red, fontWeight: 600,
             fontFamily: "'IBM Plex Mono', monospace",
           }}>
             OVER ${(total - budget).toFixed(0)}
@@ -136,6 +142,7 @@ function FilledSlotRow({
   locked: boolean;
   isActive: boolean;
 }) {
+  const { theme, sz } = useTheme();
   const meta = SLOT_LABELS[slotKey] || { label: slotKey, icon: "\u25CF" };
 
   return (
@@ -143,40 +150,40 @@ function FilledSlotRow({
       padding: "8px 10px",
       borderRadius: 6,
       background: isActive
-        ? withGlow(palette.blue, 0.06)
+        ? withGlow(theme.palette.blue, 0.06)
         : locked
-          ? withGlow(palette.emerald, 0.04)
-          : surface.card,
+          ? withGlow(theme.palette.emerald, 0.04)
+          : theme.surface.card,
       border: `1px solid ${
         isActive
-          ? withGlow(palette.blue, 0.25)
+          ? withGlow(theme.palette.blue, 0.25)
           : locked
-            ? withGlow(palette.emerald, 0.2)
-            : border.subtle
+            ? withGlow(theme.palette.emerald, 0.2)
+            : theme.border.subtle
       }`,
       marginBottom: 4,
       display: "flex",
       alignItems: "center",
       gap: 8,
     }}>
-      <span style={{ fontSize: 12, width: 18, textAlign: "center" }}>
+      <span style={{ fontSize: sz(12), width: 18, textAlign: "center" }}>
         {meta.icon}
       </span>
       <span style={{
-        fontSize: 10, fontWeight: 600, color: text.subtle,
+        fontSize: sz(10), fontWeight: 600, color: theme.text.subtle,
         fontFamily: "'IBM Plex Mono', monospace",
         width: 90, flexShrink: 0,
       }}>
         {meta.label}
       </span>
       <span style={{
-        flex: 1, fontSize: 11, color: text.primary,
+        flex: 1, fontSize: sz(11), color: theme.text.primary,
         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
       }}>
         {product}
       </span>
       <span style={{
-        fontSize: 11, fontWeight: 600, color: palette.emerald,
+        fontSize: sz(11), fontWeight: 600, color: theme.palette.emerald,
         fontFamily: "'IBM Plex Mono', monospace",
         flexShrink: 0,
       }}>
@@ -184,11 +191,11 @@ function FilledSlotRow({
       </span>
       {locked && (
         <span style={{
-          fontSize: 8, color: palette.emerald,
+          fontSize: sz(8), color: theme.palette.emerald,
           fontFamily: "'IBM Plex Mono', monospace",
           padding: "1px 4px", borderRadius: 3,
-          background: withGlow(palette.emerald, 0.1),
-          border: `1px solid ${withGlow(palette.emerald, 0.2)}`,
+          background: withGlow(theme.palette.emerald, 0.1),
+          border: `1px solid ${withGlow(theme.palette.emerald, 0.2)}`,
           flexShrink: 0,
         }}>
           LOCKED
@@ -205,30 +212,31 @@ function EmptySlotRow({
   slotKey: string;
   isActive: boolean;
 }) {
+  const { theme, sz } = useTheme();
   const meta = SLOT_LABELS[slotKey] || { label: slotKey, icon: "\u25CF" };
 
   return (
     <div style={{
       padding: "8px 10px",
       borderRadius: 6,
-      background: isActive ? withGlow(palette.blue, 0.06) : "transparent",
-      border: `1px dashed ${isActive ? withGlow(palette.blue, 0.25) : border.subtle}`,
+      background: isActive ? withGlow(theme.palette.blue, 0.06) : "transparent",
+      border: `1px dashed ${isActive ? withGlow(theme.palette.blue, 0.25) : theme.border.subtle}`,
       marginBottom: 4,
       display: "flex",
       alignItems: "center",
       gap: 8,
     }}>
-      <span style={{ fontSize: 12, width: 18, textAlign: "center", opacity: 0.4 }}>
+      <span style={{ fontSize: sz(12), width: 18, textAlign: "center", opacity: 0.4 }}>
         {meta.icon}
       </span>
       <span style={{
-        fontSize: 10, fontWeight: 600, color: text.hint,
+        fontSize: sz(10), fontWeight: 600, color: theme.text.hint,
         fontFamily: "'IBM Plex Mono', monospace",
         width: 90,
       }}>
         {meta.label}
       </span>
-      <span style={{ fontSize: 10, color: text.hint, fontStyle: "italic" }}>
+      <span style={{ fontSize: sz(10), color: theme.text.hint, fontStyle: "italic" }}>
         {isActive ? "selecting..." : "empty"}
       </span>
     </div>
@@ -246,6 +254,7 @@ export function BuildPanel({
   isQuerying,
   onSelectProduct,
 }: BuildPanelProps) {
+  const { theme, sz } = useTheme();
   const hasBuild = build.activity || Object.keys(build.slots).length > 0;
   const allSlotKeys = new Set([
     ...BUILD_SLOTS,
@@ -260,16 +269,16 @@ export function BuildPanel({
       }}>
         <div style={{ textAlign: "center" }}>
           <div style={{
-            fontSize: 32, marginBottom: 12, opacity: 0.3,
+            fontSize: sz(32), marginBottom: 12, opacity: 0.3,
           }}>
             {"\u2699"}
           </div>
           <div style={{
-            fontSize: 13, color: text.subtle, lineHeight: 1.6,
+            fontSize: sz(13), color: theme.text.subtle, lineHeight: 1.6,
           }}>
             Start a conversation to begin building.
             <br />
-            <span style={{ fontSize: 11, color: text.hint }}>
+            <span style={{ fontSize: sz(11), color: theme.text.hint }}>
               Try: "I want to build a gaming PC for $1500"
             </span>
           </div>
@@ -290,33 +299,33 @@ export function BuildPanel({
         }}>
           {build.activity && (
             <span style={{
-              fontSize: 10, color: palette.blue,
+              fontSize: sz(10), color: theme.palette.blue,
               fontFamily: "'IBM Plex Mono', monospace",
               padding: "2px 8px", borderRadius: 4,
-              background: withGlow(palette.blue, 0.1),
-              border: `1px solid ${withGlow(palette.blue, 0.2)}`,
+              background: withGlow(theme.palette.blue, 0.1),
+              border: `1px solid ${withGlow(theme.palette.blue, 0.2)}`,
             }}>
               {build.activity}
             </span>
           )}
           {build.target && (
             <span style={{
-              fontSize: 10, color: palette.purple,
+              fontSize: sz(10), color: theme.palette.purple,
               fontFamily: "'IBM Plex Mono', monospace",
               padding: "2px 8px", borderRadius: 4,
-              background: withGlow(palette.purple, 0.1),
-              border: `1px solid ${withGlow(palette.purple, 0.2)}`,
+              background: withGlow(theme.palette.purple, 0.1),
+              border: `1px solid ${withGlow(theme.palette.purple, 0.2)}`,
             }}>
               {build.target}
             </span>
           )}
           {build.constraints.map((c) => (
             <span key={c} style={{
-              fontSize: 10, color: palette.amber,
+              fontSize: sz(10), color: theme.palette.amber,
               fontFamily: "'IBM Plex Mono', monospace",
               padding: "2px 8px", borderRadius: 4,
-              background: withGlow(palette.amber, 0.1),
-              border: `1px solid ${withGlow(palette.amber, 0.2)}`,
+              background: withGlow(theme.palette.amber, 0.1),
+              border: `1px solid ${withGlow(theme.palette.amber, 0.2)}`,
             }}>
               {c}
             </span>
@@ -334,13 +343,13 @@ export function BuildPanel({
         <div style={{
           padding: "10px 12px",
           borderRadius: 8,
-          background: withGlow(palette.emerald, 0.05),
-          border: `1px solid ${withGlow(palette.emerald, 0.15)}`,
+          background: withGlow(theme.palette.emerald, 0.05),
+          border: `1px solid ${withGlow(theme.palette.emerald, 0.15)}`,
           marginBottom: 16,
-          fontSize: 12, color: text.primary, lineHeight: 1.5,
+          fontSize: sz(12), color: theme.text.primary, lineHeight: 1.5,
         }}>
           {isThinking ? (
-            <span style={{ color: text.subtle, fontStyle: "italic" }}>
+            <span style={{ color: theme.text.subtle, fontStyle: "italic" }}>
               Thinking...
             </span>
           ) : lastMessage}
@@ -349,8 +358,8 @@ export function BuildPanel({
 
       {/* Slot grid */}
       <div style={{
-        fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
-        color: text.subtle, textTransform: "uppercase",
+        fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+        color: theme.text.subtle, textTransform: "uppercase",
         letterSpacing: 0.5, marginBottom: 6,
       }}>
         Components
@@ -385,8 +394,8 @@ export function BuildPanel({
       {activeSlot && (recommendations.length > 0 || isQuerying) && (
         <div style={{ marginTop: 16 }}>
           <div style={{
-            fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
-            color: text.subtle, textTransform: "uppercase",
+            fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+            color: theme.text.subtle, textTransform: "uppercase",
             letterSpacing: 0.5, marginBottom: 8,
           }}>
             {isQuerying ? "Querying catalog..." : `Select ${SLOT_LABELS[activeSlot]?.label || activeSlot}`}
@@ -395,8 +404,8 @@ export function BuildPanel({
           {isQuerying && (
             <div style={{
               padding: "20px 12px", borderRadius: 8,
-              background: surface.card, border: `1px solid ${border.subtle}`,
-              textAlign: "center", fontSize: 11, color: text.subtle,
+              background: theme.surface.card, border: `1px solid ${theme.border.subtle}`,
+              textAlign: "center", fontSize: sz(11), color: theme.text.subtle,
             }}>
               Searching products...
             </div>
@@ -405,9 +414,9 @@ export function BuildPanel({
           {!isQuerying && recommendations.length === 0 && (
             <div style={{
               padding: "12px", borderRadius: 8,
-              background: withGlow(palette.amber, 0.05),
-              border: `1px solid ${withGlow(palette.amber, 0.15)}`,
-              fontSize: 11, color: palette.amber, textAlign: "center",
+              background: withGlow(theme.palette.amber, 0.05),
+              border: `1px solid ${withGlow(theme.palette.amber, 0.15)}`,
+              fontSize: sz(11), color: theme.palette.amber, textAlign: "center",
             }}>
               No products found matching criteria
             </div>
@@ -435,17 +444,17 @@ export function BuildPanel({
         <div style={{
           marginTop: 16, padding: "16px",
           borderRadius: 8,
-          background: withGlow(palette.emerald, 0.06),
-          border: `1px solid ${withGlow(palette.emerald, 0.2)}`,
+          background: withGlow(theme.palette.emerald, 0.06),
+          border: `1px solid ${withGlow(theme.palette.emerald, 0.2)}`,
           textAlign: "center",
         }}>
           <div style={{
-            fontSize: 16, color: palette.emerald, marginBottom: 6,
+            fontSize: sz(16), color: theme.palette.emerald, marginBottom: 6,
           }}>
             {"\u2713"} Build Complete
           </div>
           <div style={{
-            fontSize: 12, color: text.muted,
+            fontSize: sz(12), color: theme.text.muted,
             fontFamily: "'IBM Plex Mono', monospace",
           }}>
             {build.budget

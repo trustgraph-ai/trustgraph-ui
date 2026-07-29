@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { GraphCanvasSVG as GraphCanvas, NodeDetailPanel, SectionLabel, Badge, LoadingState, SearchInput, MessageBubble, useGraphData, getLocalName, palette, text, border, withGlow } from "@trustgraph/trustkit";
+import { GraphCanvasSVG as GraphCanvas, NodeDetailPanel, SectionLabel, Badge, LoadingState, SearchInput, MessageBubble, useGraphData, getLocalName, useTheme, withGlow } from "@trustgraph/trustkit";
 import type { Entity } from "@trustgraph/trustkit";
 import { useChat, useConversation, useEmbeddings, useGraphEmbeddings, useSessionStore, useSettings } from "@trustgraph/react-state";
 
@@ -14,6 +14,7 @@ interface EmbeddingResultItem {
 }
 
 export function QueryView() {
+  const { theme, sz } = useTheme();
   const flowId = useSessionStore((s) => s.flowId);
   const { settings } = useSettings();
   const collection = settings.collection;
@@ -125,7 +126,7 @@ export function QueryView() {
     <div style={{ display: "flex", height: "var(--page-height)" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {/* Query input area */}
-        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${border.default}` }}>
+        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${theme.border.default}` }}>
           <SectionLabel marginBottom={12}>AGENT QUERIES</SectionLabel>
 
           <SearchInput
@@ -135,19 +136,19 @@ export function QueryView() {
             placeholder="Type your own question..."
             buttonText="Ask"
             isLoading={isSubmitting}
-            buttonColor={palette.amber}
+            buttonColor={theme.palette.amber}
           />
         </div>
 
         {/* Related entities from graph embeddings */}
         {queryForEmbeddings && (
-          <div style={{ padding: "16px 28px", borderBottom: `1px solid ${border.default}` }}>
+          <div style={{ padding: "16px 28px", borderBottom: `1px solid ${theme.border.default}` }}>
             <SectionLabel>
-              RELATED ENTITIES {(embeddingsLoading || graphEmbeddingsLoading) && <span style={{ color: palette.amber }}>loading...</span>}
+              RELATED ENTITIES {(embeddingsLoading || graphEmbeddingsLoading) && <span style={{ color: theme.palette.amber }}>loading...</span>}
             </SectionLabel>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {embeddingResults.length === 0 && !embeddingsLoading && !graphEmbeddingsLoading && (
-                <span style={{ fontSize: 11, color: text.disabled, fontStyle: "italic" }}>No related concepts found</span>
+                <span style={{ fontSize: sz(11), color: theme.text.disabled, fontStyle: "italic" }}>No related concepts found</span>
               )}
               {embeddingResults.map((item) => {
                 const isSelected = selectedEntityId === item.id;
@@ -173,7 +174,7 @@ export function QueryView() {
         {/* Response area */}
         <div style={{ flex: 1, padding: "24px 28px", overflowY: "auto" }}>
           {messages.length === 0 ? (
-            <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+            <div style={{ color: theme.text.hint, fontSize: sz(13), fontStyle: "italic" }}>
               Type your question to get started.
             </div>
           ) : (
@@ -184,8 +185,8 @@ export function QueryView() {
               {isSubmitting && (
                 <div style={{
                   padding: "8px 12px",
-                  fontSize: 11,
-                  color: withGlow(palette.amber, 0.4),
+                  fontSize: sz(11),
+                  color: withGlow(theme.palette.amber, 0.4),
                   fontFamily: "'IBM Plex Mono', monospace"
                 }}>
                   Processing...
@@ -198,7 +199,7 @@ export function QueryView() {
       </div>
 
       {/* Graph visualization */}
-      <div style={{ width: selectedNode ? "30%" : "45%", borderLeft: `1px solid ${border.default}`, transition: "width 0.2s" }}>
+      <div style={{ width: selectedNode ? "30%" : "45%", borderLeft: `1px solid ${theme.border.default}`, transition: "width 0.2s" }}>
         <GraphCanvas
           entities={entities}
           relationships={relationships}
