@@ -1,31 +1,22 @@
 import { Badge } from "../common";
 import { SourceLinkBadge } from "./SourceLinkBadge";
-import { text, withGlow, palette } from "../../theme";
+import { withGlow } from "../../theme";
 import { useTheme } from "../../theme/ThemeContext";
-import type { Theme } from "../../theme/types";
+import type { ThemePalette } from "../../theme/types";
 import type { ProvenanceChain } from "../../hooks/useExplainEventFetcher";
 
-const staticPaletteMap = new Map(
-  (Object.keys(palette) as Array<keyof typeof palette>).map(k => [palette[k], k])
-);
-
-function remapPaletteColor(color: string, theme: Theme): string {
-  const key = staticPaletteMap.get(color);
-  return key ? theme.palette[key] : color;
-}
-
-export function eventTypeColor(eventType: string): string {
+export function eventTypeColor(eventType: string): keyof ThemePalette | null {
   switch (eventType) {
-    case "question": return palette.amber;
-    case "grounding": return palette.orange;
-    case "exploration": return palette.blue;
-    case "focus": return palette.purple;
-    case "analysis": return palette.purple;
-    case "decomposition": return palette.orange;
-    case "reflection": return palette.cyan;
-    case "synthesis": return palette.emerald;
-    case "conclusion": return palette.emerald;
-    default: return text.muted;
+    case "question": return "amber";
+    case "grounding": return "orange";
+    case "exploration": return "blue";
+    case "focus": return "purple";
+    case "analysis": return "purple";
+    case "decomposition": return "orange";
+    case "reflection": return "cyan";
+    case "synthesis": return "emerald";
+    case "conclusion": return "emerald";
+    default: return null;
   }
 }
 
@@ -66,7 +57,8 @@ export function ExplainEventCard({
   sourceLevel = "full",
 }: ExplainEventCardProps) {
   const { theme, sz } = useTheme();
-  const typeColor = remapPaletteColor(eventTypeColor(eventType), theme);
+  const paletteKey = eventTypeColor(eventType);
+  const typeColor = paletteKey ? theme.palette[paletteKey] : theme.text.muted;
 
   return (
     <div style={{

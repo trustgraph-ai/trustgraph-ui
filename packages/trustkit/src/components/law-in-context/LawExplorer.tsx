@@ -5,39 +5,42 @@ import type {
   OverviewData, InstitutionsOverviewData, RightsOverviewData,
   ComplianceOverviewData, StructureData,
 } from "../../hooks/useLawData";
-import { palette, text, surface } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import type { Theme } from "../../theme/types";
 
 export interface LawExplorerProps {}
 
 type Mode = "overview" | "institutions" | "rights" | "compliance" | "structure";
 
-const MODE_META: { key: Mode; en: string; lt: string; icon: string; color: string }[] = [
-  { key: "overview", en: "Overview", lt: "Apzvalga", icon: "\u2696", color: palette.amber },
-  { key: "institutions", en: "Institutions", lt: "Institucijos", icon: "\u25C8", color: palette.blue },
-  { key: "rights", en: "Rights & Powers", lt: "Teises ir galios", icon: "\u25C9", color: palette.emerald },
-  { key: "compliance", en: "Compliance", lt: "Atitiktis", icon: "\u25CE", color: palette.rose },
-  { key: "structure", en: "Law Structure", lt: "Struktura", icon: "\u25B3", color: palette.purple },
+const MODE_META: { key: Mode; en: string; lt: string; icon: string; paletteKey: keyof Theme["palette"] }[] = [
+  { key: "overview", en: "Overview", lt: "Apzvalga", icon: "\u2696", paletteKey: "amber" },
+  { key: "institutions", en: "Institutions", lt: "Institucijos", icon: "\u25C8", paletteKey: "blue" },
+  { key: "rights", en: "Rights & Powers", lt: "Teises ir galios", icon: "\u25C9", paletteKey: "emerald" },
+  { key: "compliance", en: "Compliance", lt: "Atitiktis", icon: "\u25CE", paletteKey: "rose" },
+  { key: "structure", en: "Law Structure", lt: "Struktura", icon: "\u25B3", paletteKey: "purple" },
 ];
 
-const KIND_COLORS: Record<string, string> = {
-  Statute: palette.amber,
-  LegislativeDraft: palette.cyan,
-  Chapter: palette.purple,
-  Article: palette.blue,
-  Ministry: "#4A9EFF",
-  JurisdictionAuthority: "#6B8AFF",
-  RegulatedEntity: palette.rose,
-  CriticalInfrastructureOperator: palette.rose,
-  ElectronicCommunicationsProvider: palette.rose,
-  HostingServiceProvider: palette.rose,
-  IncidentTrigger: palette.orange,
-  ResilienceMandate: palette.cyan,
-  ContinuityProtocol: palette.cyan,
-  InformationPipeline: palette.purple,
-  CivicRight: palette.emerald,
-  ExecutiveLiability: "#FF4A6B",
-  LegalConcept: "#9CA3AF",
-};
+function kindColors(theme: Theme): Record<string, string> {
+  return {
+    Statute: theme.palette.amber,
+    LegislativeDraft: theme.palette.cyan,
+    Chapter: theme.palette.purple,
+    Article: theme.palette.blue,
+    Ministry: "#4A9EFF",
+    JurisdictionAuthority: "#6B8AFF",
+    RegulatedEntity: theme.palette.rose,
+    CriticalInfrastructureOperator: theme.palette.rose,
+    ElectronicCommunicationsProvider: theme.palette.rose,
+    HostingServiceProvider: theme.palette.rose,
+    IncidentTrigger: theme.palette.orange,
+    ResilienceMandate: theme.palette.cyan,
+    ContinuityProtocol: theme.palette.cyan,
+    InformationPipeline: theme.palette.purple,
+    CivicRight: theme.palette.emerald,
+    ExecutiveLiability: "#FF4A6B",
+    LegalConcept: "#9CA3AF",
+  };
+}
 
 const LAW_KINDS = ["Statute", "LegislativeDraft"];
 const ORG_KINDS = ["Ministry", "JurisdictionAuthority"];
@@ -54,38 +57,14 @@ function formatDuration(d: string): string {
   return d;
 }
 
-function domainBadgeColor(domain: string): string {
-  if (domain === "Military") return palette.rose;
-  if (domain === "Civilian") return palette.blue;
-  if (domain === "Independent Regulatory") return palette.emerald;
-  return text.muted;
+function domainBadgeColor(domain: string, theme: Theme): string {
+  if (domain === "Military") return theme.palette.rose;
+  if (domain === "Civilian") return theme.palette.blue;
+  if (domain === "Independent Regulatory") return theme.palette.emerald;
+  return theme.text.muted;
 }
 
-const cardBase: React.CSSProperties = {
-  padding: "12px 14px",
-  borderRadius: 8,
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(255,255,255,0.06)",
-  cursor: "pointer",
-  transition: "all 0.15s ease",
-};
 
-const sectionTitle: React.CSSProperties = {
-  fontSize: 10,
-  fontWeight: 700,
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.08em",
-  color: text.subtle,
-  marginBottom: 8,
-  marginTop: 16,
-};
-
-const loadingDot: React.CSSProperties = {
-  fontSize: 11,
-  color: text.hint,
-  fontStyle: "italic",
-  padding: "8px 0",
-};
 
 const SPINNER_ID = "law-spinner-keyframes";
 function ensureSpinnerStyles() {
@@ -101,6 +80,7 @@ function ensureSpinnerStyles() {
 }
 
 function ModeLoading({ color, message }: { color: string; message: string }) {
+  const { theme, sz } = useTheme();
   ensureSpinnerStyles();
   return (
     <div style={{
@@ -115,7 +95,7 @@ function ModeLoading({ color, message }: { color: string; message: string }) {
         animation: "law-spin 0.8s linear infinite",
       }} />
       <div style={{
-        fontSize: 12, color: text.subtle,
+        fontSize: sz(12), color: theme.text.subtle,
         animation: "law-pulse 1.5s ease-in-out infinite",
       }}>
         {message}
@@ -125,6 +105,36 @@ function ModeLoading({ color, message }: { color: string; message: string }) {
 }
 
 export function LawExplorer(_props: LawExplorerProps) {
+  const { theme, sz } = useTheme();
+
+  const KIND_COLORS = useMemo(() => kindColors(theme), [theme]);
+
+  const cardBase: React.CSSProperties = useMemo(() => ({
+    padding: "12px 14px",
+    borderRadius: 8,
+    background: theme.surface.card,
+    border: `1px solid ${theme.surface.cardHover}`,
+    cursor: "pointer",
+    transition: "all 0.15s ease",
+  }), [theme]);
+
+  const sectionTitle: React.CSSProperties = useMemo(() => ({
+    fontSize: sz(10),
+    fontWeight: 700,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.08em",
+    color: theme.text.subtle,
+    marginBottom: 8,
+    marginTop: 16,
+  }), [theme, sz]);
+
+  const loadingDot: React.CSSProperties = useMemo(() => ({
+    fontSize: sz(11),
+    color: theme.text.hint,
+    fontStyle: "italic",
+    padding: "8px 0",
+  }), [theme, sz]);
+
   const [lang, setLang] = useState<"en" | "lt">("en");
   const [mode, setMode] = useState<Mode>("overview");
   const [selectedUri, setSelectedUri] = useState<string | null>(null);
@@ -306,7 +316,7 @@ export function LawExplorer(_props: LawExplorerProps) {
 
   if (data.error) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "var(--page-height)", color: palette.rose, fontSize: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "var(--page-height)", color: theme.palette.rose, fontSize: sz(14) }}>
         Error: {data.error.message}
       </div>
     );
@@ -321,7 +331,7 @@ export function LawExplorer(_props: LawExplorerProps) {
           display: "inline-block",
           padding: "2px 8px",
           borderRadius: 4,
-          fontSize: 11,
+          fontSize: sz(11),
           background: color + "18",
           color,
           border: `1px solid ${color}33`,
@@ -338,7 +348,7 @@ export function LawExplorer(_props: LawExplorerProps) {
   function renderRefChip(uri: string, color?: string) {
     const node = data.nodes.get(uri);
     if (!node) return null;
-    const c = color || KIND_COLORS[node.kind] || text.muted;
+    const c = color || KIND_COLORS[node.kind] || theme.text.muted;
     return renderChip(node.label, c, () => setSelectedUri(uri));
   }
 
@@ -357,7 +367,7 @@ export function LawExplorer(_props: LawExplorerProps) {
   // ─── Detail panel ──────────────────────────────────────────────────
 
   function renderDetailPanel(node: LawNode) {
-    const color = KIND_COLORS[node.kind] || text.muted;
+    const color = KIND_COLORS[node.kind] || theme.text.muted;
 
     if (detailLoading) {
       return (
@@ -365,7 +375,7 @@ export function LawExplorer(_props: LawExplorerProps) {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
             {renderChip(node.kind.replace(/([A-Z])/g, " $1").trim(), color)}
           </div>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: "8px 0 4px", lineHeight: 1.3 }}>
+          <h2 style={{ fontSize: sz(18), fontWeight: 700, color: theme.text.primary, margin: "8px 0 4px", lineHeight: 1.3 }}>
             {node.label}
           </h2>
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0" }}>
@@ -375,7 +385,7 @@ export function LawExplorer(_props: LawExplorerProps) {
               borderTopColor: color,
               animation: "law-spin 0.8s linear infinite",
             }} />
-            <span style={{ fontSize: 11, color: text.hint }}>{lang === "lt" ? "Kraunama..." : "Loading details..."}</span>
+            <span style={{ fontSize: sz(11), color: theme.text.hint }}>{lang === "lt" ? "Kraunama..." : "Loading details..."}</span>
           </div>
         </div>
       );
@@ -385,22 +395,22 @@ export function LawExplorer(_props: LawExplorerProps) {
       <div style={{ padding: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
           {renderChip(node.kind.replace(/([A-Z])/g, " $1").trim(), color)}
-          {detail?.governanceDomain && renderChip(detail.governanceDomain, domainBadgeColor(detail.governanceDomain))}
+          {detail?.governanceDomain && renderChip(detail.governanceDomain, domainBadgeColor(detail.governanceDomain, theme))}
         </div>
 
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: "8px 0 4px", lineHeight: 1.3 }}>
+        <h2 style={{ fontSize: sz(18), fontWeight: 700, color: theme.text.primary, margin: "8px 0 4px", lineHeight: 1.3 }}>
           {node.label}
         </h2>
 
         {detail?.description && (
-          <p style={{ fontSize: 12, color: text.secondary, lineHeight: 1.6, margin: "8px 0 16px" }}>
+          <p style={{ fontSize: sz(12), color: theme.text.secondary, lineHeight: 1.6, margin: "8px 0 16px" }}>
             {detail.description}
           </p>
         )}
 
         {detail?.legalBasis && (
-          <div style={{ fontSize: 11, color: text.subtle, marginBottom: 16 }}>
-            Legal basis: <span style={{ color: text.secondary }}>{detail.legalBasis}</span>
+          <div style={{ fontSize: sz(11), color: theme.text.subtle, marginBottom: 16 }}>
+            Legal basis: <span style={{ color: theme.text.secondary }}>{detail.legalBasis}</span>
           </div>
         )}
 
@@ -422,23 +432,23 @@ export function LawExplorer(_props: LawExplorerProps) {
     return (
       <>
         {detail.docId && (
-          <div style={{ fontSize: 12, color: text.secondary, marginBottom: 4 }}>
-            <span style={{ color: text.subtle }}>{lang === "lt" ? "Dokumentas: " : "Document ID: "}</span>
+          <div style={{ fontSize: sz(12), color: theme.text.secondary, marginBottom: 4 }}>
+            <span style={{ color: theme.text.subtle }}>{lang === "lt" ? "Dokumentas: " : "Document ID: "}</span>
             <span style={{ fontWeight: 600 }}>{detail.docId}</span>
           </div>
         )}
         {detail.dateEnacted && (
-          <div style={{ fontSize: 12, color: text.secondary, marginBottom: 12 }}>
-            <span style={{ color: text.subtle }}>{lang === "lt" ? "Priimtas: " : "Enacted: "}</span>
+          <div style={{ fontSize: sz(12), color: theme.text.secondary, marginBottom: 12 }}>
+            <span style={{ color: theme.text.subtle }}>{lang === "lt" ? "Priimtas: " : "Enacted: "}</span>
             <span style={{ fontWeight: 600 }}>{detail.dateEnacted}</span>
           </div>
         )}
-        {renderConnectionSection(lang === "lt" ? "Keicia" : "Amends", rels.amendsStatutes, palette.amber)}
-        {renderConnectionSection(lang === "lt" ? "Keiciamas" : "Amended by", rels.amendedBy, palette.cyan)}
-        {renderConnectionSection(lang === "lt" ? "Pakeicia" : "Supersedes", rels.supersedesVersions, text.muted)}
-        {renderConnectionSection(lang === "lt" ? "Pakeiciamas" : "Superseded by", rels.supersededBy, text.muted)}
-        {renderConnectionSection(lang === "lt" ? "Garantuojamos teises" : "Guarantees rights", rels.guaranteesRights, palette.emerald)}
-        {renderConnectionSection(lang === "lt" ? "Skyriai" : "Chapters", rels.components, palette.purple)}
+        {renderConnectionSection(lang === "lt" ? "Keicia" : "Amends", rels.amendsStatutes, theme.palette.amber)}
+        {renderConnectionSection(lang === "lt" ? "Keiciamas" : "Amended by", rels.amendedBy, theme.palette.cyan)}
+        {renderConnectionSection(lang === "lt" ? "Pakeicia" : "Supersedes", rels.supersedesVersions, theme.text.muted)}
+        {renderConnectionSection(lang === "lt" ? "Pakeiciamas" : "Superseded by", rels.supersededBy, theme.text.muted)}
+        {renderConnectionSection(lang === "lt" ? "Garantuojamos teises" : "Guarantees rights", rels.guaranteesRights, theme.palette.emerald)}
+        {renderConnectionSection(lang === "lt" ? "Skyriai" : "Chapters", rels.components, theme.palette.purple)}
       </>
     );
   }
@@ -447,10 +457,10 @@ export function LawExplorer(_props: LawExplorerProps) {
     if (!rels) return null;
     return (
       <>
-        {renderConnectionSection(lang === "lt" ? "Pavaldi" : "Sub-agencies", rels.subAgencies, palette.blue)}
-        {renderConnectionSection(lang === "lt" ? "Pavaldi organizacijai" : "Reports to", rels.subAgencyOf, palette.blue)}
-        {renderConnectionSection(lang === "lt" ? "Priiueri subjektus" : "Governs", rels.governsEntities, palette.rose)}
-        {renderConnectionSection(lang === "lt" ? "Keiciasi duomenimis su" : "Exchanges data with", rels.exchangesDataWith, palette.cyan)}
+        {renderConnectionSection(lang === "lt" ? "Pavaldi" : "Sub-agencies", rels.subAgencies, theme.palette.blue)}
+        {renderConnectionSection(lang === "lt" ? "Pavaldi organizacijai" : "Reports to", rels.subAgencyOf, theme.palette.blue)}
+        {renderConnectionSection(lang === "lt" ? "Priiueri subjektus" : "Governs", rels.governsEntities, theme.palette.rose)}
+        {renderConnectionSection(lang === "lt" ? "Keiciasi duomenimis su" : "Exchanges data with", rels.exchangesDataWith, theme.palette.cyan)}
       </>
     );
   }
@@ -463,12 +473,12 @@ export function LawExplorer(_props: LawExplorerProps) {
           <div style={{ marginBottom: 12 }}>
             {renderChip(
               detail.isPublicAdministration ? (lang === "lt" ? "Viesojo administravimo" : "Public administration") : (lang === "lt" ? "Privatus sektorius" : "Private sector"),
-              detail.isPublicAdministration ? palette.blue : palette.amber,
+              detail.isPublicAdministration ? theme.palette.blue : theme.palette.amber,
             )}
           </div>
         )}
-        {renderConnectionSection(lang === "lt" ? "Praneiti" : "Must report to", rels.reportsTo, palette.blue)}
-        {renderConnectionSection(lang === "lt" ? "Pareigos" : "Obligations", rels.mandatedBy, palette.cyan)}
+        {renderConnectionSection(lang === "lt" ? "Praneiti" : "Must report to", rels.reportsTo, theme.palette.blue)}
+        {renderConnectionSection(lang === "lt" ? "Pareigos" : "Obligations", rels.mandatedBy, theme.palette.cyan)}
         {renderConnectionSection(lang === "lt" ? "Baudos" : "Subject to penalties", rels.penalizedBy, "#FF4A6B")}
       </>
     );
@@ -482,24 +492,24 @@ export function LawExplorer(_props: LawExplorerProps) {
           <div style={{ marginBottom: 12 }}>
             {renderChip(
               detail.isExtraordinaryPower ? (lang === "lt" ? "Ypatingasis igaliojimas" : "Extraordinary power") : (lang === "lt" ? "Standartinis" : "Standard power"),
-              detail.isExtraordinaryPower ? palette.orange : palette.emerald,
+              detail.isExtraordinaryPower ? theme.palette.orange : theme.palette.emerald,
             )}
           </div>
         )}
         {detail.emergencyLimit && (
-          <div style={{ fontSize: 12, color: text.secondary, marginBottom: 8 }}>
-            <span style={{ color: text.subtle }}>{lang === "lt" ? "Laiko riba: " : "Time limit: "}</span>
-            <span style={{ color: palette.amber, fontWeight: 600 }}>{formatDuration(detail.emergencyLimit)}</span>
+          <div style={{ fontSize: sz(12), color: theme.text.secondary, marginBottom: 8 }}>
+            <span style={{ color: theme.text.subtle }}>{lang === "lt" ? "Laiko riba: " : "Time limit: "}</span>
+            <span style={{ color: theme.palette.amber, fontWeight: 600 }}>{formatDuration(detail.emergencyLimit)}</span>
           </div>
         )}
         {detail.responseWindow && (
-          <div style={{ fontSize: 12, color: text.secondary, marginBottom: 8 }}>
-            <span style={{ color: text.subtle }}>{lang === "lt" ? "Reagavimo langas: " : "Response window: "}</span>
-            <span style={{ color: palette.amber, fontWeight: 600 }}>{formatDuration(detail.responseWindow)}</span>
+          <div style={{ fontSize: sz(12), color: theme.text.secondary, marginBottom: 8 }}>
+            <span style={{ color: theme.text.subtle }}>{lang === "lt" ? "Reagavimo langas: " : "Response window: "}</span>
+            <span style={{ color: theme.palette.amber, fontWeight: 600 }}>{formatDuration(detail.responseWindow)}</span>
           </div>
         )}
-        {renderConnectionSection(lang === "lt" ? "Vykdoma" : "Executed by", rels.executedBy, palette.blue)}
-        {renderConnectionSection(lang === "lt" ? "Riboja teises" : "Limits rights", rels.limitsRights, palette.emerald)}
+        {renderConnectionSection(lang === "lt" ? "Vykdoma" : "Executed by", rels.executedBy, theme.palette.blue)}
+        {renderConnectionSection(lang === "lt" ? "Riboja teises" : "Limits rights", rels.limitsRights, theme.palette.emerald)}
       </>
     );
   }
@@ -509,7 +519,7 @@ export function LawExplorer(_props: LawExplorerProps) {
     return renderConnectionSection(
       lang === "lt" ? "Gali buti ribojama" : "Can be limited by",
       rels.limitedByTriggers,
-      palette.orange,
+      theme.palette.orange,
     );
   }
 
@@ -521,11 +531,11 @@ export function LawExplorer(_props: LawExplorerProps) {
           <div style={{ marginBottom: 12 }}>
             {renderChip(
               detail.isAtExpenseOfEntity ? (lang === "lt" ? "Savo lesomis" : "At entity's own expense") : (lang === "lt" ? "Valstybes lesomis" : "State funded"),
-              detail.isAtExpenseOfEntity ? palette.amber : palette.emerald,
+              detail.isAtExpenseOfEntity ? theme.palette.amber : theme.palette.emerald,
             )}
           </div>
         )}
-        {renderConnectionSection(lang === "lt" ? "Taikoma" : "Applies to", rels.bearsCostOf, palette.rose)}
+        {renderConnectionSection(lang === "lt" ? "Taikoma" : "Applies to", rels.bearsCostOf, theme.palette.rose)}
       </>
     );
   }
@@ -547,14 +557,14 @@ export function LawExplorer(_props: LawExplorerProps) {
             )}
           </div>
         )}
-        {renderConnectionSection(lang === "lt" ? "Taikoma subjektams" : "Penalizes", rels.penalizesEntities, palette.rose)}
+        {renderConnectionSection(lang === "lt" ? "Taikoma subjektams" : "Penalizes", rels.penalizesEntities, theme.palette.rose)}
       </>
     );
   }
 
   function renderPipelineDetail() {
     if (!rels) return null;
-    return renderConnectionSection(lang === "lt" ? "Perduoda duomenis" : "Relays data to", rels.relaysDataTo, palette.blue);
+    return renderConnectionSection(lang === "lt" ? "Perduoda duomenis" : "Relays data to", rels.relaysDataTo, theme.palette.blue);
   }
 
   // ─── Overview mode ──────────────────────────────────────────────────
@@ -562,16 +572,16 @@ export function LawExplorer(_props: LawExplorerProps) {
   function renderOverview() {
     if (allLaws.length === 0 && overviewLoading) {
       const m = MODE_META[0];
-      return <ModeLoading color={m.color} message={lang === "lt" ? "Kraunami teises aktai..." : "Loading legal documents..."} />;
+      return <ModeLoading color={theme.palette[m.paletteKey]} message={lang === "lt" ? "Kraunami teises aktai..." : "Loading legal documents..."} />;
     }
 
     const stats = [
-      { label: lang === "lt" ? "Teises aktai" : "Legal documents", value: allLaws.length, color: palette.amber },
-      { label: lang === "lt" ? "Institucijos" : "Institutions", value: orgs.length, color: palette.blue },
-      { label: lang === "lt" ? "Reguliuojami" : "Regulated entities", value: entities.length, color: palette.rose },
-      { label: lang === "lt" ? "Galios" : "Emergency powers", value: triggers.length, color: palette.orange },
-      { label: lang === "lt" ? "Teises" : "Civic rights", value: rights.length, color: palette.emerald },
-      { label: lang === "lt" ? "Straipsniai" : "Articles", value: articles.length, color: palette.purple },
+      { label: lang === "lt" ? "Teises aktai" : "Legal documents", value: allLaws.length, color: theme.palette.amber },
+      { label: lang === "lt" ? "Institucijos" : "Institutions", value: orgs.length, color: theme.palette.blue },
+      { label: lang === "lt" ? "Reguliuojami" : "Regulated entities", value: entities.length, color: theme.palette.rose },
+      { label: lang === "lt" ? "Galios" : "Emergency powers", value: triggers.length, color: theme.palette.orange },
+      { label: lang === "lt" ? "Teises" : "Civic rights", value: rights.length, color: theme.palette.emerald },
+      { label: lang === "lt" ? "Straipsniai" : "Articles", value: articles.length, color: theme.palette.purple },
     ];
 
     return (
@@ -582,7 +592,7 @@ export function LawExplorer(_props: LawExplorerProps) {
         {allLaws.map(law => {
           const ld = overviewData?.lawDetails.get(law.uri);
           const isStatute = law.kind === "Statute";
-          const accentColor = isStatute ? palette.amber : palette.cyan;
+          const accentColor = isStatute ? theme.palette.amber : theme.palette.cyan;
 
           return (
             <div
@@ -602,27 +612,27 @@ export function LawExplorer(_props: LawExplorerProps) {
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                 {ld?.docId && (
-                  <span style={{ fontSize: 11, color: accentColor, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  <span style={{ fontSize: sz(11), color: accentColor, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>
                     {ld.docId}
                   </span>
                 )}
                 {renderChip(isStatute ? (lang === "lt" ? "Istatymas" : "Statute") : (lang === "lt" ? "Projektas" : "Draft/Amendment"), accentColor)}
               </div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: "0 0 4px", lineHeight: 1.3 }}>
+              <h2 style={{ fontSize: sz(18), fontWeight: 700, color: theme.text.primary, margin: "0 0 4px", lineHeight: 1.3 }}>
                 {law.label}
               </h2>
               {ld?.dateEnacted && (
-                <div style={{ fontSize: 12, color: text.muted, marginBottom: 6 }}>
+                <div style={{ fontSize: sz(12), color: theme.text.muted, marginBottom: 6 }}>
                   {lang === "lt" ? "Priimtas: " : "Enacted: "}{ld.dateEnacted}
                 </div>
               )}
               {ld?.amends && ld.amends.length > 0 && (
-                <div style={{ fontSize: 11, color: palette.cyan, marginBottom: 4 }}>
+                <div style={{ fontSize: sz(11), color: theme.palette.cyan, marginBottom: 4 }}>
                   {lang === "lt" ? "Keicia: " : "Amends: "}{ld.amends.map(u => nodeLabel(u)).join(", ")}
                 </div>
               )}
               {ld?.description && (
-                <p style={{ fontSize: 12, color: text.subtle, lineHeight: 1.5, margin: "4px 0 0" }}>
+                <p style={{ fontSize: sz(12), color: theme.text.subtle, lineHeight: 1.5, margin: "4px 0 0" }}>
                   {ld.description.length > 200 ? ld.description.slice(0, 200) + "..." : ld.description}
                 </p>
               )}
@@ -644,8 +654,8 @@ export function LawExplorer(_props: LawExplorerProps) {
                 borderColor: s.color + "22",
               }}
             >
-              <div style={{ fontSize: 28, fontWeight: 700, color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: 10, color: text.subtle, marginTop: 2 }}>{s.label}</div>
+              <div style={{ fontSize: sz(28), fontWeight: 700, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: sz(10), color: theme.text.subtle, marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -663,21 +673,21 @@ export function LawExplorer(_props: LawExplorerProps) {
                 display: "flex",
                 alignItems: "center",
                 gap: 10,
-                borderColor: m.color + "22",
+                borderColor: theme.palette[m.paletteKey] + "22",
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = m.color + "55"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = m.color + "22"; }}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = theme.palette[m.paletteKey] + "55"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = theme.palette[m.paletteKey] + "22"; }}
             >
               <div style={{
                 width: 32, height: 32, borderRadius: 6,
-                background: m.color + "15", display: "flex",
+                background: theme.palette[m.paletteKey] + "15", display: "flex",
                 alignItems: "center", justifyContent: "center",
-                fontSize: 16, color: m.color,
+                fontSize: sz(16), color: theme.palette[m.paletteKey],
               }}>
                 {m.icon}
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: m.color }}>{lang === "lt" ? m.lt : m.en}</div>
+                <div style={{ fontSize: sz(13), fontWeight: 600, color: theme.palette[m.paletteKey] }}>{lang === "lt" ? m.lt : m.en}</div>
               </div>
             </div>
           ))}
@@ -692,11 +702,11 @@ export function LawExplorer(_props: LawExplorerProps) {
               <div
                 key={p.uri}
                 onClick={() => setSelectedUri(p.uri)}
-                style={{ ...cardBase, marginBottom: 8, borderColor: palette.purple + "22" }}
+                style={{ ...cardBase, marginBottom: 8, borderColor: theme.palette.purple + "22" }}
               >
-                <div style={{ fontSize: 13, fontWeight: 600, color: palette.purple }}>{p.label}</div>
+                <div style={{ fontSize: sz(13), fontWeight: 600, color: theme.palette.purple }}>{p.label}</div>
                 {overviewData?.pipelineDescriptions.get(p.uri) && (
-                  <div style={{ fontSize: 11, color: text.subtle, marginTop: 4 }}>
+                  <div style={{ fontSize: sz(11), color: theme.text.subtle, marginTop: 4 }}>
                     {overviewData.pipelineDescriptions.get(p.uri)!.slice(0, 120)}...
                   </div>
                 )}
@@ -713,7 +723,7 @@ export function LawExplorer(_props: LawExplorerProps) {
   function renderInstitutions() {
     if (orgs.length === 0 && instLoading) {
       const m = MODE_META[1];
-      return <ModeLoading color={m.color} message={lang === "lt" ? "Kraunamos institucijos..." : "Loading institutions..."} />;
+      return <ModeLoading color={theme.palette[m.paletteKey]} message={lang === "lt" ? "Kraunamos institucijos..." : "Loading institutions..."} />;
     }
 
     const ministries = orgs.filter(o => o.kind === "Ministry");
@@ -744,7 +754,7 @@ export function LawExplorer(_props: LawExplorerProps) {
 
   function renderOrgCard(node: LawNode) {
     const isSelected = selectedUri === node.uri;
-    const color = KIND_COLORS[node.kind] || text.muted;
+    const color = KIND_COLORS[node.kind] || theme.text.muted;
     const domain = instData?.governanceDomains.get(node.uri);
 
     return (
@@ -758,11 +768,11 @@ export function LawExplorer(_props: LawExplorerProps) {
           background: isSelected ? color + "0A" : cardBase.background,
         }}
       >
-        <div style={{ fontSize: 12, fontWeight: 600, color: isSelected ? color : text.primary }}>
+        <div style={{ fontSize: sz(12), fontWeight: 600, color: isSelected ? color : theme.text.primary }}>
           {node.label}
         </div>
         {domain && (
-          <div style={{ fontSize: 10, color: domainBadgeColor(domain), marginTop: 2 }}>
+          <div style={{ fontSize: sz(10), color: domainBadgeColor(domain, theme), marginTop: 2 }}>
             {domain}
           </div>
         )}
@@ -773,10 +783,10 @@ export function LawExplorer(_props: LawExplorerProps) {
   function renderInstitutionalOverview() {
     return (
       <div style={{ padding: 20 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, color: palette.blue, marginBottom: 8 }}>
+        <h2 style={{ fontSize: sz(16), fontWeight: 700, color: theme.palette.blue, marginBottom: 8 }}>
           {lang === "lt" ? "Institucine struktura" : "Institutional framework"}
         </h2>
-        <p style={{ fontSize: 12, color: text.secondary, lineHeight: 1.6, marginBottom: 16 }}>
+        <p style={{ fontSize: sz(12), color: theme.text.secondary, lineHeight: 1.6, marginBottom: 16 }}>
           {lang === "lt"
             ? "Pasirinkite institucija kaireje, kad pamatysite jos igaliojimus, priiurimus subjektus ir duomenu mainu rysius."
             : "Select an institution on the left to see its powers, governed entities, and data exchange relationships."
@@ -792,18 +802,18 @@ export function LawExplorer(_props: LawExplorerProps) {
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "6px 10px", borderRadius: 6,
                 background: "rgba(255,255,255,0.02)",
-                fontSize: 11, color: text.secondary,
+                fontSize: sz(11), color: theme.text.secondary,
               }}>
                 <span
                   onClick={() => setSelectedUri(from)}
-                  style={{ color: palette.cyan, cursor: "pointer", fontWeight: 600 }}
+                  style={{ color: theme.palette.cyan, cursor: "pointer", fontWeight: 600 }}
                 >
                   {nodeLabel(from)}
                 </span>
-                <span style={{ color: text.hint }}>{"\u2194"}</span>
+                <span style={{ color: theme.text.hint }}>{"\u2194"}</span>
                 <span
                   onClick={() => setSelectedUri(to)}
-                  style={{ color: palette.cyan, cursor: "pointer", fontWeight: 600 }}
+                  style={{ color: theme.palette.cyan, cursor: "pointer", fontWeight: 600 }}
                 >
                   {nodeLabel(to)}
                 </span>
@@ -820,7 +830,7 @@ export function LawExplorer(_props: LawExplorerProps) {
   function renderRightsAndPowers() {
     if (rights.length === 0 && triggers.length === 0 && rightsLoading) {
       const m = MODE_META[2];
-      return <ModeLoading color={m.color} message={lang === "lt" ? "Kraunamos teises ir galios..." : "Loading rights & powers..."} />;
+      return <ModeLoading color={theme.palette[m.paletteKey]} message={lang === "lt" ? "Kraunamos teises ir galios..." : "Loading rights & powers..."} />;
     }
 
     return (
@@ -831,7 +841,7 @@ export function LawExplorer(_props: LawExplorerProps) {
         }}>
           <div style={sectionTitle}>
             {lang === "lt" ? "Garantuojamos teises" : "Guaranteed rights"}
-            <span style={{ color: palette.emerald, marginLeft: 6 }}>({rights.length})</span>
+            <span style={{ color: theme.palette.emerald, marginLeft: 6 }}>({rights.length})</span>
           </div>
           {rights.map(r => {
             const isSelected = selectedUri === r.uri;
@@ -843,16 +853,16 @@ export function LawExplorer(_props: LawExplorerProps) {
                 style={{
                   ...cardBase,
                   marginBottom: 6,
-                  borderLeft: isSelected ? `3px solid ${palette.emerald}` : `3px solid transparent`,
-                  background: isSelected ? palette.emerald + "0A" : cardBase.background,
-                  borderColor: palette.emerald + "15",
+                  borderLeft: isSelected ? `3px solid ${theme.palette.emerald}` : `3px solid transparent`,
+                  background: isSelected ? theme.palette.emerald + "0A" : cardBase.background,
+                  borderColor: theme.palette.emerald + "15",
                 }}
               >
-                <div style={{ fontSize: 12, fontWeight: 600, color: isSelected ? palette.emerald : text.primary }}>
+                <div style={{ fontSize: sz(12), fontWeight: 600, color: isSelected ? theme.palette.emerald : theme.text.primary }}>
                   {r.label}
                 </div>
                 {limitedBy && limitedBy.length > 0 && (
-                  <div style={{ fontSize: 10, color: palette.orange, marginTop: 4 }}>
+                  <div style={{ fontSize: sz(10), color: theme.palette.orange, marginTop: 4 }}>
                     {lang === "lt" ? "Ribojama " : "Limited by "}{limitedBy.length} {lang === "lt" ? "galiomis" : "power(s)"}
                   </div>
                 )}
@@ -862,7 +872,7 @@ export function LawExplorer(_props: LawExplorerProps) {
 
           <div style={{ ...sectionTitle, marginTop: 20 }}>
             {lang === "lt" ? "Ypatingosios galios" : "Emergency powers"}
-            <span style={{ color: palette.orange, marginLeft: 6 }}>({triggers.length})</span>
+            <span style={{ color: theme.palette.orange, marginLeft: 6 }}>({triggers.length})</span>
           </div>
           {triggers.map(t => {
             const isSelected = selectedUri === t.uri;
@@ -874,18 +884,18 @@ export function LawExplorer(_props: LawExplorerProps) {
                 style={{
                   ...cardBase,
                   marginBottom: 6,
-                  borderLeft: isSelected ? `3px solid ${palette.orange}` : `3px solid transparent`,
-                  background: isSelected ? palette.orange + "0A" : cardBase.background,
-                  borderColor: palette.orange + "15",
+                  borderLeft: isSelected ? `3px solid ${theme.palette.orange}` : `3px solid transparent`,
+                  background: isSelected ? theme.palette.orange + "0A" : cardBase.background,
+                  borderColor: theme.palette.orange + "15",
                 }}
               >
-                <div style={{ fontSize: 12, fontWeight: 600, color: isSelected ? palette.orange : text.primary }}>
+                <div style={{ fontSize: sz(12), fontWeight: 600, color: isSelected ? theme.palette.orange : theme.text.primary }}>
                   {t.label}
                 </div>
                 {flags && (
                   <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
-                    {flags.extraordinary && renderChip(lang === "lt" ? "Ypatingasis" : "Extraordinary", palette.orange)}
-                    {(flags.limit || flags.window) && renderChip(formatDuration(flags.limit || flags.window || ""), palette.amber)}
+                    {flags.extraordinary && renderChip(lang === "lt" ? "Ypatingasis" : "Extraordinary", theme.palette.orange)}
+                    {(flags.limit || flags.window) && renderChip(formatDuration(flags.limit || flags.window || ""), theme.palette.amber)}
                   </div>
                 )}
               </div>
@@ -906,10 +916,10 @@ export function LawExplorer(_props: LawExplorerProps) {
   function renderRightsOverview() {
     return (
       <div style={{ padding: 20 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, color: palette.emerald, marginBottom: 8 }}>
+        <h2 style={{ fontSize: sz(16), fontWeight: 700, color: theme.palette.emerald, marginBottom: 8 }}>
           {lang === "lt" ? "Teisiu ir galiu balansas" : "Balance of rights and powers"}
         </h2>
-        <p style={{ fontSize: 12, color: text.secondary, lineHeight: 1.6, marginBottom: 20 }}>
+        <p style={{ fontSize: sz(12), color: theme.text.secondary, lineHeight: 1.6, marginBottom: 20 }}>
           {lang === "lt"
             ? "Istatymas garantuoja pagrindines pilietines teises kibernetineje erdveje, taciau leidzia jas laikinai apriboti ypatinguju incidentu metu. Visos apribojimu priemones turi buti proporcingos ir laiko atzivilgiu ribotos."
             : "The law guarantees fundamental civic rights in cyberspace while allowing temporary limitations during emergency incidents. All restrictive measures must be proportionate and time-limited."
@@ -928,13 +938,13 @@ export function LawExplorer(_props: LawExplorerProps) {
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "8px 10px", borderRadius: 6,
                   background: "rgba(255,255,255,0.02)",
-                  marginBottom: 4, fontSize: 12,
+                  marginBottom: 4, fontSize: sz(12),
                 }}>
-                  <span style={{ color: palette.emerald, fontWeight: 600, flex: 1, cursor: "pointer" }}
+                  <span style={{ color: theme.palette.emerald, fontWeight: 600, flex: 1, cursor: "pointer" }}
                     onClick={() => setSelectedUri(r.uri)}>
                     {r.label}
                   </span>
-                  <span style={{ color: text.hint, fontSize: 11 }}>
+                  <span style={{ color: theme.text.hint, fontSize: sz(11) }}>
                     {lang === "lt" ? "Neribojama" : "Not limited"}
                   </span>
                 </div>
@@ -946,14 +956,14 @@ export function LawExplorer(_props: LawExplorerProps) {
                   marginBottom: 4,
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 12, color: palette.emerald, fontWeight: 600, flex: 1, cursor: "pointer" }}
+                    <span style={{ fontSize: sz(12), color: theme.palette.emerald, fontWeight: 600, flex: 1, cursor: "pointer" }}
                       onClick={() => setSelectedUri(r.uri)}>
                       {r.label}
                     </span>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 4, paddingLeft: 12 }}>
                     {limitedBy.map(t => (
-                      <span key={t}>{renderRefChip(t, palette.orange)}</span>
+                      <span key={t}>{renderRefChip(t, theme.palette.orange)}</span>
                     ))}
                   </div>
                 </div>
@@ -970,7 +980,7 @@ export function LawExplorer(_props: LawExplorerProps) {
   function renderCompliance() {
     if (entities.length === 0 && mandates.length === 0 && compLoading) {
       const m = MODE_META[3];
-      return <ModeLoading color={m.color} message={lang === "lt" ? "Kraunama atitiktis..." : "Loading compliance data..."} />;
+      return <ModeLoading color={theme.palette[m.paletteKey]} message={lang === "lt" ? "Kraunama atitiktis..." : "Loading compliance data..."} />;
     }
 
     return (
@@ -981,7 +991,7 @@ export function LawExplorer(_props: LawExplorerProps) {
         }}>
           <div style={sectionTitle}>
             {lang === "lt" ? "Reguliuojami subjektai" : "Regulated entities"}
-            <span style={{ color: palette.rose, marginLeft: 6 }}>({entities.length})</span>
+            <span style={{ color: theme.palette.rose, marginLeft: 6 }}>({entities.length})</span>
           </div>
           {entities.map(e => {
             const isSelected = selectedUri === e.uri;
@@ -992,15 +1002,15 @@ export function LawExplorer(_props: LawExplorerProps) {
                 style={{
                   ...cardBase,
                   marginBottom: 6,
-                  borderLeft: isSelected ? `3px solid ${palette.rose}` : `3px solid transparent`,
-                  background: isSelected ? palette.rose + "0A" : cardBase.background,
-                  borderColor: palette.rose + "15",
+                  borderLeft: isSelected ? `3px solid ${theme.palette.rose}` : `3px solid transparent`,
+                  background: isSelected ? theme.palette.rose + "0A" : cardBase.background,
+                  borderColor: theme.palette.rose + "15",
                 }}
               >
-                <div style={{ fontSize: 12, fontWeight: 600, color: isSelected ? palette.rose : text.primary }}>
+                <div style={{ fontSize: sz(12), fontWeight: 600, color: isSelected ? theme.palette.rose : theme.text.primary }}>
                   {e.label}
                 </div>
-                <div style={{ fontSize: 10, color: text.subtle, marginTop: 2 }}>
+                <div style={{ fontSize: sz(10), color: theme.text.subtle, marginTop: 2 }}>
                   {e.kind.replace(/([A-Z])/g, " $1").trim()}
                 </div>
               </div>
@@ -1009,7 +1019,7 @@ export function LawExplorer(_props: LawExplorerProps) {
 
           <div style={{ ...sectionTitle, marginTop: 16 }}>
             {lang === "lt" ? "Atsparumo reikalavimai" : "Resilience mandates"}
-            <span style={{ color: palette.cyan, marginLeft: 6 }}>({mandates.length})</span>
+            <span style={{ color: theme.palette.cyan, marginLeft: 6 }}>({mandates.length})</span>
           </div>
           {mandates.map(m => {
             const isSelected = selectedUri === m.uri;
@@ -1021,16 +1031,16 @@ export function LawExplorer(_props: LawExplorerProps) {
                 style={{
                   ...cardBase,
                   marginBottom: 6,
-                  borderLeft: isSelected ? `3px solid ${palette.cyan}` : `3px solid transparent`,
-                  background: isSelected ? palette.cyan + "0A" : cardBase.background,
-                  borderColor: palette.cyan + "15",
+                  borderLeft: isSelected ? `3px solid ${theme.palette.cyan}` : `3px solid transparent`,
+                  background: isSelected ? theme.palette.cyan + "0A" : cardBase.background,
+                  borderColor: theme.palette.cyan + "15",
                 }}
               >
-                <div style={{ fontSize: 12, fontWeight: 600, color: isSelected ? palette.cyan : text.primary }}>
+                <div style={{ fontSize: sz(12), fontWeight: 600, color: isSelected ? theme.palette.cyan : theme.text.primary }}>
                   {m.label}
                 </div>
                 {isSelf && (
-                  <div style={{ fontSize: 10, color: palette.amber, marginTop: 2 }}>
+                  <div style={{ fontSize: sz(10), color: theme.palette.amber, marginTop: 2 }}>
                     {lang === "lt" ? "Savo lesomis" : "Self-funded"}
                   </div>
                 )}
@@ -1058,7 +1068,7 @@ export function LawExplorer(_props: LawExplorerProps) {
                       borderColor: "#FF4A6B15",
                     }}
                   >
-                    <div style={{ fontSize: 12, fontWeight: 600, color: isSelected ? "#FF4A6B" : text.primary }}>
+                    <div style={{ fontSize: sz(12), fontWeight: 600, color: isSelected ? "#FF4A6B" : theme.text.primary }}>
                       {l.label}
                     </div>
                   </div>
@@ -1081,10 +1091,10 @@ export function LawExplorer(_props: LawExplorerProps) {
   function renderComplianceOverview() {
     return (
       <div style={{ padding: 20 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, color: palette.rose, marginBottom: 8 }}>
+        <h2 style={{ fontSize: sz(16), fontWeight: 700, color: theme.palette.rose, marginBottom: 8 }}>
           {lang === "lt" ? "Atitikties pareigos" : "Compliance obligations"}
         </h2>
-        <p style={{ fontSize: 12, color: text.secondary, lineHeight: 1.6, marginBottom: 20 }}>
+        <p style={{ fontSize: sz(12), color: theme.text.secondary, lineHeight: 1.6, marginBottom: 20 }}>
           {lang === "lt"
             ? "Istatymas nustato pareigas keturioms reguliuojamu subjektu kategorijoms. Kiekviena kategorija turi specifines praneisimu ir saugumo uztikrinimo pareigas."
             : "The law establishes obligations for four categories of regulated entities. Each category has specific reporting and security requirements."
@@ -1105,15 +1115,15 @@ export function LawExplorer(_props: LawExplorerProps) {
                   marginBottom: 4,
                 }}>
                   <div style={{
-                    fontSize: 12, fontWeight: 600, color: palette.rose,
+                    fontSize: sz(12), fontWeight: 600, color: theme.palette.rose,
                     cursor: "pointer", marginBottom: 4,
                   }} onClick={() => setSelectedUri(e.uri)}>
                     {e.label}
                   </div>
                   {reportsTo && (
                     <div style={{ display: "flex", alignItems: "center", gap: 4, paddingLeft: 12, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 10, color: text.hint }}>{lang === "lt" ? "praneisa" : "reports to"} {"\u2192"}</span>
-                      {reportsTo.map(a => <span key={a}>{renderRefChip(a, palette.blue)}</span>)}
+                      <span style={{ fontSize: sz(10), color: theme.text.hint }}>{lang === "lt" ? "praneisa" : "reports to"} {"\u2192"}</span>
+                      {reportsTo.map(a => <span key={a}>{renderRefChip(a, theme.palette.blue)}</span>)}
                     </div>
                   )}
                 </div>
@@ -1143,17 +1153,17 @@ export function LawExplorer(_props: LawExplorerProps) {
           }}
           style={{
             ...cardBase,
-            borderLeft: selectedUri === art.uri ? `3px solid ${palette.blue}` : `3px solid transparent`,
+            borderLeft: selectedUri === art.uri ? `3px solid ${theme.palette.blue}` : `3px solid transparent`,
             display: "flex", alignItems: "center", gap: 6,
             marginBottom: 2, padding: "8px 12px",
           }}
         >
           {concepts.length > 0 && (
-            <span style={{ fontSize: 9, color: text.hint, transition: "transform 0.15s", transform: isArtExpanded ? "rotate(90deg)" : "none" }}>
+            <span style={{ fontSize: sz(9), color: theme.text.hint, transition: "transform 0.15s", transform: isArtExpanded ? "rotate(90deg)" : "none" }}>
               {"\u25B6"}
             </span>
           )}
-          <span style={{ fontSize: 11, color: selectedUri === art.uri ? palette.blue : text.secondary }}>
+          <span style={{ fontSize: sz(11), color: selectedUri === art.uri ? theme.palette.blue : theme.text.secondary }}>
             {art.label}
           </span>
         </div>
@@ -1172,7 +1182,7 @@ export function LawExplorer(_props: LawExplorerProps) {
                 cursor: "pointer",
               }}
             >
-              <span style={{ fontSize: 11, color: selectedUri === cUri ? "#9CA3AF" : text.subtle }}>
+              <span style={{ fontSize: sz(11), color: selectedUri === cUri ? "#9CA3AF" : theme.text.subtle }}>
                 {concept.label}
               </span>
             </div>
@@ -1212,21 +1222,21 @@ export function LawExplorer(_props: LawExplorerProps) {
                 }}
                 style={{
                   ...cardBase,
-                  borderLeft: selectedUri === ch.uri ? `3px solid ${palette.purple}` : `3px solid transparent`,
+                  borderLeft: selectedUri === ch.uri ? `3px solid ${theme.palette.purple}` : `3px solid transparent`,
                   display: "flex", alignItems: "center", gap: 6,
                   marginBottom: 2,
                 }}
               >
-                <span style={{ fontSize: 10, color: text.hint, transition: "transform 0.15s", transform: isExpanded ? "rotate(90deg)" : "none" }}>
+                <span style={{ fontSize: sz(10), color: theme.text.hint, transition: "transform 0.15s", transform: isExpanded ? "rotate(90deg)" : "none" }}>
                   {"\u25B6"}
                 </span>
                 <span
-                  style={{ fontSize: 12, fontWeight: 600, color: palette.purple, flex: 1, cursor: "pointer" }}
+                  style={{ fontSize: sz(12), fontWeight: 600, color: theme.palette.purple, flex: 1, cursor: "pointer" }}
                   onClick={e => { e.stopPropagation(); setSelectedUri(ch.uri); }}
                 >
                   {ch.label}
                 </span>
-                <span style={{ fontSize: 10, color: text.hint }}>{chapterArticles.length}</span>
+                <span style={{ fontSize: sz(10), color: theme.text.hint }}>{chapterArticles.length}</span>
               </div>
               {isExpanded && chapterArticles.map(art => renderArticleRow(art, 20))}
             </div>
@@ -1260,7 +1270,7 @@ export function LawExplorer(_props: LawExplorerProps) {
                   background: selectedUri === s.uri ? KIND_COLORS[s.kind] + "0A" : cardBase.background,
                   borderColor: KIND_COLORS[s.kind] + "22",
                   fontWeight: 700,
-                  fontSize: 13,
+                  fontSize: sz(13),
                   color: KIND_COLORS[s.kind],
                 }}
               >
@@ -1277,10 +1287,10 @@ export function LawExplorer(_props: LawExplorerProps) {
             ? renderDetailPanel(selected)
             : (
               <div style={{ padding: 20 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: palette.purple, marginBottom: 8 }}>
+                <h2 style={{ fontSize: sz(16), fontWeight: 700, color: theme.palette.purple, marginBottom: 8 }}>
                   {lang === "lt" ? "Istatymo struktura" : "Law structure"}
                 </h2>
-                <p style={{ fontSize: 12, color: text.secondary, lineHeight: 1.6 }}>
+                <p style={{ fontSize: sz(12), color: theme.text.secondary, lineHeight: 1.6 }}>
                   {lang === "lt"
                     ? "Ispleskite skyrius kaireje, kad pamatysite straipsnius ir ju kodifikuojamas savokas."
                     : "Expand chapters on the left to see articles and the legal concepts they codify."
@@ -1309,17 +1319,17 @@ export function LawExplorer(_props: LawExplorerProps) {
         alignItems: "center",
         padding: "10px 16px",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
-        background: surface.base,
+        background: theme.surface.base,
         gap: 12,
         flexShrink: 0,
       }}>
-        <span style={{ fontSize: 18 }}>{"\u2696"}</span>
+        <span style={{ fontSize: sz(18) }}>{"\u2696"}</span>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>
+          <div style={{ fontSize: sz(14), fontWeight: 700, color: theme.text.primary }}>
             {lang === "lt" ? "Teises aktai kontekste" : "Law in Context"}
           </div>
           {allLaws.length > 0 && (
-            <div style={{ fontSize: 10, color: text.subtle }}>
+            <div style={{ fontSize: sz(10), color: theme.text.subtle }}>
               {allLaws.length} {lang === "lt" ? "teises aktai" : allLaws.length === 1 ? "legal document" : "legal documents"}
             </div>
           )}
@@ -1338,11 +1348,11 @@ export function LawExplorer(_props: LawExplorerProps) {
               onClick={() => setLang(l)}
               style={{
                 padding: "4px 12px",
-                fontSize: 11,
+                fontSize: sz(11),
                 fontWeight: 600,
                 fontFamily: "'IBM Plex Mono', monospace",
-                background: lang === l ? palette.amber + "20" : "transparent",
-                color: lang === l ? palette.amber : text.subtle,
+                background: lang === l ? theme.palette.amber + "20" : "transparent",
+                color: lang === l ? theme.palette.amber : theme.text.subtle,
                 border: "none",
                 cursor: "pointer",
                 textTransform: "uppercase",
@@ -1380,9 +1390,9 @@ export function LawExplorer(_props: LawExplorerProps) {
                   height: 40,
                   borderRadius: 8,
                   border: "none",
-                  background: isActive ? m.color + "18" : "transparent",
-                  color: isActive ? m.color : text.hint,
-                  fontSize: 18,
+                  background: isActive ? theme.palette[m.paletteKey] + "18" : "transparent",
+                  color: isActive ? theme.palette[m.paletteKey] : theme.text.hint,
+                  fontSize: sz(18),
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { SectionLabel, Card, LoadingState, SearchInput, FilterBar, semantic, palette, text, border, surface } from "@trustgraph/trustkit";
+import { SectionLabel, Card, LoadingState, SearchInput, FilterBar, useTheme } from "@trustgraph/trustkit";
 import type { FilterItem } from "@trustgraph/trustkit";
 import { useSchemas, useEmbeddings, useRowEmbeddingsQuery, useRowsQuery, useSettings } from "@trustgraph/react-state";
 
@@ -37,6 +37,7 @@ interface AccumulatedMatch {
 }
 
 export function DataView() {
+  const { theme, sz } = useTheme();
   const { settings } = useSettings();
   const collection = settings.collection;
 
@@ -254,7 +255,7 @@ export function DataView() {
       />
 
       {/* Search Input */}
-      <div style={{ padding: "20px 28px", borderBottom: `1px solid ${border.default}` }}>
+      <div style={{ padding: "20px 28px", borderBottom: `1px solid ${theme.border.default}` }}>
         <SectionLabel marginBottom={12}>SEARCH DATA</SectionLabel>
         <SearchInput
           value={searchTerm}
@@ -263,22 +264,22 @@ export function DataView() {
           placeholder="Search for data across tables..."
           buttonText="Search"
           isLoading={isSearching}
-          buttonColor={palette.blue}
+          buttonColor={theme.palette.blue}
         />
       </div>
 
       {/* Results Area */}
       <div style={{ flex: 1, padding: "24px 28px", overflowY: "auto" }}>
         {!hasSearched && !isSearching ? (
-          <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+          <div style={{ color: theme.text.hint, fontSize: sz(13), fontStyle: "italic" }}>
             Enter a search term to find data across tables.
           </div>
         ) : isSearching ? (
-          <div style={{ color: palette.blue, fontSize: 13 }}>
+          <div style={{ color: theme.palette.blue, fontSize: sz(13) }}>
             Searching...
           </div>
         ) : displayMatches.length === 0 ? (
-          <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+          <div style={{ color: theme.text.hint, fontSize: sz(13), fontStyle: "italic" }}>
             {selectedSchema ? "No matches in this schema. Try selecting 'All'." : "No matches found."}
           </div>
         ) : (
@@ -292,22 +293,22 @@ export function DataView() {
                   {/* Table Header */}
                   <div style={{
                     padding: "12px 16px",
-                    borderBottom: `1px solid ${border.default}`,
+                    borderBottom: `1px solid ${theme.border.default}`,
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
                   }}>
                     <span style={{
-                      fontSize: 12,
+                      fontSize: sz(12),
                       fontWeight: 600,
-                      color: palette.blue,
+                      color: theme.palette.blue,
                       fontFamily: "'IBM Plex Mono', monospace",
                     }}>
                       ▤ {schema?.name || schemaKey}
                     </span>
                     <span style={{
-                      fontSize: 11,
-                      color: text.disabled,
+                      fontSize: sz(11),
+                      color: theme.text.disabled,
                       fontFamily: "'IBM Plex Mono', monospace",
                     }}>
                       {schemaMatches.length} matches
@@ -321,10 +322,10 @@ export function DataView() {
                         key={idx}
                         style={{
                           padding: "12px 16px",
-                          borderBottom: `1px solid ${border.subtle}`,
+                          borderBottom: `1px solid ${theme.border.subtle}`,
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = surface.card;
+                          e.currentTarget.style.background = theme.surface.card;
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = "transparent";
@@ -341,14 +342,14 @@ export function DataView() {
                               const isMatched = (match.index_name || "").split('.').includes(key);
                               return (
                               <div key={key} style={isMatched ? {
-                                background: `${palette.blue}22`,
-                                borderLeft: `3px solid ${palette.blue}`,
+                                background: `${theme.palette.blue}22`,
+                                borderLeft: `3px solid ${theme.palette.blue}`,
                                 borderRadius: 4,
                                 padding: "3px 8px",
                               } : undefined}>
                                 <span style={{
-                                  fontSize: 10,
-                                  color: isMatched ? palette.blue : text.faint,
+                                  fontSize: sz(10),
+                                  color: isMatched ? theme.palette.blue : theme.text.faint,
                                   fontWeight: isMatched ? 700 : 400,
                                   fontFamily: "'IBM Plex Mono', monospace",
                                   textTransform: "uppercase",
@@ -356,8 +357,8 @@ export function DataView() {
                                   {key}{isMatched ? "  ● matched" : ""}
                                 </span>
                                 <div style={{
-                                  fontSize: 13,
-                                  color: isMatched ? palette.blue : text.primary,
+                                  fontSize: sz(13),
+                                  color: isMatched ? theme.palette.blue : theme.text.primary,
                                   fontWeight: isMatched ? 600 : 400,
                                   marginTop: 2,
                                   wordBreak: "break-word",
@@ -370,8 +371,8 @@ export function DataView() {
                           </div>
                         ) : (
                           <div style={{
-                            fontSize: 13,
-                            color: text.primary,
+                            fontSize: sz(13),
+                            color: theme.text.primary,
                             marginBottom: 6,
                             lineHeight: 1.5,
                           }}>
@@ -382,11 +383,11 @@ export function DataView() {
                         <div style={{
                           display: "flex",
                           justifyContent: "flex-end",
-                          fontSize: 11,
+                          fontSize: sz(11),
                           fontFamily: "'IBM Plex Mono', monospace",
                         }}>
                           <span style={{
-                            color: match.score > 0.8 ? semantic.success : match.score > 0.5 ? palette.amber : text.subtle,
+                            color: match.score > 0.8 ? theme.semantic.success : match.score > 0.5 ? theme.palette.amber : theme.text.subtle,
                           }}>
                             {(match.score * 100).toFixed(1)}% match
                           </span>

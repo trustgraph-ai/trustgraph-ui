@@ -1,20 +1,22 @@
 import { useRef } from "react";
 import { createPortal } from "react-dom";
-import { text, surface, border, palette, withGlow } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import { withGlow } from "../../theme";
 import type { ProductScorecardData } from "../../hooks/useProductScorecard";
 
 const mono = "'IBM Plex Mono', monospace";
 
 function Stars({ rating }: { rating: number }) {
+  const { theme, sz } = useTheme();
   const full = Math.floor(rating);
   const half = rating - full >= 0.3;
   const stars: string[] = [];
   for (let i = 0; i < full; i++) stars.push("\u2605");
   if (half) stars.push("\u00BD");
   return (
-    <span style={{ color: palette.amber, fontSize: 12, letterSpacing: 1 }}>
+    <span style={{ color: theme.palette.amber, fontSize: sz(12), letterSpacing: 1 }}>
       {stars.join("")}
-      <span style={{ color: text.hint, fontSize: 10, marginLeft: 4, fontFamily: mono }}>
+      <span style={{ color: theme.text.hint, fontSize: sz(10), marginLeft: 4, fontFamily: mono }}>
         {rating.toFixed(1)}
       </span>
     </span>
@@ -28,9 +30,10 @@ function truncate(s: string, max: number): string {
 }
 
 function ZoneLabel({ children }: { children: React.ReactNode }) {
+  const { theme, sz } = useTheme();
   return (
     <div style={{
-      fontSize: 8, fontFamily: mono, color: text.hint,
+      fontSize: sz(8), fontFamily: mono, color: theme.text.hint,
       textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6,
     }}>
       {children}
@@ -39,7 +42,8 @@ function ZoneLabel({ children }: { children: React.ReactNode }) {
 }
 
 function Divider() {
-  return <div style={{ borderTop: `1px solid ${border.subtle}`, margin: "10px 0" }} />;
+  const { theme } = useTheme();
+  return <div style={{ borderTop: `1px solid ${theme.border.subtle}`, margin: "10px 0" }} />;
 }
 
 export interface ProductScorecardProps {
@@ -50,6 +54,7 @@ export interface ProductScorecardProps {
 }
 
 export function ProductScorecard({ productName, anchorRect, data }: ProductScorecardProps) {
+  const { theme, sz } = useTheme();
   const cardRef = useRef<HTMLDivElement>(null);
   const cardWidth = 340;
   const maxHeight = 480;
@@ -72,8 +77,8 @@ export function ProductScorecard({ productName, anchorRect, data }: ProductScore
       ref={cardRef}
       style={{
         position: "fixed", left, top, width: cardWidth, maxHeight,
-        background: surface.overlay || "#1a1a24",
-        border: `1px solid ${border.default}`,
+        background: theme.surface.overlay || "#1a1a24",
+        border: `1px solid ${theme.border.default}`,
         borderRadius: 10,
         boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.1)",
         overflow: "auto", zIndex: 10000,
@@ -81,19 +86,19 @@ export function ProductScorecard({ productName, anchorRect, data }: ProductScore
       }}
     >
       {data.isLoading ? (
-        <div style={{ padding: 24, textAlign: "center", color: text.hint, fontSize: 11 }}>
+        <div style={{ padding: 24, textAlign: "center", color: theme.text.hint, fontSize: sz(11) }}>
           Loading scorecard...
         </div>
       ) : (
         <>
           {/* Zone 1: Basics */}
           <div style={{ padding: "14px 16px 0" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: text.primary, marginBottom: 6 }}>
+            <div style={{ fontSize: sz(13), fontWeight: 700, color: theme.text.primary, marginBottom: 6 }}>
               {productName}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               {data.price !== null && (
-                <span style={{ fontSize: 16, fontWeight: 700, color: palette.emerald, fontFamily: mono }}>
+                <span style={{ fontSize: sz(16), fontWeight: 700, color: theme.palette.emerald, fontFamily: mono }}>
                   ${data.price.toFixed(2)}
                 </span>
               )}
@@ -101,7 +106,7 @@ export function ProductScorecard({ productName, anchorRect, data }: ProductScore
                 <Stars rating={data.rating} />
               )}
               {data.reviewCount !== null && (
-                <span style={{ fontSize: 9, color: text.hint, fontFamily: mono }}>
+                <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: mono }}>
                   {data.reviewCount.toLocaleString()} reviews
                 </span>
               )}
@@ -116,14 +121,14 @@ export function ProductScorecard({ productName, anchorRect, data }: ProductScore
 
             {data.winReasons.length > 0 && (
               <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 9, color: palette.emerald, fontWeight: 600, marginBottom: 4 }}>
+                <div style={{ fontSize: sz(9), color: theme.palette.emerald, fontWeight: 600, marginBottom: 4 }}>
                   Why it wins
                 </div>
                 {data.winReasons.map((r, i) => (
                   <div key={i} style={{
-                    fontSize: 10, color: text.muted, lineHeight: 1.4,
+                    fontSize: sz(10), color: theme.text.muted, lineHeight: 1.4,
                     marginBottom: 3, paddingLeft: 8,
-                    borderLeft: `2px solid ${withGlow(palette.emerald, 0.3)}`,
+                    borderLeft: `2px solid ${withGlow(theme.palette.emerald, 0.3)}`,
                   }}>
                     {truncate(r, 140)}
                   </div>
@@ -133,16 +138,16 @@ export function ProductScorecard({ productName, anchorRect, data }: ProductScore
 
             {data.lossReasons.length > 0 && (
               <div>
-                <div style={{ fontSize: 9, color: palette.rose, fontWeight: 600, marginBottom: 4 }}>
+                <div style={{ fontSize: sz(9), color: theme.palette.rose, fontWeight: 600, marginBottom: 4 }}>
                   Why it loses
                 </div>
                 {data.lossReasons.map((r, i) => (
                   <div key={i} style={{
-                    fontSize: 10, color: text.muted, lineHeight: 1.4,
+                    fontSize: sz(10), color: theme.text.muted, lineHeight: 1.4,
                     marginBottom: 3, paddingLeft: 8,
-                    borderLeft: `2px solid ${withGlow(palette.rose, 0.3)}`,
+                    borderLeft: `2px solid ${withGlow(theme.palette.rose, 0.3)}`,
                   }}>
-                    <span style={{ color: palette.rose, fontWeight: 600 }}>vs {r.winnerName}: </span>
+                    <span style={{ color: theme.palette.rose, fontWeight: 600 }}>vs {r.winnerName}: </span>
                     {truncate(r.reasoning, 120)}
                   </div>
                 ))}
@@ -150,7 +155,7 @@ export function ProductScorecard({ productName, anchorRect, data }: ProductScore
             )}
 
             {data.winReasons.length === 0 && data.lossReasons.length === 0 && (
-              <div style={{ fontSize: 10, color: text.hint, fontStyle: "italic" }}>
+              <div style={{ fontSize: sz(10), color: theme.text.hint, fontStyle: "italic" }}>
                 No decision reasoning data captured yet.
               </div>
             )}
@@ -165,15 +170,15 @@ export function ProductScorecard({ productName, anchorRect, data }: ProductScore
               {data.budgetCohort && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{
-                    fontSize: 8, color: palette.purple, fontFamily: mono, textTransform: "uppercase",
-                    background: withGlow(palette.purple, 0.1),
-                    border: `1px solid ${withGlow(palette.purple, 0.2)}`,
+                    fontSize: sz(8), color: theme.palette.purple, fontFamily: mono, textTransform: "uppercase",
+                    background: withGlow(theme.palette.purple, 0.1),
+                    border: `1px solid ${withGlow(theme.palette.purple, 0.2)}`,
                     borderRadius: 3, padding: "1px 5px",
                   }}>
                     Budget
                   </span>
-                  <span style={{ fontSize: 10, color: text.primary }}>
-                    Most popular in <span style={{ color: palette.purple, fontWeight: 600 }}>{data.budgetCohort}</span> builds
+                  <span style={{ fontSize: sz(10), color: theme.text.primary }}>
+                    Most popular in <span style={{ color: theme.palette.purple, fontWeight: 600 }}>{data.budgetCohort}</span> builds
                   </span>
                 </div>
               )}
@@ -181,16 +186,16 @@ export function ProductScorecard({ productName, anchorRect, data }: ProductScore
               {data.topCompetitor && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{
-                    fontSize: 8, color: palette.rose, fontFamily: mono, textTransform: "uppercase",
-                    background: withGlow(palette.rose, 0.1),
-                    border: `1px solid ${withGlow(palette.rose, 0.2)}`,
+                    fontSize: sz(8), color: theme.palette.rose, fontFamily: mono, textTransform: "uppercase",
+                    background: withGlow(theme.palette.rose, 0.1),
+                    border: `1px solid ${withGlow(theme.palette.rose, 0.2)}`,
                     borderRadius: 3, padding: "1px 5px",
                   }}>
                     Threat
                   </span>
-                  <span style={{ fontSize: 10, color: text.primary }}>
-                    Most often beaten by <span style={{ color: palette.rose, fontWeight: 600 }}>{data.topCompetitor.name}</span>
-                    <span style={{ color: text.hint, fontFamily: mono, fontSize: 9 }}> ({data.topCompetitor.losses}x)</span>
+                  <span style={{ fontSize: sz(10), color: theme.text.primary }}>
+                    Most often beaten by <span style={{ color: theme.palette.rose, fontWeight: 600 }}>{data.topCompetitor.name}</span>
+                    <span style={{ color: theme.text.hint, fontFamily: mono, fontSize: sz(9) }}> ({data.topCompetitor.losses}x)</span>
                   </span>
                 </div>
               )}
@@ -198,22 +203,22 @@ export function ProductScorecard({ productName, anchorRect, data }: ProductScore
               {data.attachHero && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{
-                    fontSize: 8, color: palette.amber, fontFamily: mono, textTransform: "uppercase",
-                    background: withGlow(palette.amber, 0.1),
-                    border: `1px solid ${withGlow(palette.amber, 0.2)}`,
+                    fontSize: sz(8), color: theme.palette.amber, fontFamily: mono, textTransform: "uppercase",
+                    background: withGlow(theme.palette.amber, 0.1),
+                    border: `1px solid ${withGlow(theme.palette.amber, 0.2)}`,
                     borderRadius: 3, padding: "1px 5px",
                   }}>
                     Attach
                   </span>
-                  <span style={{ fontSize: 10, color: text.primary }}>
-                    Top cross-sell: <span style={{ color: palette.amber, fontWeight: 600 }}>{data.attachHero.name}</span>
-                    <span style={{ color: text.hint, fontFamily: mono, fontSize: 9 }}> ({data.attachHero.count}x)</span>
+                  <span style={{ fontSize: sz(10), color: theme.text.primary }}>
+                    Top cross-sell: <span style={{ color: theme.palette.amber, fontWeight: 600 }}>{data.attachHero.name}</span>
+                    <span style={{ color: theme.text.hint, fontFamily: mono, fontSize: sz(9) }}> ({data.attachHero.count}x)</span>
                   </span>
                 </div>
               )}
 
               {!data.budgetCohort && !data.topCompetitor && !data.attachHero && (
-                <div style={{ fontSize: 10, color: text.hint, fontStyle: "italic" }}>
+                <div style={{ fontSize: sz(10), color: theme.text.hint, fontStyle: "italic" }}>
                   Not enough session data to determine sweet spot.
                 </div>
               )}

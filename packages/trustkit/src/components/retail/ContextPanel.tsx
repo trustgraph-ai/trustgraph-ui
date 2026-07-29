@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { text, surface, border, palette, withGlow } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import { withGlow } from "../../theme";
 import type { RetailFlow } from "../../hooks/useRetailChat";
 import type { RetailContextData, ActivityTemplate, CategoryRequirement } from "../../hooks/useRetailContext";
 
@@ -8,32 +9,13 @@ interface ContextPanelProps {
   context: RetailContextData;
 }
 
-const FLOW_STYLES: Record<RetailFlow, { icon: string; title: string; color: string }> = {
-  build: { icon: "\u2699", title: "PC Build Assistant", color: palette.blue },
-  gift: { icon: "\u2605", title: "Gift Finder", color: palette.amber },
-  kit: { icon: "\u25B3", title: "Kit Assembly", color: palette.emerald },
-  compare: { icon: "\u25C7", title: "Product Comparison", color: palette.purple },
-  browse: { icon: "\u25C9", title: "Shopping Assistant", color: palette.cyan },
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  "PC Components": palette.blue,
-  "Electronics": palette.amber,
-  "Outdoor Gear": palette.emerald,
-};
-
-const PRIORITY_STYLES: Record<string, { color: string; label: string }> = {
-  essential: { color: palette.red, label: "ESSENTIAL" },
-  recommended: { color: palette.amber, label: "RECOMMENDED" },
-  optional: { color: palette.cyan, label: "OPTIONAL" },
-};
-
 function SectionHeader({ children }: { children: string }) {
+  const { theme, sz } = useTheme();
   return (
     <div style={{
-      fontSize: 10,
+      fontSize: sz(10),
       fontFamily: "'IBM Plex Mono', monospace",
-      color: text.subtle,
+      color: theme.text.subtle,
       textTransform: "uppercase",
       letterSpacing: 0.5,
       marginBottom: 8,
@@ -44,6 +26,14 @@ function SectionHeader({ children }: { children: string }) {
 }
 
 function RequirementRow({ req }: { req: CategoryRequirement }) {
+  const { theme, sz } = useTheme();
+
+  const PRIORITY_STYLES: Record<string, { color: string; label: string }> = {
+    essential: { color: theme.palette.red, label: "ESSENTIAL" },
+    recommended: { color: theme.palette.amber, label: "RECOMMENDED" },
+    optional: { color: theme.palette.cyan, label: "OPTIONAL" },
+  };
+
   const ps = PRIORITY_STYLES[req.priority] || PRIORITY_STYLES.optional;
   const qty = req.perPerson
     ? `${req.perPerson}/person`
@@ -58,14 +48,14 @@ function RequirementRow({ req }: { req: CategoryRequirement }) {
       alignItems: "center",
       gap: 8,
     }}>
-      <span style={{ color: ps.color, fontSize: 7, flexShrink: 0 }}>{"\u25CF"}</span>
+      <span style={{ color: ps.color, fontSize: sz(7), flexShrink: 0 }}>{"\u25CF"}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ fontSize: 11, color: text.muted }}>{req.categoryName}</span>
+        <span style={{ fontSize: sz(11), color: theme.text.muted }}>{req.categoryName}</span>
       </div>
       <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
         {qty && (
           <span style={{
-            fontSize: 8, color: text.subtle,
+            fontSize: sz(8), color: theme.text.subtle,
             fontFamily: "'IBM Plex Mono', monospace",
             padding: "1px 4px", borderRadius: 3,
             background: withGlow(ps.color, 0.08),
@@ -74,7 +64,7 @@ function RequirementRow({ req }: { req: CategoryRequirement }) {
           </span>
         )}
         <span style={{
-          fontSize: 8, color: ps.color,
+          fontSize: sz(8), color: ps.color,
           fontFamily: "'IBM Plex Mono', monospace",
           padding: "1px 4px", borderRadius: 3,
           background: withGlow(ps.color, 0.1),
@@ -88,8 +78,15 @@ function RequirementRow({ req }: { req: CategoryRequirement }) {
 }
 
 function ActivityCard({ activity }: { activity: ActivityTemplate }) {
+  const { theme, sz } = useTheme();
   const [expanded, setExpanded] = useState(false);
   const hasReqs = activity.requirements.length > 0;
+
+  const PRIORITY_STYLES: Record<string, { color: string; label: string }> = {
+    essential: { color: theme.palette.red, label: "ESSENTIAL" },
+    recommended: { color: theme.palette.amber, label: "RECOMMENDED" },
+    optional: { color: theme.palette.cyan, label: "OPTIONAL" },
+  };
 
   const essential = activity.requirements.filter((r) => r.priority === "essential");
   const recommended = activity.requirements.filter((r) => r.priority === "recommended");
@@ -99,8 +96,8 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
   return (
     <div style={{
       borderRadius: 8,
-      background: surface.card,
-      border: `1px solid ${border.subtle}`,
+      background: theme.surface.card,
+      border: `1px solid ${theme.border.subtle}`,
       marginBottom: 6,
       overflow: "hidden",
     }}>
@@ -115,12 +112,12 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: text.muted, marginBottom: 2 }}>
+          <div style={{ fontSize: sz(11), fontWeight: 600, color: theme.text.muted, marginBottom: 2 }}>
             {activity.name}
           </div>
           {!expanded && (
             <div style={{
-              fontSize: 10, color: text.subtle, lineHeight: 1.4,
+              fontSize: sz(10), color: theme.text.subtle, lineHeight: 1.4,
               display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
               overflow: "hidden",
             }}>
@@ -134,13 +131,13 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
             flexShrink: 0,
           }}>
             <span style={{
-              fontSize: 10, color: text.subtle,
+              fontSize: sz(10), color: theme.text.subtle,
               fontFamily: "'IBM Plex Mono', monospace",
             }}>
               {activity.requirements.length}
             </span>
             <span style={{
-              fontSize: 8, color: text.hint,
+              fontSize: sz(8), color: theme.text.hint,
               transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
               transition: "transform 0.15s",
             }}>
@@ -152,7 +149,7 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
 
       {expanded && hasReqs && (
         <div style={{
-          borderTop: `1px solid ${border.subtle}`,
+          borderTop: `1px solid ${theme.border.subtle}`,
           padding: "4px 0",
         }}>
           {sorted.map((req) => (
@@ -168,7 +165,7 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
           }}>
             {essential.length > 0 && (
               <span style={{
-                fontSize: 9, color: PRIORITY_STYLES.essential.color,
+                fontSize: sz(9), color: PRIORITY_STYLES.essential.color,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 {essential.length} essential
@@ -176,7 +173,7 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
             )}
             {recommended.length > 0 && (
               <span style={{
-                fontSize: 9, color: PRIORITY_STYLES.recommended.color,
+                fontSize: sz(9), color: PRIORITY_STYLES.recommended.color,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 {recommended.length} recommended
@@ -184,7 +181,7 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
             )}
             {optional.length > 0 && (
               <span style={{
-                fontSize: 9, color: PRIORITY_STYLES.optional.color,
+                fontSize: sz(9), color: PRIORITY_STYLES.optional.color,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 {optional.length} optional
@@ -198,6 +195,22 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
 }
 
 export function ContextPanel({ flow, context }: ContextPanelProps) {
+  const { theme, sz } = useTheme();
+
+  const FLOW_STYLES: Record<RetailFlow, { icon: string; title: string; color: string }> = {
+    build: { icon: "\u2699", title: "PC Build Assistant", color: theme.palette.blue },
+    gift: { icon: "\u2605", title: "Gift Finder", color: theme.palette.amber },
+    kit: { icon: "\u25B3", title: "Kit Assembly", color: theme.palette.emerald },
+    compare: { icon: "\u25C7", title: "Product Comparison", color: theme.palette.purple },
+    browse: { icon: "\u25C9", title: "Shopping Assistant", color: theme.palette.cyan },
+  };
+
+  const CATEGORY_COLORS: Record<string, string> = {
+    "PC Components": theme.palette.blue,
+    "Electronics": theme.palette.amber,
+    "Outdoor Gear": theme.palette.emerald,
+  };
+
   const style = FLOW_STYLES[flow];
   const { categories, activities, constraints, totalProducts, isLoading, error } = context;
 
@@ -216,15 +229,15 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
           background: withGlow(style.color, 0.15),
           border: `1px solid ${withGlow(style.color, 0.3)}`,
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 16,
+          fontSize: sz(16),
         }}>
           {style.icon}
         </div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: style.color }}>
+          <div style={{ fontSize: sz(13), fontWeight: 700, color: style.color }}>
             {style.title}
           </div>
-          <div style={{ fontSize: 10, color: text.subtle }}>
+          <div style={{ fontSize: sz(10), color: theme.text.subtle }}>
             {isLoading ? "Loading..." : `${totalProducts} products`}
           </div>
         </div>
@@ -233,9 +246,9 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
       {error && (
         <div style={{
           padding: "8px 12px", borderRadius: 6, marginBottom: 12,
-          background: withGlow(palette.red, 0.1),
-          border: `1px solid ${withGlow(palette.red, 0.3)}`,
-          color: palette.red, fontSize: 11,
+          background: withGlow(theme.palette.red, 0.1),
+          border: `1px solid ${withGlow(theme.palette.red, 0.3)}`,
+          color: theme.palette.red, fontSize: sz(11),
         }}>
           Failed to load catalog data
         </div>
@@ -244,8 +257,8 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
       {isLoading && (
         <div style={{
           padding: "10px 12px", borderRadius: 8,
-          background: surface.card, border: `1px solid ${border.subtle}`,
-          fontSize: 12, color: text.subtle, textAlign: "center",
+          background: theme.surface.card, border: `1px solid ${theme.border.subtle}`,
+          fontSize: sz(12), color: theme.text.subtle, textAlign: "center",
         }}>
           Querying knowledge graph...
         </div>
@@ -257,29 +270,29 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
           <SectionHeader>Product Categories</SectionHeader>
           {topCategories.map((cat) => {
             const subs = subCategories.filter((s) => s.parentName === cat.name);
-            const color = CATEGORY_COLORS[cat.name] || palette.cyan;
+            const color = CATEGORY_COLORS[cat.name] || theme.palette.cyan;
             return (
               <div key={cat.uri} style={{
                 padding: "10px 12px", borderRadius: 8,
-                background: surface.card, border: `1px solid ${border.subtle}`,
+                background: theme.surface.card, border: `1px solid ${theme.border.subtle}`,
                 marginBottom: 6,
               }}>
                 <div style={{
                   display: "flex", justifyContent: "space-between",
                   alignItems: "center", marginBottom: subs.length > 0 ? 6 : 0,
                 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color }}>
+                  <span style={{ fontSize: sz(12), fontWeight: 600, color }}>
                     {cat.name}
                   </span>
                   <span style={{
-                    fontSize: 10, color: text.subtle,
+                    fontSize: sz(10), color: theme.text.subtle,
                     fontFamily: "'IBM Plex Mono', monospace",
                   }}>
                     {cat.productCount > 0 ? `${cat.productCount} items` : ""}
                   </span>
                 </div>
                 {subs.length > 0 && (
-                  <div style={{ fontSize: 10, color: text.subtle, lineHeight: 1.4 }}>
+                  <div style={{ fontSize: sz(10), color: theme.text.subtle, lineHeight: 1.4 }}>
                     {subs.map((s) => s.name).join(", ")}
                   </div>
                 )}
@@ -307,7 +320,7 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
           {hardConstraints.length > 0 && (
             <div style={{ marginBottom: 8 }}>
               <div style={{
-                fontSize: 10, color: palette.red, fontWeight: 600,
+                fontSize: sz(10), color: theme.palette.red, fontWeight: 600,
                 marginBottom: 4, fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 HARD ({hardConstraints.length})
@@ -315,15 +328,15 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
               {hardConstraints.map((c) => (
                 <div key={c.uri} style={{
                   padding: "6px 10px", borderRadius: 6,
-                  background: withGlow(palette.red, 0.05),
-                  border: `1px solid ${withGlow(palette.red, 0.15)}`,
+                  background: withGlow(theme.palette.red, 0.05),
+                  border: `1px solid ${withGlow(theme.palette.red, 0.15)}`,
                   marginBottom: 3, display: "flex", alignItems: "center", gap: 8,
                 }}>
-                  <span style={{ color: palette.red, fontSize: 8 }}>{"\u25CF"}</span>
+                  <span style={{ color: theme.palette.red, fontSize: sz(8) }}>{"\u25CF"}</span>
                   <div>
-                    <div style={{ fontSize: 11, color: text.muted }}>{c.name}</div>
+                    <div style={{ fontSize: sz(11), color: theme.text.muted }}>{c.name}</div>
                     <div style={{
-                      fontSize: 9, color: text.subtle,
+                      fontSize: sz(9), color: theme.text.subtle,
                       fontFamily: "'IBM Plex Mono', monospace",
                     }}>
                       {c.slotTypes.join(" + ")}
@@ -337,7 +350,7 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
           {softConstraints.length > 0 && (
             <div>
               <div style={{
-                fontSize: 10, color: palette.amber, fontWeight: 600,
+                fontSize: sz(10), color: theme.palette.amber, fontWeight: 600,
                 marginBottom: 4, fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 SOFT ({softConstraints.length})
@@ -345,15 +358,15 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
               {softConstraints.map((c) => (
                 <div key={c.uri} style={{
                   padding: "6px 10px", borderRadius: 6,
-                  background: withGlow(palette.amber, 0.05),
-                  border: `1px solid ${withGlow(palette.amber, 0.15)}`,
+                  background: withGlow(theme.palette.amber, 0.05),
+                  border: `1px solid ${withGlow(theme.palette.amber, 0.15)}`,
                   marginBottom: 3, display: "flex", alignItems: "center", gap: 8,
                 }}>
-                  <span style={{ color: palette.amber, fontSize: 8 }}>{"\u25CF"}</span>
+                  <span style={{ color: theme.palette.amber, fontSize: sz(8) }}>{"\u25CF"}</span>
                   <div>
-                    <div style={{ fontSize: 11, color: text.muted }}>{c.name}</div>
+                    <div style={{ fontSize: sz(11), color: theme.text.muted }}>{c.name}</div>
                     <div style={{
-                      fontSize: 9, color: text.subtle,
+                      fontSize: sz(9), color: theme.text.subtle,
                       fontFamily: "'IBM Plex Mono', monospace",
                     }}>
                       {c.slotTypes.join(" + ")}

@@ -4,7 +4,7 @@ import type { RawNode } from "../../hooks/useRawGraphData";
 import { RawGraphCanvas } from "./RawGraphCanvas";
 import { RawNodeSearch } from "./RawNodeSearch";
 import { SplitPane, LoadingState } from "../common";
-import { text, palette, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface RawGraphWithSearchProps {
   startUri?: string;
@@ -16,6 +16,7 @@ interface RawGraphWithSearchProps {
  * and add them to the graph. No detail panel.
  */
 export function RawGraphWithSearch({ startUri, onNodeSelect }: RawGraphWithSearchProps) {
+  const { theme, sz } = useTheme();
   const {
     visibleNodes, visibleEdges, centerUri, highlightedNodes, stats,
     initialLoading, isError, error, isFetching, searchNodes,
@@ -41,7 +42,7 @@ export function RawGraphWithSearch({ startUri, onNodeSelect }: RawGraphWithSearc
     <div style={{ display: "flex", flexDirection: "column", height: "var(--page-height)" }}>
       <div style={{
         padding: "10px 28px",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
         gap: 12,
@@ -51,10 +52,10 @@ export function RawGraphWithSearch({ startUri, onNodeSelect }: RawGraphWithSearc
           style={{
             padding: "5px 12px",
             borderRadius: 6,
-            border: `1px solid ${showSearch ? palette.cyan + "44" : border.default}`,
-            background: showSearch ? `${palette.cyan}1a` : "transparent",
-            color: showSearch ? palette.cyan : text.subtle,
-            fontSize: 11,
+            border: `1px solid ${showSearch ? theme.palette.cyan + "44" : theme.border.default}`,
+            background: showSearch ? `${theme.palette.cyan}1a` : "transparent",
+            color: showSearch ? theme.palette.cyan : theme.text.subtle,
+            fontSize: sz(11),
             fontFamily: "'IBM Plex Mono', monospace",
             cursor: "pointer",
             transition: "all 0.2s",
@@ -69,10 +70,10 @@ export function RawGraphWithSearch({ startUri, onNodeSelect }: RawGraphWithSearc
             style={{
               padding: "5px 12px",
               borderRadius: 6,
-              border: `1px solid ${border.default}`,
+              border: `1px solid ${theme.border.default}`,
               background: "transparent",
-              color: text.faint,
-              fontSize: 11,
+              color: theme.text.faint,
+              fontSize: sz(11),
               fontFamily: "'IBM Plex Mono', monospace",
               cursor: "pointer",
             }}
@@ -84,9 +85,9 @@ export function RawGraphWithSearch({ startUri, onNodeSelect }: RawGraphWithSearc
         <div style={{ flex: 1 }} />
 
         <span style={{
-          fontSize: 10,
+          fontSize: sz(10),
           fontFamily: "'IBM Plex Mono', monospace",
-          color: text.hint,
+          color: theme.text.hint,
         }}>
           {stats}
         </span>

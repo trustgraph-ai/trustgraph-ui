@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { text, surface, border, palette, withGlow } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import { withGlow } from "../../theme";
 import type { ChatMessage } from "../../hooks/useRetailChat";
 
 interface ChatPanelProps {
@@ -11,8 +12,9 @@ interface ChatPanelProps {
 }
 
 function ChatBubble({ message }: { message: ChatMessage }) {
+  const { theme, sz } = useTheme();
   const isUser = message.role === "user";
-  const color = isUser ? palette.amber : palette.emerald;
+  const color = isUser ? theme.palette.amber : theme.palette.emerald;
 
   return (
     <div
@@ -27,7 +29,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
     >
       <div
         style={{
-          fontSize: 10,
+          fontSize: sz(10),
           color: withGlow(color, 0.53),
           fontFamily: "'IBM Plex Mono', monospace",
           marginBottom: 4,
@@ -37,8 +39,8 @@ function ChatBubble({ message }: { message: ChatMessage }) {
       </div>
       <div
         style={{
-          fontSize: 13,
-          color: text.primary,
+          fontSize: sz(13),
+          color: theme.text.primary,
           lineHeight: 1.6,
           whiteSpace: "pre-wrap",
         }}
@@ -69,6 +71,7 @@ export function ChatPanel({
   error,
   suggestedPrompts,
 }: ChatPanelProps) {
+  const { theme, sz } = useTheme();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -118,9 +121,9 @@ export function ChatPanel({
           <div style={{ padding: "40px 0", textAlign: "center" }}>
             <div
               style={{
-                fontSize: 18,
+                fontSize: sz(18),
                 fontWeight: 700,
-                color: text.primary,
+                color: theme.text.primary,
                 marginBottom: 6,
               }}
             >
@@ -128,8 +131,8 @@ export function ChatPanel({
             </div>
             <div
               style={{
-                fontSize: 12,
-                color: text.subtle,
+                fontSize: sz(12),
+                color: theme.text.subtle,
                 marginBottom: 24,
                 lineHeight: 1.5,
               }}
@@ -155,10 +158,10 @@ export function ChatPanel({
                   style={{
                     padding: "8px 14px",
                     borderRadius: 8,
-                    border: `1px solid ${border.medium}`,
-                    background: surface.card,
-                    color: text.muted,
-                    fontSize: 12,
+                    border: `1px solid ${theme.border.medium}`,
+                    background: theme.surface.card,
+                    color: theme.text.muted,
+                    fontSize: sz(12),
                     cursor: "pointer",
                     fontFamily: "'IBM Plex Sans', sans-serif",
                     maxWidth: 320,
@@ -182,10 +185,10 @@ export function ChatPanel({
             style={{
               padding: "8px 12px",
               borderRadius: 6,
-              background: withGlow(palette.red, 0.1),
-              border: `1px solid ${withGlow(palette.red, 0.3)}`,
-              color: palette.red,
-              fontSize: 12,
+              background: withGlow(theme.palette.red, 0.1),
+              border: `1px solid ${withGlow(theme.palette.red, 0.3)}`,
+              color: theme.palette.red,
+              fontSize: sz(12),
             }}
           >
             {error}
@@ -197,7 +200,7 @@ export function ChatPanel({
       <div
         style={{
           padding: "12px 20px",
-          borderTop: `1px solid ${border.default}`,
+          borderTop: `1px solid ${theme.border.default}`,
           display: "flex",
           gap: 8,
           alignItems: "flex-end",
@@ -214,10 +217,10 @@ export function ChatPanel({
             flex: 1,
             padding: "10px 14px",
             borderRadius: 8,
-            border: `1px solid ${border.medium}`,
-            background: surface.card,
-            color: text.primary,
-            fontSize: 13,
+            border: `1px solid ${theme.border.medium}`,
+            background: theme.surface.card,
+            color: theme.text.primary,
+            fontSize: sz(13),
             fontFamily: "'IBM Plex Sans', sans-serif",
             outline: "none",
             resize: "none",
@@ -230,16 +233,16 @@ export function ChatPanel({
           style={{
             padding: "10px 18px",
             borderRadius: 8,
-            border: `1px solid ${palette.emerald}44`,
+            border: `1px solid ${theme.palette.emerald}44`,
             background:
               !input.trim() || isQuerying
-                ? surface.card
-                : `${palette.emerald}1a`,
+                ? theme.surface.card
+                : `${theme.palette.emerald}1a`,
             color:
-              !input.trim() || isQuerying ? text.disabled : palette.emerald,
+              !input.trim() || isQuerying ? theme.text.disabled : theme.palette.emerald,
             cursor:
               !input.trim() || isQuerying ? "not-allowed" : "pointer",
-            fontSize: 13,
+            fontSize: sz(13),
             fontWeight: 600,
             fontFamily: "'IBM Plex Mono', monospace",
             whiteSpace: "nowrap",

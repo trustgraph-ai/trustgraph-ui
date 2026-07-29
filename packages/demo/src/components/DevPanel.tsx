@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { SectionLabel, Badge, text, surface, border, palette } from "@trustgraph/trustkit";
+import { SectionLabel, Badge, useTheme } from "@trustgraph/trustkit";
+import type { ThemePalette } from "@trustgraph/trustkit";
 
 interface CodeSample {
   label: string;
@@ -23,13 +24,14 @@ interface DevPanelProps {
   hooks: ComponentInfo[];
 }
 
-const tierLabels: Record<string, { label: string; color: string }> = {
-  "1": { label: "Hook", color: palette.blue },
-  "2": { label: "Domain Piece", color: palette.purple },
-  "3": { label: "Composite", color: palette.emerald },
+const tierLabels: Record<string, { label: string; paletteKey: keyof ThemePalette }> = {
+  "1": { label: "Hook", paletteKey: "blue" },
+  "2": { label: "Domain Piece", paletteKey: "purple" },
+  "3": { label: "Composite", paletteKey: "emerald" },
 };
 
 function CopyButton({ text: textToCopy }: { text: string }) {
+  const { theme, sz } = useTheme();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -43,10 +45,10 @@ function CopyButton({ text: textToCopy }: { text: string }) {
       onClick={handleCopy}
       style={{
         background: "none",
-        border: `1px solid ${border.medium}`,
+        border: `1px solid ${theme.border.medium}`,
         borderRadius: 4,
-        color: copied ? palette.emerald : text.subtle,
-        fontSize: 11,
+        color: copied ? theme.palette.emerald : theme.text.subtle,
+        fontSize: sz(11),
         fontFamily: "'IBM Plex Mono', monospace",
         padding: "3px 8px",
         cursor: "pointer",
@@ -58,6 +60,7 @@ function CopyButton({ text: textToCopy }: { text: string }) {
 }
 
 export function DevPanel({ explanation, codeSamples, components, hooks }: DevPanelProps) {
+  const { theme, sz } = useTheme();
   const [open, setOpen] = useState(false);
 
   return (
@@ -77,16 +80,16 @@ export function DevPanel({ explanation, codeSamples, components, hooks }: DevPan
           width: 480,
           maxHeight: "calc(100vh - 200px)",
           overflowY: "auto",
-          background: surface.overlay,
+          background: theme.surface.overlay,
           backdropFilter: "blur(16px)",
-          border: `1px solid ${border.medium}`,
+          border: `1px solid ${theme.border.medium}`,
           borderRadius: 12,
           padding: 24,
         }}>
           <SectionLabel marginBottom={12}>HOW THIS PAGE IS BUILT</SectionLabel>
           <p style={{
-            fontSize: 13,
-            color: text.secondary,
+            fontSize: sz(13),
+            color: theme.text.secondary,
             lineHeight: 1.6,
             marginBottom: 20,
           }}>
@@ -103,8 +106,8 @@ export function DevPanel({ explanation, codeSamples, components, hooks }: DevPan
                 marginBottom: 6,
               }}>
                 <span style={{
-                  fontSize: 11,
-                  color: text.muted,
+                  fontSize: sz(11),
+                  color: theme.text.muted,
                   fontFamily: "'IBM Plex Mono', monospace",
                 }}>
                   {sample.label}
@@ -112,14 +115,14 @@ export function DevPanel({ explanation, codeSamples, components, hooks }: DevPan
                 <CopyButton text={sample.code} />
               </div>
               <pre style={{
-                fontSize: 12,
+                fontSize: sz(12),
                 fontFamily: "'IBM Plex Mono', monospace",
-                color: text.primary,
+                color: theme.text.primary,
                 lineHeight: 1.6,
                 padding: "14px 16px",
                 background: "rgba(0,0,0,0.3)",
                 borderRadius: 8,
-                border: `1px solid ${border.subtle}`,
+                border: `1px solid ${theme.border.subtle}`,
                 overflow: "auto",
                 margin: 0,
                 whiteSpace: "pre",
@@ -142,15 +145,15 @@ export function DevPanel({ explanation, codeSamples, components, hooks }: DevPan
                       alignItems: "center",
                       gap: 8,
                     }}>
-                      <Badge color={tier.color} size="small">{tier.label}</Badge>
+                      <Badge color={theme.palette[tier.paletteKey]} size="small">{tier.label}</Badge>
                       <span style={{
-                        fontSize: 12,
+                        fontSize: sz(12),
                         fontFamily: "'IBM Plex Mono', monospace",
-                        color: text.primary,
+                        color: theme.text.primary,
                       }}>
                         {c.name}
                       </span>
-                      <span style={{ fontSize: 11, color: text.subtle }}>
+                      <span style={{ fontSize: sz(11), color: theme.text.subtle }}>
                         — {c.description}
                       </span>
                     </div>
@@ -173,15 +176,15 @@ export function DevPanel({ explanation, codeSamples, components, hooks }: DevPan
                       alignItems: "center",
                       gap: 8,
                     }}>
-                      <Badge color={tier.color} size="small">{tier.label}</Badge>
+                      <Badge color={theme.palette[tier.paletteKey]} size="small">{tier.label}</Badge>
                       <span style={{
-                        fontSize: 12,
+                        fontSize: sz(12),
                         fontFamily: "'IBM Plex Mono', monospace",
-                        color: text.primary,
+                        color: theme.text.primary,
                       }}>
                         {h.name}
                       </span>
-                      <span style={{ fontSize: 11, color: text.subtle }}>
+                      <span style={{ fontSize: sz(11), color: theme.text.subtle }}>
                         — {h.description}
                       </span>
                     </div>
@@ -200,11 +203,11 @@ export function DevPanel({ explanation, codeSamples, components, hooks }: DevPan
           width: 40,
           height: 40,
           borderRadius: 10,
-          border: `1px solid ${open ? palette.amber + "88" : border.medium}`,
-          background: open ? palette.amber + "20" : surface.overlay,
+          border: `1px solid ${open ? theme.palette.amber + "88" : theme.border.medium}`,
+          background: open ? theme.palette.amber + "20" : theme.surface.overlay,
           backdropFilter: "blur(8px)",
-          color: open ? palette.amber : text.subtle,
-          fontSize: 16,
+          color: open ? theme.palette.amber : theme.text.subtle,
+          fontSize: sz(16),
           fontFamily: "'IBM Plex Mono', monospace",
           fontWeight: 700,
           cursor: "pointer",

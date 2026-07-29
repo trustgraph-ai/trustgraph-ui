@@ -1,4 +1,5 @@
-import { text, surface, border, palette, withGlow } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import { withGlow } from "../../theme";
 import type { RecommendedProduct } from "../../hooks/useRetailBuild";
 
 interface ProductCardProps {
@@ -55,6 +56,7 @@ const SPEC_UNITS: Record<string, string> = {
 };
 
 function Stars({ rating }: { rating: number }) {
+  const { theme, sz } = useTheme();
   const full = Math.floor(rating);
   const half = rating - full >= 0.5;
   const stars = [];
@@ -64,13 +66,14 @@ function Stars({ rating }: { rating: number }) {
     else stars.push("\u2606");
   }
   return (
-    <span style={{ color: palette.amber, fontSize: 10, letterSpacing: 1 }}>
+    <span style={{ color: theme.palette.amber, fontSize: sz(10), letterSpacing: 1 }}>
       {stars.join("")}
     </span>
   );
 }
 
 export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
+  const { theme, sz } = useTheme();
   const specEntries = Object.entries(product.specs).slice(0, 6);
   const hasSpecs = specEntries.length > 0;
 
@@ -78,28 +81,28 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
     <div
       style={{
         borderRadius: 8,
-        background: surface.card,
-        border: `1px solid ${border.subtle}`,
+        background: theme.surface.card,
+        border: `1px solid ${theme.border.subtle}`,
         overflow: "hidden",
         transition: "border-color 0.15s",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.borderColor = withGlow(palette.blue, 0.4))}
-      onMouseLeave={(e) => (e.currentTarget.style.borderColor = border.subtle)}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = withGlow(theme.palette.blue, 0.4))}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = theme.border.subtle)}
     >
       {/* Header */}
       <div style={{ padding: "10px 12px", display: "flex", alignItems: "flex-start", gap: 8 }}>
         <span style={{
-          fontSize: 9, fontWeight: 700, color: palette.blue,
+          fontSize: sz(9), fontWeight: 700, color: theme.palette.blue,
           fontFamily: "'IBM Plex Mono', monospace",
-          background: withGlow(palette.blue, 0.12),
-          border: `1px solid ${withGlow(palette.blue, 0.25)}`,
+          background: withGlow(theme.palette.blue, 0.12),
+          border: `1px solid ${withGlow(theme.palette.blue, 0.25)}`,
           borderRadius: 4, padding: "2px 5px", flexShrink: 0,
         }}>
           #{rank}
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            fontSize: 12, fontWeight: 600, color: text.primary,
+            fontSize: sz(12), fontWeight: 600, color: theme.text.primary,
             lineHeight: 1.3, marginBottom: 3,
           }}>
             {product.name}
@@ -107,16 +110,16 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <Stars rating={product.rating} />
             {product.reviewCount > 0 && (
-              <span style={{ fontSize: 9, color: text.hint }}>
+              <span style={{ fontSize: sz(9), color: theme.text.hint }}>
                 ({product.reviewCount})
               </span>
             )}
             {product.performanceTier && (
               <span style={{
-                fontSize: 8, color: palette.purple,
+                fontSize: sz(8), color: theme.palette.purple,
                 fontFamily: "'IBM Plex Mono', monospace",
                 padding: "1px 4px", borderRadius: 3,
-                background: withGlow(palette.purple, 0.1),
+                background: withGlow(theme.palette.purple, 0.1),
               }}>
                 {product.performanceTier}
               </span>
@@ -125,13 +128,13 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
         </div>
         <div style={{ textAlign: "right", flexShrink: 0 }}>
           <div style={{
-            fontSize: 15, fontWeight: 700, color: palette.emerald,
+            fontSize: sz(15), fontWeight: 700, color: theme.palette.emerald,
             fontFamily: "'IBM Plex Mono', monospace",
           }}>
             ${product.price.toFixed(0)}
           </div>
           <div style={{
-            fontSize: 8, color: product.inStock ? palette.emerald : palette.red,
+            fontSize: sz(8), color: product.inStock ? theme.palette.emerald : theme.palette.red,
             fontFamily: "'IBM Plex Mono', monospace",
           }}>
             {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
@@ -143,7 +146,7 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
       {product.imageUrl && (
         <div style={{
           padding: "0 12px 6px",
-          borderTop: `1px solid ${border.subtle}`,
+          borderTop: `1px solid ${theme.border.subtle}`,
         }}>
           <img
             src={product.imageUrl}
@@ -154,7 +157,7 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
               objectFit: "contain",
               borderRadius: 4,
               marginTop: 6,
-              background: "rgba(255,255,255,0.03)",
+              background: theme.surface.cardHover,
             }}
           />
         </div>
@@ -164,14 +167,14 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
       {hasSpecs && (
         <div style={{
           padding: "6px 12px 8px",
-          borderTop: `1px solid ${border.subtle}`,
+          borderTop: `1px solid ${theme.border.subtle}`,
           display: "flex", flexWrap: "wrap", gap: "4px 12px",
         }}>
           {specEntries.map(([key, value]) => (
-            <div key={key} style={{ fontSize: 10 }}>
-              <span style={{ color: text.hint }}>{SPEC_LABELS[key] || key}: </span>
+            <div key={key} style={{ fontSize: sz(10) }}>
+              <span style={{ color: theme.text.hint }}>{SPEC_LABELS[key] || key}: </span>
               <span style={{
-                color: text.muted,
+                color: theme.text.muted,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 {value}{SPEC_UNITS[key] ? ` ${SPEC_UNITS[key]}` : ""}
@@ -190,10 +193,10 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
             width: "100%",
             padding: "7px 0",
             borderRadius: 6,
-            border: `1px solid ${product.inStock ? withGlow(palette.blue, 0.3) : border.subtle}`,
-            background: product.inStock ? withGlow(palette.blue, 0.08) : surface.card,
-            color: product.inStock ? palette.blue : text.disabled,
-            fontSize: 11, fontWeight: 600,
+            border: `1px solid ${product.inStock ? withGlow(theme.palette.blue, 0.3) : theme.border.subtle}`,
+            background: product.inStock ? withGlow(theme.palette.blue, 0.08) : theme.surface.card,
+            color: product.inStock ? theme.palette.blue : theme.text.disabled,
+            fontSize: sz(11), fontWeight: 600,
             fontFamily: "'IBM Plex Mono', monospace",
             cursor: product.inStock ? "pointer" : "not-allowed",
           }}

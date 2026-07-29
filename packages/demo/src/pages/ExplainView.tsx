@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { SectionLabel, SearchInput, ExplainGraph, palette, text, border, withGlow, semantic } from "@trustgraph/trustkit";
+import { SectionLabel, SearchInput, ExplainGraph, withGlow, useTheme } from "@trustgraph/trustkit";
+import type { Theme } from "@trustgraph/trustkit";
 import type { ExplainGraphNode, ExplainGraphEdge } from "@trustgraph/trustkit";
 import { useInference, useSessionStore, useSettings, useWorkspaceStore } from "@trustgraph/react-state";
 import type { ExplainEvent, Triple, Term } from "@trustgraph/react-state";
@@ -150,17 +151,17 @@ function getEventTypeFromTriples(triples: Triple[]): string {
   return "unknown";
 }
 
-function eventTypeColor(eventType: string): string {
+function eventTypeColor(eventType: string, theme: Theme): string {
   switch (eventType) {
-    case "question": return palette.amber;
-    case "grounding": return palette.orange;
-    case "exploration": return palette.blue;
-    case "focus": return palette.purple;
-    case "analysis": return palette.purple;
-    case "reflection": return palette.cyan;
-    case "synthesis": return palette.emerald;
-    case "conclusion": return palette.emerald;
-    default: return text.muted;
+    case "question": return theme.palette.amber;
+    case "grounding": return theme.palette.orange;
+    case "exploration": return theme.palette.blue;
+    case "focus": return theme.palette.purple;
+    case "analysis": return theme.palette.purple;
+    case "reflection": return theme.palette.cyan;
+    case "synthesis": return theme.palette.emerald;
+    case "conclusion": return theme.palette.emerald;
+    default: return "#aaaaaa";
   }
 }
 
@@ -526,6 +527,7 @@ const queryModeLabels: Record<QueryMode, string> = {
 };
 
 export function ExplainView() {
+  const { theme, sz } = useTheme();
   const [input, setInput] = useState("");
   const [queryMode, setQueryMode] = useState<QueryMode>("graph-rag");
   const [response, setResponse] = useState("");
@@ -733,7 +735,7 @@ export function ExplainView() {
         const labels = d.entityLabels || [];
         d.entities.forEach((uri, i) => {
           if (!nodeMap.has(uri)) {
-            nodeMap.set(uri, { id: uri, label: labels[i] || shortUri(uri), color: palette.blue });
+            nodeMap.set(uri, { id: uri, label: labels[i] || shortUri(uri), color: theme.palette.blue });
           }
         });
       }
@@ -748,8 +750,8 @@ export function ExplainView() {
           const oLabel = sel.edgeLabels?.o || shortUri(o);
 
           // Ensure nodes exist
-          if (!nodeMap.has(s)) nodeMap.set(s, { id: s, label: sLabel, color: palette.pink });
-          if (!nodeMap.has(o)) nodeMap.set(o, { id: o, label: oLabel, color: palette.pink });
+          if (!nodeMap.has(s)) nodeMap.set(s, { id: s, label: sLabel, color: theme.palette.pink });
+          if (!nodeMap.has(o)) nodeMap.set(o, { id: o, label: oLabel, color: theme.palette.pink });
 
           edgeList.push({
             id: sel.edgeUri,
@@ -762,7 +764,7 @@ export function ExplainView() {
     }
 
     return { graphNodes: Array.from(nodeMap.values()), graphEdges: edgeList };
-  }, [explainNodes]);
+  }, [explainNodes, theme]);
 
   // ── Entity/edge click → neighbourhood highlight on graph ─────────
   const handleEntityClick = useCallback((entityUri: string) => {
@@ -845,8 +847,8 @@ export function ExplainView() {
   return (
     <div style={{ display: "flex", height: "var(--page-height)" }}>
       {/* LHS: Query + Response */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${border.default}` }}>
-        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${border.default}` }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", borderRight: `1px solid ${theme.border.default}` }}>
+        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${theme.border.default}` }}>
           <SectionLabel marginBottom={12}>{queryModeLabels[queryMode].toUpperCase()} QUERY</SectionLabel>
           <div style={{ display: "flex", gap: 4, marginBottom: 12 }}>
             {(["graph-rag", "doc-rag", "agent"] as QueryMode[]).map(mode => (
@@ -855,12 +857,12 @@ export function ExplainView() {
                 onClick={() => setQueryMode(mode)}
                 disabled={isQuerying}
                 style={{
-                  padding: "5px 14px", borderRadius: 6, fontSize: 11,
+                  padding: "5px 14px", borderRadius: 6, fontSize: sz(11),
                   fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600,
                   cursor: isQuerying ? "default" : "pointer",
-                  background: queryMode === mode ? withGlow(palette.cyan, 0.15) : "transparent",
-                  border: `1px solid ${queryMode === mode ? withGlow(palette.cyan, 0.4) : border.default}`,
-                  color: queryMode === mode ? palette.cyan : text.muted,
+                  background: queryMode === mode ? withGlow(theme.palette.cyan, 0.15) : "transparent",
+                  border: `1px solid ${queryMode === mode ? withGlow(theme.palette.cyan, 0.4) : theme.border.default}`,
+                  color: queryMode === mode ? theme.palette.cyan : theme.text.muted,
                   opacity: isQuerying ? 0.5 : 1,
                   transition: "all 0.15s ease",
                 }}
@@ -876,7 +878,7 @@ export function ExplainView() {
             placeholder="Ask a question..."
             buttonText="Query"
             isLoading={isQuerying}
-            buttonColor={palette.cyan}
+            buttonColor={theme.palette.cyan}
           />
         </div>
 
@@ -884,17 +886,17 @@ export function ExplainView() {
           {error && (
             <div style={{
               padding: "12px 16px", borderRadius: 10,
-              background: withGlow(semantic.error, 0.08),
-              border: `1px solid ${withGlow(semantic.error, 0.2)}`,
+              background: withGlow(theme.semantic.error, 0.08),
+              border: `1px solid ${withGlow(theme.semantic.error, 0.2)}`,
               marginBottom: 12,
             }}>
-              <div style={{ fontSize: 10, color: withGlow(semantic.error, 0.53), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 6 }}>ERROR</div>
-              <div style={{ fontSize: 13, color: text.secondary, lineHeight: 1.6 }}>{error}</div>
+              <div style={{ fontSize: sz(10), color: withGlow(theme.semantic.error, 0.53), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 6 }}>ERROR</div>
+              <div style={{ fontSize: sz(13), color: theme.text.secondary, lineHeight: 1.6 }}>{error}</div>
             </div>
           )}
 
           {!response && !isQuerying && !error && agentMessages.length === 0 && (
-            <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+            <div style={{ color: theme.text.hint, fontSize: sz(13), fontStyle: "italic" }}>
               Ask a question to see {queryModeLabels[queryMode]} in action with live explainability.
             </div>
           )}
@@ -905,17 +907,17 @@ export function ExplainView() {
               {response && (
                 <div style={{
                   padding: "16px 20px", borderRadius: 10,
-                  background: withGlow(semantic.answer, 0.08),
-                  border: `1px solid ${withGlow(semantic.answer, 0.2)}`,
+                  background: withGlow(theme.semantic.answer, 0.08),
+                  border: `1px solid ${withGlow(theme.semantic.answer, 0.2)}`,
                 }}>
-                  <div style={{ fontSize: 10, color: withGlow(semantic.answer, 0.53), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 8 }}>
-                    <span style={{ color: semantic.answer }}>✓</span> RESPONSE
+                  <div style={{ fontSize: sz(10), color: withGlow(theme.semantic.answer, 0.53), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 8 }}>
+                    <span style={{ color: theme.semantic.answer }}>✓</span> RESPONSE
                   </div>
-                  <div style={{ fontSize: 14, color: text.primary, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{response}</div>
+                  <div style={{ fontSize: sz(14), color: theme.text.primary, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{response}</div>
                 </div>
               )}
               {isQuerying && (
-                <div style={{ padding: "8px 12px", fontSize: 11, color: withGlow(palette.cyan, 0.6), fontFamily: "'IBM Plex Mono', monospace", marginTop: 12 }}>
+                <div style={{ padding: "8px 12px", fontSize: sz(11), color: withGlow(theme.palette.cyan, 0.6), fontFamily: "'IBM Plex Mono', monospace", marginTop: 12 }}>
                   {response ? "Streaming..." : "Processing query..."}
                 </div>
               )}
@@ -927,21 +929,21 @@ export function ExplainView() {
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {agentMessages.map((msg, i) => {
                 const colors: Record<string, string> = {
-                  thinking: palette.purple,
-                  observation: palette.blue,
-                  answer: palette.emerald,
+                  thinking: theme.palette.purple,
+                  observation: theme.palette.blue,
+                  answer: theme.palette.emerald,
                 };
-                const color = colors[msg.type] || text.muted;
+                const color = colors[msg.type] || theme.text.muted;
                 return (
                   <div key={i} style={{
                     padding: "12px 16px", borderRadius: 10,
                     background: withGlow(color, 0.08),
                     border: `1px solid ${withGlow(color, 0.2)}`,
                   }}>
-                    <div style={{ fontSize: 10, color: withGlow(color, 0.6), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 6, textTransform: "uppercase", fontWeight: 600 }}>
+                    <div style={{ fontSize: sz(10), color: withGlow(color, 0.6), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 6, textTransform: "uppercase", fontWeight: 600 }}>
                       {msg.type}
                     </div>
-                    <div style={{ fontSize: 13, color: text.secondary, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{msg.text}</div>
+                    <div style={{ fontSize: sz(13), color: theme.text.secondary, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{msg.text}</div>
                   </div>
                 );
               })}
@@ -949,7 +951,7 @@ export function ExplainView() {
           )}
 
           {queryMode === "agent" && isQuerying && agentMessages.length === 0 && (
-            <div style={{ padding: "8px 12px", fontSize: 11, color: withGlow(palette.cyan, 0.6), fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ padding: "8px 12px", fontSize: sz(11), color: withGlow(theme.palette.cyan, 0.6), fontFamily: "'IBM Plex Mono', monospace" }}>
               Agent is working...
             </div>
           )}
@@ -960,23 +962,23 @@ export function ExplainView() {
         {/* Source text panel — shown when a provenance link is clicked */}
         {sourcePanel && (
           <div style={{
-            maxHeight: "40%", borderTop: `1px solid ${border.default}`,
+            maxHeight: "40%", borderTop: `1px solid ${theme.border.default}`,
             display: "flex", flexDirection: "column",
-            background: withGlow(palette.amber, 0.03),
+            background: withGlow(theme.palette.amber, 0.03),
           }}>
             {/* Header with document metadata */}
             <div style={{
-              padding: "8px 16px", borderBottom: `1px solid ${border.default}`,
+              padding: "8px 16px", borderBottom: `1px solid ${theme.border.default}`,
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
-              <div style={{ fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
-                <span style={{ fontWeight: 600, color: palette.amber }}>SOURCE</span>
+              <div style={{ fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
+                <span style={{ fontWeight: 600, color: theme.palette.amber }}>SOURCE</span>
                 {sourcePanel.documentTitle ? (
-                  <span style={{ color: text.secondary, marginLeft: 8 }}>
+                  <span style={{ color: theme.text.secondary, marginLeft: 8 }}>
                     {sourcePanel.documentTitle}
                   </span>
                 ) : (
-                  <span style={{ color: text.muted, marginLeft: 8 }}>
+                  <span style={{ color: theme.text.muted, marginLeft: 8 }}>
                     {shortUri(sourcePanel.documentUri)}
                   </span>
                 )}
@@ -984,10 +986,10 @@ export function ExplainView() {
                   <span style={{ marginLeft: 8 }}>
                     {sourcePanel.documentTags.map((tag, i) => (
                       <span key={i} style={{
-                        fontSize: 9, padding: "1px 6px", borderRadius: 3, marginLeft: 4,
-                        background: withGlow(palette.cyan, 0.1),
-                        border: `1px solid ${withGlow(palette.cyan, 0.2)}`,
-                        color: text.subtle,
+                        fontSize: sz(9), padding: "1px 6px", borderRadius: 3, marginLeft: 4,
+                        background: withGlow(theme.palette.cyan, 0.1),
+                        border: `1px solid ${withGlow(theme.palette.cyan, 0.2)}`,
+                        color: theme.text.subtle,
                       }}>
                         {tag}
                       </span>
@@ -999,7 +1001,7 @@ export function ExplainView() {
                 onClick={() => setSourcePanel(null)}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
-                  color: text.muted, fontSize: 16, padding: "0 4px",
+                  color: theme.text.muted, fontSize: sz(16), padding: "0 4px",
                   lineHeight: 1,
                 }}
                 title="Close"
@@ -1011,18 +1013,18 @@ export function ExplainView() {
             {/* Chunk text content */}
             <div style={{ flex: 1, padding: "12px 16px", overflowY: "auto" }}>
               {sourcePanel.loading && (
-                <div style={{ fontSize: 11, color: withGlow(palette.amber, 0.6), fontFamily: "'IBM Plex Mono', monospace" }}>
+                <div style={{ fontSize: sz(11), color: withGlow(theme.palette.amber, 0.6), fontFamily: "'IBM Plex Mono', monospace" }}>
                   Loading source text...
                 </div>
               )}
               {sourcePanel.error && (
-                <div style={{ fontSize: 11, color: semantic.error, fontFamily: "'IBM Plex Mono', monospace" }}>
+                <div style={{ fontSize: sz(11), color: theme.semantic.error, fontFamily: "'IBM Plex Mono', monospace" }}>
                   {sourcePanel.error}
                 </div>
               )}
               {sourcePanel.chunkText && (
                 <div style={{
-                  fontSize: 12, color: text.secondary, lineHeight: 1.7,
+                  fontSize: sz(12), color: theme.text.secondary, lineHeight: 1.7,
                   whiteSpace: "pre-wrap",
                 }}>
                   {sourcePanel.chunkText}
@@ -1036,7 +1038,7 @@ export function ExplainView() {
       {/* RHS: Graph + Explainability panel */}
       <div style={{ width: "45%", display: "flex", flexDirection: "column" }}>
         {/* Graph view — top half */}
-        <div style={{ height: "45%", borderBottom: `1px solid ${border.default}`, position: "relative" }}>
+        <div style={{ height: "45%", borderBottom: `1px solid ${theme.border.default}`, position: "relative" }}>
           <ExplainGraph
             nodes={graphNodes}
             edges={graphEdges}
@@ -1057,11 +1059,11 @@ export function ExplainView() {
 
         {/* Event cards — bottom half */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-          <div style={{ padding: "12px 20px", borderBottom: `1px solid ${border.default}` }}>
+          <div style={{ padding: "12px 20px", borderBottom: `1px solid ${theme.border.default}` }}>
             <SectionLabel>
               EVENTS
               {explainNodes.length > 0 && (
-                <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
+                <span style={{ color: theme.text.muted, fontWeight: 400, marginLeft: 8 }}>
                   {explainNodes.length} event{explainNodes.length !== 1 ? "s" : ""}
                 </span>
               )}
@@ -1070,13 +1072,13 @@ export function ExplainView() {
 
           <div style={{ flex: 1, padding: "12px 16px", overflowY: "auto" }}>
             {explainNodes.length === 0 && !isQuerying && (
-              <div style={{ color: text.hint, fontSize: 13, fontStyle: "italic" }}>
+              <div style={{ color: theme.text.hint, fontSize: sz(13), fontStyle: "italic" }}>
                 Explain events will appear here as the query progresses.
               </div>
             )}
 
             {isQuerying && explainNodes.length === 0 && (
-              <div style={{ padding: "8px 12px", fontSize: 11, color: withGlow(palette.cyan, 0.6), fontFamily: "'IBM Plex Mono', monospace" }}>
+              <div style={{ padding: "8px 12px", fontSize: sz(11), color: withGlow(theme.palette.cyan, 0.6), fontFamily: "'IBM Plex Mono', monospace" }}>
                 Waiting for explain events...
               </div>
             )}
@@ -1110,7 +1112,8 @@ function ExplainCard({ node, index, onEntityClick, onEdgeClick, onSourceClick }:
   onEdgeClick?: (sel: EdgeSelection) => void;
   onSourceClick?: (source: ProvenanceChain) => void;
 }) {
-  const typeColor = eventTypeColor(node.eventType);
+  const { theme, sz } = useTheme();
+  const typeColor = eventTypeColor(node.eventType, theme);
 
   return (
     <div style={{
@@ -1123,18 +1126,18 @@ function ExplainCard({ node, index, onEntityClick, onEdgeClick, onSourceClick }:
         <span style={{
           display: "inline-block", width: 20, height: 20, borderRadius: "50%",
           background: withGlow(typeColor, 0.2), border: `1px solid ${withGlow(typeColor, 0.4)}`,
-          textAlign: "center", lineHeight: "20px", fontSize: 10, color: typeColor, fontWeight: 700,
+          textAlign: "center", lineHeight: "20px", fontSize: sz(10), color: typeColor, fontWeight: 700,
         }}>
           {index + 1}
         </span>
         <span style={{
-          fontSize: 11, fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace",
           color: typeColor, fontWeight: 600, textTransform: "uppercase",
         }}>
           {node.eventType}
         </span>
         {node.fetching && (
-          <span style={{ fontSize: 10, color: text.faint, fontStyle: "italic" }}>loading...</span>
+          <span style={{ fontSize: sz(10), color: theme.text.faint, fontStyle: "italic" }}>loading...</span>
         )}
       </div>
 
@@ -1150,7 +1153,7 @@ function ExplainCard({ node, index, onEntityClick, onEdgeClick, onSourceClick }:
       )}
 
       {node.error && (
-        <div style={{ fontSize: 10, color: semantic.error, marginTop: 4 }}>{node.error}</div>
+        <div style={{ fontSize: sz(10), color: theme.semantic.error, marginTop: 4 }}>{node.error}</div>
       )}
     </div>
   );
@@ -1165,6 +1168,7 @@ function EventDataView({ eventType, data, onEntityClick, onEdgeClick, onSourceCl
   onEdgeClick?: (sel: EdgeSelection) => void;
   onSourceClick?: (source: ProvenanceChain) => void;
 }) {
+  const { theme, sz } = useTheme();
   const mono = { fontFamily: "'IBM Plex Mono', monospace" } as const;
 
   switch (eventType) {
@@ -1173,12 +1177,12 @@ function EventDataView({ eventType, data, onEntityClick, onEdgeClick, onSourceCl
       return (
         <div style={{ marginTop: 4 }}>
           {d.query && (
-            <div style={{ fontSize: 12, color: text.secondary, lineHeight: 1.6, ...mono }}>
-              <span style={{ color: palette.amber }}>Query:</span> {d.query}
+            <div style={{ fontSize: sz(12), color: theme.text.secondary, lineHeight: 1.6, ...mono }}>
+              <span style={{ color: theme.palette.amber }}>Query:</span> {d.query}
             </div>
           )}
           {d.timestamp && (
-            <div style={{ fontSize: 10, color: text.faint, marginTop: 4, ...mono }}>
+            <div style={{ fontSize: sz(10), color: theme.text.faint, marginTop: 4, ...mono }}>
               {d.timestamp}
             </div>
           )}
@@ -1192,16 +1196,16 @@ function EventDataView({ eventType, data, onEntityClick, onEdgeClick, onSourceCl
         <div style={{ marginTop: 4 }}>
           {d.concepts.length > 0 && (
             <>
-              <div style={{ fontSize: 11, color: palette.orange, marginBottom: 4, ...mono }}>
+              <div style={{ fontSize: sz(11), color: theme.palette.orange, marginBottom: 4, ...mono }}>
                 {d.concepts.length} concept{d.concepts.length !== 1 ? "s" : ""} extracted
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                 {d.concepts.map((concept, i) => (
                   <span key={i} style={{
-                    fontSize: 11, padding: "3px 8px", borderRadius: 4,
-                    background: withGlow(palette.orange, 0.1),
-                    border: `1px solid ${withGlow(palette.orange, 0.2)}`,
-                    color: text.secondary, ...mono,
+                    fontSize: sz(11), padding: "3px 8px", borderRadius: 4,
+                    background: withGlow(theme.palette.orange, 0.1),
+                    border: `1px solid ${withGlow(theme.palette.orange, 0.2)}`,
+                    color: theme.text.secondary, ...mono,
                   }}>
                     {concept}
                   </span>
@@ -1218,18 +1222,18 @@ function EventDataView({ eventType, data, onEntityClick, onEdgeClick, onSourceCl
       return (
         <div style={{ marginTop: 4 }}>
           {d.edgeCount && (
-            <div style={{ fontSize: 12, color: text.secondary, ...mono }}>
-              <span style={{ color: palette.blue }}>Subgraph extracted:</span> {d.edgeCount} edges
+            <div style={{ fontSize: sz(12), color: theme.text.secondary, ...mono }}>
+              <span style={{ color: theme.palette.blue }}>Subgraph extracted:</span> {d.edgeCount} edges
             </div>
           )}
           {d.chunkCount && (
-            <div style={{ fontSize: 12, color: text.secondary, ...mono }}>
-              <span style={{ color: palette.blue }}>Chunks retrieved:</span> {d.chunkCount}
+            <div style={{ fontSize: sz(12), color: theme.text.secondary, ...mono }}>
+              <span style={{ color: theme.palette.blue }}>Chunks retrieved:</span> {d.chunkCount}
             </div>
           )}
           {d.entityLabels && d.entityLabels.length > 0 && (
             <div style={{ marginTop: 6 }}>
-              <div style={{ fontSize: 11, color: palette.blue, marginBottom: 4, ...mono }}>
+              <div style={{ fontSize: sz(11), color: theme.palette.blue, marginBottom: 4, ...mono }}>
                 {d.entityLabels.length} seed entit{d.entityLabels.length !== 1 ? "ies" : "y"}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
@@ -1238,15 +1242,15 @@ function EventDataView({ eventType, data, onEntityClick, onEdgeClick, onSourceCl
                     key={i}
                     onClick={() => onEntityClick?.(d.entities[i])}
                     style={{
-                      fontSize: 11, padding: "3px 8px", borderRadius: 4,
-                      background: withGlow(palette.blue, 0.1),
-                      border: `1px solid ${withGlow(palette.blue, 0.2)}`,
-                      color: text.secondary, ...mono,
+                      fontSize: sz(11), padding: "3px 8px", borderRadius: 4,
+                      background: withGlow(theme.palette.blue, 0.1),
+                      border: `1px solid ${withGlow(theme.palette.blue, 0.2)}`,
+                      color: theme.text.secondary, ...mono,
                       cursor: onEntityClick ? "pointer" : "default",
                       transition: "all 0.15s ease",
                     }}
-                    onMouseEnter={e => { if (onEntityClick) (e.currentTarget.style.background = withGlow(palette.blue, 0.25)); }}
-                    onMouseLeave={e => { (e.currentTarget.style.background = withGlow(palette.blue, 0.1)); }}
+                    onMouseEnter={e => { if (onEntityClick) (e.currentTarget.style.background = withGlow(theme.palette.blue, 0.25)); }}
+                    onMouseLeave={e => { (e.currentTarget.style.background = withGlow(theme.palette.blue, 0.1)); }}
                   >
                     {label}
                   </span>
@@ -1264,7 +1268,7 @@ function EventDataView({ eventType, data, onEntityClick, onEdgeClick, onSourceCl
         <div style={{ marginTop: 4 }}>
           {d.edgeSelections && d.edgeSelections.length > 0 && (
             <>
-              <div style={{ fontSize: 11, color: palette.purple, marginBottom: 6, ...mono }}>
+              <div style={{ fontSize: sz(11), color: theme.palette.purple, marginBottom: 6, ...mono }}>
                 Focused on {d.edgeSelections.length} edge{d.edgeSelections.length !== 1 ? "s" : ""}
               </div>
               {d.edgeSelections.map((sel, i) => (
@@ -1281,8 +1285,8 @@ function EventDataView({ eventType, data, onEntityClick, onEdgeClick, onSourceCl
       return (
         <div style={{ marginTop: 4 }}>
           {d.contentLength != null && (
-            <div style={{ fontSize: 12, color: text.secondary, ...mono }}>
-              <span style={{ color: palette.emerald }}>Synthesis:</span> {d.contentLength} chars
+            <div style={{ fontSize: sz(12), color: theme.text.secondary, ...mono }}>
+              <span style={{ color: theme.palette.emerald }}>Synthesis:</span> {d.contentLength} chars
             </div>
           )}
         </div>
@@ -1298,17 +1302,17 @@ function EventDataView({ eventType, data, onEntityClick, onEdgeClick, onSourceCl
       return (
         <div style={{ marginTop: 4 }}>
           {d.action && (
-            <div style={{ fontSize: 12, color: text.secondary, ...mono, marginBottom: 4 }}>
-              <span style={{ color: palette.purple }}>Tool:</span> {d.action}
+            <div style={{ fontSize: sz(12), color: theme.text.secondary, ...mono, marginBottom: 4 }}>
+              <span style={{ color: theme.palette.purple }}>Tool:</span> {d.action}
             </div>
           )}
           {parsedArgs && Object.entries(parsedArgs).map(([key, val]) => (
-            <div key={key} style={{ fontSize: 11, color: text.muted, lineHeight: 1.5, ...mono }}>
-              <span style={{ color: text.subtle }}>{key}:</span> {String(val)}
+            <div key={key} style={{ fontSize: sz(11), color: theme.text.muted, lineHeight: 1.5, ...mono }}>
+              <span style={{ color: theme.text.subtle }}>{key}:</span> {String(val)}
             </div>
           ))}
           {!parsedArgs && d.arguments && (
-            <div style={{ fontSize: 11, color: text.muted, ...mono }}>
+            <div style={{ fontSize: sz(11), color: theme.text.muted, ...mono }}>
               {d.arguments}
             </div>
           )}
@@ -1321,7 +1325,7 @@ function EventDataView({ eventType, data, onEntityClick, onEdgeClick, onSourceCl
       return (
         <div style={{ marginTop: 4 }}>
           {d.documentUri && (
-            <div style={{ fontSize: 11, color: text.muted, ...mono }}>
+            <div style={{ fontSize: sz(11), color: theme.text.muted, ...mono }}>
               {shortUri(d.documentUri)}
             </div>
           )}
@@ -1334,7 +1338,7 @@ function EventDataView({ eventType, data, onEntityClick, onEdgeClick, onSourceCl
       return (
         <div style={{ marginTop: 4 }}>
           {d.documentUri && (
-            <div style={{ fontSize: 11, color: text.muted, ...mono }}>
+            <div style={{ fontSize: sz(11), color: theme.text.muted, ...mono }}>
               {shortUri(d.documentUri)}
             </div>
           )}
@@ -1354,6 +1358,7 @@ function EdgeSelectionView({ sel, onClick, onSourceClick }: {
   onClick?: () => void;
   onSourceClick?: (source: ProvenanceChain) => void;
 }) {
+  const { theme, sz } = useTheme();
   const mono = { fontFamily: "'IBM Plex Mono', monospace" } as const;
 
   return (
@@ -1361,21 +1366,21 @@ function EdgeSelectionView({ sel, onClick, onSourceClick }: {
       onClick={onClick}
       style={{
         padding: "6px 10px", marginBottom: 4, borderRadius: 6,
-        borderLeft: `3px solid ${withGlow(palette.purple, 0.3)}`,
+        borderLeft: `3px solid ${withGlow(theme.palette.purple, 0.3)}`,
         cursor: onClick ? "pointer" : "default",
         transition: "background 0.15s ease",
       }}
-      onMouseEnter={e => { if (onClick) e.currentTarget.style.background = withGlow(palette.purple, 0.08); }}
+      onMouseEnter={e => { if (onClick) e.currentTarget.style.background = withGlow(theme.palette.purple, 0.08); }}
       onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
     >
       {/* Edge triple */}
       {sel.edgeLabels && (
-        <div style={{ fontSize: 11, lineHeight: 1.5, ...mono }}>
-          <span style={{ color: palette.pink }}>{sel.edgeLabels.s}</span>
-          <span style={{ color: text.faint }}> → </span>
-          <span style={{ color: palette.cyan }}>{sel.edgeLabels.p}</span>
-          <span style={{ color: text.faint }}> → </span>
-          <span style={{ color: palette.pink }}>{sel.edgeLabels.o}</span>
+        <div style={{ fontSize: sz(11), lineHeight: 1.5, ...mono }}>
+          <span style={{ color: theme.palette.pink }}>{sel.edgeLabels.s}</span>
+          <span style={{ color: theme.text.faint }}> → </span>
+          <span style={{ color: theme.palette.cyan }}>{sel.edgeLabels.p}</span>
+          <span style={{ color: theme.text.faint }}> → </span>
+          <span style={{ color: theme.palette.pink }}>{sel.edgeLabels.o}</span>
         </div>
       )}
 
@@ -1393,15 +1398,15 @@ function EdgeSelectionView({ sel, onClick, onSourceClick }: {
                 }}
                 title={`View source: ${chainLabel}`}
                 style={{
-                  fontSize: 10, padding: "2px 7px", borderRadius: 4,
-                  background: withGlow(palette.amber, 0.08),
-                  border: `1px solid ${withGlow(palette.amber, 0.2)}`,
-                  color: text.hint, ...mono,
+                  fontSize: sz(10), padding: "2px 7px", borderRadius: 4,
+                  background: withGlow(theme.palette.amber, 0.08),
+                  border: `1px solid ${withGlow(theme.palette.amber, 0.2)}`,
+                  color: theme.text.hint, ...mono,
                   cursor: onSourceClick ? "pointer" : "default",
                   transition: "all 0.15s ease",
                 }}
-                onMouseEnter={e => { if (onSourceClick) { e.currentTarget.style.background = withGlow(palette.amber, 0.2); e.currentTarget.style.color = palette.amber; } }}
-                onMouseLeave={e => { e.currentTarget.style.background = withGlow(palette.amber, 0.08); e.currentTarget.style.color = text.hint; }}
+                onMouseEnter={e => { if (onSourceClick) { e.currentTarget.style.background = withGlow(theme.palette.amber, 0.2); e.currentTarget.style.color = theme.palette.amber; } }}
+                onMouseLeave={e => { e.currentTarget.style.background = withGlow(theme.palette.amber, 0.08); e.currentTarget.style.color = theme.text.hint; }}
               >
                 {chainLabel}
               </span>
@@ -1413,20 +1418,20 @@ function EdgeSelectionView({ sel, onClick, onSourceClick }: {
       {/* Concept + Score */}
       {(sel.concept || sel.score != null) && (
         <div style={{
-          fontSize: 10, color: text.subtle, lineHeight: 1.4, marginTop: 2,
+          fontSize: sz(10), color: theme.text.subtle, lineHeight: 1.4, marginTop: 2,
           fontFamily: "'IBM Plex Mono', monospace",
           display: "flex", alignItems: "center", gap: 8,
         }}>
           {sel.concept && (
             <span>
-              <span style={{ color: text.faint }}>concept: </span>
-              <span style={{ color: palette.orange }}>{sel.concept}</span>
+              <span style={{ color: theme.text.faint }}>concept: </span>
+              <span style={{ color: theme.palette.orange }}>{sel.concept}</span>
             </span>
           )}
           {sel.score != null && (
             <span>
-              <span style={{ color: text.faint }}>score: </span>
-              <span style={{ color: palette.cyan }}>{sel.score.toFixed(4)}</span>
+              <span style={{ color: theme.text.faint }}>score: </span>
+              <span style={{ color: theme.palette.cyan }}>{sel.score.toFixed(4)}</span>
             </span>
           )}
         </div>

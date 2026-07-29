@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSocket } from "@trustgraph/react-provider";
 import { useSessionStore, useWorkspaceStore } from "@trustgraph/react-state";
-import { SectionLabel, text, border, palette, surface } from "@trustgraph/trustkit";
+import { SectionLabel, useTheme } from "@trustgraph/trustkit";
 
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
@@ -47,6 +47,7 @@ function getTermValue(term: { t: string; i?: string; v?: string; d?: string }): 
 }
 
 export function StorageContents({ collection, storeColor }: StorageContentsProps) {
+  const { theme, sz } = useTheme();
   const socket = useSocket();
   const flowId = useSessionStore((s) => s.flowId);
   const generation = useWorkspaceStore((s) => s.generation);
@@ -199,7 +200,7 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
 
   if (loading) {
     return (
-      <div style={{ fontSize: 11, color: text.disabled, fontFamily: "'IBM Plex Mono', monospace" }}>
+      <div style={{ fontSize: sz(11), color: theme.text.disabled, fontFamily: "'IBM Plex Mono', monospace" }}>
         Loading contents...
       </div>
     );
@@ -207,7 +208,7 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
 
   if (hierarchy.length === 0) {
     return (
-      <div style={{ fontSize: 12, color: text.hint, fontStyle: "italic" }}>
+      <div style={{ fontSize: sz(12), color: theme.text.hint, fontStyle: "italic" }}>
         No documents processed into this store yet.
       </div>
     );
@@ -221,7 +222,7 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
     <div>
       <SectionLabel marginBottom={8}>
         CONTENTS
-        <span style={{ color: text.muted, fontWeight: 400, marginLeft: 8 }}>
+        <span style={{ color: theme.text.muted, fontWeight: 400, marginLeft: 8 }}>
           {hierarchy.length} doc{hierarchy.length !== 1 ? "s" : ""}
           {totalPages > 0 && ` · ${totalPages} pg`}
           {totalChunks > 0 && ` · ${totalChunks} ch`}
@@ -242,19 +243,19 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
                   padding: "6px 8px",
                   borderRadius: 4,
                   cursor: "pointer",
-                  fontSize: 11,
+                  fontSize: sz(11),
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
                 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = surface.card; }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.surface.card; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
               >
                 <span>
-                  <span style={{ color: text.faint, marginRight: 4 }}>{isExpanded ? "▾" : "▸"}</span>
-                  <span style={{ color: palette.cyan, fontWeight: 600 }}>{doc.label}</span>
+                  <span style={{ color: theme.text.faint, marginRight: 4 }}>{isExpanded ? "▾" : "▸"}</span>
+                  <span style={{ color: theme.palette.cyan, fontWeight: 600 }}>{doc.label}</span>
                 </span>
-                <span style={{ color: text.disabled, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9 }}>
+                <span style={{ color: theme.text.disabled, fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(9) }}>
                   {doc.pages.length > 0 && `${doc.pages.length}pg `}
                   {docChunks > 0 && `${docChunks}ch`}
                 </span>
@@ -262,7 +263,7 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
 
               {/* Expanded: pages and chunks */}
               {isExpanded && (
-                <div style={{ paddingLeft: 16, borderLeft: `1px solid ${border.subtle}`, marginLeft: 10 }}>
+                <div style={{ paddingLeft: 16, borderLeft: `1px solid ${theme.border.subtle}`, marginLeft: 10 }}>
                   {/* Pages */}
                   {doc.pages.map(page => {
                     const pageExpanded = expandedPages.has(page.uri);
@@ -272,19 +273,19 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
                           onClick={() => togglePage(page.uri)}
                           style={{
                             padding: "4px 6px",
-                            fontSize: 10,
+                            fontSize: sz(10),
                             cursor: "pointer",
                             display: "flex",
                             justifyContent: "space-between",
                           }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = surface.card; }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.surface.card; }}
                           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                         >
                           <span>
-                            <span style={{ color: text.faint, marginRight: 4 }}>{pageExpanded ? "▾" : "▸"}</span>
+                            <span style={{ color: theme.text.faint, marginRight: 4 }}>{pageExpanded ? "▾" : "▸"}</span>
                             <span style={{ color: storeColor }}>{page.label}</span>
                           </span>
-                          <span style={{ color: text.disabled, fontFamily: "'IBM Plex Mono', monospace", fontSize: 9 }}>
+                          <span style={{ color: theme.text.disabled, fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(9) }}>
                             {page.charLength > 0 && `${page.charLength}ch `}
                             {page.chunks.length}chunks
                           </span>
@@ -292,16 +293,16 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
 
                         {/* Chunks under this page */}
                         {pageExpanded && (
-                          <div style={{ paddingLeft: 14, borderLeft: `1px solid ${border.subtle}`, marginLeft: 8 }}>
+                          <div style={{ paddingLeft: 14, borderLeft: `1px solid ${theme.border.subtle}`, marginLeft: 8 }}>
                             {page.chunks.map(chunk => (
                               <div key={chunk.uri} style={{
                                 padding: "2px 6px",
-                                fontSize: 9,
+                                fontSize: sz(9),
                                 fontFamily: "'IBM Plex Mono', monospace",
-                                color: text.faint,
+                                color: theme.text.faint,
                               }}>
                                 {chunk.label}
-                                <span style={{ marginLeft: 8, color: text.disabled }}>
+                                <span style={{ marginLeft: 8, color: theme.text.disabled }}>
                                   {chunk.charLength > 0 && `${chunk.charLength} chars`}
                                 </span>
                               </div>
@@ -316,12 +317,12 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
                   {doc.directChunks.map(chunk => (
                     <div key={chunk.uri} style={{
                       padding: "2px 6px",
-                      fontSize: 9,
+                      fontSize: sz(9),
                       fontFamily: "'IBM Plex Mono', monospace",
-                      color: text.faint,
+                      color: theme.text.faint,
                     }}>
                       {chunk.label}
-                      <span style={{ marginLeft: 8, color: text.disabled }}>
+                      <span style={{ marginLeft: 8, color: theme.text.disabled }}>
                         {chunk.charLength > 0 && `${chunk.charLength} chars`}
                       </span>
                     </div>

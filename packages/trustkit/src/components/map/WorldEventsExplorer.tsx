@@ -6,7 +6,8 @@ import type { Topology } from "topojson-specification";
 import { useWorldEvents } from "../../hooks/useWorldEvents";
 import type { WorldEvent, EventSummary, GridCell, SearchFilters } from "../../hooks/useWorldEvents";
 import { EventTimeline } from "./EventTimeline";
-import { text, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import type { Theme } from "../../theme/types";
 import { LoadingState } from "../common";
 
 import worldTopo from "world-atlas/countries-110m.json";
@@ -15,41 +16,39 @@ const MAP_W = 960;
 const MAP_H = 500;
 const LIST_LIMIT = 25;
 
-const TYPE_COLORS: Record<string, string> = {
-  War: palette.rose,
-  MilitaryConflict: palette.rose,
-  CivilWar: palette.rose,
-  Military: palette.rose,
-  Terrorism: palette.red,
-  Revolution: palette.amber,
-  Independence: palette.emerald,
-  StateFormation: palette.emerald,
-  Political: palette.blue,
-  Legislative: palette.blue,
-  Legislation: palette.blue,
-  Legal: palette.blue,
-  Economic: palette.cyan,
-  EconomicPolicy: palette.cyan,
-  InternationalFinance: palette.cyan,
-  NaturalDisaster: palette.purple,
-  DiplomaticAgreement: palette.emerald,
-  InternationalRelations: palette.cyan,
-  Civilization: palette.amber,
-  Pandemic: palette.purple,
-  Famine: palette.orange,
-};
-
-const DEFAULT_COLOR = palette.blue;
-
-function colorForType(type: string): string {
-  return TYPE_COLORS[type] || DEFAULT_COLOR;
+function buildTypeColors(palette: Theme["palette"]): Record<string, string> {
+  return {
+    War: palette.rose,
+    MilitaryConflict: palette.rose,
+    CivilWar: palette.rose,
+    Military: palette.rose,
+    Terrorism: palette.red,
+    Revolution: palette.amber,
+    Independence: palette.emerald,
+    StateFormation: palette.emerald,
+    Political: palette.blue,
+    Legislative: palette.blue,
+    Legislation: palette.blue,
+    Legal: palette.blue,
+    Economic: palette.cyan,
+    EconomicPolicy: palette.cyan,
+    InternationalFinance: palette.cyan,
+    NaturalDisaster: palette.purple,
+    DiplomaticAgreement: palette.emerald,
+    InternationalRelations: palette.cyan,
+    Civilization: palette.amber,
+    Pandemic: palette.purple,
+    Famine: palette.orange,
+  };
 }
 
-const OUTCOME_COLORS: Record<string, string> = {
-  Positive: palette.emerald,
-  Negative: palette.rose,
-  Mixed: palette.amber,
-};
+function buildOutcomeColors(palette: Theme["palette"]): Record<string, string> {
+  return {
+    Positive: palette.emerald,
+    Negative: palette.rose,
+    Mixed: palette.amber,
+  };
+}
 
 export interface WorldEventsExplorerProps {
   ontologyNs?: string;
@@ -58,6 +57,16 @@ export interface WorldEventsExplorerProps {
 export function WorldEventsExplorer({
   ontologyNs = "http://trustgraph.ai/ontology/world-events#",
 }: WorldEventsExplorerProps) {
+  const { theme, sz } = useTheme();
+
+  const typeColors = useMemo(() => buildTypeColors(theme.palette), [theme.palette]);
+  const defaultColor = theme.palette.blue;
+  const colorForType = useCallback(
+    (type: string): string => typeColors[type] || defaultColor,
+    [typeColors, defaultColor],
+  );
+  const outcomeColors = useMemo(() => buildOutcomeColors(theme.palette), [theme.palette]);
+
   const {
     gridCells, eventTypes, buckets, totalEvents,
     isLoading, error,
@@ -238,10 +247,10 @@ export function WorldEventsExplorer({
   if (error) {
     return (
       <div style={{ height: "var(--page-height)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
-        <div style={{ color: palette.rose, fontSize: 14, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ color: theme.palette.rose, fontSize: sz(14), fontFamily: "'IBM Plex Mono', monospace" }}>
           Failed to load events
         </div>
-        <div style={{ color: text.muted, fontSize: 11 }}>{error.message}</div>
+        <div style={{ color: theme.text.muted, fontSize: sz(11) }}>{error.message}</div>
       </div>
     );
   }
@@ -249,10 +258,10 @@ export function WorldEventsExplorer({
   if (gridCells.length === 0) {
     return (
       <div style={{ height: "var(--page-height)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
-        <div style={{ color: text.muted, fontSize: 14, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ color: theme.text.muted, fontSize: sz(14), fontFamily: "'IBM Plex Mono', monospace" }}>
           No geo-temporal events found
         </div>
-        <div style={{ color: text.hint, fontSize: 11 }}>
+        <div style={{ color: theme.text.hint, fontSize: sz(11) }}>
           Load a dataset with location and year predicates.
         </div>
       </div>
@@ -267,14 +276,14 @@ export function WorldEventsExplorer({
       {/* Filter bar */}
       <div style={{
         padding: "8px 16px",
-        borderBottom: `1px solid ${border.default}`,
+        borderBottom: `1px solid ${theme.border.default}`,
         display: "flex",
         alignItems: "center",
         gap: 6,
         flexWrap: "wrap",
         minHeight: 40,
       }}>
-        <span style={{ fontSize: 10, color: text.hint, fontFamily: "'IBM Plex Mono', monospace", marginRight: 4 }}>
+        <span style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace", marginRight: 4 }}>
           TYPE
         </span>
         {eventTypes.slice(0, 14).map(et => {
@@ -287,10 +296,10 @@ export function WorldEventsExplorer({
               style={{
                 padding: "2px 8px",
                 borderRadius: 10,
-                border: `1px solid ${isActive ? c + "66" : border.default}`,
+                border: `1px solid ${isActive ? c + "66" : theme.border.default}`,
                 background: isActive ? c + "15" : "transparent",
-                color: isActive ? c : text.disabled,
-                fontSize: 9,
+                color: isActive ? c : theme.text.disabled,
+                fontSize: sz(9),
                 fontFamily: "'IBM Plex Mono', monospace",
                 cursor: "pointer",
                 transition: "all 0.15s",
@@ -311,8 +320,8 @@ export function WorldEventsExplorer({
             onClick={() => setSelectedCell(null)}
             style={{
               padding: "2px 8px", borderRadius: 10,
-              border: `1px solid ${palette.cyan}44`, background: palette.cyan + "15",
-              color: palette.cyan, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer",
+              border: `1px solid ${theme.palette.cyan}44`, background: theme.palette.cyan + "15",
+              color: theme.palette.cyan, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer",
             }}
           >
             Region {selectedCell.avgLat.toFixed(0)},{selectedCell.avgLon.toFixed(0)} x
@@ -324,8 +333,8 @@ export function WorldEventsExplorer({
             onClick={() => { setSelectedCountry(null); setSelectedCell(null); }}
             style={{
               padding: "2px 8px", borderRadius: 10,
-              border: `1px solid ${palette.amber}44`, background: palette.amber + "15",
-              color: palette.amber, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer",
+              border: `1px solid ${theme.palette.amber}44`, background: theme.palette.amber + "15",
+              color: theme.palette.amber, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer",
             }}
           >
             {selectedCountry} x
@@ -337,15 +346,15 @@ export function WorldEventsExplorer({
             onClick={clearFilters}
             style={{
               padding: "2px 8px", borderRadius: 10,
-              border: `1px solid ${border.default}`, background: "transparent",
-              color: text.faint, fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer",
+              border: `1px solid ${theme.border.default}`, background: "transparent",
+              color: theme.text.faint, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer",
             }}
           >
             Clear all
           </button>
         )}
 
-        <span style={{ fontSize: 9, color: text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
           {listLoading ? "Searching..." : `${listEvents.length} of ${totalEvents}`}
         </span>
       </div>
@@ -387,7 +396,7 @@ export function WorldEventsExplorer({
                     "rgba(255,255,255,0.06)"
                   }
                   stroke={
-                    isSelected ? palette.amber + "66" :
+                    isSelected ? theme.palette.amber + "66" :
                     isHovered ? "rgba(255,255,255,0.35)" :
                     "rgba(255,255,255,0.22)"
                   }
@@ -422,16 +431,16 @@ export function WorldEventsExplorer({
                   <circle
                     cx={c.x} cy={c.y}
                     r={isSelected ? glowR + 4 : isHovered ? glowR + 2 : glowR}
-                    fill={palette.cyan}
+                    fill={theme.palette.cyan}
                     opacity={isSelected ? 0.15 : isHovered ? 0.1 : 0.04}
                     style={{ transition: "all 0.2s" }}
                   />
                   <circle
                     cx={c.x} cy={c.y}
                     r={isSelected ? r + 1 : isHovered ? r + 0.5 : r}
-                    fill={palette.cyan}
+                    fill={theme.palette.cyan}
                     opacity={0.15 + t * 0.45}
-                    stroke={palette.cyan}
+                    stroke={theme.palette.cyan}
                     strokeWidth={isSelected ? 1.5 : isHovered ? 1 : 0.5}
                     strokeOpacity={isSelected ? 0.8 : isHovered ? 0.6 : 0.3}
                     style={{ transition: "all 0.2s" }}
@@ -440,8 +449,8 @@ export function WorldEventsExplorer({
                   {(c.count >= 3 || isHovered || isSelected) && (
                     <text
                       x={c.x} y={c.y + 3}
-                      fill="#fff"
-                      fontSize={r > 8 ? 8 : 6}
+                      fill={theme.text.primary}
+                      fontSize={r > 8 ? sz(8) : sz(6)}
                       fontFamily="'IBM Plex Mono', monospace"
                       textAnchor="middle"
                       opacity={isSelected ? 1 : isHovered ? 0.9 : 0.7}
@@ -459,7 +468,7 @@ export function WorldEventsExplorer({
             {hoveredCountry && !selectedCountry && (
               <text
                 x={MAP_W - 8} y={MAP_H - 8}
-                fill={text.subtle} fontSize={10}
+                fill={theme.text.subtle} fontSize={sz(10)}
                 fontFamily="'IBM Plex Mono', monospace"
                 textAnchor="end"
               >
@@ -472,7 +481,7 @@ export function WorldEventsExplorer({
         {/* Event list panel */}
         <div style={{
           width: 320,
-          borderLeft: `1px solid ${border.default}`,
+          borderLeft: `1px solid ${theme.border.default}`,
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
@@ -483,31 +492,34 @@ export function WorldEventsExplorer({
                 event={selectedEvent}
                 typeColor={colorForType(selectedEvent.type)}
                 onBack={() => setSelectedEvent(null)}
+                theme={theme}
+                sz={sz}
+                outcomeColors={outcomeColors}
               />
             </div>
           ) : (
             <>
               <div style={{
                 padding: "10px 14px",
-                borderBottom: `1px solid ${border.default}`,
+                borderBottom: `1px solid ${theme.border.default}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
               }}>
-                <span style={{ fontSize: 10, color: text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
+                <span style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
                   {listLoading ? "Searching..." : `${listEvents.length} events`}
                 </span>
               </div>
               <div style={{ flex: 1, overflowY: "auto" }}>
                 {listLoading ? (
                   <div style={{ padding: 20, textAlign: "center" }}>
-                    <div style={{ color: text.hint, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
+                    <div style={{ color: theme.text.hint, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
                       Searching...
                     </div>
                   </div>
                 ) : listEvents.length === 0 ? (
                   <div style={{ padding: 20, textAlign: "center" }}>
-                    <div style={{ color: text.hint, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
+                    <div style={{ color: theme.text.hint, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
                       No events match filters
                     </div>
                   </div>
@@ -526,7 +538,7 @@ export function WorldEventsExplorer({
                             gap: 8,
                             padding: "8px 14px",
                             border: "none",
-                            borderBottom: `1px solid ${border.default}`,
+                            borderBottom: `1px solid ${theme.border.default}`,
                             background: "transparent",
                             cursor: detailLoading ? "wait" : "pointer",
                             textAlign: "left",
@@ -542,7 +554,7 @@ export function WorldEventsExplorer({
                           }} />
                           <div style={{ minWidth: 0 }}>
                             <div style={{
-                              fontSize: 11, color: "#fff", fontWeight: 600,
+                              fontSize: sz(11), color: theme.text.primary, fontWeight: 600,
                               fontFamily: "'IBM Plex Sans', sans-serif",
                               lineHeight: 1.3,
                               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -550,7 +562,7 @@ export function WorldEventsExplorer({
                               {e.name}
                             </div>
                             <div style={{
-                              fontSize: 9, color: text.hint,
+                              fontSize: sz(9), color: theme.text.hint,
                               fontFamily: "'IBM Plex Mono', monospace",
                               marginTop: 2,
                             }}>
@@ -571,7 +583,7 @@ export function WorldEventsExplorer({
       </div>
 
       {/* Timeline */}
-      <div style={{ borderTop: `1px solid ${border.default}`, flexShrink: 0 }}>
+      <div style={{ borderTop: `1px solid ${theme.border.default}`, flexShrink: 0 }}>
         <EventTimeline
           buckets={buckets}
           range={effectiveRange}
@@ -582,20 +594,23 @@ export function WorldEventsExplorer({
   );
 }
 
-function EventDetail({ event, typeColor, onBack }: {
+function EventDetail({ event, typeColor, onBack, theme, sz, outcomeColors }: {
   event: WorldEvent;
   typeColor: string;
   onBack: () => void;
+  theme: Theme;
+  sz: (px: number) => number;
+  outcomeColors: Record<string, string>;
 }) {
-  const outcomeColor = OUTCOME_COLORS[event.outcome || ""] || text.muted;
+  const outcomeColor = outcomeColors[event.outcome || ""] || theme.text.muted;
 
   return (
     <div style={{ padding: 20 }}>
       <button
         onClick={onBack}
         style={{
-          background: "none", border: "none", color: text.hint,
-          fontSize: 10, cursor: "pointer", padding: "2px 0", marginBottom: 16,
+          background: "none", border: "none", color: theme.text.hint,
+          fontSize: sz(10), cursor: "pointer", padding: "2px 0", marginBottom: 16,
           fontFamily: "'IBM Plex Mono', monospace",
         }}
       >
@@ -603,7 +618,7 @@ function EventDetail({ event, typeColor, onBack }: {
       </button>
 
       <div style={{
-        fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
         color: typeColor, textTransform: "uppercase",
         letterSpacing: "0.05em", marginBottom: 8,
       }}>
@@ -611,7 +626,7 @@ function EventDetail({ event, typeColor, onBack }: {
       </div>
 
       <div style={{
-        fontSize: 18, fontWeight: 700, color: "#fff",
+        fontSize: sz(18), fontWeight: 700, color: theme.text.primary,
         lineHeight: 1.3, marginBottom: 12,
         fontFamily: "'IBM Plex Sans', sans-serif",
       }}>
@@ -619,12 +634,12 @@ function EventDetail({ event, typeColor, onBack }: {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <span style={{ fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", color: text.subtle }}>
+        <span style={{ fontSize: sz(13), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.subtle }}>
           {event.date || event.yearLabel}
         </span>
         {event.outcome && (
           <span style={{
-            fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
             padding: "2px 8px", borderRadius: 10,
             background: outcomeColor + "18",
             border: `1px solid ${outcomeColor}44`,
@@ -638,16 +653,16 @@ function EventDetail({ event, typeColor, onBack }: {
       {event.impact && (
         <div style={{ marginBottom: 20 }}>
           <div style={{
-            fontSize: 9, color: text.hint, fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(9), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace",
             textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6,
           }}>
             Impact
           </div>
           <div style={{
-            fontSize: 12, color: text.subtle, lineHeight: 1.6,
+            fontSize: sz(12), color: theme.text.subtle, lineHeight: 1.6,
             padding: "10px 12px", borderRadius: 8,
             background: "rgba(255,255,255,0.03)",
-            border: `1px solid ${border.default}`,
+            border: `1px solid ${theme.border.default}`,
           }}>
             {event.impact}
           </div>
@@ -655,27 +670,29 @@ function EventDetail({ event, typeColor, onBack }: {
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {event.responsible && <MetaField label="Responsible" value={event.responsible} />}
-        {event.affectedPopulation && <MetaField label="Affected" value={event.affectedPopulation} />}
+        {event.responsible && <MetaField label="Responsible" value={event.responsible} theme={theme} sz={sz} />}
+        {event.affectedPopulation && <MetaField label="Affected" value={event.affectedPopulation} theme={theme} sz={sz} />}
         <MetaField
           label="Location"
           value={`${event.lat.toFixed(2)}\u00b0${event.lat >= 0 ? "N" : "S"}, ${Math.abs(event.lng).toFixed(2)}\u00b0${event.lng >= 0 ? "E" : "W"}`}
+          theme={theme}
+          sz={sz}
         />
       </div>
     </div>
   );
 }
 
-function MetaField({ label, value }: { label: string; value: string }) {
+function MetaField({ label, value, theme, sz }: { label: string; value: string; theme: Theme; sz: (px: number) => number }) {
   return (
     <div>
       <div style={{
-        fontSize: 9, color: text.hint, fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(9), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace",
         textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2,
       }}>
         {label}
       </div>
-      <div style={{ fontSize: 11, color: text.muted, fontFamily: "'IBM Plex Mono', monospace" }}>
+      <div style={{ fontSize: sz(11), color: theme.text.muted, fontFamily: "'IBM Plex Mono', monospace" }}>
         {value}
       </div>
     </div>

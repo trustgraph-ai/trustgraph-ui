@@ -1,6 +1,6 @@
 import { useRef, useState, useMemo, useCallback } from "react";
 import type { TimeBucket } from "../../hooks/useWorldEvents";
-import { text, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 export interface EventTimelineProps {
   buckets: TimeBucket[];
@@ -15,6 +15,7 @@ export function EventTimeline({
   onRangeChange,
   height = 72,
 }: EventTimelineProps) {
+  const { theme, sz } = useTheme();
   const svgRef = useRef<SVGSVGElement>(null);
   const [dragging, setDragging] = useState<"left" | "right" | "pan" | null>(null);
   const dragStart = useRef<{ x: number; range: [number, number] }>({ x: 0, range: [0, 0] });
@@ -123,7 +124,7 @@ export function EventTimeline({
       onClick={handleClick}
     >
       <rect width={width} height={height} fill="rgba(10,10,15,0.8)" />
-      <line x1={padding.left} x2={width - padding.right} y1={barH} y2={barH} stroke={border.default} strokeWidth={0.5} />
+      <line x1={padding.left} x2={width - padding.right} y1={barH} y2={barH} stroke={theme.border.default} strokeWidth={0.5} />
 
       {buckets.map((bucket) => {
         const x = yearToX(bucket.year);
@@ -136,7 +137,7 @@ export function EventTimeline({
             y={barH - h}
             width={barW}
             height={h}
-            fill={isActive ? palette.cyan + "44" : "rgba(255,255,255,0.06)"}
+            fill={isActive ? theme.palette.cyan + "44" : "rgba(255,255,255,0.06)"}
             rx={1}
           />
         );
@@ -148,7 +149,7 @@ export function EventTimeline({
         width={rangeRight - rangeLeft}
         height={barH}
         fill="rgba(103,232,249,0.06)"
-        stroke={palette.cyan + "33"}
+        stroke={theme.palette.cyan + "33"}
         strokeWidth={0.5}
         style={{ cursor: "grab" }}
         onMouseDown={(e) => handleMouseDown("pan", e)}
@@ -156,18 +157,18 @@ export function EventTimeline({
 
       {/* Left handle */}
       <g style={{ cursor: "ew-resize" }} onMouseDown={(e) => handleMouseDown("left", e)}>
-        <line x1={rangeLeft} x2={rangeLeft} y1={0} y2={barH} stroke={palette.cyan + "88"} strokeWidth={2} />
-        <rect x={rangeLeft - 4} y={barH / 2 - 10} width={8} height={20} rx={3} fill={palette.cyan + "44"} stroke={palette.cyan + "88"} strokeWidth={1} />
-        <line x1={rangeLeft - 1} x2={rangeLeft - 1} y1={barH / 2 - 4} y2={barH / 2 + 4} stroke={palette.cyan + "88"} strokeWidth={0.5} />
-        <line x1={rangeLeft + 1} x2={rangeLeft + 1} y1={barH / 2 - 4} y2={barH / 2 + 4} stroke={palette.cyan + "88"} strokeWidth={0.5} />
+        <line x1={rangeLeft} x2={rangeLeft} y1={0} y2={barH} stroke={theme.palette.cyan + "88"} strokeWidth={2} />
+        <rect x={rangeLeft - 4} y={barH / 2 - 10} width={8} height={20} rx={3} fill={theme.palette.cyan + "44"} stroke={theme.palette.cyan + "88"} strokeWidth={1} />
+        <line x1={rangeLeft - 1} x2={rangeLeft - 1} y1={barH / 2 - 4} y2={barH / 2 + 4} stroke={theme.palette.cyan + "88"} strokeWidth={0.5} />
+        <line x1={rangeLeft + 1} x2={rangeLeft + 1} y1={barH / 2 - 4} y2={barH / 2 + 4} stroke={theme.palette.cyan + "88"} strokeWidth={0.5} />
       </g>
 
       {/* Right handle */}
       <g style={{ cursor: "ew-resize" }} onMouseDown={(e) => handleMouseDown("right", e)}>
-        <line x1={rangeRight} x2={rangeRight} y1={0} y2={barH} stroke={palette.cyan + "88"} strokeWidth={2} />
-        <rect x={rangeRight - 4} y={barH / 2 - 10} width={8} height={20} rx={3} fill={palette.cyan + "44"} stroke={palette.cyan + "88"} strokeWidth={1} />
-        <line x1={rangeRight - 1} x2={rangeRight - 1} y1={barH / 2 - 4} y2={barH / 2 + 4} stroke={palette.cyan + "88"} strokeWidth={0.5} />
-        <line x1={rangeRight + 1} x2={rangeRight + 1} y1={barH / 2 - 4} y2={barH / 2 + 4} stroke={palette.cyan + "88"} strokeWidth={0.5} />
+        <line x1={rangeRight} x2={rangeRight} y1={0} y2={barH} stroke={theme.palette.cyan + "88"} strokeWidth={2} />
+        <rect x={rangeRight - 4} y={barH / 2 - 10} width={8} height={20} rx={3} fill={theme.palette.cyan + "44"} stroke={theme.palette.cyan + "88"} strokeWidth={1} />
+        <line x1={rangeRight - 1} x2={rangeRight - 1} y1={barH / 2 - 4} y2={barH / 2 + 4} stroke={theme.palette.cyan + "88"} strokeWidth={0.5} />
+        <line x1={rangeRight + 1} x2={rangeRight + 1} y1={barH / 2 - 4} y2={barH / 2 + 4} stroke={theme.palette.cyan + "88"} strokeWidth={0.5} />
       </g>
 
       {labelYears.map(y => (
@@ -175,8 +176,8 @@ export function EventTimeline({
           key={y}
           x={yearToX(y)}
           y={height - 4}
-          fill={text.hint}
-          fontSize={8}
+          fill={theme.text.hint}
+          fontSize={sz(8)}
           fontFamily="'IBM Plex Mono', monospace"
           textAnchor="middle"
         >
@@ -184,10 +185,10 @@ export function EventTimeline({
         </text>
       ))}
 
-      <text x={6} y={barH / 2 + 3} fill={text.hint} fontSize={7} fontFamily="'IBM Plex Mono', monospace">
+      <text x={6} y={barH / 2 + 3} fill={theme.text.hint} fontSize={sz(7)} fontFamily="'IBM Plex Mono', monospace">
         {range[0] < 0 ? `${Math.abs(range[0])} BC` : range[0]}
       </text>
-      <text x={6} y={barH / 2 + 13} fill={text.hint} fontSize={7} fontFamily="'IBM Plex Mono', monospace">
+      <text x={6} y={barH / 2 + 13} fill={theme.text.hint} fontSize={sz(7)} fontFamily="'IBM Plex Mono', monospace">
         {range[1] < 0 ? `${Math.abs(range[1])} BC` : range[1]}
       </text>
     </svg>

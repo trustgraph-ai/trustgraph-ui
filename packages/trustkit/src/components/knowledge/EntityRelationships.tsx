@@ -1,6 +1,6 @@
 import type { Entity, Relationship } from "../../types";
 import { SectionLabel, Card } from "../common";
-import { text } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface EntityRelationshipsProps {
   entity: Entity;
@@ -19,6 +19,7 @@ export function EntityRelationships({
   entities,
   onEntityClick,
 }: EntityRelationshipsProps) {
+  const { theme, sz } = useTheme();
   const nodeRelationships = relationships.filter(
     r => r.from === entity.id || r.to === entity.id
   );
@@ -27,7 +28,7 @@ export function EntityRelationships({
     return (
       <div style={{ marginTop: 24 }}>
         <SectionLabel>RELATIONSHIPS</SectionLabel>
-        <div style={{ fontSize: 12, color: text.hint, fontStyle: "italic" }}>
+        <div style={{ fontSize: sz(12), color: theme.text.hint, fontStyle: "italic" }}>
           No relationships
         </div>
       </div>
@@ -50,14 +51,14 @@ export function EntityRelationships({
             onClick={() => { if (other && onEntityClick) onEntityClick(other); }}
             style={{ marginBottom: 4 }}
           >
-            <div style={{ fontSize: 11, color: text.muted }}>
-              <span style={{ color: other?.color || text.subtle }}>
+            <div style={{ fontSize: sz(11), color: theme.text.muted }}>
+              <span style={{ color: other?.color || theme.text.subtle }}>
                 {direction} {other?.label || otherId}
               </span>
             </div>
             <div style={{
-              fontSize: 10,
-              color: text.faint,
+              fontSize: sz(10),
+              color: theme.text.faint,
               fontFamily: "'IBM Plex Mono', monospace",
               marginTop: 2,
             }}>

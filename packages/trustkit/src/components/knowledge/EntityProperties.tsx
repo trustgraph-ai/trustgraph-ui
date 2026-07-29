@@ -1,23 +1,21 @@
 import type { Entity } from "../../types";
 import { SectionLabel } from "../common";
-import { text, border } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
 
 interface EntityPropertiesProps {
   entity: Entity;
   propertyLabels?: Record<string, string>;
 }
 
-/**
- * Renders an entity's properties as a key-value list with human-readable labels.
- */
 export function EntityProperties({ entity, propertyLabels = {} }: EntityPropertiesProps) {
+  const { theme, sz } = useTheme();
   const entries = Object.entries(entity.props || {});
 
   if (entries.length === 0) {
     return (
       <div style={{ marginTop: 20 }}>
         <SectionLabel>PROPERTIES</SectionLabel>
-        <div style={{ fontSize: 12, color: text.hint, fontStyle: "italic" }}>
+        <div style={{ fontSize: sz(12), color: theme.text.hint, fontStyle: "italic" }}>
           No properties
         </div>
       </div>
@@ -34,15 +32,15 @@ export function EntityProperties({ entity, propertyLabels = {} }: EntityProperti
             display: "flex",
             justifyContent: "space-between",
             padding: "8px 0",
-            borderBottom: `1px solid ${border.subtle}`,
+            borderBottom: `1px solid ${theme.border.subtle}`,
           }}
         >
-          <span style={{ fontSize: 12, color: text.subtle }}>
+          <span style={{ fontSize: sz(12), color: theme.text.subtle }}>
             {propertyLabels[k] || k}
           </span>
           <span style={{
-            fontSize: 12,
-            color: text.primary,
+            fontSize: sz(12),
+            color: theme.text.primary,
             fontFamily: "'IBM Plex Mono', monospace",
             textAlign: "right",
             maxWidth: "60%",

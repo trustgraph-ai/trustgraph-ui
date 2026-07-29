@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import type { IINode } from "../../hooks/useInnovationData";
-import { text, border, palette } from "../../theme";
+import { useTheme } from "../../theme/ThemeContext";
+import type { Theme } from "../../theme/types";
 import { useInference } from "@trustgraph/react-state";
 import { StreamingResponse } from "../explain/StreamingResponse";
 
@@ -63,6 +64,7 @@ function EntityPicker({
   placeholder: string;
   filter?: (node: IINode) => boolean;
 }) {
+  const { theme, sz } = useTheme();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -98,16 +100,16 @@ function EntityPicker({
         <div
           onClick={() => { setOpen(true); setSearch(""); }}
           style={{
-            padding: "8px 12px", borderRadius: 6, fontSize: 13,
-            background: "rgba(255,255,255,0.06)", border: `1px solid ${border.medium}`,
-            color: text.primary, cursor: "pointer",
+            padding: "8px 12px", borderRadius: 6, fontSize: sz(13),
+            background: "rgba(255,255,255,0.06)", border: `1px solid ${theme.border.medium}`,
+            color: theme.text.primary, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}
         >
           <span>{selected.label}</span>
           <span
             onClick={(e) => { e.stopPropagation(); onChange(null); setSearch(""); }}
-            style={{ color: text.faint, cursor: "pointer", fontSize: 11, marginLeft: 8 }}
+            style={{ color: theme.text.faint, cursor: "pointer", fontSize: sz(11), marginLeft: 8 }}
           >✕</span>
         </div>
       ) : (
@@ -118,9 +120,9 @@ function EntityPicker({
           placeholder={placeholder}
           autoFocus={open}
           style={{
-            width: "100%", padding: "8px 12px", borderRadius: 6, fontSize: 13,
-            background: "rgba(255,255,255,0.04)", border: `1px solid ${border.default}`,
-            color: text.primary, outline: "none",
+            width: "100%", padding: "8px 12px", borderRadius: 6, fontSize: sz(13),
+            background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
+            color: theme.text.primary, outline: "none",
             fontFamily: "'IBM Plex Sans', sans-serif",
           }}
         />
@@ -129,7 +131,7 @@ function EntityPicker({
         <div style={{
           position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100,
           marginTop: 4, borderRadius: 6, overflow: "hidden",
-          background: "#15151F", border: `1px solid ${border.medium}`,
+          background: "#15151F", border: `1px solid ${theme.border.medium}`,
           maxHeight: 240, overflowY: "auto",
           boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
         }}>
@@ -138,15 +140,15 @@ function EntityPicker({
               key={node.uri}
               onClick={() => { onChange(node.uri); setOpen(false); setSearch(""); }}
               style={{
-                padding: "6px 12px", cursor: "pointer", fontSize: 12,
-                color: text.secondary, borderBottom: `1px solid ${border.subtle}`,
+                padding: "6px 12px", cursor: "pointer", fontSize: sz(12),
+                color: theme.text.secondary, borderBottom: `1px solid ${theme.border.subtle}`,
                 transition: "background 0.1s",
               }}
               onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
-              <span style={{ color: text.primary }}>{node.label}</span>
-              <span style={{ color: text.faint, fontSize: 10, marginLeft: 8 }}>
+              <span style={{ color: theme.text.primary }}>{node.label}</span>
+              <span style={{ color: theme.text.faint, fontSize: sz(10), marginLeft: 8 }}>
                 {node.kind.replace(/([A-Z])/g, " $1").trim()}
               </span>
             </div>
@@ -157,26 +159,25 @@ function EntityPicker({
   );
 }
 
-const KIND_COLORS: Record<string, string> = {
-  GovernmentDepartment: palette.blue, MilitaryCommand: "#5B8DEF",
-  Agency: palette.cyan, InnovationHub: palette.emerald,
-  PrimeContractor: palette.orange, SME: palette.amber,
-  Startup: "#FCD34D", Investor: palette.pink,
-  Accelerator: palette.emerald, ResearchOrganisation: palette.purple,
-  University: "#C4B5FD", Person: palette.amber,
-  CapabilityDomain: palette.emerald, Framework: palette.purple,
-  InnovationChallenge: "#C4B5FD", CustomerSegment: palette.rose,
-  Nation: palette.cyan, Region: "#67E8F9",
-  IndustrySector: palette.orange,
-};
-
-function kindColor(kind: string): string {
-  return KIND_COLORS[kind] || text.muted;
+function buildKindColors(theme: Theme): Record<string, string> {
+  return {
+    GovernmentDepartment: theme.palette.blue, MilitaryCommand: "#5B8DEF",
+    Agency: theme.palette.cyan, InnovationHub: theme.palette.emerald,
+    PrimeContractor: theme.palette.orange, SME: theme.palette.amber,
+    Startup: "#FCD34D", Investor: theme.palette.pink,
+    Accelerator: theme.palette.emerald, ResearchOrganisation: theme.palette.purple,
+    University: "#C4B5FD", Person: theme.palette.amber,
+    CapabilityDomain: theme.palette.emerald, Framework: theme.palette.purple,
+    InnovationChallenge: "#C4B5FD", CustomerSegment: theme.palette.rose,
+    Nation: theme.palette.cyan, Region: "#67E8F9",
+    IndustrySector: theme.palette.orange,
+  };
 }
 
 function Section({ title, color, count, children }: {
   title: string; color: string; count: number; children: React.ReactNode;
 }) {
+  const { theme, sz } = useTheme();
   const [open, setOpen] = useState(true);
   if (count === 0) return null;
   return (
@@ -191,17 +192,17 @@ function Section({ title, color, count, children }: {
         <span style={{
           display: "inline-block", transition: "transform 0.15s",
           transform: open ? "rotate(90deg)" : "rotate(0deg)",
-          fontSize: 8, color: text.faint,
+          fontSize: sz(8), color: theme.text.faint,
         }}>▶</span>
         <span style={{
-          fontSize: 11, fontWeight: 600, color,
+          fontSize: sz(11), fontWeight: 600, color,
           fontFamily: "'IBM Plex Mono', monospace",
           textTransform: "uppercase", letterSpacing: "0.04em",
         }}>
           {title}
         </span>
         <span style={{
-          fontSize: 9, color: text.hint, background: "rgba(255,255,255,0.04)",
+          fontSize: sz(9), color: theme.text.hint, background: "rgba(255,255,255,0.04)",
           padding: "1px 6px", borderRadius: 3,
           fontFamily: "'IBM Plex Mono', monospace",
         }}>
@@ -213,10 +214,12 @@ function Section({ title, color, count, children }: {
   );
 }
 
-function EntityChip({ node, color, subtitle, onClick }: {
+function EntityChip({ node, color, subtitle, onClick, kindColorFn }: {
   node: IINode; color?: string; subtitle?: string; onClick: () => void;
+  kindColorFn: (kind: string) => string;
 }) {
-  const c = color || kindColor(node.kind);
+  const { theme, sz } = useTheme();
+  const c = color || kindColorFn(node.kind);
   return (
     <div
       onClick={onClick}
@@ -229,9 +232,9 @@ function EntityChip({ node, color, subtitle, onClick }: {
       onMouseEnter={e => (e.currentTarget.style.background = `${c}22`)}
       onMouseLeave={e => (e.currentTarget.style.background = `${c}11`)}
     >
-      <span style={{ fontSize: 11, color: c, fontWeight: 500 }}>{node.label}</span>
+      <span style={{ fontSize: sz(11), color: c, fontWeight: 500 }}>{node.label}</span>
       {subtitle && (
-        <span style={{ fontSize: 9, color: text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
           {subtitle}
         </span>
       )}
@@ -569,6 +572,7 @@ function buildGtmPrompt(report: GtmReport, descriptions: Map<string, string>): s
 }
 
 export function GtmAdvisor(props: GtmAdvisorProps) {
+  const { theme, sz } = useTheme();
   const { nodes, abbreviations, descriptions, onSelectNode } = props;
   const [entityUri, setEntityUri] = useState<string | null>(null);
   const [streamingText, setStreamingText] = useState("");
@@ -577,6 +581,12 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
   const streamRef = useRef("");
 
   const inference = useInference();
+
+  const KIND_COLORS = useMemo(() => buildKindColors(theme), [theme]);
+
+  const kindColor = useCallback((kind: string): string => {
+    return KIND_COLORS[kind] || theme.text.muted;
+  }, [KIND_COLORS, theme.text.muted]);
 
   const orgFilter = useCallback((node: IINode) =>
     ORG_KINDS.has(node.kind) || node.kind === "CapabilityDomain",
@@ -625,11 +635,11 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ marginBottom: 24 }}>
           <div style={{
-            fontSize: 16, fontWeight: 600, color: text.primary, marginBottom: 6,
+            fontSize: sz(16), fontWeight: 600, color: theme.text.primary, marginBottom: 6,
           }}>
             Go-To-Market Advisor
           </div>
-          <div style={{ fontSize: 12, color: text.faint, lineHeight: 1.5 }}>
+          <div style={{ fontSize: sz(12), color: theme.text.faint, lineHeight: 1.5 }}>
             Select your organisation or capability area to generate a GTM strategy map.
             Discover who needs what you offer, how to reach them, and who to partner with.
           </div>
@@ -637,7 +647,7 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
 
         <div style={{ marginBottom: 20 }}>
           <div style={{
-            fontSize: 9, color: palette.emerald, fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(9), color: theme.palette.emerald, fontFamily: "'IBM Plex Mono', monospace",
             textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6,
           }}>Your organisation or capability</div>
           <EntityPicker
@@ -653,8 +663,8 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
         {entity && descriptions.get(entity.uri) && (
           <div style={{
             padding: 12, marginBottom: 20, borderRadius: 8,
-            background: "rgba(255,255,255,0.02)", border: `1px solid ${border.subtle}`,
-            fontSize: 12, color: text.secondary, lineHeight: 1.6,
+            background: "rgba(255,255,255,0.02)", border: `1px solid ${theme.border.subtle}`,
+            fontSize: sz(12), color: theme.text.secondary, lineHeight: 1.6,
           }}>
             {descriptions.get(entity.uri)}
           </div>
@@ -664,17 +674,17 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
           <div>
             {/* Capabilities */}
             {report.capabilities.length > 1 && (
-              <Section title="Your Capabilities" color={palette.emerald} count={report.capabilities.length}>
+              <Section title="Your Capabilities" color={theme.palette.emerald} count={report.capabilities.length}>
                 <div style={{ display: "flex", flexWrap: "wrap" }}>
                   {report.capabilities.map(cap => (
-                    <EntityChip key={cap.uri} node={cap} onClick={() => onSelectNode(cap.uri)} />
+                    <EntityChip key={cap.uri} node={cap} onClick={() => onSelectNode(cap.uri)} kindColorFn={kindColor} />
                   ))}
                 </div>
               </Section>
             )}
 
             {/* Demand */}
-            <Section title="Demand — Who Needs This" color={palette.rose} count={report.demandOrgs.length}>
+            <Section title="Demand — Who Needs This" color={theme.palette.rose} count={report.demandOrgs.length}>
               {report.demandOrgs.length > 0 ? (
                 <div style={{ display: "flex", flexWrap: "wrap" }}>
                   {report.demandOrgs.map(({ org, capability }) => (
@@ -683,57 +693,60 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
                       node={org}
                       subtitle={`seeks ${capability.label}`}
                       onClick={() => onSelectNode(org.uri)}
+                      kindColorFn={kindColor}
                     />
                   ))}
                 </div>
               ) : (
-                <div style={{ fontSize: 11, color: text.hint, padding: "4px 0" }}>
+                <div style={{ fontSize: sz(11), color: theme.text.hint, padding: "4px 0" }}>
                   No organisations seeking these capabilities found in the dataset
                 </div>
               )}
             </Section>
 
             {/* Procurement Routes */}
-            <Section title="Procurement Routes" color={palette.purple} count={report.procurementRoutes.length}>
+            <Section title="Procurement Routes" color={theme.palette.purple} count={report.procurementRoutes.length}>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {report.procurementRoutes.map(({ mechanism, via }) => (
                   <EntityChip
                     key={mechanism.uri}
                     node={mechanism}
-                    color={palette.purple}
+                    color={theme.palette.purple}
                     subtitle={via ? `via ${via.label}` : "direct listing"}
                     onClick={() => onSelectNode(mechanism.uri)}
+                    kindColorFn={kindColor}
                   />
                 ))}
               </div>
             </Section>
 
             {/* Potential Primes */}
-            <Section title="Prime Contractors to Partner With" color={palette.orange} count={report.potentialPrimes.length}>
+            <Section title="Prime Contractors to Partner With" color={theme.palette.orange} count={report.potentialPrimes.length}>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {report.potentialPrimes.map(prime => (
-                  <EntityChip key={prime.uri} node={prime} onClick={() => onSelectNode(prime.uri)} />
+                  <EntityChip key={prime.uri} node={prime} onClick={() => onSelectNode(prime.uri)} kindColorFn={kindColor} />
                 ))}
               </div>
             </Section>
 
             {/* Competitors */}
-            <Section title="Competitive Landscape" color={palette.amber} count={report.competitors.length}>
+            <Section title="Competitive Landscape" color={theme.palette.amber} count={report.competitors.length}>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {report.competitors.map(({ org, capability }) => (
                   <EntityChip
                     key={org.uri}
                     node={org}
-                    color={palette.amber}
+                    color={theme.palette.amber}
                     subtitle={`delivers ${capability.label}`}
                     onClick={() => onSelectNode(org.uri)}
+                    kindColorFn={kindColor}
                   />
                 ))}
               </div>
             </Section>
 
             {/* Key People */}
-            <Section title="Key People" color={palette.amber} count={report.keyPeople.length}>
+            <Section title="Key People" color={theme.palette.amber} count={report.keyPeople.length}>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {report.keyPeople.map(({ person, title, org, capability }) => {
                   const sub = [title, org?.label, capability ? `expertise: ${capability.label}` : ""]
@@ -742,9 +755,10 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
                     <EntityChip
                       key={person.uri}
                       node={person}
-                      color={palette.amber}
+                      color={theme.palette.amber}
                       subtitle={sub}
                       onClick={() => onSelectNode(person.uri)}
+                      kindColorFn={kindColor}
                     />
                   );
                 })}
@@ -752,18 +766,18 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
             </Section>
 
             {/* Investors & Accelerators */}
-            <Section title="Investors" color={palette.pink} count={report.investors.length}>
+            <Section title="Investors" color={theme.palette.pink} count={report.investors.length}>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {report.investors.map(inv => (
-                  <EntityChip key={inv.uri} node={inv} onClick={() => onSelectNode(inv.uri)} />
+                  <EntityChip key={inv.uri} node={inv} onClick={() => onSelectNode(inv.uri)} kindColorFn={kindColor} />
                 ))}
               </div>
             </Section>
 
-            <Section title="Accelerators & Incubators" color={palette.emerald} count={report.accelerators.length}>
+            <Section title="Accelerators & Incubators" color={theme.palette.emerald} count={report.accelerators.length}>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {report.accelerators.map(acc => (
-                  <EntityChip key={acc.uri} node={acc} onClick={() => onSelectNode(acc.uri)} />
+                  <EntityChip key={acc.uri} node={acc} onClick={() => onSelectNode(acc.uri)} kindColorFn={kindColor} />
                 ))}
               </div>
             </Section>
@@ -771,17 +785,17 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
             {/* Sectors & Segments */}
             {(report.sectors.length > 0 || report.segments.length > 0) && (
               <>
-                <Section title="Industry Sectors" color={palette.orange} count={report.sectors.length}>
+                <Section title="Industry Sectors" color={theme.palette.orange} count={report.sectors.length}>
                   <div style={{ display: "flex", flexWrap: "wrap" }}>
                     {report.sectors.map(s => (
-                      <EntityChip key={s.uri} node={s} onClick={() => onSelectNode(s.uri)} />
+                      <EntityChip key={s.uri} node={s} onClick={() => onSelectNode(s.uri)} kindColorFn={kindColor} />
                     ))}
                   </div>
                 </Section>
-                <Section title="Customer Segments" color={palette.rose} count={report.segments.length}>
+                <Section title="Customer Segments" color={theme.palette.rose} count={report.segments.length}>
                   <div style={{ display: "flex", flexWrap: "wrap" }}>
                     {report.segments.map(s => (
-                      <EntityChip key={s.uri} node={s} onClick={() => onSelectNode(s.uri)} />
+                      <EntityChip key={s.uri} node={s} onClick={() => onSelectNode(s.uri)} kindColorFn={kindColor} />
                     ))}
                   </div>
                 </Section>
@@ -789,10 +803,10 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
             )}
 
             {/* Locations */}
-            <Section title="Geographic Presence" color={palette.cyan} count={report.locations.length}>
+            <Section title="Geographic Presence" color={theme.palette.cyan} count={report.locations.length}>
               <div style={{ display: "flex", flexWrap: "wrap" }}>
                 {report.locations.map(loc => (
-                  <EntityChip key={loc.uri} node={loc} onClick={() => onSelectNode(loc.uri)} />
+                  <EntityChip key={loc.uri} node={loc} onClick={() => onSelectNode(loc.uri)} kindColorFn={kindColor} />
                 ))}
               </div>
             </Section>
@@ -802,13 +816,13 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
              report.procurementRoutes.length === 0 && report.keyPeople.length === 0 && (
               <div style={{
                 padding: 32, textAlign: "center", borderRadius: 8,
-                background: "rgba(255,255,255,0.02)", border: `1px solid ${border.subtle}`,
+                background: "rgba(255,255,255,0.02)", border: `1px solid ${theme.border.subtle}`,
               }}>
-                <div style={{ fontSize: 24, opacity: 0.3, marginBottom: 8 }}>∅</div>
-                <div style={{ color: text.faint, fontSize: 13 }}>
+                <div style={{ fontSize: sz(24), opacity: 0.3, marginBottom: 8 }}>∅</div>
+                <div style={{ color: theme.text.faint, fontSize: sz(13) }}>
                   Limited GTM intelligence available for this entity
                 </div>
-                <div style={{ color: text.hint, fontSize: 11, marginTop: 4 }}>
+                <div style={{ color: theme.text.hint, fontSize: sz(11), marginTop: 4 }}>
                   Try selecting a different organisation or capability area with more connections
                 </div>
               </div>
@@ -819,17 +833,17 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
               report.procurementRoutes.length > 0 || report.keyPeople.length > 0) && (
               <div style={{
                 marginTop: 8, marginBottom: 16, padding: 16, borderRadius: 8,
-                background: `${palette.emerald}08`,
-                border: `1px solid ${palette.emerald}22`,
+                background: `${theme.palette.emerald}08`,
+                border: `1px solid ${theme.palette.emerald}22`,
                 display: "flex", alignItems: "center", justifyContent: "space-between",
               }}>
                 <div>
                   <div style={{
-                    fontSize: 12, fontWeight: 600, color: palette.emerald, marginBottom: 2,
+                    fontSize: sz(12), fontWeight: 600, color: theme.palette.emerald, marginBottom: 2,
                   }}>
                     Generate Strategy Report
                   </div>
-                  <div style={{ fontSize: 11, color: text.hint }}>
+                  <div style={{ fontSize: sz(11), color: theme.text.hint }}>
                     Use AI to synthesise the above intelligence into an actionable GTM plan
                   </div>
                 </div>
@@ -838,9 +852,9 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
                   disabled={isStreaming}
                   style={{
                     padding: "8px 20px", borderRadius: 6, cursor: "pointer",
-                    background: isStreaming ? "rgba(255,255,255,0.04)" : `${palette.emerald}22`,
-                    color: isStreaming ? text.faint : palette.emerald,
-                    fontSize: 12, fontWeight: 600, border: `1px solid ${palette.emerald}44`,
+                    background: isStreaming ? "rgba(255,255,255,0.04)" : `${theme.palette.emerald}22`,
+                    color: isStreaming ? theme.text.faint : theme.palette.emerald,
+                    fontSize: sz(12), fontWeight: 600, border: `1px solid ${theme.palette.emerald}44`,
                     fontFamily: "'IBM Plex Mono', monospace",
                     transition: "all 0.15s",
                   }}
@@ -866,13 +880,13 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
         {!entityUri && (
           <div style={{
             padding: 48, textAlign: "center", borderRadius: 8,
-            background: "rgba(255,255,255,0.02)", border: `1px solid ${border.subtle}`,
+            background: "rgba(255,255,255,0.02)", border: `1px solid ${theme.border.subtle}`,
           }}>
-            <div style={{ fontSize: 32, opacity: 0.2, marginBottom: 12 }}>🚀</div>
-            <div style={{ color: text.faint, fontSize: 13, marginBottom: 8 }}>
+            <div style={{ fontSize: sz(32), opacity: 0.2, marginBottom: 12 }}>🚀</div>
+            <div style={{ color: theme.text.faint, fontSize: sz(13), marginBottom: 8 }}>
               Select your organisation or capability area above
             </div>
-            <div style={{ color: text.hint, fontSize: 11, lineHeight: 1.6 }}>
+            <div style={{ color: theme.text.hint, fontSize: sz(11), lineHeight: 1.6 }}>
               The GTM advisor will map out demand signals, procurement routes,<br />
               competitive landscape, key contacts, and potential partners
             </div>
