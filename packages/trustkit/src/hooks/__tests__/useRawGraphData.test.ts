@@ -9,7 +9,13 @@ import {
 } from "../useRawGraphData";
 import type { RawNode, RawEdge, PredicateInfo } from "../useRawGraphData";
 import type { Triple } from "@trustgraph/react-state";
-import { domainColors } from "../../theme";
+import { withGlow } from "../../theme/glow";
+import { defaultTheme } from "../../theme/defaultTheme";
+
+const domainColors = Object.values(defaultTheme.palette).map((hex) => ({
+  color: hex,
+  glow: withGlow(hex),
+}));
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -91,20 +97,20 @@ describe("hashString", () => {
 
 describe("colorForUri", () => {
   it("returns a color and glow from the domain palette", () => {
-    const result = colorForUri("http://example.org/x");
+    const result = colorForUri("http://example.org/x", domainColors);
     expect(result.color).toMatch(/^#[0-9A-Fa-f]{6}$/);
     expect(result.glow).toMatch(/^rgba\(/);
   });
 
   it("is deterministic for the same URI", () => {
-    const a = colorForUri("http://example.org/x");
-    const b = colorForUri("http://example.org/x");
+    const a = colorForUri("http://example.org/x", domainColors);
+    const b = colorForUri("http://example.org/x", domainColors);
     expect(a.color).toBe(b.color);
     expect(a.glow).toBe(b.glow);
   });
 
   it("result is from domainColors", () => {
-    const result = colorForUri("http://example.org/y");
+    const result = colorForUri("http://example.org/y", domainColors);
     expect(domainColors.some((dc) => dc.color === result.color && dc.glow === result.glow)).toBe(true);
   });
 });
@@ -146,7 +152,7 @@ describe("processTriples", () => {
     const triples: Triple[] = [
       triple("http://a.org/A", "http://a.org/rel", "http://a.org/B"),
     ];
-    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap);
+    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap, domainColors);
     expect(state.nodeMap.has("http://a.org/A")).toBe(true);
     expect(state.nodeMap.has("http://a.org/B")).toBe(true);
   });
@@ -156,7 +162,7 @@ describe("processTriples", () => {
     const triples: Triple[] = [
       triple("http://a.org/A", "http://a.org/rel", "http://a.org/B"),
     ];
-    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap);
+    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap, domainColors);
     expect(state.edgeList).toHaveLength(1);
     expect(state.edgeList[0].from).toBe("http://a.org/A");
     expect(state.edgeList[0].to).toBe("http://a.org/B");
@@ -168,7 +174,7 @@ describe("processTriples", () => {
       triple("http://a.org/A", "http://a.org/rel", "http://a.org/B"),
       triple("http://a.org/A", "http://a.org/rel", "http://a.org/B"),
     ];
-    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap);
+    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap, domainColors);
     expect(state.edgeList).toHaveLength(1);
   });
 
@@ -178,7 +184,7 @@ describe("processTriples", () => {
       { s: iri("http://a.org/A"), p: iri(RDFS_LABEL), o: lit("Node A") },
       triple("http://a.org/A", "http://a.org/rel", "http://a.org/B"),
     ];
-    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap);
+    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap, domainColors);
     expect(state.nodeMap.get("http://a.org/A")?.label).toBe("Node A");
   });
 
@@ -187,7 +193,7 @@ describe("processTriples", () => {
     const triples: Triple[] = [
       { s: iri("http://a.org/A"), p: iri(RDFS_LABEL), o: lit("Node A") },
     ];
-    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap);
+    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap, domainColors);
     expect(state.edgeList).toHaveLength(0);
   });
 
@@ -196,7 +202,7 @@ describe("processTriples", () => {
     const triples: Triple[] = [
       { s: iri("http://a.org/A"), p: iri("http://a.org/age"), o: lit("42") },
     ];
-    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap);
+    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap, domainColors);
     const node = state.nodeMap.get("http://a.org/A");
     expect(node?.properties["age"]).toEqual(["42"]);
   });
@@ -207,7 +213,7 @@ describe("processTriples", () => {
       { s: iri("http://a.org/A"), p: iri("http://a.org/tag"), o: lit("foo") },
       { s: iri("http://a.org/A"), p: iri("http://a.org/tag"), o: lit("foo") },
     ];
-    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap);
+    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap, domainColors);
     const node = state.nodeMap.get("http://a.org/A");
     expect(node?.properties["tag"]).toEqual(["foo"]);
   });
@@ -218,7 +224,7 @@ describe("processTriples", () => {
       triple("http://a.org/A", "http://a.org/rel", "http://a.org/B"),
       triple("http://a.org/B", "http://a.org/rel", "http://a.org/C"),
     ];
-    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap);
+    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap, domainColors);
     const pred = state.predMap.get("http://a.org/rel");
     expect(pred?.count).toBe(2);
     expect(pred?.label).toBe("rel");
@@ -230,7 +236,7 @@ describe("processTriples", () => {
       triple("http://a.org/A", "http://a.org/r1", "http://a.org/B"),
       triple("http://a.org/A", "http://a.org/r2", "http://a.org/C"),
     ];
-    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap);
+    processTriples(triples, state.nodeMap, state.edgeSet, state.edgeList, state.predMap, domainColors);
     expect(state.nodeMap.get("http://a.org/A")?.outDegree).toBe(2);
     expect(state.nodeMap.get("http://a.org/B")?.inDegree).toBe(1);
     expect(state.nodeMap.get("http://a.org/C")?.inDegree).toBe(1);
@@ -241,14 +247,14 @@ describe("processTriples", () => {
     // First batch: create node without label
     processTriples(
       [triple("http://a.org/A", "http://a.org/rel", "http://a.org/B")],
-      state.nodeMap, state.edgeSet, state.edgeList, state.predMap,
+      state.nodeMap, state.edgeSet, state.edgeList, state.predMap, domainColors,
     );
     expect(state.nodeMap.get("http://a.org/A")?.label).toBe("A");
 
     // Second batch: label arrives
     processTriples(
       [{ s: iri("http://a.org/A"), p: iri(RDFS_LABEL), o: lit("Alpha") }],
-      state.nodeMap, state.edgeSet, state.edgeList, state.predMap,
+      state.nodeMap, state.edgeSet, state.edgeList, state.predMap, domainColors,
     );
     expect(state.nodeMap.get("http://a.org/A")?.label).toBe("Alpha");
   });

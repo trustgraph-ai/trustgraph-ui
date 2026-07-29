@@ -72,6 +72,8 @@ function Pill({
             top: "calc(100% + 4px)",
             right: 0,
             minWidth: 160,
+            maxHeight: "min(400px, 60vh)",
+            overflowY: "auto",
             background: theme.surface.base,
             border: `1px solid ${color}33`,
             borderRadius: 8,
@@ -80,7 +82,7 @@ function Pill({
             boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
           }}
         >
-          {items.map((id) => (
+          {[...items].sort((a, b) => a.localeCompare(b)).map((id) => (
             <div
               key={id}
               onClick={() => {
