@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 *~
+
+packages/demo/public/plugins/*.js
+packages/demo/public/plugins/*.png
+packages/demo/public/plugins/*.jpg

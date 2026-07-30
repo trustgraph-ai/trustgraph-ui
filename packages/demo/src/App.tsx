@@ -1,10 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ComponentType } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import type { DomainKey, Entity } from "@trustgraph/trustkit";
 import { Header, StatusBar, Toaster, useGraphData, toast, WorkspaceSwitcher, ThemeProvider, useTheme } from "@trustgraph/trustkit";
 import { useLogout, useWorkspaceSync } from "@trustgraph/react-state";
 import { useThemeSettings, ThemePanel } from "./components/ThemePanel";
-import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, PlaygroundPage, WorldEventsPage, SparqlPage, GraphqlPage, SolarMissionsPage, HwSecPage, RetailAssistantPage, BrandAnalyticsPage, InnovationPage, RiskPage, GameTheoryPage, LawInContextPage, ThreatExplorerPage } from "./pages";
+import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, SparqlPage, GraphqlPage } from "./pages";
+import { PluginErrorBoundary } from "./RemotePlugin";
+import { usePluginManifest } from "./usePluginManifest";
+
+const BUILTIN_COMPONENTS = new Map<string, ComponentType>([]);
 
 export default function App() {
   const themeSettings = useThemeSettings();
@@ -24,6 +28,7 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
   const { entities, isLoading } = useGraphData();
   const logout = useLogout();
   const { theme, sz } = useTheme();
+  const { plugins } = usePluginManifest("/config/plugins.json", BUILTIN_COMPONENTS);
 
   useWorkspaceSync();
 
@@ -71,7 +76,7 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
 
       <Routes>
         <Route path="/" element={<HomePage onNavigate={handleNavigate} />} />
-        <Route path="/demos" element={<DemosPage onNavigate={handleNavigate} />} />
+        <Route path="/demos" element={<DemosPage onNavigate={handleNavigate} plugins={plugins} />} />
         <Route path="/ingest" element={<IngestPage />} />
         <Route path="/explore" element={<ExploreView />} />
         <Route path="/graph-rag" element={<GraphRagPage />} />
@@ -97,19 +102,16 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
         <Route path="/agent-config" element={<AgentConfigPage />} />
         <Route path="/ontology-manage" element={<OntologyManagePage />} />
         <Route path="/schemas" element={<SchemaPage />} />
-        <Route path="/playground" element={<PlaygroundPage />} />
         <Route path="/sparql" element={<SparqlPage />} />
-        <Route path="/world-events" element={<WorldEventsPage />} />
-        <Route path="/solar-missions" element={<SolarMissionsPage />} />
         <Route path="/graphql" element={<GraphqlPage />} />
-        <Route path="/hwsec" element={<HwSecPage />} />
-        <Route path="/retail-assistant" element={<RetailAssistantPage />} />
-        <Route path="/brand-analytics" element={<BrandAnalyticsPage />} />
-        <Route path="/innovation" element={<InnovationPage />} />
-        <Route path="/risk" element={<RiskPage />} />
-        <Route path="/game-theory" element={<GameTheoryPage />} />
-        <Route path="/law-in-context" element={<LawInContextPage />} />
-        <Route path="/threat-explorer" element={<ThreatExplorerPage />} />
+        {/* Plugin routes — loaded dynamically from /plugins.json */}
+        {plugins.map(p => p.Component ? (
+          <Route key={p.id} path={`/${p.id}`} element={
+            <PluginErrorBoundary name={p.id}>
+              <p.Component />
+            </PluginErrorBoundary>
+          } />
+        ) : null)}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

@@ -1,36 +1,16 @@
 import { Card, useTheme } from "@trustgraph/trustkit";
 import type { ThemePalette } from "@trustgraph/trustkit";
-
-interface DemoCard {
-  key: string;
-  view?: string;
-  title: string;
-  icon: string;
-  paletteKey: keyof ThemePalette;
-  description: string;
-  screenshot?: string;
-}
+import type { ResolvedPlugin } from "../usePluginManifest";
 
 interface DemosPageProps {
   onNavigate?: (view: string) => void;
+  plugins?: ResolvedPlugin[];
 }
 
-const demos: DemoCard[] = [
-  { key: "solar-missions", view: "solar-missions", title: "Solar System Missions", icon: "◉", paletteKey: "amber", description: "Explore space missions across the solar system." },
-  { key: "hwsec", view: "hwsec", title: "Hardware Security Explorer", icon: "◈", paletteKey: "blue", description: "Hardware decomposition tree with security annotations." },
-  { key: "playground", view: "playground", title: "Playground", icon: "△", paletteKey: "rose", description: "Experimental sandbox for trying things out." },
-  { key: "world-events", view: "world-events", title: "World Events Explorer", icon: "⊕", paletteKey: "cyan", description: "Geo-temporal event explorer with map, timeline, and filters." },
-  { key: "retail-assistant", view: "retail-assistant", title: "Retail Shopping Assistant", icon: "◈", paletteKey: "emerald", description: "AI shopping assistant for PC builds, gifts, and camping gear." },
-  { key: "brand-analytics", view: "brand-analytics", title: "Brand Analytics", icon: "◎", paletteKey: "purple", description: "Brand intelligence from interaction signals. See what users buy, reject, and why." },
-  { key: "risk", view: "risk", title: "Risk Management", icon: "🛡", paletteKey: "rose", description: "Enterprise risk explorer with time-windowed event analysis, threat actors, assets, and incident response tracking." },
-  { key: "game-theory", view: "game-theory", title: "Game Theory", icon: "♟", paletteKey: "purple", description: "Interactive game tree visualizer with payoff matrices, backward induction, Nash equilibria, and what-if sandbox." },
-  { key: "innovation", view: "innovation", title: "Innovation Intelligence", icon: "🔍", paletteKey: "cyan", description: "Innovation ecosystem explorer for navigating organisations, capabilities, procurement routes, and people." },
-  { key: "law-in-context", view: "law-in-context", title: "Law in Context", icon: "\u2696", paletteKey: "amber", description: "Multilingual legal explorer: institutions, civic rights, compliance obligations, emergency powers, and legislative structure." },
-  { key: "threat-explorer", view: "threat-explorer", title: "Threat Explorer", icon: "\u26A0", paletteKey: "cyan", description: "Cybersecurity investigation tool: pivot through risk events, actors, assets, and categories. Drill into raw OCSF events for evidence." },
-];
-
-export function DemosPage({ onNavigate }: DemosPageProps) {
+export function DemosPage({ onNavigate, plugins = [] }: DemosPageProps) {
   const { theme, sz } = useTheme();
+
+  const cards = plugins.filter(p => p.placement === "demo");
 
   return (
     <div style={{
@@ -63,14 +43,14 @@ export function DemosPage({ onNavigate }: DemosPageProps) {
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: 12,
         }}>
-          {demos.map((wf) => {
-            const color = theme.palette[wf.paletteKey];
+          {cards.map((p) => {
+            const color = theme.palette[p.paletteKey as keyof ThemePalette];
             return (
               <Card
-                key={wf.key}
+                key={p.id}
                 borderColor={color + "22"}
                 padding={0}
-                onClick={wf.view && onNavigate ? () => onNavigate(wf.view!) : undefined}
+                onClick={onNavigate ? () => onNavigate(p.id) : undefined}
               >
                 <div style={{
                   height: 80,
@@ -79,8 +59,8 @@ export function DemosPage({ onNavigate }: DemosPageProps) {
                   position: "relative",
                 }}>
                   <img
-                    src={wf.screenshot || "/placeholder.png"}
-                    alt={wf.title}
+                    src={p.screenshot || "/placeholder.png"}
+                    alt={p.title}
                     style={{
                       width: "100%",
                       height: "100%",
@@ -108,7 +88,7 @@ export function DemosPage({ onNavigate }: DemosPageProps) {
                     justifyContent: "center",
                     fontSize: sz(14),
                   }}>
-                    {wf.icon}
+                    {p.icon}
                   </div>
                 </div>
 
@@ -119,14 +99,14 @@ export function DemosPage({ onNavigate }: DemosPageProps) {
                     color: color,
                     marginBottom: 3,
                   }}>
-                    {wf.title}
+                    {p.title}
                   </div>
                   <div style={{
                     fontSize: sz(11),
                     color: theme.text.subtle,
                     lineHeight: 1.4,
                   }}>
-                    {wf.description}
+                    {p.description}
                   </div>
                 </div>
               </Card>

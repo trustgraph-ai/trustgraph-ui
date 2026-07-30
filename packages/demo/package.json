@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "copy-plugins": "node scripts/copy-plugins.mjs",
+    "build": "npm run copy-plugins && tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
