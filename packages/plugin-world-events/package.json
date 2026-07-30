@@ -1,0 +1,34 @@
+{
+  "name": "@trustgraph/plugin-world-events",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/world-events.iife.js",
+  "scripts": {
+    "build": "tsc --noEmit && vite build"
+  },
+  "dependencies": {
+    "d3-geo": "^3.1.1",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@trustgraph/trustkit": "*",
+    "@trustgraph/react-provider": "*",
+    "@trustgraph/react-state": "*"
+  },
+  "devDependencies": {
+    "@types/d3-geo": "^3.1.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "@trustgraph/trustkit": "*",
+    "@trustgraph/react-provider": "*",
+    "@trustgraph/react-state": "*",
+    "vite": "^7.3.1"
+  }
+}

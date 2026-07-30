@@ -1,0 +1,116 @@
+[
+  {
+    "id": "solar-missions",
+    "title": "Solar System Missions",
+    "icon": "◉",
+    "paletteKey": "amber",
+    "description": "Explore space missions across the solar system.",
+    "url": "/plugins/solar-missions.iife.js",
+    "globalName": "SolarMissionsPlugin",
+    "screenshot": "/plugins/solar-missions.png",
+    "placement": "demo"
+  },
+  {
+    "id": "hwsec",
+    "title": "Hardware Security Explorer",
+    "icon": "◈",
+    "paletteKey": "blue",
+    "description": "Hardware decomposition tree with security annotations.",
+    "url": "/plugins/hwsec.iife.js",
+    "globalName": "HwSecPlugin",
+    "placement": "demo"
+  },
+  {
+    "id": "playground",
+    "title": "Playground",
+    "icon": "△",
+    "paletteKey": "rose",
+    "description": "Experimental sandbox for trying things out.",
+    "url": "/plugins/playground.iife.js",
+    "globalName": "PlaygroundPlugin",
+    "placement": "demo"
+  },
+  {
+    "id": "world-events",
+    "title": "World Events Explorer",
+    "icon": "⊕",
+    "paletteKey": "cyan",
+    "description": "Geo-temporal event explorer with map, timeline, and filters.",
+    "url": "/plugins/world-events.iife.js",
+    "globalName": "WorldEventsPlugin",
+    "placement": "demo"
+  },
+  {
+    "id": "retail-assistant",
+    "title": "Retail Shopping Assistant",
+    "icon": "◈",
+    "paletteKey": "emerald",
+    "description": "AI shopping assistant for PC builds, gifts, and camping gear.",
+    "url": "/plugins/retail-brand.iife.js",
+    "globalName": "RetailBrandPlugin",
+    "componentName": "RetailAssistant",
+    "placement": "demo"
+  },
+  {
+    "id": "brand-analytics",
+    "title": "Brand Analytics",
+    "icon": "◎",
+    "paletteKey": "purple",
+    "description": "Brand intelligence from interaction signals. See what users buy, reject, and why.",
+    "url": "/plugins/retail-brand.iife.js",
+    "globalName": "RetailBrandPlugin",
+    "componentName": "BrandAnalytics",
+    "placement": "demo"
+  },
+  {
+    "id": "risk",
+    "title": "Risk Management",
+    "icon": "🛡",
+    "paletteKey": "rose",
+    "description": "Enterprise risk explorer with time-windowed event analysis, threat actors, assets, and incident response tracking.",
+    "url": "/plugins/risk.iife.js",
+    "globalName": "RiskPlugin",
+    "placement": "demo"
+  },
+  {
+    "id": "game-theory",
+    "title": "Game Theory",
+    "icon": "♟",
+    "paletteKey": "purple",
+    "description": "Interactive game tree visualizer with payoff matrices, backward induction, Nash equilibria, and what-if sandbox.",
+    "url": "/plugins/game-theory.iife.js",
+    "globalName": "GameTheoryPlugin",
+    "screenshot": "/plugins/game-theory.png",
+    "placement": "demo"
+  },
+  {
+    "id": "innovation",
+    "title": "Innovation Intelligence",
+    "icon": "🔍",
+    "paletteKey": "cyan",
+    "description": "Innovation ecosystem explorer for navigating organisations, capabilities, procurement routes, and people.",
+    "url": "/plugins/innovation.iife.js",
+    "globalName": "InnovationPlugin",
+    "placement": "demo"
+  },
+  {
+    "id": "law-in-context",
+    "title": "Law in Context",
+    "icon": "⚖",
+    "paletteKey": "amber",
+    "description": "Multilingual legal explorer: institutions, civic rights, compliance obligations, emergency powers, and legislative structure.",
+    "url": "/plugins/law.iife.js",
+    "globalName": "LawPlugin",
+    "placement": "demo"
+  },
+  {
+    "id": "threat-explorer",
+    "title": "Threat Explorer",
+    "icon": "⚠",
+    "paletteKey": "cyan",
+    "description": "Cybersecurity investigation tool: pivot through risk events, actors, assets, and categories. Drill into raw OCSF events for evidence.",
+    "url": "/plugins/threat.iife.js",
+    "globalName": "ThreatPlugin",
+    "placement": "demo"
+  }
+]

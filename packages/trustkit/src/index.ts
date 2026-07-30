@@ -23,62 +23,8 @@ export { OntologyList, OntologyClassTree, OntologyPropertyTree, OntologyClassEdi
 export { useSchemaForm, SchemaFieldEditor, SchemaFieldsList, SchemaBasicInfo, SchemaIndexesSection, SchemaValidationErrors, SchemaEditor, SchemaWorkbench } from "./components/schema";
 
 // Components — map
-export { GeoMap, MAP_PRESETS, WorldEventsExplorer, EventTimeline } from "./components/map";
-export type { GeoMapProps, MapMarker, MapPreset, WorldEventsExplorerProps, EventTimelineProps } from "./components/map";
-export { useWorldEvents } from "./hooks/useWorldEvents";
-export type { WorldEvent, EventSummary, EventTypeInfo, TimeBucket, GridCell } from "./hooks/useWorldEvents";
-
-// Components — solar
-export { SolarSystemExplorer } from "./components/solar";
-export type { SolarSystemExplorerProps } from "./components/solar";
-export { useSolarMissions } from "./hooks/useSolarMissions";
-export type { CelestialBody, SolarMission, MissionEvent } from "./hooks/useSolarMissions";
-
-// Components — hwsec
-export { HwSecExplorer } from "./components/hwsec";
-export type { HwSecExplorerProps } from "./components/hwsec";
-export { useHwSecData } from "./hooks/useHwSecData";
-export type { HwNode } from "./hooks/useHwSecData";
-
-// Components — retail
-export { RetailAssistant, ChatPanel, ContextPanel, BrowseGrid, CartPanel } from "./components/retail";
-export type { RetailAssistantProps } from "./components/retail";
-
-// Components — brand analytics
-export { BrandAnalytics } from "./components/brand-analytics";
-export type { BrandAnalyticsProps } from "./components/brand-analytics";
-export { useBrandAnalytics, BUDGET_TIERS } from "./hooks/useBrandAnalytics";
-export type { CompetitorEntry, CategoryCompetition, HeadToHead, FunnelEntry, AnchorAttachment, BudgetTierDef, BrandAnalyticsData } from "./hooks/useBrandAnalytics";
-
-// Components — innovation intelligence
-export { InnovationExplorer } from "./components/innovation";
-export type { InnovationExplorerProps } from "./components/innovation";
-export { useInnovationData } from "./hooks/useInnovationData";
-export type { IINode } from "./hooks/useInnovationData";
-
-// Components — ocsf / threat
-export { ThreatExplorer } from "./components/ocsf";
-export type { ThreatExplorerProps } from "./components/ocsf";
-export { useOcsfData } from "./hooks/useOcsfData";
-export type { OcsfNode } from "./hooks/useOcsfData";
-
-// Components — risk
-export { RiskExplorer } from "./components/risk";
-export type { RiskExplorerProps } from "./components/risk";
-export { useRiskData } from "./hooks/useRiskData";
-export type { RiskNode } from "./hooks/useRiskData";
-
-// Components — game theory
-export { GameTheoryExplorer } from "./components/game-theory";
-export type { GameTheoryExplorerProps } from "./components/game-theory";
-export { useGameTheoryData } from "./hooks/useGameTheoryData";
-export type { GTNode } from "./hooks/useGameTheoryData";
-
-// Components — law in context
-export { LawExplorer } from "./components/law-in-context";
-export type { LawExplorerProps } from "./components/law-in-context";
-export { useLawData } from "./hooks/useLawData";
-export type { LawNode } from "./hooks/useLawData";
+export { GeoMap, MAP_PRESETS } from "./components/map";
+export type { GeoMapProps, MapMarker, MapPreset } from "./components/map";
 
 // Components — sparql
 export { SparqlWorkbench } from "./components/sparql";
@@ -97,7 +43,7 @@ export { StreamingResponse, ExplainEventCard, eventTypeColor, ExplainTimeline, E
 
 // Hooks
 export { useGraphData } from "./hooks/useGraphData";
-export { useRawGraphData } from "./hooks/useRawGraphData";
+export { useRawGraphData, getTermValue, isUri, processTriples } from "./hooks/useRawGraphData";
 export type { RawNode, RawEdge, PredicateInfo } from "./hooks/useRawGraphData";
 export { useRawGraphState } from "./hooks/useRawGraphState";
 export { useNodeDetail } from "./hooks/useNodeDetail";
@@ -128,18 +74,6 @@ export type { DAGNode, DAGEdge, DAGLayout } from "./hooks/useExplainDAG";
 export { useSourceDocument } from "./hooks/useSourceDocument";
 export type { SourceDocumentState } from "./hooks/useSourceDocument";
 export type { ProvenanceChain } from "./hooks/useExplainEventFetcher";
-export { useRetailChat } from "./hooks/useRetailChat";
-export type { ChatMessage, RetailFlow, RetailChatState } from "./hooks/useRetailChat";
-export { useRetailContext } from "./hooks/useRetailContext";
-export type { ProductCategory, CategoryRequirement, ActivityTemplate, CompatConstraint, RetailContextData } from "./hooks/useRetailContext";
-export { useRetailPrompt, buildRetailTerms, buildGenericTerms, parsePromptResponse } from "./hooks/useRetailPrompt";
-export type { RetailAction, RetailActionType, RetailLLMResponse, BuildPhase, SlotState, BuildState, HistoryEntry, RetailPromptState, DisplayedProduct } from "./hooks/useRetailPrompt";
-export { useRetailBuild } from "./hooks/useRetailBuild";
-export type { RecommendedProduct, RetailBuildState } from "./hooks/useRetailBuild";
-export { useRetailOrchestrator } from "./hooks/useRetailOrchestrator";
-export type { ActiveFlow, RetailOrchestratorState } from "./hooks/useRetailOrchestrator";
-export { useRetailCart } from "./hooks/useRetailCart";
-export type { CartItem, CartState } from "./hooks/useRetailCart";
 export { useTripleWriter, iri, literal, triple } from "./hooks/useTripleWriter";
 export type { RawTriple, TripleWriter } from "./hooks/useTripleWriter";
 export { useToastStore, toast } from "./hooks/toastStore";
