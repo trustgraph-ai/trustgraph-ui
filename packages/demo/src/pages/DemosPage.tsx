@@ -10,7 +10,7 @@ interface DemosPageProps {
 export function DemosPage({ onNavigate, plugins = [] }: DemosPageProps) {
   const { theme, sz } = useTheme();
 
-  const cards = plugins.filter(p => p.placement === "demo");
+  const cards = plugins;
 
   return (
     <div style={{

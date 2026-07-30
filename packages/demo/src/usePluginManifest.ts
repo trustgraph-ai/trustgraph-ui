@@ -1,8 +1,6 @@
 import { useState, useEffect, type ComponentType } from "react";
 import { loadRemotePlugin } from "./loadRemotePlugin";
 
-export type PluginPlacement = "workflow" | "demo";
-
 export interface PluginManifestEntry {
   id: string;
   title: string;
@@ -13,7 +11,6 @@ export interface PluginManifestEntry {
   globalName?: string;
   componentName?: string;
   screenshot?: string;
-  placement?: PluginPlacement;
 }
 
 export interface ResolvedPlugin {
@@ -23,15 +20,51 @@ export interface ResolvedPlugin {
   paletteKey: string;
   description: string;
   screenshot?: string;
-  placement: PluginPlacement;
   Component: ComponentType | null;
+}
+
+interface PluginManifestFile {
+  workflows?: PluginManifestEntry[];
+  demos?: PluginManifestEntry[];
+}
+
+async function resolveEntries(
+  entries: PluginManifestEntry[],
+  builtins?: Map<string, ComponentType>,
+): Promise<ResolvedPlugin[]> {
+  const resolved: ResolvedPlugin[] = [];
+  for (const entry of entries) {
+    try {
+      let Component: ComponentType | null = null;
+
+      if (entry.url && entry.globalName) {
+        Component = await loadRemotePlugin(entry.url, entry.globalName, entry.componentName);
+      } else if (builtins?.has(entry.id)) {
+        Component = builtins.get(entry.id)!;
+      }
+
+      resolved.push({
+        id: entry.id,
+        title: entry.title,
+        icon: entry.icon,
+        paletteKey: entry.paletteKey,
+        description: entry.description,
+        screenshot: entry.screenshot,
+        Component,
+      });
+    } catch (err) {
+      console.warn(`Failed to load plugin "${entry.id}":`, err);
+    }
+  }
+  return resolved;
 }
 
 export function usePluginManifest(
   manifestUrl: string,
   builtins?: Map<string, ComponentType>,
 ) {
-  const [plugins, setPlugins] = useState<ResolvedPlugin[]>([]);
+  const [workflows, setWorkflows] = useState<ResolvedPlugin[]>([]);
+  const [demos, setDemos] = useState<ResolvedPlugin[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,38 +75,16 @@ export function usePluginManifest(
       try {
         const res = await fetch(manifestUrl);
         if (!res.ok) throw new Error(`Failed to fetch plugin manifest: ${res.status}`);
-        const entries: PluginManifestEntry[] = await res.json();
+        const manifest: PluginManifestFile = await res.json();
 
-        const resolved: ResolvedPlugin[] = [];
-        for (const entry of entries) {
-          try {
-            let Component: ComponentType | null = null;
-
-            if (entry.url && entry.globalName) {
-              Component = await loadRemotePlugin(entry.url, entry.globalName, entry.componentName);
-            } else if (builtins?.has(entry.id)) {
-              Component = builtins.get(entry.id)!;
-            }
-
-            if (!cancelled) {
-              resolved.push({
-                id: entry.id,
-                title: entry.title,
-                icon: entry.icon,
-                paletteKey: entry.paletteKey,
-                description: entry.description,
-                screenshot: entry.screenshot,
-                placement: entry.placement ?? "demo",
-                Component,
-              });
-            }
-          } catch (err) {
-            console.warn(`Failed to load plugin "${entry.id}":`, err);
-          }
-        }
+        const [resolvedWorkflows, resolvedDemos] = await Promise.all([
+          resolveEntries(manifest.workflows ?? [], builtins),
+          resolveEntries(manifest.demos ?? [], builtins),
+        ]);
 
         if (!cancelled) {
-          setPlugins(resolved);
+          setWorkflows(resolvedWorkflows);
+          setDemos(resolvedDemos);
           setIsLoading(false);
         }
       } catch (err) {
@@ -87,5 +98,5 @@ export function usePluginManifest(
     return () => { cancelled = true; };
   }, [manifestUrl, builtins]);
 
-  return { plugins, isLoading, error };
+  return { workflows, demos, isLoading, error };
 }

@@ -4,9 +4,11 @@ import { useTheme } from "../../theme/ThemeContext";
 interface HeaderProps {
   activeTab: TabKey;
   onTabChange: (tab: TabKey) => void;
+  showWorkflows?: boolean;
+  showDemos?: boolean;
 }
 
-export function Header({ activeTab, onTabChange }: HeaderProps) {
+export function Header({ activeTab, onTabChange, showWorkflows = true, showDemos = true }: HeaderProps) {
   const { theme, sz } = useTheme();
 
   return (
@@ -36,30 +38,34 @@ export function Header({ activeTab, onTabChange }: HeaderProps) {
         </div>
       </div>
       <div style={{ display: "flex", gap: sz(6), fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(12) }}>
-        <button
-          onClick={() => onTabChange("home" as TabKey)}
-          style={{
-            padding: `${sz(7)}px ${sz(16)}px`, borderRadius: 6, border: "none", cursor: "pointer",
-            background: activeTab === "home" ? theme.surface.cardHover : "transparent",
-            color: activeTab === "home" ? theme.text.primary : theme.text.muted,
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(12), fontWeight: activeTab === "home" ? 600 : 400,
-            transition: "all 0.2s",
-          }}
-        >
-          ⌂ Workflows
-        </button>
-        <button
-          onClick={() => onTabChange("demos" as TabKey)}
-          style={{
-            padding: `${sz(7)}px ${sz(16)}px`, borderRadius: 6, border: "none", cursor: "pointer",
-            background: activeTab === "demos" ? theme.surface.cardHover : "transparent",
-            color: activeTab === "demos" ? theme.text.primary : theme.text.muted,
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(12), fontWeight: activeTab === "demos" ? 600 : 400,
-            transition: "all 0.2s",
-          }}
-        >
-          ▷ Demos
-        </button>
+        {showWorkflows && (
+          <button
+            onClick={() => onTabChange("home" as TabKey)}
+            style={{
+              padding: `${sz(7)}px ${sz(16)}px`, borderRadius: 6, border: "none", cursor: "pointer",
+              background: activeTab === "home" ? theme.surface.cardHover : "transparent",
+              color: activeTab === "home" ? theme.text.primary : theme.text.muted,
+              fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(12), fontWeight: activeTab === "home" ? 600 : 400,
+              transition: "all 0.2s",
+            }}
+          >
+            ⌂ Workflows
+          </button>
+        )}
+        {showDemos && (
+          <button
+            onClick={() => onTabChange("demos" as TabKey)}
+            style={{
+              padding: `${sz(7)}px ${sz(16)}px`, borderRadius: 6, border: "none", cursor: "pointer",
+              background: activeTab === "demos" ? theme.surface.cardHover : "transparent",
+              color: activeTab === "demos" ? theme.text.primary : theme.text.muted,
+              fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(12), fontWeight: activeTab === "demos" ? 600 : 400,
+              transition: "all 0.2s",
+            }}
+          >
+            ▷ Demos
+          </button>
+        )}
       </div>
     </div>
   );
