@@ -116,6 +116,12 @@ class Api:
                     text=t, content_type="text/javascript"
                 )
 
+            if request.path.endswith(".json"):
+                t = self.open(request.path)
+                return web.Response(
+                    text=t, content_type="application/json"
+                )
+
             if request.path == "/" or request.path.endswith(".html"):
                 t = self.open(request.path)
                 return web.Response(
