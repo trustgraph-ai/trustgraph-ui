@@ -11,7 +11,7 @@ export function SchemaValidationErrors({ errors }: SchemaValidationErrorsProps) 
   return (
     <div style={{ padding: "8px 12px", borderRadius: 6, background: `${theme.palette.red}1a`, marginBottom: 16 }}>
       {errors.map((err, i) => (
-        <div key={i} style={{ display: "flex", gap: 6, padding: "2px 0", fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", color: theme.palette.red }}>
+        <div key={i} style={{ display: "flex", gap: 6, padding: "2px 0", fontSize: sz(10), fontFamily: theme.font.mono, color: theme.palette.red }}>
           <span style={{ flexShrink: 0 }}>●</span>
           <span>{err}</span>
         </div>

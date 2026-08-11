@@ -65,7 +65,7 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
     <div style={{
       "--page-height": "calc(100vh - 140px)",
       width: "100%", minHeight: "100vh", background: theme.surface.base,
-      fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+      fontFamily: theme.font.sans,
       color: theme.text.primary, overflow: "hidden",
     } as React.CSSProperties}>
       <div style={{
@@ -89,7 +89,7 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
             background: theme.surface.card,
             border: `1px solid ${theme.border.medium}`,
             color: theme.text.subtle, fontSize: sz(12), cursor: "pointer",
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}
         >
           Sign out

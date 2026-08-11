@@ -1,5 +1,5 @@
 // Components — common
-export { SectionLabel, FilterButton, Header, StatusBar, Typewriter, Card, Badge, LoadingState, Toaster, SearchInput, FilterBar, MessageBubble, TextInput, SplitPane, DetailPanel, EmptyState, ModeSelector, Toolbar, PageLayout, WorkspaceSwitcher } from "./components/common";
+export { SectionLabel, FilterButton, Header, StatusBar, Typewriter, Card, Badge, LoadingState, Toaster, SearchInput, FilterBar, MessageBubble, TextInput, Input, Button, Select, FormLabel, SelectableListItem, SplitPane, DetailPanel, EmptyState, ModeSelector, Toolbar, PageLayout, WorkspaceSwitcher } from "./components/common";
 export type { FilterItem, Message, SearchPreset } from "./components/common";
 
 // Components — graph
@@ -84,7 +84,7 @@ export { withGlow } from "./theme/glow";
 export { defaultTheme } from "./theme/defaultTheme";
 export { ThemeProvider, useTheme } from "./theme/ThemeContext";
 export type { ThemeProviderProps, ThemeContextValue } from "./theme/ThemeContext";
-export type { Theme, ThemePalette, ThemeSemantic, ThemeText, ThemeSurface, ThemeBorder, DeepPartial } from "./theme/types";
+export type { Theme, ThemePalette, ThemeSemantic, ThemeText, ThemeSurface, ThemeBorder, ThemeFont, DeepPartial } from "./theme/types";
 
 // Types
 export * from "./types";

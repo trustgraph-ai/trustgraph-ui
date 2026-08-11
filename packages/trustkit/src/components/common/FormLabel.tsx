@@ -1,22 +1,23 @@
 import { useTheme } from "../../theme/ThemeContext";
 
-interface SectionLabelProps {
+interface FormLabelProps {
   children: React.ReactNode;
   marginBottom?: number;
-  marginTop?: number;
+  style?: React.CSSProperties;
 }
 
-export function SectionLabel({ children, marginBottom = 10, marginTop }: SectionLabelProps) {
+export function FormLabel({ children, marginBottom = 4, style }: FormLabelProps) {
   const { theme, sz } = useTheme();
 
   return (
     <div style={{
       fontSize: sz(10),
-      color: theme.text.disabled,
       fontFamily: theme.font.mono,
+      fontWeight: 600,
+      color: theme.text.faint,
       letterSpacing: "0.1em",
       marginBottom,
-      marginTop,
+      ...style,
     }}>
       {children}
     </div>

@@ -34,7 +34,7 @@ export function SourceLinkBadge({ source, onClick }: SourceLinkBadgeProps) {
         background: withGlow(theme.palette.amber, 0.08),
         border: `1px solid ${withGlow(theme.palette.amber, 0.2)}`,
         color: theme.text.hint,
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         cursor: isClickable ? "pointer" : "default",
         transition: "all 0.15s ease",
         display: "inline-block",

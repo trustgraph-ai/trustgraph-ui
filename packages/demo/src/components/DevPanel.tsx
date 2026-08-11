@@ -49,7 +49,7 @@ function CopyButton({ text: textToCopy }: { text: string }) {
         borderRadius: 4,
         color: copied ? theme.palette.emerald : theme.text.subtle,
         fontSize: sz(11),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         padding: "3px 8px",
         cursor: "pointer",
       }}
@@ -108,7 +108,7 @@ export function DevPanel({ explanation, codeSamples, components, hooks }: DevPan
                 <span style={{
                   fontSize: sz(11),
                   color: theme.text.muted,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                 }}>
                   {sample.label}
                 </span>
@@ -116,7 +116,7 @@ export function DevPanel({ explanation, codeSamples, components, hooks }: DevPan
               </div>
               <pre style={{
                 fontSize: sz(12),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 color: theme.text.primary,
                 lineHeight: 1.6,
                 padding: "14px 16px",
@@ -148,7 +148,7 @@ export function DevPanel({ explanation, codeSamples, components, hooks }: DevPan
                       <Badge color={theme.palette[tier.paletteKey]} size="small">{tier.label}</Badge>
                       <span style={{
                         fontSize: sz(12),
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: theme.font.mono,
                         color: theme.text.primary,
                       }}>
                         {c.name}
@@ -179,7 +179,7 @@ export function DevPanel({ explanation, codeSamples, components, hooks }: DevPan
                       <Badge color={theme.palette[tier.paletteKey]} size="small">{tier.label}</Badge>
                       <span style={{
                         fontSize: sz(12),
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: theme.font.mono,
                         color: theme.text.primary,
                       }}>
                         {h.name}
@@ -208,7 +208,7 @@ export function DevPanel({ explanation, codeSamples, components, hooks }: DevPan
           backdropFilter: "blur(8px)",
           color: open ? theme.palette.amber : theme.text.subtle,
           fontSize: sz(16),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           fontWeight: 700,
           cursor: "pointer",
           display: "flex",

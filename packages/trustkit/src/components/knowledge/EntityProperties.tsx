@@ -41,7 +41,7 @@ export function EntityProperties({ entity, propertyLabels = {} }: EntityProperti
           <span style={{
             fontSize: sz(12),
             color: theme.text.primary,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             textAlign: "right",
             maxWidth: "60%",
             wordBreak: "break-word",

@@ -1,6 +1,9 @@
 import { useState, useRef } from "react";
 import type { OWLClass } from "@trustgraph/react-state";
 import { useTheme } from "../../theme/ThemeContext";
+import { Input } from "../common/Input";
+import { Button } from "../common/Button";
+import { SelectableListItem } from "../common/SelectableListItem";
 
 interface OntologyClassTreeProps {
   classes: Record<string, OWLClass>;
@@ -35,12 +38,10 @@ export function OntologyClassTree({ classes, selectedClassId, onSelectClass, onC
     return (
       <div key={id}>
         <div style={{ paddingLeft: depth * 16 }}>
-          <button onClick={() => onSelectClass(id)}
-            style={{ width: "100%", textAlign: "left", padding: "5px 8px", marginBottom: 1, borderRadius: 4, border: isSelected ? `1px solid ${theme.palette.cyan}44` : "1px solid transparent", background: isSelected ? `${theme.palette.cyan}1a` : "transparent", color: isSelected ? theme.palette.cyan : theme.text.secondary, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", transition: "all 0.15s" }}
-            onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = theme.surface.cardHover; }}
-            onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}>
+          <SelectableListItem isSelected={isSelected} onClick={() => onSelectClass(id)}
+            style={{ padding: "5px 8px", borderRadius: 4, marginBottom: 1 }}>
             {getLabel(cls, id)}
-          </button>
+          </SelectableListItem>
         </div>
         {children.map(([childId, childCls]) => renderClass(childId, childCls, depth + 1))}
       </div>
@@ -50,30 +51,30 @@ export function OntologyClassTree({ classes, selectedClassId, onSelectClass, onC
   return (
     <div style={{ padding: 12 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <div style={{ fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.hint, letterSpacing: "0.1em" }}>CLASSES ({Object.keys(classes).length})</div>
-        <button onClick={() => { setShowCreate(!showCreate); setTimeout(() => inputRef.current?.focus(), 50); }}
-          style={{ padding: "2px 6px", borderRadius: 3, border: `1px solid ${showCreate ? theme.palette.emerald + "44" : theme.border.default}`, background: showCreate ? `${theme.palette.emerald}1a` : "transparent", color: showCreate ? theme.palette.emerald : theme.text.faint, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+        <div style={{ fontSize: sz(9), fontFamily: theme.font.mono, color: theme.text.hint, letterSpacing: "0.1em" }}>CLASSES ({Object.keys(classes).length})</div>
+        <Button size="sm" color={showCreate ? theme.palette.emerald : undefined} active={showCreate}
+          onClick={() => { setShowCreate(!showCreate); setTimeout(() => inputRef.current?.focus(), 50); }}>
           + New
-        </button>
+        </Button>
       </div>
 
       {showCreate && (
         <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
-          <input ref={inputRef} type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setShowCreate(false); setNewName(""); } }}
+          <Input ref={inputRef} value={newName} onChange={setNewName}
+            onSubmit={handleCreate}
+            onCancel={() => { setShowCreate(false); setNewName(""); }}
             placeholder="Class name"
-            style={{ flex: 1, padding: "4px 6px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: theme.surface.card, color: theme.text.primary, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", outline: "none" }} />
-          <button onClick={handleCreate} disabled={!newName.trim()}
-            style={{ padding: "4px 8px", borderRadius: 4, border: `1px solid ${theme.palette.emerald}44`, background: `${theme.palette.emerald}1a`, color: !newName.trim() ? theme.text.disabled : theme.palette.emerald, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+            style={{ flex: 1, padding: "4px 6px", fontSize: sz(10) }} />
+          <Button size="sm" onClick={handleCreate} disabled={!newName.trim()} color={theme.palette.emerald}>
             Add
-          </button>
+          </Button>
         </div>
       )}
 
       {rootClasses.map(([id, cls]) => renderClass(id, cls, 0))}
 
       {Object.keys(classes).length === 0 && (
-        <div style={{ padding: 16, textAlign: "center", color: theme.text.hint, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", fontStyle: "italic" }}>No classes yet</div>
+        <div style={{ padding: 16, textAlign: "center", color: theme.text.hint, fontSize: sz(10), fontFamily: theme.font.mono, fontStyle: "italic" }}>No classes yet</div>
       )}
     </div>
   );

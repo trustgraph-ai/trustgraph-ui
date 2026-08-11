@@ -63,7 +63,7 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
       }}>
         <span style={{
           fontSize: sz(10),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           fontWeight: 600,
           color: theme.text.faint,
           letterSpacing: "0.1em",
@@ -87,7 +87,7 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
             background: theme.surface.card,
             color: theme.text.primary,
             fontSize: sz(12),
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontFamily: theme.font.sans,
             outline: "none",
           }}
         />
@@ -102,7 +102,7 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
             background: !question.trim() || isQuerying ? "transparent" : `${theme.palette.amber}1a`,
             color: !question.trim() || isQuerying ? theme.text.disabled : theme.palette.amber,
             fontSize: sz(11),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             fontWeight: 600,
             cursor: !question.trim() || isQuerying ? "default" : "pointer",
           }}
@@ -120,7 +120,7 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
             background: "transparent",
             color: theme.text.disabled,
             fontSize: sz(11),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             cursor: "not-allowed",
           }}
         >
@@ -145,7 +145,7 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
             <div style={{
               fontSize: sz(12),
               color: theme.palette.red,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               marginBottom: 8,
             }}>
               Error: {error}
@@ -191,7 +191,7 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
           }}>
             <span style={{
               fontSize: sz(9),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               fontWeight: 600,
               color: theme.text.faint,
               letterSpacing: "0.1em",
@@ -200,7 +200,7 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
             </span>
             <span style={{
               fontSize: sz(9),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               color: theme.text.hint,
             }}>
               {events.length}
@@ -236,7 +236,7 @@ export function AgentTestStrip({ height = 320 }: AgentTestStripProps) {
                     background: isSelected ? `${theme.palette.cyan}1a` : theme.surface.card,
                     border: `1px solid ${isSelected ? theme.palette.cyan + "44" : theme.border.subtle}`,
                     fontSize: sz(10),
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: theme.font.mono,
                     color: theme.text.secondary,
                     cursor: "pointer",
                   }}

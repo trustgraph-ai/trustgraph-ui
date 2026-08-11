@@ -428,7 +428,7 @@ export function RawGraphCanvas({
                     fill={edge.color}
                     fillOpacity={isHighlighted ? 0.7 : 0.35}
                     fontSize={sz(7)}
-                    fontFamily="'IBM Plex Mono', monospace"
+                    fontFamily={theme.font.mono}
                     textAnchor="middle"
                   >
                     {edge.predicate}
@@ -495,7 +495,7 @@ export function RawGraphCanvas({
                     fillOpacity={alpha * (isHighlighted || isCenter ? 1 : 0.7)}
                     fontSize={sz(isHovered || isCenter ? 8.5 : 7)}
                     fontWeight={isCenter || isHighlighted ? "bold" : "normal"}
-                    fontFamily="'IBM Plex Sans', sans-serif"
+                    fontFamily={theme.font.sans}
                     textAnchor="middle"
                   >
                     {truncateLabel(node.label)}
@@ -521,7 +521,7 @@ export function RawGraphCanvas({
         bottom: 16,
         left: 16,
         fontSize: sz(10),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         color: theme.text.hint,
       }}>
         click to select · double-click to navigate · shift+drag to pan
@@ -555,7 +555,7 @@ export function RawGraphCanvas({
               color: node.color,
               fontWeight: 700,
               fontSize: sz(12),
-              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontFamily: theme.font.sans,
               marginBottom: node.description ? 4 : 4,
             }}>
               {node.label}
@@ -564,7 +564,7 @@ export function RawGraphCanvas({
               <div style={{
                 color: theme.text.secondary,
                 fontSize: sz(11),
-                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontFamily: theme.font.sans,
                 lineHeight: 1.4,
               }}>
                 {node.description.length > 120

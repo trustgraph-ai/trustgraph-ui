@@ -5,6 +5,8 @@ import { SchemaBasicInfo } from "./SchemaBasicInfo";
 import { SchemaValidationErrors } from "./SchemaValidationErrors";
 import { SchemaEditor } from "./SchemaEditor";
 import { LoadingState } from "../common";
+import { Button } from "../common/Button";
+import { SelectableListItem } from "../common/SelectableListItem";
 import { useTheme } from "../../theme/ThemeContext";
 
 function SchemaList({ schemas, selectedId, onSelect, onCreate }: {
@@ -37,11 +39,11 @@ function SchemaList({ schemas, selectedId, onSelect, onCreate }: {
   return (
     <div style={{ padding: 16, height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <div style={{ fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, color: theme.text.faint, letterSpacing: "0.1em" }}>SCHEMAS</div>
-        <button onClick={() => setShowCreate(!showCreate)}
-          style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${showCreate ? theme.palette.emerald + "44" : theme.border.default}`, background: showCreate ? `${theme.palette.emerald}1a` : "transparent", color: showCreate ? theme.palette.emerald : theme.text.faint, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+        <div style={{ fontSize: sz(10), fontFamily: theme.font.mono, fontWeight: 600, color: theme.text.faint, letterSpacing: "0.1em" }}>SCHEMAS</div>
+        <Button size="sm" color={showCreate ? theme.palette.emerald : undefined} active={showCreate}
+          onClick={() => setShowCreate(!showCreate)}>
           + New
-        </button>
+        </Button>
       </div>
 
       {showCreate && (
@@ -50,31 +52,25 @@ function SchemaList({ schemas, selectedId, onSelect, onCreate }: {
           <SchemaBasicInfo id={newId} name={newName} description={newDescription} isNew
             onIdChange={setNewId} onNameChange={setNewName} onDescriptionChange={setNewDescription} />
           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-            <button onClick={handleCancelCreate}
-              style={{ padding: "4px 10px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: "transparent", color: theme.text.faint, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+            <Button size="md" active={false} onClick={handleCancelCreate}
+              style={{ padding: "4px 10px" }}>
               Cancel
-            </button>
-            <button onClick={handleCreate}
-              style={{ padding: "4px 10px", borderRadius: 4, border: `1px solid ${theme.palette.emerald}44`, background: `${theme.palette.emerald}1a`, color: theme.palette.emerald, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+            </Button>
+            <Button size="md" onClick={handleCreate} color={theme.palette.emerald}
+              style={{ padding: "4px 10px" }}>
               Create
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       <div style={{ flex: 1, overflowY: "auto", margin: "0 -16px", padding: "0 16px" }}>
-        {schemas.map(([id, schema]) => {
-          const isSelected = selectedId === id;
-          return (
-            <button key={id} onClick={() => onSelect(id)}
-              style={{ display: "block", width: "100%", textAlign: "left", padding: "7px 10px", marginBottom: 2, borderRadius: 6, border: isSelected ? `1px solid ${theme.palette.cyan}44` : "1px solid transparent", background: isSelected ? `${theme.palette.cyan}1a` : "transparent", color: isSelected ? theme.palette.cyan : theme.text.secondary, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", transition: "all 0.15s" }}
-              onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = theme.surface.cardHover; }}
-              onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}>
-              <div>{schema.name || id}</div>
-              <div style={{ fontSize: sz(9), color: theme.text.hint, marginTop: 2 }}>{schema.fields.length} field{schema.fields.length !== 1 ? "s" : ""}</div>
-            </button>
-          );
-        })}
+        {schemas.map(([id, schema]) => (
+          <SelectableListItem key={id} isSelected={selectedId === id} onClick={() => onSelect(id)}>
+            <div>{schema.name || id}</div>
+            <div style={{ fontSize: sz(9), color: theme.text.hint, marginTop: 2 }}>{schema.fields.length} field{schema.fields.length !== 1 ? "s" : ""}</div>
+          </SelectableListItem>
+        ))}
       </div>
     </div>
   );

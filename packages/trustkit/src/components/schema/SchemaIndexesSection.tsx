@@ -1,6 +1,9 @@
 import { useState } from "react";
 import type { SchemaField } from "../../utils/schema-validation";
 import { useTheme } from "../../theme/ThemeContext";
+import { Button } from "../common/Button";
+import { Select } from "../common/Select";
+import { FormLabel } from "../common/FormLabel";
 
 interface IndexGroupProps {
   label: string;
@@ -14,37 +17,35 @@ interface IndexGroupProps {
 function IndexGroup({ label, color, indexes, fields, onAdd, onRemove }: IndexGroupProps) {
   const { theme, sz } = useTheme();
   const [selected, setSelected] = useState("");
-  const labelStyle = { fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace" as const, fontWeight: 600 as const, color: theme.text.faint, letterSpacing: "0.1em", marginBottom: 8 };
-  const inputStyle = { padding: "5px 7px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: theme.surface.card, color: theme.text.primary, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace" as const, outline: "none", cursor: "pointer" };
   const indexableFields = fields.filter((f) => f.name.trim() && !indexes.includes(f.name));
 
   return (
     <div>
-      <div style={labelStyle}>{label}</div>
+      <FormLabel marginBottom={8}>{label}</FormLabel>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
         {indexes.map((idx) => (
-          <span key={idx} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 4, background: `${color}1a`, color, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace" }}>
+          <span key={idx} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 4, background: `${color}1a`, color, fontSize: sz(10), fontFamily: theme.font.mono }}>
             {idx}
             <button onClick={() => onRemove(idx)}
               style={{ border: "none", background: "transparent", color, fontSize: sz(10), cursor: "pointer", padding: 0 }}>×</button>
           </span>
         ))}
         {indexes.length === 0 && (
-          <span style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace", fontStyle: "italic" }}>None</span>
+          <span style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: theme.font.mono, fontStyle: "italic" }}>None</span>
         )}
       </div>
 
       {indexableFields.length > 0 && (
         <div style={{ display: "flex", gap: 4 }}>
-          <select value={selected} onChange={(e) => setSelected(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
+          <Select value={selected} onChange={setSelected} style={{ flex: 1 }}>
             <option value="">Select field...</option>
             {indexableFields.map((f) => <option key={f.id} value={f.name}>{f.name}</option>)}
-          </select>
-          <button onClick={() => { if (selected) { onAdd(selected); setSelected(""); } }} disabled={!selected}
-            style={{ padding: "5px 10px", borderRadius: 4, border: `1px solid ${color}44`, background: `${color}1a`, color: !selected ? theme.text.disabled : color, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+          </Select>
+          <Button size="md" onClick={() => { if (selected) { onAdd(selected); setSelected(""); } }}
+            disabled={!selected} color={color}>
             Add
-          </button>
+          </Button>
         </div>
       )}
     </div>

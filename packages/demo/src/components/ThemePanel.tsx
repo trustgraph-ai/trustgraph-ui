@@ -243,7 +243,7 @@ export function ThemePanel({ settings }: { settings: ThemeSettings }) {
               background: theme.surface.base,
               color: theme.text.primary,
               fontSize: 12,
-              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontFamily: theme.font.sans,
               marginBottom: 16,
               cursor: "pointer",
               outline: "none",

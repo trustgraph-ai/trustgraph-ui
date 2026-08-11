@@ -713,7 +713,7 @@ export function IngestPage() {
               padding: "5px 14px",
               borderRadius: 6,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               fontWeight: 600,
               cursor: "pointer",
               background: withGlow(theme.palette.cyan, 0.15),
@@ -734,17 +734,17 @@ export function IngestPage() {
         >
           {/* Column headers */}
           <text x={COL_X.doc + COL_WIDTH / 2} y={24} textAnchor="middle"
-            fill={theme.text.faint} fontSize={sz(10)} fontFamily="'IBM Plex Mono', monospace"
+            fill={theme.text.faint} fontSize={sz(10)} fontFamily={theme.font.mono}
             fontWeight={600} letterSpacing="0.1em">
             DOCUMENTS
           </text>
           <text x={COL_X.proc + COL_WIDTH / 2} y={24} textAnchor="middle"
-            fill={theme.text.faint} fontSize={sz(10)} fontFamily="'IBM Plex Mono', monospace"
+            fill={theme.text.faint} fontSize={sz(10)} fontFamily={theme.font.mono}
             fontWeight={600} letterSpacing="0.1em">
             FLOWS
           </text>
           <text x={COL_X.dest + (COL_WIDTH + 20) / 2} y={24} textAnchor="middle"
-            fill={theme.text.faint} fontSize={sz(10)} fontFamily="'IBM Plex Mono', monospace"
+            fill={theme.text.faint} fontSize={sz(10)} fontFamily={theme.font.mono}
             fontWeight={600} letterSpacing="0.1em">
             STORAGE
           </text>
@@ -879,7 +879,7 @@ export function IngestPage() {
                     fill={node.color}
                     fontSize={sz(10)}
                     fontWeight={600}
-                    fontFamily="'IBM Plex Mono', monospace"
+                    fontFamily={theme.font.mono}
                   >
                     {line}
                   </text>
@@ -893,7 +893,7 @@ export function IngestPage() {
                   fill={node.color}
                   fontSize={sz(10)}
                   fontWeight={600}
-                  fontFamily="'IBM Plex Mono', monospace"
+                  fontFamily={theme.font.mono}
                 >
                   {node.label}
                 </text>
@@ -961,7 +961,7 @@ export function IngestPage() {
                         padding: "5px 14px",
                         borderRadius: 6,
                         fontSize: sz(11),
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: theme.font.mono,
                         fontWeight: 600,
                         cursor: "pointer",
                         background: selectedDraft.inputMode === mode ? withGlow(theme.palette.cyan, 0.15) : "transparent",
@@ -1019,7 +1019,7 @@ export function IngestPage() {
                         minHeight: 100,
                         padding: "10px 14px",
                         fontSize: sz(12),
-                        fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+                        fontFamily: theme.font.sans,
                         color: theme.text.primary,
                         background: "transparent",
                         border: `1px solid ${theme.border.medium}`,
@@ -1043,7 +1043,7 @@ export function IngestPage() {
                       width: "100%",
                       padding: "8px 12px",
                       fontSize: sz(13),
-                      fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+                      fontFamily: theme.font.sans,
                       color: theme.text.primary,
                       background: "transparent",
                       border: `1px solid ${theme.border.medium}`,
@@ -1065,7 +1065,7 @@ export function IngestPage() {
                       width: "100%",
                       padding: "8px 12px",
                       fontSize: sz(12),
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                       color: theme.text.secondary,
                       background: "transparent",
                       border: `1px solid ${theme.border.medium}`,
@@ -1087,7 +1087,7 @@ export function IngestPage() {
                       minHeight: 60,
                       padding: "8px 12px",
                       fontSize: sz(12),
-                      fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+                      fontFamily: theme.font.sans,
                       color: theme.text.secondary,
                       background: "transparent",
                       border: `1px solid ${theme.border.medium}`,
@@ -1117,7 +1117,7 @@ export function IngestPage() {
                       width: "100%",
                       padding: "8px 12px",
                       fontSize: sz(12),
-                      fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+                      fontFamily: theme.font.sans,
                       color: theme.text.primary,
                       background: "transparent",
                       border: `1px solid ${theme.border.medium}`,
@@ -1231,7 +1231,7 @@ export function IngestPage() {
                 <SectionLabel marginBottom={8}>COLLECTION</SectionLabel>
                 <div style={{
                   fontSize: sz(12),
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   color: theme.palette.emerald,
                 }}>
                   {collection}
@@ -1244,7 +1244,7 @@ export function IngestPage() {
                 <SectionLabel marginBottom={8}>{extraType.toUpperCase()}</SectionLabel>
                 <div style={{
                   fontSize: sz(12),
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   color: cfg.color,
                 }}>
                   {extraName}
@@ -1306,7 +1306,7 @@ export function IngestPage() {
               <SectionLabel marginBottom={8}>BLUEPRINT</SectionLabel>
               <div style={{
                 fontSize: sz(12),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 color: theme.palette.amber,
               }}>
                 {selectedFlow.blueprintId}
@@ -1340,7 +1340,7 @@ export function IngestPage() {
               <SectionLabel marginBottom={8}>COLLECTION</SectionLabel>
               <div style={{
                 fontSize: sz(12),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 color: theme.palette.emerald,
               }}>
                 {selectedFlow.collection}
@@ -1381,7 +1381,7 @@ export function IngestPage() {
                         <span style={{ color: theme.text.subtle }}>{label}</span>
                         <span style={{
                           color: theme.text.primary,
-                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontFamily: theme.font.mono,
                           textAlign: "right",
                           maxWidth: "60%",
                           wordBreak: "break-word",
@@ -1417,7 +1417,7 @@ export function IngestPage() {
                     {proc.time && (
                       <span style={{
                         color: theme.text.disabled,
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: theme.font.mono,
                         marginLeft: 8,
                         fontSize: sz(10),
                       }}>
@@ -1451,7 +1451,7 @@ export function IngestPage() {
               <div style={{ marginBottom: 12 }}>
                 <span style={{
                   fontSize: sz(10),
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   color: theme.text.faint,
                   padding: "2px 6px",
                   borderRadius: 3,
@@ -1490,7 +1490,7 @@ export function IngestPage() {
                 <SectionLabel marginBottom={8}>UPLOADED</SectionLabel>
                 <div style={{
                   fontSize: sz(12),
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   color: theme.text.subtle,
                 }}>
                   {new Date(selectedDoc.time * 1000).toLocaleString()}
@@ -1502,7 +1502,7 @@ export function IngestPage() {
               <SectionLabel marginBottom={8}>DOCUMENT ID</SectionLabel>
               <div style={{
                 fontSize: sz(10),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 color: theme.text.faint,
                 wordBreak: "break-all",
               }}>
@@ -1534,14 +1534,14 @@ export function IngestPage() {
                   }}>
                     <div style={{
                       fontSize: sz(11),
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                     }}>
                       <span style={{ color: theme.text.faint }}>flow: </span>
                       <span style={{ color: theme.palette.amber }}>{proc.flow || "default"}</span>
                     </div>
                     <div style={{
                       fontSize: sz(11),
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                       marginTop: 2,
                     }}>
                       <span style={{ color: theme.text.faint }}>collection: </span>
@@ -1550,7 +1550,7 @@ export function IngestPage() {
                     {proc.time && (
                       <div style={{
                         fontSize: sz(10),
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: theme.font.mono,
                         color: theme.text.disabled,
                         marginTop: 4,
                       }}>

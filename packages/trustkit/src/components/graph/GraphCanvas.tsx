@@ -114,7 +114,7 @@ export function GraphCanvas({ entities, relationships, ontology, highlightedEnti
     const currentOntology = ontologyRef.current;
     (Object.entries(domainPositions) as [DomainKey, { x: number; y: number }][]).forEach(([domain, pos]) => {
       const data = currentOntology[domain];
-      ctx.font = `bold ${sz(22)}px 'IBM Plex Mono', monospace`;
+      ctx.font = `bold ${sz(22)}px ${theme.font.mono}`;
       ctx.fillStyle = data.color + "44";
       ctx.textAlign = "center";
       ctx.fillText(data.label.toUpperCase(), pos.x, pos.y - Math.min(canvas.width, canvas.height) * 0.14);
@@ -171,7 +171,7 @@ export function GraphCanvas({ entities, relationships, ontology, highlightedEnti
       ctx.stroke();
 
       // Label
-      ctx.font = `${isHighlighted ? "bold " : ""}${sz(isHovered ? 17 : 14)}px 'IBM Plex Sans', sans-serif`;
+      ctx.font = `${isHighlighted ? "bold " : ""}${sz(isHovered ? 17 : 14)}px ${theme.font.sans}`;
       ctx.globalAlpha = alpha * (isHighlighted ? 1 : 0.75);
       ctx.fillStyle = theme.text.primary;
       ctx.textAlign = "center";
@@ -589,10 +589,10 @@ export function GraphCanvas({ entities, relationships, ontology, highlightedEnti
             borderRadius: 8, padding: "10px 14px", pointerEvents: "none",
             backdropFilter: "blur(12px)", zIndex: 10, minWidth: 180,
           }}>
-            <div style={{ color: node.color, fontWeight: 700, fontSize: sz(13), fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: node.color, fontWeight: 700, fontSize: sz(13), fontFamily: theme.font.mono }}>
               {node.icon} {node.label}
             </div>
-            <div style={{ color: theme.text.muted, fontSize: sz(11), marginTop: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: theme.text.muted, fontSize: sz(11), marginTop: 4, fontFamily: theme.font.mono }}>
               {Object.entries(node.props || {}).map(([k, v]) => (
                 <div key={k}><span style={{ color: theme.text.faint }}>{k}:</span> <span style={{ color: theme.text.secondary }}>{String(v)}</span></div>
               ))}

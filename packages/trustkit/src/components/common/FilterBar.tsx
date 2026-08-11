@@ -41,7 +41,7 @@ export function FilterBar({
       borderBottom: `1px solid ${theme.border.subtle}`,
       flexWrap: "wrap",
     }}>
-      <span style={{ fontSize: sz(11), color: theme.text.disabled, fontFamily: "'IBM Plex Mono', monospace", marginRight: 8 }}>
+      <span style={{ fontSize: sz(11), color: theme.text.disabled, fontFamily: theme.font.mono, marginRight: 8 }}>
         FILTER:
       </span>
 
@@ -70,7 +70,7 @@ export function FilterBar({
       )}
 
       {stats && (
-        <div style={{ marginLeft: "auto", fontSize: sz(11), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ marginLeft: "auto", fontSize: sz(11), color: theme.text.hint, fontFamily: theme.font.mono }}>
           {stats}
         </div>
       )}

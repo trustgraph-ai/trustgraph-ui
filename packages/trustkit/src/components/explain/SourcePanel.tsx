@@ -35,7 +35,7 @@ export function SourcePanel({ source, onClose }: SourcePanelProps) {
         alignItems: "center",
         justifyContent: "space-between",
       }}>
-        <div style={{ fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ fontSize: sz(11), fontFamily: theme.font.mono }}>
           <span style={{ fontWeight: 600, color: theme.palette.amber }}>SOURCE</span>
           {source.documentTitle ? (
             <span style={{ color: theme.text.secondary, marginLeft: 8 }}>
@@ -78,7 +78,7 @@ export function SourcePanel({ source, onClose }: SourcePanelProps) {
           <div style={{
             fontSize: sz(11),
             color: withGlow(theme.palette.amber, 0.6),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             Loading source text...
           </div>
@@ -87,7 +87,7 @@ export function SourcePanel({ source, onClose }: SourcePanelProps) {
           <div style={{
             fontSize: sz(11),
             color: theme.semantic.error,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             {source.error}
           </div>

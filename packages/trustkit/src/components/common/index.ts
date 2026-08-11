@@ -14,6 +14,12 @@ export type { FilterItem } from "./FilterBar";
 export { MessageBubble } from "./MessageBubble";
 export type { Message } from "./MessageBubble";
 
+export { Input } from "./Input";
+export { Button } from "./Button";
+export { Select } from "./Select";
+export { FormLabel } from "./FormLabel";
+export { SelectableListItem } from "./SelectableListItem";
+
 // New foundation components
 export { TextInput } from "./TextInput";
 export { SplitPane } from "./SplitPane";

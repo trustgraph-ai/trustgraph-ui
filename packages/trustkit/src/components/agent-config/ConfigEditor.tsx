@@ -64,7 +64,7 @@ function Editor({ selected, onDelete }: { selected: SelectedItem; onDelete?: () 
         <div>
           <div style={{
             fontSize: sz(10),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             fontWeight: 600,
             color: kindColor(selected.kind, theme.palette),
             letterSpacing: "0.1em",
@@ -90,7 +90,7 @@ function Editor({ selected, onDelete }: { selected: SelectedItem; onDelete?: () 
             background: "transparent",
             color: theme.palette.rose,
             fontSize: sz(10),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             fontWeight: 600,
             cursor: isDeleting ? "wait" : "pointer",
             opacity: isDeleting ? 0.5 : 1,
@@ -158,7 +158,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div style={{ marginBottom: 14 }}>
       <div style={{
         fontSize: sz(9),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         color: theme.text.faint,
         letterSpacing: "0.1em",
         textTransform: "uppercase",
@@ -187,7 +187,7 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
         background: theme.surface.card,
         color: theme.text.primary,
         fontSize: sz(12),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         outline: "none",
       }}
     />
@@ -210,7 +210,7 @@ function TextArea({ value, onChange, rows = 3, placeholder }: { value: string; o
         background: theme.surface.card,
         color: theme.text.primary,
         fontSize: sz(12),
-        fontFamily: "'IBM Plex Sans', sans-serif",
+        fontFamily: theme.font.sans,
         lineHeight: 1.5,
         outline: "none",
         resize: "vertical",
@@ -234,7 +234,7 @@ function NumberInput({ value, onChange }: { value: number; onChange: (v: number)
         background: theme.surface.card,
         color: theme.text.primary,
         fontSize: sz(12),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         outline: "none",
       }}
     />
@@ -255,7 +255,7 @@ function SaveButton({ onClick, isDirty, isSaving, saveError }: { onClick: () => 
           background: isDirty ? `${theme.palette.emerald}1a` : "transparent",
           color: isDirty ? theme.palette.emerald : theme.text.faint,
           fontSize: sz(11),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           fontWeight: 600,
           cursor: isDirty && !isSaving ? "pointer" : "default",
           transition: "all 0.2s",
@@ -351,7 +351,7 @@ function TaskTypeFields({ data, onSave, isSaving, saveError }: FieldsProps<Agent
                   background: active ? `${theme.palette.cyan}1a` : "transparent",
                   color: active ? theme.palette.cyan : theme.text.subtle,
                   fontSize: sz(11),
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   cursor: "pointer",
                 }}
               >
@@ -474,7 +474,7 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
                 background: type === t ? `${theme.palette.emerald}1a` : "transparent",
                 color: type === t ? theme.palette.emerald : theme.text.subtle,
                 fontSize: sz(10),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 cursor: "pointer",
               }}
             >
@@ -508,7 +508,7 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
                 padding: "3px 10px",
                 borderRadius: 4,
                 fontSize: sz(10),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 fontWeight: 600,
                 cursor: "pointer",
                 background: argsMode === mode ? theme.surface.cardHover : "transparent",
@@ -536,7 +536,7 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
               background: theme.surface.card,
               color: theme.text.primary,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               lineHeight: 1.5,
               outline: "none",
               resize: "vertical",
@@ -555,7 +555,7 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
               }}>
                 <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
                   <div style={{ flex: 2 }}>
-                    <div style={{ fontSize: sz(9), color: theme.text.hint, marginBottom: 2, fontFamily: "'IBM Plex Mono', monospace" }}>NAME</div>
+                    <div style={{ fontSize: sz(9), color: theme.text.hint, marginBottom: 2, fontFamily: theme.font.mono }}>NAME</div>
                     <input
                       type="text"
                       value={arg.name}
@@ -569,13 +569,13 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
                         background: "transparent",
                         color: theme.text.primary,
                         fontSize: sz(11),
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: theme.font.mono,
                         outline: "none",
                       }}
                     />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: sz(9), color: theme.text.hint, marginBottom: 2, fontFamily: "'IBM Plex Mono', monospace" }}>TYPE</div>
+                    <div style={{ fontSize: sz(9), color: theme.text.hint, marginBottom: 2, fontFamily: theme.font.mono }}>TYPE</div>
                     <input
                       type="text"
                       value={arg.type}
@@ -589,7 +589,7 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
                         background: "transparent",
                         color: theme.text.primary,
                         fontSize: sz(11),
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: theme.font.mono,
                         outline: "none",
                       }}
                     />
@@ -604,7 +604,7 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
                       background: "transparent",
                       color: theme.palette.rose,
                       fontSize: sz(10),
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                       cursor: "pointer",
                     }}
                   >
@@ -612,7 +612,7 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
                   </button>
                 </div>
                 <div>
-                  <div style={{ fontSize: sz(9), color: theme.text.hint, marginBottom: 2, fontFamily: "'IBM Plex Mono', monospace" }}>DESCRIPTION</div>
+                  <div style={{ fontSize: sz(9), color: theme.text.hint, marginBottom: 2, fontFamily: theme.font.mono }}>DESCRIPTION</div>
                   <input
                     type="text"
                     value={arg.description}
@@ -626,7 +626,7 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
                       background: "transparent",
                       color: theme.text.primary,
                       fontSize: sz(11),
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                       outline: "none",
                     }}
                   />
@@ -642,7 +642,7 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
                 background: "transparent",
                 color: theme.palette.cyan,
                 fontSize: sz(10),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 fontWeight: 600,
                 cursor: "pointer",
                 alignSelf: "flex-start",
@@ -719,7 +719,7 @@ function McpToolTester({ toolKey }: { toolKey: string }) {
     }}>
       <div style={{
         fontSize: sz(10),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         fontWeight: 600,
         color: theme.text.faint,
         letterSpacing: "0.1em",
@@ -743,7 +743,7 @@ function McpToolTester({ toolKey }: { toolKey: string }) {
             background: theme.surface.card,
             color: theme.text.primary,
             fontSize: sz(11),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             lineHeight: 1.5,
             outline: "none",
             resize: "vertical",
@@ -765,7 +765,7 @@ function McpToolTester({ toolKey }: { toolKey: string }) {
             background: isInvoking ? "transparent" : `${theme.palette.purple}1a`,
             color: isInvoking ? theme.text.disabled : theme.palette.purple,
             fontSize: sz(11),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             fontWeight: 600,
             cursor: isInvoking ? "wait" : "pointer",
           }}
@@ -782,7 +782,7 @@ function McpToolTester({ toolKey }: { toolKey: string }) {
               background: "transparent",
               color: theme.text.faint,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               cursor: "pointer",
             }}
           >
@@ -804,7 +804,7 @@ function McpToolTester({ toolKey }: { toolKey: string }) {
             <div style={{
               fontSize: sz(11),
               color: theme.palette.red,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
             }}>
               {error}
             </div>
@@ -813,7 +813,7 @@ function McpToolTester({ toolKey }: { toolKey: string }) {
             <pre style={{
               margin: 0,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               color: theme.text.primary,
               lineHeight: 1.5,
               whiteSpace: "pre-wrap",
@@ -871,7 +871,7 @@ function ToolServiceFields({ data, onSave, isSaving, saveError }: FieldsProps<To
             background: theme.surface.card,
             color: theme.text.primary,
             fontSize: sz(11),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             lineHeight: 1.5,
             outline: "none",
             resize: "vertical",

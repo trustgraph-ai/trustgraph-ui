@@ -1,6 +1,9 @@
 import { useState, useRef } from "react";
 import type { PromptListItem } from "../../hooks/usePromptList";
 import { useTheme } from "../../theme/ThemeContext";
+import { Input } from "../common/Input";
+import { Button } from "../common/Button";
+import { SelectableListItem } from "../common/SelectableListItem";
 
 interface PromptListProps {
   prompts: PromptListItem[];
@@ -47,7 +50,7 @@ export function PromptList({
       }}>
         <div style={{
           fontSize: sz(10),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           fontWeight: 600,
           color: theme.text.faint,
           letterSpacing: "0.1em",
@@ -56,78 +59,36 @@ export function PromptList({
         </div>
 
         {onCreate && (
-          <button
-            onClick={() => {
-              setShowCreate(!showCreate);
-              setTimeout(() => inputRef.current?.focus(), 50);
-            }}
-            style={{
-              padding: "3px 8px",
-              borderRadius: 4,
-              border: `1px solid ${showCreate ? theme.palette.emerald + "44" : theme.border.default}`,
-              background: showCreate ? `${theme.palette.emerald}1a` : "transparent",
-              color: showCreate ? theme.palette.emerald : theme.text.faint,
-              fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
-              cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-          >
+          <Button size="sm" color={showCreate ? theme.palette.emerald : undefined} active={showCreate}
+            onClick={() => { setShowCreate(!showCreate); setTimeout(() => inputRef.current?.focus(), 50); }}>
             + New
-          </button>
+          </Button>
         )}
       </div>
 
-      {/* New prompt input */}
       {showCreate && (
         <div style={{ marginBottom: 12, display: "flex", gap: 6 }}>
-          <input
+          <Input
             ref={inputRef}
-            type="text"
             value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleCreate();
-              if (e.key === "Escape") { setShowCreate(false); setNewName(""); }
-            }}
+            onChange={setNewName}
+            onSubmit={handleCreate}
+            onCancel={() => { setShowCreate(false); setNewName(""); }}
             placeholder="prompt-name"
             disabled={creating}
-            style={{
-              flex: 1,
-              padding: "5px 8px",
-              borderRadius: 4,
-              border: `1px solid ${theme.border.default}`,
-              background: theme.surface.card,
-              color: theme.text.primary,
-              fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
-              outline: "none",
-            }}
+            style={{ flex: 1 }}
           />
-          <button
-            onClick={handleCreate}
-            disabled={creating || !newName.trim()}
-            style={{
-              padding: "5px 10px",
-              borderRadius: 4,
-              border: `1px solid ${theme.palette.emerald}44`,
-              background: `${theme.palette.emerald}1a`,
-              color: !newName.trim() ? theme.text.disabled : theme.palette.emerald,
-              fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontWeight: 600,
-              cursor: creating ? "wait" : "pointer",
-            }}
-          >
+          <Button onClick={handleCreate} disabled={creating || !newName.trim()}
+            color={theme.palette.emerald} style={{ cursor: creating ? "wait" : "pointer" }}>
             {creating ? "..." : "Create"}
-          </button>
+          </Button>
         </div>
       )}
 
       {isLoading && (
         <div style={{
           fontSize: sz(11),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.palette.amber,
           marginBottom: 8,
         }}>
@@ -146,12 +107,11 @@ export function PromptList({
       )}
 
       <div style={{ flex: 1, overflowY: "auto", margin: "0 -16px", padding: "0 16px" }}>
-        {/* System prompt */}
         {systemPrompts.length > 0 && (
           <div style={{ marginBottom: 16 }}>
             <div style={{
               fontSize: sz(9),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               color: theme.text.hint,
               letterSpacing: "0.1em",
               marginBottom: 6,
@@ -160,24 +120,18 @@ export function PromptList({
               System
             </div>
             {systemPrompts.map(p => (
-              <PromptItem
-                key={p.id}
-                item={p}
-                isSelected={selectedId === p.id}
-                onSelect={onSelect}
-                theme={theme}
-                sz={sz}
-              />
+              <SelectableListItem key={p.id} isSelected={selectedId === p.id} onClick={() => onSelect(p.id)}>
+                {p.label}
+              </SelectableListItem>
             ))}
           </div>
         )}
 
-        {/* Templates */}
         {templates.length > 0 && (
           <div>
             <div style={{
               fontSize: sz(9),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               color: theme.text.hint,
               letterSpacing: "0.1em",
               marginBottom: 6,
@@ -186,65 +140,13 @@ export function PromptList({
               Templates ({templates.length})
             </div>
             {templates.map(p => (
-              <PromptItem
-                key={p.id}
-                item={p}
-                isSelected={selectedId === p.id}
-                onSelect={onSelect}
-                theme={theme}
-                sz={sz}
-              />
+              <SelectableListItem key={p.id} isSelected={selectedId === p.id} onClick={() => onSelect(p.id)}>
+                {p.label}
+              </SelectableListItem>
             ))}
           </div>
         )}
       </div>
     </div>
-  );
-}
-
-function PromptItem({
-  item,
-  isSelected,
-  onSelect,
-  theme,
-  sz,
-}: {
-  item: PromptListItem;
-  isSelected: boolean;
-  onSelect: (id: string) => void;
-  theme: ReturnType<typeof import("../../theme/ThemeContext").useTheme>["theme"];
-  sz: (px: number) => number;
-}) {
-  return (
-    <button
-      onClick={() => onSelect(item.id)}
-      style={{
-        display: "block",
-        width: "100%",
-        textAlign: "left",
-        padding: "7px 10px",
-        marginBottom: 2,
-        borderRadius: 6,
-        border: isSelected ? `1px solid ${theme.palette.cyan}44` : "1px solid transparent",
-        background: isSelected ? `${theme.palette.cyan}1a` : "transparent",
-        color: isSelected ? theme.palette.cyan : theme.text.secondary,
-        fontSize: sz(11),
-        fontFamily: "'IBM Plex Mono', monospace",
-        cursor: "pointer",
-        transition: "all 0.15s",
-      }}
-      onMouseEnter={(e) => {
-        if (!isSelected) {
-          e.currentTarget.style.background = theme.surface.cardHover;
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isSelected) {
-          e.currentTarget.style.background = "transparent";
-        }
-      }}
-    >
-      {item.label}
-    </button>
   );
 }

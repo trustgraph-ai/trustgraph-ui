@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { PromptData } from "../../hooks/usePromptDetail";
 import { useTheme } from "../../theme/ThemeContext";
+import { Button } from "../common/Button";
 
 interface PromptEditorProps {
   data: PromptData;
@@ -89,7 +90,7 @@ export function PromptEditor({
       }}>
         <div style={{
           fontSize: sz(10),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           fontWeight: 600,
           color: theme.text.faint,
           letterSpacing: "0.1em",
@@ -102,24 +103,11 @@ export function PromptEditor({
             {saveError && (
               <span style={{ fontSize: sz(11), color: theme.palette.red }}>{saveError}</span>
             )}
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              style={{
-                padding: "5px 14px",
-                borderRadius: 6,
-                border: `1px solid ${isDirty ? theme.palette.emerald + "44" : theme.border.default}`,
-                background: isDirty ? `${theme.palette.emerald}1a` : "transparent",
-                color: isDirty ? theme.palette.emerald : theme.text.faint,
-                fontSize: sz(11),
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontWeight: 600,
-                cursor: isSaving ? "wait" : "pointer",
-                transition: "all 0.2s",
-              }}
-            >
+            <Button size="lg" onClick={handleSave} disabled={isSaving}
+              color={theme.palette.emerald} active={isDirty}
+              style={{ cursor: isSaving ? "wait" : "pointer" }}>
               {isSaving ? "Saving..." : "Save"}
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -139,7 +127,7 @@ export function PromptEditor({
           background: theme.surface.card,
           color: theme.text.primary,
           fontSize: sz(12),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           lineHeight: 1.6,
           resize: "none",
           outline: "none",
@@ -156,31 +144,21 @@ export function PromptEditor({
       }}>
         <span style={{
           fontSize: sz(10),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.text.faint,
           letterSpacing: "0.1em",
         }}>
           RESPONSE TYPE
         </span>
         {(["text", "json", "jsonl"] as const).map(rt => (
-          <button
-            key={rt}
+          <Button key={rt} size="md"
             onClick={() => !readOnly && setResponseType(rt)}
             disabled={readOnly}
-            style={{
-              padding: "4px 10px",
-              borderRadius: 4,
-              border: `1px solid ${responseType === rt ? theme.palette.cyan + "44" : theme.border.default}`,
-              background: responseType === rt ? `${theme.palette.cyan}1a` : "transparent",
-              color: responseType === rt ? theme.palette.cyan : theme.text.subtle,
-              fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
-              cursor: readOnly ? "default" : "pointer",
-              transition: "all 0.15s",
-            }}
-          >
+            color={theme.palette.cyan}
+            active={responseType === rt}
+            style={{ padding: "4px 10px" }}>
             {rt}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -195,7 +173,7 @@ export function PromptEditor({
           }}>
             <span style={{
               fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               color: theme.text.faint,
               letterSpacing: "0.1em",
             }}>
@@ -220,7 +198,7 @@ export function PromptEditor({
               background: theme.surface.card,
               color: theme.text.secondary,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               lineHeight: 1.5,
               resize: "vertical",
               outline: "none",

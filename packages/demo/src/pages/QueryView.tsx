@@ -187,7 +187,7 @@ export function QueryView() {
                   padding: "8px 12px",
                   fontSize: sz(11),
                   color: withGlow(theme.palette.amber, 0.4),
-                  fontFamily: "'IBM Plex Mono', monospace"
+                  fontFamily: theme.font.mono
                 }}>
                   Processing...
                 </div>

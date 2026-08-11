@@ -16,7 +16,7 @@ export interface BrandAnalyticsProps {
   collection?: string;
 }
 
-const mono = "'IBM Plex Mono', monospace";
+const mono = "${theme.font.mono}";
 
 const HoverCtx = createContext<{
   onEnter: (uri: string, name: string, rect: DOMRect) => void;

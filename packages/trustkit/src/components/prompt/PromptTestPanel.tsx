@@ -91,7 +91,7 @@ export function PromptTestPanel({
       {/* Header */}
       <div style={{
         fontSize: sz(10),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         fontWeight: 600,
         color: theme.text.faint,
         letterSpacing: "0.1em",
@@ -110,7 +110,7 @@ export function PromptTestPanel({
               padding: "3px 10px",
               borderRadius: 4,
               fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               fontWeight: 600,
               cursor: "pointer",
               background: inputMode === mode ? theme.surface.cardHover : "transparent",
@@ -138,7 +138,7 @@ export function PromptTestPanel({
                   <label style={{
                     display: "block",
                     fontSize: sz(10),
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: theme.font.mono,
                     color: theme.palette.amber,
                     marginBottom: 4,
                   }}>
@@ -158,7 +158,7 @@ export function PromptTestPanel({
                       background: theme.surface.card,
                       color: theme.text.primary,
                       fontSize: sz(12),
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                       lineHeight: 1.5,
                       resize: "vertical",
                       outline: "none",
@@ -183,7 +183,7 @@ export function PromptTestPanel({
             }}>
               <span style={{
                 fontSize: sz(10),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 color: theme.text.hint,
               }}>
                 variables:
@@ -193,7 +193,7 @@ export function PromptTestPanel({
                   key={v}
                   style={{
                     fontSize: sz(10),
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: theme.font.mono,
                     color: theme.palette.amber,
                     padding: "1px 6px",
                     borderRadius: 3,
@@ -220,7 +220,7 @@ export function PromptTestPanel({
               background: theme.surface.card,
               color: theme.text.primary,
               fontSize: sz(12),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               lineHeight: 1.5,
               resize: "vertical",
               outline: "none",
@@ -244,7 +244,7 @@ export function PromptTestPanel({
             background: result.isStreaming ? "transparent" : `${theme.palette.emerald}1a`,
             color: result.isStreaming ? theme.text.disabled : theme.palette.emerald,
             fontSize: sz(11),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             fontWeight: 600,
             cursor: result.isStreaming ? "wait" : "pointer",
             transition: "all 0.2s",
@@ -263,7 +263,7 @@ export function PromptTestPanel({
               background: "transparent",
               color: theme.text.faint,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               cursor: "pointer",
             }}
           >
@@ -286,7 +286,7 @@ export function PromptTestPanel({
           <div style={{
             fontSize: sz(12),
             color: theme.palette.red,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             Error: {result.error}
           </div>
@@ -296,7 +296,7 @@ export function PromptTestPanel({
           <pre style={{
             margin: 0,
             fontSize: sz(12),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             color: theme.text.primary,
             lineHeight: 1.6,
             whiteSpace: "pre-wrap",
@@ -327,7 +327,7 @@ export function PromptTestPanel({
           gap: 16,
           marginTop: 10,
           fontSize: sz(10),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.text.subtle,
         }}>
           {result.inTokens && (

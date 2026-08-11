@@ -47,7 +47,7 @@ export function DetailPanel({
             <div style={{
               color: subtitleColor || theme.text.muted,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               fontWeight: 600,
             }}>
               {subtitle}

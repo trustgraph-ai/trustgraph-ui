@@ -178,17 +178,17 @@ export function EventTimeline({
           y={height - 4}
           fill={theme.text.hint}
           fontSize={sz(8)}
-          fontFamily="'IBM Plex Mono', monospace"
+          fontFamily={theme.font.mono}
           textAnchor="middle"
         >
           {y < 0 ? `${Math.abs(y)} BC` : y}
         </text>
       ))}
 
-      <text x={6} y={barH / 2 + 3} fill={theme.text.hint} fontSize={sz(7)} fontFamily="'IBM Plex Mono', monospace">
+      <text x={6} y={barH / 2 + 3} fill={theme.text.hint} fontSize={sz(7)} fontFamily={theme.font.mono}>
         {range[0] < 0 ? `${Math.abs(range[0])} BC` : range[0]}
       </text>
-      <text x={6} y={barH / 2 + 13} fill={theme.text.hint} fontSize={sz(7)} fontFamily="'IBM Plex Mono', monospace">
+      <text x={6} y={barH / 2 + 13} fill={theme.text.hint} fontSize={sz(7)} fontFamily={theme.font.mono}>
         {range[1] < 0 ? `${Math.abs(range[1])} BC` : range[1]}
       </text>
     </svg>

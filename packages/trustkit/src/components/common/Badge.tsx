@@ -1,3 +1,5 @@
+import { useTheme } from "../../theme/ThemeContext";
+
 interface BadgeProps {
   children: React.ReactNode;
   color: string;
@@ -13,6 +15,7 @@ export function Badge({
   selected = false,
   onClick,
 }: BadgeProps) {
+  const { theme } = useTheme();
   const isSmall = size === "small";
 
   return (
@@ -26,7 +29,7 @@ export function Badge({
         color: isSmall ? color + "cc" : color,
         cursor: onClick ? "pointer" : "default",
         fontSize: isSmall ? 10 : 11,
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         display: "inline-flex",
         alignItems: "center",
         gap: 6,

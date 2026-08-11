@@ -57,7 +57,7 @@ function Section({ title, color, children, sz }: { title: string; color: string;
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{
-        fontSize: sz(8), color, fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(8), color, fontFamily: theme.font.mono,
         textTransform: "uppercase", letterSpacing: "0.06em",
         marginBottom: 6, paddingBottom: 4,
         borderBottom: `1px solid ${color}22`,
@@ -380,7 +380,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           <div>
             <div style={{ fontSize: sz(18), fontWeight: 600, color: theme.text.primary }}>Risk Overview</div>
             <div style={{
-              fontSize: sz(10), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(10), color: theme.text.faint, fontFamily: theme.font.mono,
               textTransform: "uppercase", letterSpacing: "0.05em",
             }}>
               {stats.events} events in time window
@@ -429,7 +429,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                       }} />
                     </div>
                     <span style={{
-                      fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: sz(10), fontFamily: theme.font.mono,
                       color, minWidth: 28, textAlign: "right",
                     }}>
                       {(score * 100).toFixed(0)}%
@@ -480,7 +480,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                       }} />
                     </div>
                     <span style={{
-                      fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: sz(10), fontFamily: theme.font.mono,
                       color: theme.palette.amber, minWidth: 20, textAlign: "right",
                     }}>
                       {count}
@@ -531,7 +531,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                       }} />
                     </div>
                     <span style={{
-                      fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: sz(10), fontFamily: theme.font.mono,
                       color: theme.palette.blue, minWidth: 20, textAlign: "right",
                     }}>
                       {count}
@@ -580,13 +580,13 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                         {nodeLabel(uri)}
                       </span>
                       <span style={{
-                        fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                        fontSize: sz(9), fontFamily: theme.font.mono,
                         color: theme.text.faint, marginRight: 6,
                       }}>
                         {count} event{count !== 1 ? "s" : ""}
                       </span>
                       <span style={{
-                        fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                        fontSize: sz(9), fontFamily: theme.font.mono,
                         padding: "1px 6px", borderRadius: 3,
                         background: `${riskColor(score, theme)}22`,
                         color: riskColor(score, theme),
@@ -638,7 +638,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
               </div>
               <div style={{
                 fontSize: sz(10), color: KIND_COLORS[node.kind] || theme.text.muted,
-                fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase",
+                fontFamily: theme.font.mono, textTransform: "uppercase",
                 letterSpacing: "0.05em",
               }}>
                 {kindLabel(node.kind)}
@@ -650,7 +650,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
               border: `1px solid ${riskColor(score, theme)}44`,
               color: riskColor(score, theme),
               fontSize: sz(16), fontWeight: 700,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
             }}>
               {(score * 100).toFixed(0)}%
             </div>
@@ -750,13 +750,13 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                         {nodeLabel(uri)}
                       </span>
                       <span style={{
-                        fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                        fontSize: sz(9), fontFamily: theme.font.mono,
                         color: theme.text.faint, marginRight: 6,
                       }}>
                         {count} event{count !== 1 ? "s" : ""}
                       </span>
                       <span style={{
-                        fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                        fontSize: sz(9), fontFamily: theme.font.mono,
                         padding: "1px 6px", borderRadius: 3,
                         background: `${riskColor(score, theme)}22`,
                         color: riskColor(score, theme),
@@ -794,7 +794,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
               </div>
               <div style={{
                 fontSize: sz(10), color: KIND_COLORS.Event,
-                fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase",
+                fontFamily: theme.font.mono, textTransform: "uppercase",
                 letterSpacing: "0.05em",
               }}>
                 {date ? formatDate(date) : "No date"}
@@ -886,7 +886,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
             {procNode?.label || procUri.split("/").pop()}
           </span>
           <span style={{
-            fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(9), fontFamily: theme.font.mono,
             padding: "2px 8px", borderRadius: 4,
             background: `${statusColor}22`,
             border: `1px solid ${statusColor}33`,
@@ -900,7 +900,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         {/* Meta */}
         <div style={{
           display: "flex", gap: 16, fontSize: sz(10), color: theme.text.faint,
-          fontFamily: "'IBM Plex Mono', monospace", marginBottom: 10,
+          fontFamily: theme.font.mono, marginBottom: 10,
         }}>
           {invBy && <span>invoked by: <span style={{ color: theme.text.secondary }}>{invBy}</span></span>}
           {assignee && <span>assigned to: <span style={{ color: theme.text.secondary }}>{assignee}</span></span>}
@@ -920,7 +920,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           }} />
         </div>
         <div style={{
-          fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: sz(9), color: theme.text.faint, fontFamily: theme.font.mono,
           marginBottom: 8, textAlign: "right",
         }}>
           {completedSteps}/{steps.length} steps ({(progress * 100).toFixed(0)}%)
@@ -943,7 +943,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
               {step.complete ? "✓" : ""}
             </span>
             <span style={{
-              fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(9), color: theme.text.faint, fontFamily: theme.font.mono,
               minWidth: 16,
             }}>
               {step.number}.
@@ -956,7 +956,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
             </span>
             {step.assignedTo && (
               <span style={{
-                fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(9), color: theme.text.faint, fontFamily: theme.font.mono,
               }}>
                 {step.assignedTo}
               </span>
@@ -980,7 +980,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
             </div>
             <div style={{
               fontSize: sz(10), color: KIND_COLORS[node.kind] || theme.text.muted,
-              fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase",
+              fontFamily: theme.font.mono, textTransform: "uppercase",
               letterSpacing: "0.05em",
             }}>
               {kindLabel(node.kind)}
@@ -1031,7 +1031,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                   onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                 >
                   <span style={{
-                    fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: sz(9), fontFamily: theme.font.mono,
                     color: theme.text.faint, minWidth: 72,
                   }}>
                     {date ? formatDate(date) : "--"}
@@ -1109,13 +1109,13 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         >
           <span style={{ fontSize: sz(10) }}>{icon}</span>
           <span style={{
-            fontSize: sz(9), color, fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(9), color, fontFamily: theme.font.mono,
             textTransform: "uppercase", letterSpacing: "0.06em", flex: 1,
           }}>
             {label}
           </span>
           <span style={{
-            fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(9), fontFamily: theme.font.mono,
             color: theme.text.faint,
           }}>
             {items.length}
@@ -1207,7 +1207,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         {/* Date labels & slider */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{
-            fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(10), fontFamily: theme.font.mono,
             color: theme.text.faint, minWidth: 80, whiteSpace: "nowrap",
           }}>
             {formatDate(new Date(rangeStartDate).toISOString())}
@@ -1284,7 +1284,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           </div>
 
           <span style={{
-            fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(10), fontFamily: theme.font.mono,
             color: theme.text.faint, minWidth: 80, whiteSpace: "nowrap", textAlign: "right",
           }}>
             {formatDate(new Date(rangeEndDate).toISOString())}
@@ -1294,7 +1294,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         {/* Stats */}
         <div style={{
           display: "flex", gap: 12, fontSize: sz(10), color: theme.text.faint,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           borderLeft: `1px solid ${theme.border.subtle}`, paddingLeft: 16,
         }}>
           <span><span style={{ color: theme.palette.cyan }}>{stats.events}</span> events</span>
@@ -1323,7 +1323,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                 width: "100%", padding: "7px 10px", borderRadius: 6, fontSize: sz(12),
                 background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
                 color: theme.text.primary, outline: "none",
-                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontFamily: theme.font.sans,
               }}
             />
           </div>
@@ -1347,7 +1347,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
                     }} />
                   </div>
                   <span style={{
-                    fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: sz(9), fontFamily: theme.font.mono,
                     color, minWidth: 22, textAlign: "right",
                   }}>
                     {(score * 100).toFixed(0)}
@@ -1361,7 +1361,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
               if (!date) return null;
               return (
                 <span style={{
-                  fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: sz(9), fontFamily: theme.font.mono,
                   color: theme.text.faint, flexShrink: 0, whiteSpace: "nowrap",
                 }}>
                   {formatDate(date)}

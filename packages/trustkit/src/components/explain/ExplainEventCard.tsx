@@ -77,7 +77,7 @@ export function ExplainEventCard({
         <span style={{
           fontSize: sz(10),
           color: typeColor,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           fontWeight: 600,
         }}>
           {index + 1}.
@@ -85,7 +85,7 @@ export function ExplainEventCard({
         <span style={{
           fontSize: sz(10),
           color: typeColor,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           fontWeight: 600,
           textTransform: "uppercase",
         }}>
@@ -98,7 +98,7 @@ export function ExplainEventCard({
         <div style={{
           fontSize: sz(11),
           color: theme.text.disabled,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           marginTop: 6,
         }}>
           Loading...
@@ -110,7 +110,7 @@ export function ExplainEventCard({
         <div style={{
           fontSize: sz(11),
           color: theme.text.disabled,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           marginTop: 6,
         }}>
           {error}
@@ -184,7 +184,7 @@ function ExplainEventData({
             <div style={{
               fontSize: sz(11),
               color: theme.text.subtle,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               marginBottom: 6,
             }}>
               {edgeCount && <span>{edgeCount} edges</span>}
@@ -249,7 +249,7 @@ function ExplainEventData({
                 >
                   <span style={{ color: theme.palette.pink }}>{sel.edgeLabels.s}</span>
                   <span style={{ color: theme.text.faint }}> → </span>
-                  <span style={{ color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace" }}>{sel.edgeLabels.p}</span>
+                  <span style={{ color: theme.text.subtle, fontFamily: theme.font.mono }}>{sel.edgeLabels.p}</span>
                   <span style={{ color: theme.text.faint }}> → </span>
                   <span style={{ color: theme.palette.pink }}>{sel.edgeLabels.o}</span>
                 </div>
@@ -260,7 +260,7 @@ function ExplainEventData({
                   color: theme.text.subtle,
                   lineHeight: 1.4,
                   marginTop: 2,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
@@ -300,7 +300,7 @@ function ExplainEventData({
 
     case "synthesis":
       return (
-        <div style={{ fontSize: sz(11), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ fontSize: sz(11), color: theme.text.subtle, fontFamily: theme.font.mono }}>
           {d.contentLength ? `Content: ${String(d.contentLength)} chars` : null}
           {d.documentUri ? `Answer document: ${String(d.documentUri).split(/[/#:]/).pop()}` : null}
           {!d.contentLength && !d.documentUri ? "Synthesis complete" : null}
@@ -310,8 +310,8 @@ function ExplainEventData({
     case "analysis":
       return (
         <div style={{ fontSize: sz(11), color: theme.text.subtle }}>
-          {d.action ? <div><span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Action:</span> {String(d.action)}</div> : null}
-          {d.arguments ? <div style={{ marginTop: 2 }}><span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Args:</span> {String(d.arguments)}</div> : null}
+          {d.action ? <div><span style={{ fontFamily: theme.font.mono }}>Action:</span> {String(d.action)}</div> : null}
+          {d.arguments ? <div style={{ marginTop: 2 }}><span style={{ fontFamily: theme.font.mono }}>Args:</span> {String(d.arguments)}</div> : null}
         </div>
       );
 
@@ -319,7 +319,7 @@ function ExplainEventData({
       const goals = (d.goals as string[]) || [];
       return (
         <div>
-          <div style={{ fontSize: sz(11), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace", marginBottom: goals.length > 0 ? 6 : 0 }}>
+          <div style={{ fontSize: sz(11), color: theme.text.subtle, fontFamily: theme.font.mono, marginBottom: goals.length > 0 ? 6 : 0 }}>
             {goals.length} sub-agent thread{goals.length !== 1 ? "s" : ""}
           </div>
           {goals.map((goal, i) => (
@@ -341,7 +341,7 @@ function ExplainEventData({
     case "conclusion":
     case "reflection":
       return (
-        <div style={{ fontSize: sz(11), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ fontSize: sz(11), color: theme.text.subtle, fontFamily: theme.font.mono }}>
           {d.documentUri ? `Document: ${String(d.documentUri).split(/[/#]/).pop()}` : "Complete"}
         </div>
       );

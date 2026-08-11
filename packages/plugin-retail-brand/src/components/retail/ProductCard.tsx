@@ -93,7 +93,7 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
       <div style={{ padding: "10px 12px", display: "flex", alignItems: "flex-start", gap: 8 }}>
         <span style={{
           fontSize: sz(9), fontWeight: 700, color: theme.palette.blue,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           background: withGlow(theme.palette.blue, 0.12),
           border: `1px solid ${withGlow(theme.palette.blue, 0.25)}`,
           borderRadius: 4, padding: "2px 5px", flexShrink: 0,
@@ -117,7 +117,7 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
             {product.performanceTier && (
               <span style={{
                 fontSize: sz(8), color: theme.palette.purple,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 padding: "1px 4px", borderRadius: 3,
                 background: withGlow(theme.palette.purple, 0.1),
               }}>
@@ -129,13 +129,13 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
         <div style={{ textAlign: "right", flexShrink: 0 }}>
           <div style={{
             fontSize: sz(15), fontWeight: 700, color: theme.palette.emerald,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             ${product.price.toFixed(0)}
           </div>
           <div style={{
             fontSize: sz(8), color: product.inStock ? theme.palette.emerald : theme.palette.red,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
           </div>
@@ -175,7 +175,7 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
               <span style={{ color: theme.text.hint }}>{SPEC_LABELS[key] || key}: </span>
               <span style={{
                 color: theme.text.muted,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 {value}{SPEC_UNITS[key] ? ` ${SPEC_UNITS[key]}` : ""}
               </span>
@@ -197,7 +197,7 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
             background: product.inStock ? withGlow(theme.palette.blue, 0.08) : theme.surface.card,
             color: product.inStock ? theme.palette.blue : theme.text.disabled,
             fontSize: sz(11), fontWeight: 600,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             cursor: product.inStock ? "pointer" : "not-allowed",
           }}
         >

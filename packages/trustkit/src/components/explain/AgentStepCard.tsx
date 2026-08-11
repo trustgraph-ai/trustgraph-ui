@@ -41,7 +41,7 @@ export function AgentStepCard({ type, content, streaming, index }: AgentStepCard
         gap: 6,
         marginBottom: 8,
         fontSize: sz(10),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         color: meta.color,
         letterSpacing: "0.05em",
       }}>
@@ -66,7 +66,7 @@ export function AgentStepCard({ type, content, streaming, index }: AgentStepCard
           marginTop: 8,
           fontSize: sz(10),
           color: withGlow(theme.palette.cyan, 0.5),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
         }}>
           streaming...
         </div>

@@ -189,7 +189,7 @@ function Section({ title, color, children }: { title: string; color: string; chi
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{
-        fontSize: sz(8), color, fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(8), color, fontFamily: theme.font.mono,
         textTransform: "uppercase", letterSpacing: "0.06em",
         marginBottom: 6, paddingBottom: 4,
         borderBottom: `1px solid ${color}22`,
@@ -773,7 +773,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
         padding: "6px 16px",
         borderBottom: `1px solid ${theme.border.subtle}`,
         display: "flex", alignItems: "center", gap: 4,
-        fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(11), fontFamily: theme.font.mono,
       }}>
         <span
           onClick={() => { clearPivot(); setShowFindings(false); }}
@@ -827,7 +827,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
         padding: "6px 12px",
         borderBottom: `1px solid ${theme.border.subtle}`,
       }}>
-        <span style={{ fontSize: sz(8), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace", marginRight: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        <span style={{ fontSize: sz(8), color: theme.text.faint, fontFamily: theme.font.mono, marginRight: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>
           Sort
         </span>
         {sortOptions.map(opt => (
@@ -836,7 +836,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
             onClick={() => setSortBy(opt.key)}
             style={{
               fontSize: sz(9), padding: "2px 6px", borderRadius: 3, cursor: "pointer",
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               background: sortBy === opt.key ? `${theme.palette.cyan}22` : "transparent",
               color: sortBy === opt.key ? theme.palette.cyan : theme.text.faint,
               border: sortBy === opt.key ? `1px solid ${theme.palette.cyan}33` : "1px solid transparent",
@@ -875,7 +875,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
           <span style={{
-            fontSize: sz(8), fontFamily: "'IBM Plex Mono', monospace", padding: "1px 5px",
+            fontSize: sz(8), fontFamily: theme.font.mono, padding: "1px 5px",
             borderRadius: 3, textTransform: "uppercase", letterSpacing: "0.04em",
             background: `${severityColor(sev, theme)}18`, color: severityColor(sev, theme),
             border: `1px solid ${severityColor(sev, theme)}33`,
@@ -884,13 +884,13 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
           </span>
           {categoryUris.slice(0, 1).map(u => (
             <span key={u} style={{
-              fontSize: sz(9), color: theme.palette.rose, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(9), color: theme.palette.rose, fontFamily: theme.font.mono,
             }}>
               {nodeLabel(u)}
             </span>
           ))}
           <span style={{ flex: 1 }} />
-          <span style={{ fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint }}>
+          <span style={{ fontSize: sz(9), fontFamily: theme.font.mono, color: theme.text.faint }}>
             {ts ? formatDateTime(ts) : ""}
           </span>
         </div>
@@ -902,7 +902,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
           {event.label}
         </div>
         {actorUris.length > 0 && (
-          <div style={{ marginTop: 3, fontSize: sz(9), color: theme.palette.amber, fontFamily: "'IBM Plex Mono', monospace" }}>
+          <div style={{ marginTop: 3, fontSize: sz(9), color: theme.palette.amber, fontFamily: theme.font.mono }}>
             {actorUris.map(u => nodeLabel(u)).join(", ")}
           </div>
         )}
@@ -926,7 +926,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <span style={{
-              fontSize: sz(8), fontFamily: "'IBM Plex Mono', monospace", padding: "2px 8px",
+              fontSize: sz(8), fontFamily: theme.font.mono, padding: "2px 8px",
               borderRadius: 4, textTransform: "uppercase", letterSpacing: "0.04em",
               background: `${severityColor(sev, theme)}18`, color: severityColor(sev, theme),
               border: `1px solid ${severityColor(sev, theme)}33`,
@@ -934,7 +934,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               {sev}
             </span>
             {ts && (
-              <span style={{ fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint }}>
+              <span style={{ fontSize: sz(10), fontFamily: theme.font.mono, color: theme.text.faint }}>
                 {formatDate(ts)}
               </span>
             )}
@@ -989,7 +989,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
             onClick={() => drillFromEvent(event.uri)}
             style={{
               padding: "6px 14px", borderRadius: 6, fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               background: `${theme.palette.cyan}15`, border: `1px solid ${theme.palette.cyan}33`,
               color: theme.palette.cyan, cursor: "pointer",
               transition: "all 0.15s",
@@ -1023,7 +1023,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: sz(18), fontWeight: 600, color: theme.text.primary }}>{node.label}</div>
               <div style={{
-                fontSize: sz(10), color, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(10), color, fontFamily: theme.font.mono,
                 textTransform: "uppercase", letterSpacing: "0.05em",
               }}>
                 {node.kind.replace(/([A-Z])/g, " $1").trim()} \u2022 {pivotConnections.eventCount} risk events
@@ -1037,7 +1037,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
                   padding: "6px 14px", borderRadius: 6,
                   background: `${riskColor(score, theme)}22`, border: `1px solid ${riskColor(score, theme)}44`,
                   color: riskColor(score, theme), fontSize: sz(16), fontWeight: 700,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                 }}>
                   {(score * 100).toFixed(0)}%
                 </div>
@@ -1104,7 +1104,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               onClick={() => drillFromPivot(node.uri)}
               style={{
                 padding: "6px 14px", borderRadius: 6, fontSize: sz(11),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 background: `${theme.palette.cyan}15`, border: `1px solid ${theme.palette.cyan}33`,
                 color: theme.palette.cyan, cursor: "pointer",
                 transition: "all 0.15s",
@@ -1146,7 +1146,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
           <div>
             <div style={{ fontSize: sz(18), fontWeight: 600, color: theme.text.primary }}>Threat Overview</div>
             <div style={{
-              fontSize: sz(10), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(10), color: theme.text.faint, fontFamily: theme.font.mono,
               textTransform: "uppercase", letterSpacing: "0.05em",
             }}>
               {riskEvents.length} risk events \u2022 {actors.length} actors \u2022 {assets.length} assets \u2022 {categories.length} categories
@@ -1159,7 +1159,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
             {sortedSev.map(([sev, count]) => (
               <div key={sev} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 0" }}>
                 <span style={{
-                  fontSize: sz(8), fontFamily: "'IBM Plex Mono', monospace", padding: "1px 5px",
+                  fontSize: sz(8), fontFamily: theme.font.mono, padding: "1px 5px",
                   borderRadius: 3, textTransform: "uppercase",
                   background: `${severityColor(sev, theme)}18`, color: severityColor(sev, theme),
                   minWidth: 60, textAlign: "center",
@@ -1172,7 +1172,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
                     height: "100%", borderRadius: 3, background: severityColor(sev, theme), opacity: 0.6,
                   }} />
                 </div>
-                <span style={{ fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", color: severityColor(sev, theme), minWidth: 20, textAlign: "right" }}>
+                <span style={{ fontSize: sz(10), fontFamily: theme.font.mono, color: severityColor(sev, theme), minWidth: 20, textAlign: "right" }}>
                   {count}
                 </span>
               </div>
@@ -1201,11 +1201,11 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
                     onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                   >
                     <span style={{ fontSize: sz(11), color: theme.text.secondary, flex: 1 }}>{cat.label}</span>
-                    <span style={{ fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint }}>{eventCount}</span>
+                    <span style={{ fontSize: sz(9), fontFamily: theme.font.mono, color: theme.text.faint }}>{eventCount}</span>
                     <div style={{ width: 32, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
                       <div style={{ width: `${score * 100}%`, height: "100%", borderRadius: 2, background: color, opacity: 0.7 }} />
                     </div>
-                    <span style={{ fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", color, minWidth: 22, textAlign: "right" }}>
+                    <span style={{ fontSize: sz(9), fontFamily: theme.font.mono, color, minWidth: 22, textAlign: "right" }}>
                       {(score * 100).toFixed(0)}
                     </span>
                   </div>
@@ -1234,7 +1234,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
                   <div style={{ flex: 1, height: 5, borderRadius: 3, background: "rgba(255,255,255,0.04)", overflow: "hidden" }}>
                     <div style={{ width: `${(count / maxCount) * 100}%`, height: "100%", borderRadius: 3, background: theme.palette.amber, opacity: 0.5 }} />
                   </div>
-                  <span style={{ fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", color: theme.palette.amber, minWidth: 20, textAlign: "right" }}>
+                  <span style={{ fontSize: sz(10), fontFamily: theme.font.mono, color: theme.palette.amber, minWidth: 20, textAlign: "right" }}>
                     {count}
                   </span>
                 </div>
@@ -1261,12 +1261,12 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
           borderBottom: `1px solid ${theme.border.subtle}`,
           background: "rgba(255,255,255,0.01)",
         }}>
-          <span style={{ fontSize: sz(8), fontFamily: "'IBM Plex Mono', monospace", color: theme.palette.cyan, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <span style={{ fontSize: sz(8), fontFamily: theme.font.mono, color: theme.palette.cyan, textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Raw OCSF Events
           </span>
           <span style={{ flex: 1 }} />
           {rawResults && (
-            <span style={{ fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint }}>
+            <span style={{ fontSize: sz(9), fontFamily: theme.font.mono, color: theme.text.faint }}>
               {rawResults.length} rows
             </span>
           )}
@@ -1287,7 +1287,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               value={rawQuery}
               onChange={e => setRawQuery(e.target.value)}
               style={{
-                flex: 1, padding: 8, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+                flex: 1, padding: 8, fontSize: sz(10), fontFamily: theme.font.mono,
                 background: "transparent", border: "none", color: theme.text.secondary,
                 resize: "none", outline: "none",
               }}
@@ -1297,7 +1297,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
                 onClick={() => executeDrill(rawQuery)}
                 style={{
                   padding: "4px 12px", borderRadius: 4, fontSize: sz(10),
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   background: `${theme.palette.cyan}20`, border: `1px solid ${theme.palette.cyan}33`,
                   color: theme.palette.cyan, cursor: "pointer",
                 }}
@@ -1319,7 +1319,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               <div style={{ padding: 20, textAlign: "center", fontSize: sz(11), color: theme.text.faint }}>No results</div>
             )}
             {rawResults && rawResults.length > 0 && (
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: sz(10), fontFamily: theme.font.mono }}>
                 <thead>
                   <tr>
                     {rawColumns.map(col => (
@@ -1370,7 +1370,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
             onClick={analyzeContext}
             style={{
               padding: "6px 14px", borderRadius: 6, fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               background: `${theme.palette.emerald}15`, border: `1px solid ${theme.palette.emerald}33`,
               color: theme.palette.emerald, cursor: "pointer",
               transition: "all 0.15s",
@@ -1390,7 +1390,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
             border: `1px solid ${theme.palette.emerald}22`,
           }}>
             <div style={{
-              fontSize: sz(8), color: theme.palette.emerald, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(8), color: theme.palette.emerald, fontFamily: theme.font.mono,
               textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8,
             }}>
               Analyzing...
@@ -1420,7 +1420,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               marginBottom: 8,
             }}>
               <span style={{
-                fontSize: sz(8), color: theme.palette.emerald, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(8), color: theme.palette.emerald, fontFamily: theme.font.mono,
                 textTransform: "uppercase", letterSpacing: "0.06em",
               }}>
                 Analysis
@@ -1441,7 +1441,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
             {aiExploreNext.length > 0 && (
               <div>
                 <div style={{
-                  fontSize: sz(8), color: theme.palette.emerald, fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: sz(8), color: theme.palette.emerald, fontFamily: theme.font.mono,
                   textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6,
                 }}>
                   Explore Next
@@ -1467,7 +1467,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
                 onClick={analyzeContext}
                 style={{
                   padding: "4px 10px", borderRadius: 4, fontSize: sz(9),
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   background: "transparent", border: `1px solid ${theme.border.default}`,
                   color: theme.text.faint, cursor: "pointer",
                 }}
@@ -1490,7 +1490,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
         background: "rgba(255,255,255,0.02)", border: `1px solid ${theme.border.subtle}`,
       }}>
         <div style={{
-          fontSize: sz(8), color: theme.palette.purple, fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: sz(8), color: theme.palette.purple, fontFamily: theme.font.mono,
           textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6,
         }}>
           Record Finding
@@ -1501,13 +1501,13 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
           placeholder="What did you observe? What's the significance?"
           style={{
             width: "100%", minHeight: 60, padding: 8, fontSize: sz(11),
-            fontFamily: "'IBM Plex Sans', sans-serif", lineHeight: 1.5,
+            fontFamily: theme.font.sans, lineHeight: 1.5,
             background: "rgba(255,255,255,0.03)", border: `1px solid ${theme.border.default}`,
             borderRadius: 4, color: theme.text.primary, resize: "vertical", outline: "none",
           }}
         />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-          <span style={{ fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace" }}>
+          <span style={{ fontSize: sz(9), color: theme.text.faint, fontFamily: theme.font.mono }}>
             {findings.length > 0 ? `Follows finding #${findings.length}` : "First finding in chain"}
           </span>
           <button
@@ -1515,7 +1515,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
             disabled={!findingDraft.trim()}
             style={{
               padding: "4px 12px", borderRadius: 4, fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               background: findingDraft.trim() ? `${theme.palette.purple}20` : "rgba(255,255,255,0.03)",
               border: `1px solid ${findingDraft.trim() ? `${theme.palette.purple}33` : theme.border.default}`,
               color: findingDraft.trim() ? theme.palette.purple : theme.text.disabled,
@@ -1539,7 +1539,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
           <div>
             <div style={{ fontSize: sz(18), fontWeight: 600, color: theme.text.primary }}>Investigation</div>
             <div style={{
-              fontSize: sz(10), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(10), color: theme.text.faint, fontFamily: theme.font.mono,
               textTransform: "uppercase", letterSpacing: "0.05em",
             }}>
               {findings.length} finding{findings.length !== 1 ? "s" : ""} recorded
@@ -1566,7 +1566,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
                     padding: "4px 0 4px 18px",
                   }}>
                     <div style={{ width: 1, height: 16, background: `${theme.palette.purple}33` }} />
-                    <span style={{ fontSize: sz(8), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint }}>
+                    <span style={{ fontSize: sz(8), fontFamily: theme.font.mono, color: theme.text.faint }}>
                       follows from
                     </span>
                   </div>
@@ -1581,12 +1581,12 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                     <span style={{
-                      fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: sz(9), fontFamily: theme.font.mono,
                       color: theme.palette.purple, fontWeight: 600,
                     }}>
                       #{i + 1}
                     </span>
-                    <span style={{ fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint }}>
+                    <span style={{ fontSize: sz(9), fontFamily: theme.font.mono, color: theme.text.faint }}>
                       {formatDateTime(f.timestamp)}
                     </span>
                   </div>
@@ -1624,7 +1624,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
 
                   {/* Pivot trail at time of finding */}
                   {f.pivotTrail.length > 0 && (
-                    <div style={{ marginTop: 6, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint }}>
+                    <div style={{ marginTop: 6, fontSize: sz(9), fontFamily: theme.font.mono, color: theme.text.faint }}>
                       path: {f.pivotTrail.map(s => s.label).join(" \u203A ")}
                     </div>
                   )}
@@ -1641,7 +1641,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               onClick={() => generateDoc("document")}
               style={{
                 padding: "6px 14px", borderRadius: 6, fontSize: sz(11),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 background: `${theme.palette.purple}15`, border: `1px solid ${theme.palette.purple}33`,
                 color: theme.palette.purple, cursor: "pointer",
                 transition: "all 0.15s",
@@ -1655,7 +1655,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               onClick={() => generateDoc("response-plan")}
               style={{
                 padding: "6px 14px", borderRadius: 6, fontSize: sz(11),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 background: `${theme.palette.emerald}15`, border: `1px solid ${theme.palette.emerald}33`,
                 color: theme.palette.emerald, cursor: "pointer",
                 transition: "all 0.15s",
@@ -1677,7 +1677,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
           }}>
             <div style={{
               fontSize: sz(8), color: docMode === "document" ? theme.palette.purple : theme.palette.emerald,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8,
             }}>
               {docMode === "document" ? "Documenting investigation..." : "Writing response plan..."}
@@ -1707,7 +1707,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               marginBottom: 12,
             }}>
               <span style={{
-                fontSize: sz(8), color: theme.palette.purple, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(8), color: theme.palette.purple, fontFamily: theme.font.mono,
                 textTransform: "uppercase", letterSpacing: "0.06em",
               }}>
                 Investigation Report
@@ -1809,7 +1809,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               marginBottom: 12,
             }}>
               <span style={{
-                fontSize: sz(8), color: theme.palette.emerald, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(8), color: theme.palette.emerald, fontFamily: theme.font.mono,
                 textTransform: "uppercase", letterSpacing: "0.06em",
               }}>
                 Incident Response Plan
@@ -1826,7 +1826,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
 
             {docResult.severity && (
               <div style={{
-                display: "inline-block", fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+                display: "inline-block", fontSize: sz(9), fontFamily: theme.font.mono,
                 padding: "2px 8px", borderRadius: 4, textTransform: "uppercase",
                 background: `${severityColor(String(docResult.severity), theme)}18`,
                 color: severityColor(String(docResult.severity), theme),
@@ -1912,7 +1912,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
         <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
           {renderBreadcrumb() || (
             <span style={{
-              fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(10), fontFamily: theme.font.mono,
               color: theme.text.faint, textTransform: "uppercase", letterSpacing: "0.05em",
             }}>
               Risk Event Browser
@@ -1926,7 +1926,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               onClick={() => { setShowFindings(!showFindings); if (!showFindings) setSelectedEventUri(null); }}
               style={{
                 padding: "4px 10px", borderRadius: 4, fontSize: sz(9),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 background: showFindings ? `${theme.palette.purple}20` : "transparent",
                 border: `1px solid ${showFindings ? `${theme.palette.purple}33` : theme.border.default}`,
                 color: showFindings ? theme.palette.purple : theme.text.faint,
@@ -1938,7 +1938,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
           )}
           <div style={{
             display: "flex", gap: 10, fontSize: sz(10), color: theme.text.faint,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             paddingLeft: 8, borderLeft: `1px solid ${theme.border.subtle}`,
           }}>
             <span><span style={{ color: theme.palette.cyan }}>{riskEvents.length}</span> events</span>
@@ -1965,7 +1965,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
                 width: "100%", padding: "7px 10px", borderRadius: 6, fontSize: sz(12),
                 background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
                 color: theme.text.primary, outline: "none",
-                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontFamily: theme.font.sans,
               }}
             />
           </div>
@@ -1974,7 +1974,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
 
           {/* Event count for current context */}
           <div style={{
-            padding: "4px 12px", fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+            padding: "4px 12px", fontSize: sz(9), fontFamily: theme.font.mono,
             color: theme.text.faint, borderBottom: `1px solid ${theme.border.subtle}`,
           }}>
             {sortedFilteredEvents.length} event{sortedFilteredEvents.length !== 1 ? "s" : ""}

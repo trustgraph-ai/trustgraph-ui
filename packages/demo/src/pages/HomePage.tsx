@@ -25,7 +25,7 @@ export function HomePage({ onNavigate, plugins = [] }: HomePageProps) {
             fontWeight: 700,
             color: theme.text.primary,
             marginBottom: 6,
-            fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+            fontFamily: theme.font.sans,
           }}>
             TrustGraph Workflows
           </h1>

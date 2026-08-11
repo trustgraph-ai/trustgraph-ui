@@ -49,7 +49,7 @@ export function TextInput({
         width: "100%",
         padding: "10px 14px",
         fontSize: sz(14),
-        fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+        fontFamily: theme.font.sans,
         color: theme.text.primary,
         background: "transparent",
         border: `1px solid ${theme.border.medium}`,

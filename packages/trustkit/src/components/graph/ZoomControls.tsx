@@ -61,7 +61,7 @@ export function ZoomControls({ zoom, onZoomIn, onZoomOut, onReset }: ZoomControl
           bottom: 16,
           left: 16,
           fontSize: sz(11),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.text.faint,
           background: theme.surface.overlayLight,
           padding: "4px 8px",

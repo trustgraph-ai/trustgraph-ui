@@ -540,7 +540,7 @@ export function RawGraphCanvas3D({
                     fill={edge.color}
                     fillOpacity={(isHighlighted ? 0.6 : 0.35) * depthAlpha}
                     fontSize={sz(7) * avgScale}
-                    fontFamily="'IBM Plex Mono', monospace"
+                    fontFamily={theme.font.mono}
                     textAnchor="middle"
                   >
                     {edge.predicate}
@@ -614,7 +614,7 @@ export function RawGraphCanvas3D({
                     fillOpacity={alpha * (isHighlighted || isCenter ? 1 : 0.7)}
                     fontSize={sz(isHovered || isCenter ? 8.5 : 7) * scale}
                     fontWeight={isCenter || isHighlighted ? "bold" : "normal"}
-                    fontFamily="'IBM Plex Sans', sans-serif"
+                    fontFamily={theme.font.sans}
                     textAnchor="middle"
                   >
                     {truncateLabel(node.label)}
@@ -639,7 +639,7 @@ export function RawGraphCanvas3D({
         bottom: 16,
         left: 16,
         fontSize: sz(10),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         color: theme.text.hint,
       }}>
         drag to rotate · scroll to zoom · right-drag to pan
@@ -669,7 +669,7 @@ export function RawGraphCanvas3D({
               color: p.node.color,
               fontWeight: 700,
               fontSize: sz(12),
-              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontFamily: theme.font.sans,
               marginBottom: p.node.description ? 4 : 0,
             }}>
               {p.node.label}
@@ -678,7 +678,7 @@ export function RawGraphCanvas3D({
               <div style={{
                 color: theme.text.secondary,
                 fontSize: sz(11),
-                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontFamily: theme.font.sans,
                 lineHeight: 1.4,
               }}>
                 {p.node.description.length > 120

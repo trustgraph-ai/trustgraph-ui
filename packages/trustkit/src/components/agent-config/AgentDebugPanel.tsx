@@ -76,7 +76,7 @@ export function AgentDebugPanel() {
       }}>
         <div style={{
           fontSize: sz(10),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           fontWeight: 600,
           color: theme.text.faint,
           letterSpacing: "0.1em",
@@ -101,7 +101,7 @@ export function AgentDebugPanel() {
               background: theme.surface.card,
               color: theme.text.primary,
               fontSize: sz(12),
-              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontFamily: theme.font.sans,
               outline: "none",
             }}
           />
@@ -115,7 +115,7 @@ export function AgentDebugPanel() {
               background: !question.trim() || isQuerying ? "transparent" : `${theme.palette.amber}1a`,
               color: !question.trim() || isQuerying ? theme.text.disabled : theme.palette.amber,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               fontWeight: 600,
               cursor: !question.trim() || isQuerying ? "default" : "pointer",
             }}
@@ -131,7 +131,7 @@ export function AgentDebugPanel() {
           padding: "6px 16px",
           borderBottom: `1px solid ${theme.border.subtle}`,
           fontSize: sz(10),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.text.subtle,
           display: "flex",
           gap: 12,
@@ -151,7 +151,7 @@ export function AgentDebugPanel() {
           padding: "5px 16px",
           borderBottom: `1px solid ${theme.border.subtle}`,
           fontSize: sz(9),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.text.faint,
           display: "flex",
           gap: 12,
@@ -181,7 +181,7 @@ export function AgentDebugPanel() {
               background: view === v ? `${theme.palette.cyan}1a` : "transparent",
               color: view === v ? theme.palette.cyan : theme.text.subtle,
               fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               cursor: "pointer",
             }}
           >
@@ -198,7 +198,7 @@ export function AgentDebugPanel() {
               <div style={{
                 fontSize: sz(12),
                 color: theme.palette.red,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 marginBottom: 8,
               }}>
                 Error: {error}
@@ -257,7 +257,7 @@ export function AgentDebugPanel() {
               }}>
                 <div style={{
                   fontSize: sz(10),
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   fontWeight: 600,
                   color: theme.text.faint,
                   letterSpacing: "0.1em",
@@ -273,7 +273,7 @@ export function AgentDebugPanel() {
                   <div style={{ marginTop: 12 }}>
                     <div style={{
                       fontSize: sz(9),
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                       color: theme.text.faint,
                       letterSpacing: "0.05em",
                       textTransform: "uppercase",
@@ -299,7 +299,7 @@ export function AgentDebugPanel() {
                             border: `1px solid ${theme.border.subtle}`,
                             color: linked ? theme.palette.cyan : theme.text.hint,
                             fontSize: sz(10),
-                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontFamily: theme.font.mono,
                             cursor: idx >= 0 ? "pointer" : "default",
                           }}
                         >
@@ -321,7 +321,7 @@ export function AgentDebugPanel() {
           padding: "6px 16px",
           borderTop: `1px solid ${theme.border.default}`,
           fontSize: sz(10),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.palette.amber,
         }}>
           Terminated: {termination.terminationReason}

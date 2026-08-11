@@ -68,7 +68,7 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
             background: showSearch ? `${theme.palette.cyan}1a` : "transparent",
             color: showSearch ? theme.palette.cyan : theme.text.subtle,
             fontSize: sz(11),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             cursor: "pointer",
             transition: "all 0.2s",
           }}
@@ -86,7 +86,7 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
               background: "transparent",
               color: theme.text.faint,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               cursor: "pointer",
             }}
           >
@@ -97,7 +97,7 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
         {isFetching && !showSearch && (
           <span style={{
             fontSize: sz(10),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             color: theme.palette.amber,
           }}>
             loading...
@@ -108,7 +108,7 @@ export function RawGraphExplorer({ startUri, onNodeSelect }: RawGraphExplorerPro
 
         <span style={{
           fontSize: sz(10),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.text.hint,
         }}>
           {stats}

@@ -26,7 +26,7 @@ export function StreamingResponse({ text: responseText, isStreaming, error }: St
         <div style={{
           fontSize: sz(10),
           color: withGlow(theme.semantic.error, 0.53),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           marginBottom: 6,
         }}>
           ERROR
@@ -52,7 +52,7 @@ export function StreamingResponse({ text: responseText, isStreaming, error }: St
           <div style={{
             fontSize: sz(10),
             color: withGlow(theme.semantic.answer, 0.53),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             marginBottom: 8,
           }}>
             <span style={{ color: theme.semantic.answer }}>✓</span> RESPONSE
@@ -72,7 +72,7 @@ export function StreamingResponse({ text: responseText, isStreaming, error }: St
           padding: "8px 12px",
           fontSize: sz(11),
           color: withGlow(theme.palette.cyan, 0.6),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           marginTop: 12,
         }}>
           {responseText ? "Streaming..." : "Processing query..."}

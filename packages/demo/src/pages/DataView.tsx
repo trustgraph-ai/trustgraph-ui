@@ -302,14 +302,14 @@ export function DataView() {
                       fontSize: sz(12),
                       fontWeight: 600,
                       color: theme.palette.blue,
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                     }}>
                       ▤ {schema?.name || schemaKey}
                     </span>
                     <span style={{
                       fontSize: sz(11),
                       color: theme.text.disabled,
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                     }}>
                       {schemaMatches.length} matches
                     </span>
@@ -351,7 +351,7 @@ export function DataView() {
                                   fontSize: sz(10),
                                   color: isMatched ? theme.palette.blue : theme.text.faint,
                                   fontWeight: isMatched ? 700 : 400,
-                                  fontFamily: "'IBM Plex Mono', monospace",
+                                  fontFamily: theme.font.mono,
                                   textTransform: "uppercase",
                                 }}>
                                   {key}{isMatched ? "  ● matched" : ""}
@@ -384,7 +384,7 @@ export function DataView() {
                           display: "flex",
                           justifyContent: "flex-end",
                           fontSize: sz(11),
-                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontFamily: theme.font.mono,
                         }}>
                           <span style={{
                             color: match.score > 0.8 ? theme.semantic.success : match.score > 0.5 ? theme.palette.amber : theme.text.subtle,

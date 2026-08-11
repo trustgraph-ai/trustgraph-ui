@@ -61,7 +61,7 @@ function Section({ title, color, borderColor, sz, children }: { title: string; c
   return (
     <div style={{ marginBottom: sz(16) }}>
       <div style={{
-        fontSize: sz(8), color, fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(8), color, fontFamily: theme.font.mono,
         textTransform: "uppercase", letterSpacing: "0.06em",
         marginBottom: sz(6), paddingBottom: sz(4),
         borderBottom: `1px solid ${borderColor ?? `${color}22`}`,
@@ -725,7 +725,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             y={labelY}
             fill={isOptimal ? theme.palette.emerald : theme.text.muted}
             fontSize={sz(mini ? 7 : 9)}
-            fontFamily="'IBM Plex Mono', monospace"
+            fontFamily={theme.font.mono}
             textAnchor="middle"
           >
             {edge.action}
@@ -741,7 +741,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               y={labelY + (mini ? 10 : 12)}
               fill={theme.text.subtle}
               fontSize={sz(mini ? 6 : 8)}
-              fontFamily="'IBM Plex Mono', monospace"
+              fontFamily={theme.font.mono}
               textAnchor="middle"
             >
               {(edge.probability * 100).toFixed(0)}%
@@ -776,7 +776,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               y={cy - NODE_SIZE / 2 - 6}
               fill={pColor}
               fontSize={sz(mini ? 7 : 10)}
-              fontFamily="'IBM Plex Mono', monospace"
+              fontFamily={theme.font.mono}
               textAnchor="middle"
               fontWeight={600}
             >
@@ -804,7 +804,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               y={cy + 3}
               fill={theme.text.muted}
               fontSize={sz(mini ? 7 : 9)}
-              fontFamily="'IBM Plex Mono', monospace"
+              fontFamily={theme.font.mono}
               textAnchor="middle"
             >
               C
@@ -814,7 +814,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               y={cy - NODE_SIZE / 2 - 6}
               fill={theme.text.secondary}
               fontSize={sz(mini ? 7 : 10)}
-              fontFamily="'IBM Plex Mono', monospace"
+              fontFamily={theme.font.mono}
               textAnchor="middle"
               fontWeight={600}
             >
@@ -856,7 +856,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               y={cy - NODE_SIZE / 2 - 6}
               fill={theme.text.secondary}
               fontSize={sz(mini ? 7 : 10)}
-              fontFamily="'IBM Plex Mono', monospace"
+              fontFamily={theme.font.mono}
               textAnchor="middle"
               fontWeight={600}
             >
@@ -883,7 +883,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             nodes.push(
               <g key={`payoff-${node.id}-${pu}`}>
                 <rect x={bx} y={by - 8} width={badgeW} height={14} rx={3} fill={`${col}33`} stroke={`${col}66`} strokeWidth={0.5} />
-                <text x={cx} y={by + 1} fill={col} fontSize={sz(9)} fontFamily="'IBM Plex Mono', monospace" textAnchor="middle">
+                <text x={cx} y={by + 1} fill={col} fontSize={sz(9)} fontFamily={theme.font.mono} textAnchor="middle">
                   {badgeText}
                 </text>
               </g>,
@@ -948,7 +948,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
         <div style={{ overflow: "auto", padding: mini ? 8 : 16 }}>
           <table style={{
             borderCollapse: "collapse",
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             fontSize: fs,
           }}>
             <thead>
@@ -1027,7 +1027,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
       <div style={{ overflow: "auto", padding: mini ? 8 : 16 }}>
         <table style={{
           borderCollapse: "collapse",
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           fontSize: fs,
         }}>
           <thead>
@@ -1110,7 +1110,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
     return (
       <div style={{
         padding: 12, borderTop: `1px solid ${theme.border.subtle}`,
-        fontFamily: "'IBM Plex Sans', sans-serif", fontSize: sz(12),
+        fontFamily: theme.font.sans, fontSize: sz(12),
         background: theme.surface.card,
         maxHeight: 180, overflow: "auto",
       }}>
@@ -1121,7 +1121,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
           <span style={{
             padding: "1px 6px", borderRadius: 3, fontSize: sz(9),
             background: `${pColor}33`, color: pColor, border: `1px solid ${pColor}55`,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             {layoutNode.kind}
           </span>
@@ -1141,7 +1141,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
                 <span key={au} style={{
                   padding: "2px 8px", borderRadius: 3, fontSize: sz(10),
                   background: theme.surface.cardHover, border: `1px solid ${theme.border.medium}`,
-                  color: theme.text.secondary, fontFamily: "'IBM Plex Mono', monospace",
+                  color: theme.text.secondary, fontFamily: theme.font.mono,
                 }}>
                   {getActionLabel(au)}
                 </span>
@@ -1160,7 +1160,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
                   <span key={pu} style={{
                     padding: "2px 8px", borderRadius: 3, fontSize: sz(10),
                     background: `${col}22`, border: `1px solid ${col}55`, color: col,
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: theme.font.mono,
                   }}>
                     {plUri ? playerLabel(plUri) : "?"}: {val}
                   </span>
@@ -1181,7 +1181,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
       <div style={{
         display: "flex", gap: 12, padding: "4px 16px",
         borderBottom: `1px solid ${theme.border.subtle}`,
-        fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(10),
+        fontFamily: theme.font.mono, fontSize: sz(10),
         alignItems: "center",
       }}>
         {players.map(p => {
@@ -1246,7 +1246,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
       <div style={{
         display: "flex", gap: 4, padding: "8px 16px",
         borderBottom: `1px solid ${theme.border.subtle}`,
-        fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(11),
+        fontFamily: theme.font.mono, fontSize: sz(11),
         alignItems: "center",
       }}>
         {([["tree", "\u229E Game Tree"], ["matrix", "\u229E Payoff Matrix"], ["sandbox", "\u229E Sandbox"]] as const).map(([m, label]) => (
@@ -1257,7 +1257,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               padding: "5px 14px", borderRadius: 5, border: "none", cursor: "pointer",
               background: mode === m ? theme.surface.cardHover : "transparent",
               color: mode === m ? theme.text.primary : theme.text.faint,
-              fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(11),
+              fontFamily: theme.font.mono, fontSize: sz(11),
               fontWeight: mode === m ? 600 : 400, transition: "all 0.15s",
             }}
           >
@@ -1274,7 +1274,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             style={{
               background: theme.surface.cardHover, border: `1px solid ${theme.border.medium}`,
               borderRadius: 4, padding: "3px 8px", color: theme.text.secondary,
-              fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(10),
+              fontFamily: theme.font.mono, fontSize: sz(10),
               outline: "none",
             }}
           >
@@ -1298,7 +1298,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
         <div style={{ flex: 1, overflow: "auto" }}>
           <div style={{ padding: "12px 16px" }}>
             <div style={{
-              fontSize: sz(8), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(8), color: theme.text.subtle, fontFamily: theme.font.mono,
               textTransform: "uppercase", letterSpacing: "0.06em",
               marginBottom: 8, paddingBottom: 4,
               borderBottom: `1px solid ${theme.text.subtle}22`,
@@ -1310,7 +1310,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
           {nashEquilibria.size > 0 && (
             <div style={{
               padding: "8px 16px", fontSize: sz(10), color: theme.palette.emerald,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
             }}>
               {nashEquilibria.size} Nash Equilibri{nashEquilibria.size === 1 ? "um" : "a"} found (highlighted)
             </div>
@@ -1324,11 +1324,11 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             width: 320, minWidth: 280, overflow: "auto",
             borderRight: `1px solid ${theme.border.subtle}`,
             padding: 12,
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontFamily: theme.font.sans,
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div style={{
-                fontSize: sz(8), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(8), color: theme.text.subtle, fontFamily: theme.font.mono,
                 textTransform: "uppercase", letterSpacing: "0.06em",
               }}>
                 Parameter Sandbox
@@ -1338,7 +1338,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
                 style={{
                   padding: "2px 8px", borderRadius: 3, border: `1px solid ${theme.border.medium}`,
                   background: theme.surface.cardHover, color: theme.text.muted,
-                  fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(9),
+                  fontFamily: theme.font.mono, fontSize: sz(9),
                   cursor: "pointer",
                 }}
               >
@@ -1358,7 +1358,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
                         fontSize: sz(10), color: theme.text.secondary, marginBottom: 2,
                       }}>
                         <span>{ca.label}</span>
-                        <span style={{ color: theme.palette.cyan, fontFamily: "'IBM Plex Mono', monospace" }}>
+                        <span style={{ color: theme.palette.cyan, fontFamily: theme.font.mono }}>
                           {val.toFixed(2)}
                         </span>
                       </div>
@@ -1391,7 +1391,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
                         fontSize: sz(10), color: theme.text.secondary, marginBottom: 2,
                       }}>
                         <span>{pe.label}</span>
-                        <span style={{ color: col, fontFamily: "'IBM Plex Mono', monospace" }}>
+                        <span style={{ color: col, fontFamily: theme.font.mono }}>
                           {val}
                         </span>
                       </div>
@@ -1419,7 +1419,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               borderBottom: `1px solid ${theme.border.subtle}`,
             }}>
               <div style={{
-                fontSize: sz(8), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(8), color: theme.text.subtle, fontFamily: theme.font.mono,
                 textTransform: "uppercase", letterSpacing: "0.06em",
                 padding: "8px 12px", borderBottom: `1px solid ${theme.text.subtle}22`,
               }}>
@@ -1429,7 +1429,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             </div>
             <div style={{ flex: 1, minHeight: 160, overflow: "auto" }}>
               <div style={{
-                fontSize: sz(8), color: theme.text.subtle, fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: sz(8), color: theme.text.subtle, fontFamily: theme.font.mono,
                 textTransform: "uppercase", letterSpacing: "0.06em",
                 padding: "8px 12px", borderBottom: `1px solid ${theme.text.subtle}22`,
               }}>
@@ -1439,7 +1439,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               {sandboxNashEquilibria.size > 0 && (
                 <div style={{
                   padding: "4px 12px", fontSize: sz(9), color: theme.palette.emerald,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                 }}>
                   {sandboxNashEquilibria.size} NE
                 </div>

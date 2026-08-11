@@ -74,7 +74,7 @@ function PhaseIndicator({ phase }: { phase: BuildPhase }) {
               </span>
               <span style={{
                 fontSize: sz(10), fontWeight: active ? 600 : 400,
-                color, fontFamily: "'IBM Plex Mono', monospace",
+                color, fontFamily: theme.font.mono,
               }}>
                 {meta.label}
               </span>
@@ -100,14 +100,14 @@ function BudgetBar({ budget, total }: { budget: number; total: number }) {
       }}>
         <span style={{
           fontSize: sz(10), color: theme.text.subtle,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
         }}>
           ${total.toFixed(0)} / ${budget.toFixed(0)}
         </span>
         {over && (
           <span style={{
             fontSize: sz(10), color: theme.palette.red, fontWeight: 600,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             OVER ${(total - budget).toFixed(0)}
           </span>
@@ -171,7 +171,7 @@ function FilledSlotRow({
       </span>
       <span style={{
         fontSize: sz(10), fontWeight: 600, color: theme.text.subtle,
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         width: 90, flexShrink: 0,
       }}>
         {meta.label}
@@ -184,7 +184,7 @@ function FilledSlotRow({
       </span>
       <span style={{
         fontSize: sz(11), fontWeight: 600, color: theme.palette.emerald,
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         flexShrink: 0,
       }}>
         ${price.toFixed(0)}
@@ -192,7 +192,7 @@ function FilledSlotRow({
       {locked && (
         <span style={{
           fontSize: sz(8), color: theme.palette.emerald,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           padding: "1px 4px", borderRadius: 3,
           background: withGlow(theme.palette.emerald, 0.1),
           border: `1px solid ${withGlow(theme.palette.emerald, 0.2)}`,
@@ -231,7 +231,7 @@ function EmptySlotRow({
       </span>
       <span style={{
         fontSize: sz(10), fontWeight: 600, color: theme.text.hint,
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         width: 90,
       }}>
         {meta.label}
@@ -300,7 +300,7 @@ export function BuildPanel({
           {build.activity && (
             <span style={{
               fontSize: sz(10), color: theme.palette.blue,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               padding: "2px 8px", borderRadius: 4,
               background: withGlow(theme.palette.blue, 0.1),
               border: `1px solid ${withGlow(theme.palette.blue, 0.2)}`,
@@ -311,7 +311,7 @@ export function BuildPanel({
           {build.target && (
             <span style={{
               fontSize: sz(10), color: theme.palette.purple,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               padding: "2px 8px", borderRadius: 4,
               background: withGlow(theme.palette.purple, 0.1),
               border: `1px solid ${withGlow(theme.palette.purple, 0.2)}`,
@@ -322,7 +322,7 @@ export function BuildPanel({
           {build.constraints.map((c) => (
             <span key={c} style={{
               fontSize: sz(10), color: theme.palette.amber,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               padding: "2px 8px", borderRadius: 4,
               background: withGlow(theme.palette.amber, 0.1),
               border: `1px solid ${withGlow(theme.palette.amber, 0.2)}`,
@@ -358,7 +358,7 @@ export function BuildPanel({
 
       {/* Slot grid */}
       <div style={{
-        fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(10), fontFamily: theme.font.mono,
         color: theme.text.subtle, textTransform: "uppercase",
         letterSpacing: 0.5, marginBottom: 6,
       }}>
@@ -394,7 +394,7 @@ export function BuildPanel({
       {activeSlot && (recommendations.length > 0 || isQuerying) && (
         <div style={{ marginTop: 16 }}>
           <div style={{
-            fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(10), fontFamily: theme.font.mono,
             color: theme.text.subtle, textTransform: "uppercase",
             letterSpacing: 0.5, marginBottom: 8,
           }}>
@@ -455,7 +455,7 @@ export function BuildPanel({
           </div>
           <div style={{
             fontSize: sz(12), color: theme.text.muted,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             {build.budget
               ? `$${build.total.toFixed(0)} / $${build.budget.toFixed(0)} budget`

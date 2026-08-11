@@ -131,7 +131,7 @@ function EntityPicker({
             width: "100%", padding: "8px 12px", borderRadius: 6, fontSize: sz(13),
             background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
             color: theme.text.primary, outline: "none",
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontFamily: theme.font.sans,
           }}
         />
       )}
@@ -552,7 +552,7 @@ function SubwayMap({
                 y={labelY + 3.5 + labelOffset}
                 textAnchor="middle"
                 fontSize={sz(8)}
-                fontFamily="'IBM Plex Mono', monospace"
+                fontFamily={theme.font.mono}
                 fill={color}
                 fillOpacity={isBypass ? 0.65 : 0.85}
               >
@@ -616,7 +616,7 @@ function SubwayMap({
                 y={y + 10}
                 textAnchor="middle"
                 fontSize={sz(7)}
-                fontFamily="'IBM Plex Mono', monospace"
+                fontFamily={theme.font.mono}
                 fill={theme.text.hint}
               >
                 {kind.replace(/([A-Z])/g, " $1").trim()}
@@ -729,7 +729,7 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
         }}>
           <div style={{ flex: 1 }}>
             <div style={{
-              fontSize: sz(9), color: theme.palette.emerald, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(9), color: theme.palette.emerald, fontFamily: theme.font.mono,
               textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6,
             }}>From</div>
             <EntityPicker
@@ -743,7 +743,7 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
           <div style={{ color: theme.text.faint, fontSize: sz(18), paddingTop: 16 }}>→</div>
           <div style={{ flex: 1 }}>
             <div style={{
-              fontSize: sz(9), color: theme.palette.rose, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(9), color: theme.palette.rose, fontFamily: theme.font.mono,
               textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6,
             }}>To</div>
             <EntityPicker
@@ -765,7 +765,7 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
                 color: startUri && endUri && startUri !== endUri
                   ? theme.palette.emerald : theme.text.faint,
                 fontSize: sz(12), fontWeight: 600, cursor: "pointer",
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 transition: "all 0.15s",
                 border: `1px solid ${startUri && endUri ? theme.palette.emerald + "44" : theme.border.default}`,
               }}
@@ -784,7 +784,7 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
                 display: "flex", alignItems: "center", gap: 6,
                 cursor: "pointer", userSelect: "none",
                 fontSize: sz(10), color: theme.text.faint,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}
             >
               <span style={{
@@ -811,7 +811,7 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
               }}>
                 <div style={{
                   display: "flex", gap: 8, marginBottom: 10,
-                  fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: sz(10), fontFamily: theme.font.mono,
                 }}>
                   <span
                     onClick={() => setDisabledEdges(new Set())}
@@ -835,7 +835,7 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
                         onClick={() => toggleEdge(label)}
                         style={{
                           padding: "3px 8px", borderRadius: 4, cursor: "pointer",
-                          fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+                          fontSize: sz(10), fontFamily: theme.font.mono,
                           background: disabled ? "rgba(255,255,255,0.02)" : `${color}15`,
                           border: `1px solid ${disabled ? theme.border.subtle : color + "44"}`,
                           color: disabled ? theme.text.hint : color,
@@ -884,7 +884,7 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
             <div>
               <div style={{
                 fontSize: sz(10), color: theme.text.faint, marginBottom: 12,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 {paths.length} path{paths.length !== 1 ? "s" : ""} found
                 {paths.length >= MAX_PATHS && " (showing first " + MAX_PATHS + ")"}

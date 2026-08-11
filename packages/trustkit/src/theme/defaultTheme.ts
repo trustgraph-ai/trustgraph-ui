@@ -44,4 +44,8 @@ export const defaultTheme: Theme = {
     medium: "rgba(255,255,255,0.1)",
     grid: "rgba(255,255,255,0.015)",
   },
+  font: {
+    mono: "'IBM Plex Mono', monospace",
+    sans: "'IBM Plex Sans', -apple-system, sans-serif",
+  },
 };

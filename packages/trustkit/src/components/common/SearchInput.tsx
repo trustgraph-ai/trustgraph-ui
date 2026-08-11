@@ -56,7 +56,7 @@ export function SearchInput({
               background: theme.surface.card,
               color: theme.text.subtle,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               cursor: "pointer",
               whiteSpace: "nowrap",
             }}
@@ -94,7 +94,7 @@ export function SearchInput({
                     background: "transparent",
                     color: theme.text.muted,
                     fontSize: sz(11),
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: theme.font.mono,
                     cursor: "pointer",
                     textAlign: "left",
                   }}
@@ -123,7 +123,7 @@ export function SearchInput({
           background: theme.surface.card,
           color: theme.text.primary,
           fontSize: sz(14),
-          fontFamily: "'IBM Plex Sans', sans-serif",
+          fontFamily: theme.font.sans,
           outline: "none",
         }}
       />
@@ -139,7 +139,7 @@ export function SearchInput({
           cursor: isDisabled ? "not-allowed" : "pointer",
           fontSize: sz(13),
           fontWeight: 600,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
         }}
       >
         {isLoading ? "..." : buttonText}

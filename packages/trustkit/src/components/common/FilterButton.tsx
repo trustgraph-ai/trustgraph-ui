@@ -23,7 +23,7 @@ export function FilterButton({ label, icon, color, isActive, onClick }: FilterBu
         color: isActive ? activeColor : theme.text.subtle,
         fontSize: sz(11),
         cursor: "pointer",
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
       }}
     >
       {icon && <>{icon} </>}{label}
