@@ -23,9 +23,58 @@ export interface ResolvedPlugin {
   Component: ComponentType | null;
 }
 
-interface PluginManifestFile {
+export interface ManifestSection {
+  title: string;
+  description: string;
+  tab: string;
+  navLabel?: string;
+  navIcon?: string;
+  components: ResolvedPlugin[];
+}
+
+interface RawSection {
+  title: string;
+  description: string;
+  tab: string;
+  navLabel?: string;
+  navIcon?: string;
+  components: PluginManifestEntry[];
+}
+
+interface LegacyManifest {
   workflows?: PluginManifestEntry[];
   demos?: PluginManifestEntry[];
+}
+
+function isLegacyFormat(data: unknown): data is LegacyManifest {
+  return !Array.isArray(data) && typeof data === "object" && data !== null;
+}
+
+function normaliseSections(data: unknown): RawSection[] {
+  if (Array.isArray(data)) return data as RawSection[];
+
+  if (isLegacyFormat(data)) {
+    const sections: RawSection[] = [];
+    if (data.workflows) {
+      sections.push({
+        title: "TrustGraph Workflows",
+        description: "Each workflow demonstrates how trustkit components compose to create a full experience.",
+        tab: "home",
+        components: data.workflows,
+      });
+    }
+    if (data.demos) {
+      sections.push({
+        title: "Demos",
+        description: "Interactive demonstrations showcasing TrustGraph capabilities with real-world datasets.",
+        tab: "demos",
+        components: data.demos,
+      });
+    }
+    return sections;
+  }
+
+  return [];
 }
 
 async function resolveEntries(
@@ -63,8 +112,7 @@ export function usePluginManifest(
   manifestUrl: string,
   builtins?: Map<string, ComponentType>,
 ) {
-  const [workflows, setWorkflows] = useState<ResolvedPlugin[]>([]);
-  const [demos, setDemos] = useState<ResolvedPlugin[]>([]);
+  const [sections, setSections] = useState<ManifestSection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,16 +123,22 @@ export function usePluginManifest(
       try {
         const res = await fetch(manifestUrl);
         if (!res.ok) throw new Error(`Failed to fetch plugin manifest: ${res.status}`);
-        const manifest: PluginManifestFile = await res.json();
+        const data = await res.json();
+        const rawSections = normaliseSections(data);
 
-        const [resolvedWorkflows, resolvedDemos] = await Promise.all([
-          resolveEntries(manifest.workflows ?? [], builtins),
-          resolveEntries(manifest.demos ?? [], builtins),
-        ]);
+        const resolved = await Promise.all(
+          rawSections.map(async (s) => ({
+            title: s.title,
+            description: s.description,
+            tab: s.tab,
+            navLabel: s.navLabel,
+            navIcon: s.navIcon,
+            components: await resolveEntries(s.components, builtins),
+          })),
+        );
 
         if (!cancelled) {
-          setWorkflows(resolvedWorkflows);
-          setDemos(resolvedDemos);
+          setSections(resolved);
           setIsLoading(false);
         }
       } catch (err) {
@@ -98,5 +152,26 @@ export function usePluginManifest(
     return () => { cancelled = true; };
   }, [manifestUrl, builtins]);
 
-  return { workflows, demos, isLoading, error };
+  const navTabs = (() => {
+    const seen = new Set<string>();
+    const result: { key: string; label: string; icon?: string }[] = [];
+    for (const s of sections) {
+      if (seen.has(s.tab)) continue;
+      seen.add(s.tab);
+      result.push({
+        key: s.tab,
+        label: s.navLabel ?? s.title,
+        icon: s.navIcon,
+      });
+    }
+    return result;
+  })();
+
+  const byTab = (tab: string) => sections.filter(s => s.tab === tab);
+
+  // Backward compat helpers
+  const workflows = byTab("home").flatMap(s => s.components);
+  const demos = byTab("demos").flatMap(s => s.components);
+
+  return { sections, navTabs, byTab, workflows, demos, isLoading, error };
 }

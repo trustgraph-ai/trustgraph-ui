@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useTheme, LoadingState, Input } from "@trustgraph/trustkit";
+import { useTheme, LoadingState, Input, PageGuidance, GuidanceSlot } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useHwSecData } from "./useHwSecData";
 import type { HwNode } from "./useHwSecData";
@@ -716,6 +716,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
   }
 
   return (
+    <PageGuidance pageKey="hwsec">
     <div style={{
       height: "var(--page-height)",
       display: "flex", flexDirection: "column",
@@ -741,6 +742,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
           onChange={setSearchTerm}
           style={{ flex: 1, maxWidth: 300, fontSize: sz(11) }}
         />
+        <GuidanceSlot id="welcome" buttonOffset={{ top: -12, left: 8 }} />
 
         <div style={{
           display: "flex", gap: 8, marginLeft: "auto",
@@ -847,5 +849,6 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
         </div>
       </div>
     </div>
+    </PageGuidance>
   );
 }

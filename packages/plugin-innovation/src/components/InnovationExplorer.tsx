@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useTheme, LoadingState, Button, Input } from "@trustgraph/trustkit";
+import { useTheme, LoadingState, Button, Input, PageGuidance, GuidanceSlot } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useInnovationData } from "../useInnovationData";
 import type { IINode } from "../useInnovationData";
@@ -462,6 +462,7 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
   }
 
   return (
+    <PageGuidance pageKey="innovation">
     <div style={{
       display: "flex", flexDirection: "column", height: "var(--page-height)", overflow: "hidden",
       borderTop: `1px solid ${theme.border.default}`,
@@ -482,6 +483,7 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
             {label}
           </Button>
         ))}
+        <GuidanceSlot id="welcome" buttonOffset={{ top: -2, left: 8 }} />
       </div>
 
       {mode === "pathfinder" ? (
@@ -683,5 +685,6 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
     </div>
       )}
     </div>
+    </PageGuidance>
   );
 }

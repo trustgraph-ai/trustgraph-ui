@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useTheme, LoadingState, Input } from "@trustgraph/trustkit";
+import { useTheme, LoadingState, Input, PageGuidance, GuidanceSlot } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useRiskData } from "./useRiskData";
 import type { RiskNode } from "./useRiskData";
@@ -387,6 +387,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
               {stats.events} events in time window
             </div>
           </div>
+          <GuidanceSlot id="welcome" buttonOffset={{ top: -12, left: 8 }} />
         </div>
 
         {/* Risk heat grid */}
@@ -1195,6 +1196,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
   /* ── main render ────────────────────────────────────────────────── */
 
   return (
+    <PageGuidance pageKey="risk-management">
     <div style={{
       display: "flex", flexDirection: "column", height: "var(--page-height)", overflow: "hidden",
       borderTop: `1px solid ${theme.border.default}`,
@@ -1371,5 +1373,6 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         </div>
       </div>
     </div>
+    </PageGuidance>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect, type ComponentType } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import type { DomainKey, Entity } from "@trustgraph/trustkit";
-import { Header, StatusBar, Toaster, useGraphData, toast, WorkspaceSwitcher, ThemeProvider, useTheme } from "@trustgraph/trustkit";
+import { Header, StatusBar, Toaster, useGraphData, toast, WorkspaceSwitcher, ActionButtonBar, ThemeProvider, useTheme } from "@trustgraph/trustkit";
 import { useLogout, useWorkspaceSync } from "@trustgraph/react-state";
 import { useThemeSettings, ThemePanel } from "./components/ThemePanel";
 import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, SparqlPage, GraphqlPage } from "./pages";
@@ -43,7 +43,8 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
   const { entities, isLoading } = useGraphData();
   const logout = useLogout();
   const { theme, sz } = useTheme();
-  const { workflows, demos } = usePluginManifest("/config/plugins.json", BUILTIN_COMPONENTS);
+  const { sections, navTabs, byTab } = usePluginManifest("/config/components.json", BUILTIN_COMPONENTS);
+  const allComponents = sections.flatMap(s => s.components);
 
   useWorkspaceSync();
 
@@ -58,8 +59,6 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
   };
 
   const activeView = location.pathname === "/" ? "home" : location.pathname.slice(1);
-
-  const allPlugins = [...workflows, ...demos];
 
   return (
     <div style={{
@@ -77,18 +76,19 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
           <Header
             activeTab={activeView as any}
             onTabChange={handleNavigate}
-            showWorkflows={workflows.length > 0}
-            showDemos={demos.length > 0}
+            tabs={navTabs}
           />
         </div>
+        <ActionButtonBar configKey="global" />
+        <div style={{ width: 12 }} />
         <WorkspaceSwitcher />
         <button
           onClick={logout}
           style={{
-            margin: `0 ${sz(20)}px 0 ${sz(12)}px`, padding: `${sz(6)}px ${sz(14)}px`, borderRadius: 6,
-            background: theme.surface.card,
-            border: `1px solid ${theme.border.medium}`,
-            color: theme.text.subtle, fontSize: sz(12), cursor: "pointer",
+            margin: `0 ${sz(20)}px 0 ${sz(12)}px`, padding: `${sz(6)}px ${sz(12)}px`, borderRadius: 6,
+            background: "transparent",
+            border: `1px solid ${theme.border.default}`,
+            color: theme.text.muted, fontSize: sz(11), cursor: "pointer",
             fontFamily: theme.font.mono,
           }}
         >
@@ -97,8 +97,10 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
       </div>
 
       <Routes>
-        <Route path="/" element={<HomePage onNavigate={handleNavigate} plugins={workflows} />} />
-        <Route path="/demos" element={<DemosPage onNavigate={handleNavigate} plugins={demos} />} />
+        <Route path="/" element={<HomePage onNavigate={handleNavigate} sections={byTab("home")} />} />
+        {navTabs.filter(t => t.key !== "home").map(t => (
+          <Route key={t.key} path={`/${t.key}`} element={<DemosPage onNavigate={handleNavigate} sections={byTab(t.key)} />} />
+        ))}
         <Route
           path="/graph"
           element={
@@ -112,7 +114,7 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
         />
         <Route path="/query" element={<QueryView />} />
         <Route path="/explain" element={<ExplainView />} />
-        {allPlugins.map(p => p.Component ? (
+        {allComponents.map(p => p.Component ? (
           <Route key={p.id} path={`/${p.id}`} element={
             <PluginErrorBoundary name={p.id}>
               <p.Component />

@@ -7,6 +7,8 @@ import {
   RagFullExplainView,
   ModeSelector,
   SectionLabel,
+  PageGuidance,
+  GuidanceSlot,
   useTheme,
 } from "@trustgraph/trustkit";
 import type { SearchPreset } from "@trustgraph/trustkit";
@@ -84,7 +86,7 @@ export function GraphRagPage() {
   }, [socket, generation]);
 
   return (
-    <>
+    <PageGuidance pageKey="graph-rag-query">
       {/* Option selector bar */}
       <div style={{
         padding: `${sz(10)}px ${sz(28)}px`,
@@ -108,14 +110,20 @@ export function GraphRagPage() {
         }}>
           {optionDescriptions[option]}
         </span>
+        <div style={{ flex: 1 }} />
       </div>
 
       {/* Active view */}
-      {option === "simple" && <SimpleRagView presets={presets} />}
-      {option === "sources" && <RagWithSourcesView presets={presets} />}
-      {option === "timeline" && <RagWithTimelineView presets={presets} />}
-      {option === "explain" && <RagExplainView presets={presets} />}
-      {option === "full" && <RagFullExplainView presets={presets} />}
+      <div style={{ position: "relative" }}>
+        <div style={{ position: "absolute", top: 8, right: 28, zIndex: 100 }}>
+          <GuidanceSlot id="results-panel" />
+        </div>
+        {option === "simple" && <SimpleRagView presets={presets} />}
+        {option === "sources" && <RagWithSourcesView presets={presets} />}
+        {option === "timeline" && <RagWithTimelineView presets={presets} />}
+        {option === "explain" && <RagExplainView presets={presets} />}
+        {option === "full" && <RagFullExplainView presets={presets} />}
+      </div>
 
       <DevPanel
         explanation="This page demonstrates 5 levels of explainability, from no explain (SimpleRagView) to full DAG visualization (RagFullExplainView). All 5 use the same Tier 1 hooks — the difference is which Tier 2 pieces they compose. Use the selector above to switch between them."
@@ -171,6 +179,6 @@ export function GraphRagPage() {
           { name: "useSourceDocument", tier: "1", description: "Fetches document chunk text" },
         ]}
       />
-    </>
+    </PageGuidance>
   );
 }
