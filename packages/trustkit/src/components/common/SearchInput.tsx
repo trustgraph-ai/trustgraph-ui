@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useTheme } from "../../theme/ThemeContext";
+import { Button } from "./Button";
+import { SelectableListItem } from "./SelectableListItem";
 
 export interface SearchPreset {
   key: string;
@@ -47,22 +49,10 @@ export function SearchInput({
     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
       {presets && presets.length > 0 && (
         <div style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowPresets(!showPresets)}
-            style={{
-              padding: "12px 14px",
-              borderRadius: 8,
-              border: `1px solid ${theme.border.medium}`,
-              background: theme.surface.card,
-              color: theme.text.subtle,
-              fontSize: sz(11),
-              fontFamily: theme.font.mono,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <Button size="lg" onClick={() => setShowPresets(!showPresets)} active={false}
+            style={{ padding: "12px 14px", border: `1px solid ${theme.border.medium}`, background: theme.surface.card, color: theme.text.subtle }}>
             Examples ▾
-          </button>
+          </Button>
           {showPresets && (
             <div style={{
               position: "absolute",
@@ -78,31 +68,13 @@ export function SearchInput({
               boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
             }}>
               {presets.map((p) => (
-                <button
+                <SelectableListItem
                   key={p.key}
-                  onClick={() => {
-                    onChange(p.query);
-                    setShowPresets(false);
-                  }}
-                  title={p.query}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    padding: "6px 10px",
-                    border: "none",
-                    borderRadius: 4,
-                    background: "transparent",
-                    color: theme.text.muted,
-                    fontSize: sz(11),
-                    fontFamily: theme.font.mono,
-                    cursor: "pointer",
-                    textAlign: "left",
-                  }}
-                  onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-                  onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
-                >
+                  isSelected={false}
+                  onClick={() => { onChange(p.query); setShowPresets(false); }}
+                  style={{ padding: "6px 10px", marginBottom: 0, borderRadius: 4, color: theme.text.muted }}>
                   {p.title}
-                </button>
+                </SelectableListItem>
               ))}
             </div>
           )}
@@ -127,23 +99,11 @@ export function SearchInput({
           outline: "none",
         }}
       />
-      <button
-        onClick={onSubmit}
-        disabled={isDisabled}
-        style={{
-          padding: "12px 20px",
-          borderRadius: 8,
-          border: `1px solid ${resolvedButtonColor}44`,
-          background: isDisabled ? theme.surface.card : `${resolvedButtonColor}1a`,
-          color: isDisabled ? theme.text.disabled : resolvedButtonColor,
-          cursor: isDisabled ? "not-allowed" : "pointer",
-          fontSize: sz(13),
-          fontWeight: 600,
-          fontFamily: theme.font.mono,
-        }}
-      >
+      <Button size="lg" onClick={onSubmit} disabled={isDisabled}
+        color={resolvedButtonColor} active={!isDisabled}
+        style={{ padding: "12px 20px", fontSize: sz(13) }}>
         {isLoading ? "..." : buttonText}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { useSocket } from "@trustgraph/react-provider";
 import { useSessionStore } from "@trustgraph/react-state";
-import { useTheme } from "@trustgraph/trustkit";
+import { useTheme, Button, Input } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useOcsfData } from "./useOcsfData";
 import type { OcsfNode } from "./useOcsfData";
@@ -185,7 +185,7 @@ function formatDate(iso: string): string {
 /* ── sub-components ───────────────────────────────────────────────── */
 
 function Section({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
-  const { sz } = useTheme();
+  const { theme, sz } = useTheme();
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{
@@ -831,20 +831,15 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
           Sort
         </span>
         {sortOptions.map(opt => (
-          <span
+          <Button
             key={opt.key}
+            size="sm"
+            active={sortBy === opt.key}
             onClick={() => setSortBy(opt.key)}
-            style={{
-              fontSize: sz(9), padding: "2px 6px", borderRadius: 3, cursor: "pointer",
-              fontFamily: theme.font.mono,
-              background: sortBy === opt.key ? `${theme.palette.cyan}22` : "transparent",
-              color: sortBy === opt.key ? theme.palette.cyan : theme.text.faint,
-              border: sortBy === opt.key ? `1px solid ${theme.palette.cyan}33` : "1px solid transparent",
-              transition: "all 0.12s",
-            }}
+            style={sortBy === opt.key ? { background: `${theme.palette.cyan}22`, color: theme.palette.cyan, border: `1px solid ${theme.palette.cyan}33` } : {}}
           >
             {opt.label}
-          </span>
+          </Button>
         ))}
       </div>
     );
@@ -985,20 +980,12 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
 
         {/* Drill-down action */}
         <div style={{ marginTop: 20, display: "flex", gap: 8 }}>
-          <button
+          <Button
             onClick={() => drillFromEvent(event.uri)}
-            style={{
-              padding: "6px 14px", borderRadius: 6, fontSize: sz(11),
-              fontFamily: theme.font.mono,
-              background: `${theme.palette.cyan}15`, border: `1px solid ${theme.palette.cyan}33`,
-              color: theme.palette.cyan, cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = `${theme.palette.cyan}25`; }}
-            onMouseLeave={e => { e.currentTarget.style.background = `${theme.palette.cyan}15`; }}
+            color={theme.palette.cyan}
           >
             Drill Down to Raw Events
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -1100,20 +1087,12 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
         {/* Drill-down — only for actors and assets, not categories */}
         {node.kind !== "RiskCategory" && (
           <div style={{ marginTop: 16 }}>
-            <button
+            <Button
               onClick={() => drillFromPivot(node.uri)}
-              style={{
-                padding: "6px 14px", borderRadius: 6, fontSize: sz(11),
-                fontFamily: theme.font.mono,
-                background: `${theme.palette.cyan}15`, border: `1px solid ${theme.palette.cyan}33`,
-                color: theme.palette.cyan, cursor: "pointer",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = `${theme.palette.cyan}25`; }}
-              onMouseLeave={e => { e.currentTarget.style.background = `${theme.palette.cyan}15`; }}
+              color={theme.palette.cyan}
             >
               Drill Down to Raw Events
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -1293,17 +1272,13 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               }}
             />
             <div style={{ padding: "4px 8px", borderTop: `1px solid ${theme.border.subtle}` }}>
-              <button
+              <Button
+                size="sm"
                 onClick={() => executeDrill(rawQuery)}
-                style={{
-                  padding: "4px 12px", borderRadius: 4, fontSize: sz(10),
-                  fontFamily: theme.font.mono,
-                  background: `${theme.palette.cyan}20`, border: `1px solid ${theme.palette.cyan}33`,
-                  color: theme.palette.cyan, cursor: "pointer",
-                }}
+                color={theme.palette.cyan}
               >
                 Execute
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -1366,20 +1341,12 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
       <div style={{ marginTop: 20 }}>
         {/* Analyze button */}
         {!aiStreaming && !aiAnalysis && (
-          <button
+          <Button
             onClick={analyzeContext}
-            style={{
-              padding: "6px 14px", borderRadius: 6, fontSize: sz(11),
-              fontFamily: theme.font.mono,
-              background: `${theme.palette.emerald}15`, border: `1px solid ${theme.palette.emerald}33`,
-              color: theme.palette.emerald, cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = `${theme.palette.emerald}25`; }}
-            onMouseLeave={e => { e.currentTarget.style.background = `${theme.palette.emerald}15`; }}
+            color={theme.palette.emerald}
           >
             Analyze This
-          </button>
+          </Button>
         )}
 
         {/* Streaming indicator */}
@@ -1463,17 +1430,9 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
 
             {/* Re-analyze button */}
             <div style={{ marginTop: 10 }}>
-              <button
-                onClick={analyzeContext}
-                style={{
-                  padding: "4px 10px", borderRadius: 4, fontSize: sz(9),
-                  fontFamily: theme.font.mono,
-                  background: "transparent", border: `1px solid ${theme.border.default}`,
-                  color: theme.text.faint, cursor: "pointer",
-                }}
-              >
+              <Button size="sm" onClick={analyzeContext}>
                 Re-analyze
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -1510,20 +1469,14 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
           <span style={{ fontSize: sz(9), color: theme.text.faint, fontFamily: theme.font.mono }}>
             {findings.length > 0 ? `Follows finding #${findings.length}` : "First finding in chain"}
           </span>
-          <button
+          <Button
+            size="sm"
             onClick={recordFinding}
             disabled={!findingDraft.trim()}
-            style={{
-              padding: "4px 12px", borderRadius: 4, fontSize: sz(10),
-              fontFamily: theme.font.mono,
-              background: findingDraft.trim() ? `${theme.palette.purple}20` : "rgba(255,255,255,0.03)",
-              border: `1px solid ${findingDraft.trim() ? `${theme.palette.purple}33` : theme.border.default}`,
-              color: findingDraft.trim() ? theme.palette.purple : theme.text.disabled,
-              cursor: findingDraft.trim() ? "pointer" : "default",
-            }}
+            color={theme.palette.purple}
           >
             Record
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -1637,34 +1590,18 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
         {/* Action buttons */}
         {findings.length > 0 && !docStreaming && (
           <div style={{ marginTop: 20, display: "flex", gap: 8 }}>
-            <button
+            <Button
               onClick={() => generateDoc("document")}
-              style={{
-                padding: "6px 14px", borderRadius: 6, fontSize: sz(11),
-                fontFamily: theme.font.mono,
-                background: `${theme.palette.purple}15`, border: `1px solid ${theme.palette.purple}33`,
-                color: theme.palette.purple, cursor: "pointer",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = `${theme.palette.purple}25`; }}
-              onMouseLeave={e => { e.currentTarget.style.background = `${theme.palette.purple}15`; }}
+              color={theme.palette.purple}
             >
               Document Investigation
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => generateDoc("response-plan")}
-              style={{
-                padding: "6px 14px", borderRadius: 6, fontSize: sz(11),
-                fontFamily: theme.font.mono,
-                background: `${theme.palette.emerald}15`, border: `1px solid ${theme.palette.emerald}33`,
-                color: theme.palette.emerald, cursor: "pointer",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = `${theme.palette.emerald}25`; }}
-              onMouseLeave={e => { e.currentTarget.style.background = `${theme.palette.emerald}15`; }}
+              color={theme.palette.emerald}
             >
               Write Incident Response Plan
-            </button>
+            </Button>
           </div>
         )}
 
@@ -1922,19 +1859,14 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
 
         <div style={{ display: "flex", gap: 6 }}>
           {findings.length > 0 && (
-            <button
+            <Button
+              size="sm"
+              active={showFindings}
               onClick={() => { setShowFindings(!showFindings); if (!showFindings) setSelectedEventUri(null); }}
-              style={{
-                padding: "4px 10px", borderRadius: 4, fontSize: sz(9),
-                fontFamily: theme.font.mono,
-                background: showFindings ? `${theme.palette.purple}20` : "transparent",
-                border: `1px solid ${showFindings ? `${theme.palette.purple}33` : theme.border.default}`,
-                color: showFindings ? theme.palette.purple : theme.text.faint,
-                cursor: "pointer",
-              }}
+              style={showFindings ? { background: `${theme.palette.purple}20`, color: theme.palette.purple, border: `1px solid ${theme.palette.purple}33` } : {}}
             >
               Investigation ({findings.length})
-            </button>
+            </Button>
           )}
           <div style={{
             display: "flex", gap: 10, fontSize: sz(10), color: theme.text.faint,
@@ -1957,16 +1889,10 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
         }}>
           {/* Search */}
           <div style={{ padding: "8px 12px", borderBottom: `1px solid ${theme.border.subtle}` }}>
-            <input
+            <Input
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+              onChange={setSearchTerm}
               placeholder="Search events, actors, descriptions..."
-              style={{
-                width: "100%", padding: "7px 10px", borderRadius: 6, fontSize: sz(12),
-                background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
-                color: theme.text.primary, outline: "none",
-                fontFamily: theme.font.sans,
-              }}
             />
           </div>
 

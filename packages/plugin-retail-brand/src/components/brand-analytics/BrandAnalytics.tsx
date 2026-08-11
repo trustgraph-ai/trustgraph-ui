@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, createContext, useContext } from "react";
-import { useTheme } from "@trustgraph/trustkit";
+import { useTheme, Button } from "@trustgraph/trustkit";
 import { withGlow } from "@trustgraph/trustkit";
 import { useBrandAnalytics, BUDGET_TIERS } from "../../hooks/useBrandAnalytics";
 import { useProductScorecard } from "../../hooks/useProductScorecard";
@@ -94,21 +94,21 @@ function Pill({ active, color, onClick, children }: {
   onClick: () => void;
   children: React.ReactNode;
 }) {
-  const { theme, sz } = useTheme();
+  const { theme } = useTheme();
   return (
-    <button
+    <Button
+      size="sm"
+      active={active}
       onClick={onClick}
       style={{
         background: active ? withGlow(color, 0.15) : "none",
         border: `1px solid ${active ? withGlow(color, 0.4) : theme.border.subtle}`,
-        borderRadius: 4,
         color: active ? color : theme.text.hint,
-        fontSize: sz(9), fontFamily: mono, padding: "2px 8px",
-        cursor: "pointer", flexShrink: 0,
+        flexShrink: 0,
       }}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -141,17 +141,9 @@ function FilterBar({
           </Pill>
         ))}
         <span style={{ flex: 1 }} />
-        <button
-          onClick={onRefresh}
-          disabled={isLoading}
-          style={{
-            background: "none", border: `1px solid ${theme.border.subtle}`,
-            borderRadius: 4, color: theme.text.muted,
-            fontSize: sz(9), fontFamily: mono, padding: "2px 8px", cursor: "pointer",
-          }}
-        >
+        <Button size="sm" onClick={onRefresh} disabled={isLoading}>
           {isLoading ? "Loading..." : "Refresh"}
-        </button>
+        </Button>
       </div>
       {categories.length > 0 && (
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>

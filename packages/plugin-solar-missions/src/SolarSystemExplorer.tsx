@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useSolarMissions } from "./useSolarMissions";
 import type { SolarMission, MissionEvent, CelestialBody } from "./useSolarMissions";
-import { useTheme } from "@trustgraph/trustkit";
+import { useTheme, Button } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 
 const SOLAR_SPINNER_ID = "solar-spinner-keyframes";
@@ -634,18 +634,17 @@ function MissionList({ missions, bodyMap, colorMap, hoveredMission, onSelect, on
           const isHovered = hoveredMission === m.uri;
           const targets = m.targetBodies.map(t => bodyMap.get(t)?.name || "").filter(Boolean).join(", ");
           return (
-            <button
+            <Button
               key={m.uri}
               onClick={() => onSelect(m.uri)}
               onMouseEnter={() => onHover(m.uri)}
               onMouseLeave={() => onHover(null)}
               style={{
                 display: "flex", alignItems: "flex-start", gap: 10,
-                padding: "10px 16px", border: "none",
+                padding: "10px 16px", borderRadius: 0,
                 borderBottom: `1px solid ${theme.border.default}`,
                 background: isHovered ? theme.surface.card : "transparent",
-                cursor: "pointer", textAlign: "left", width: "100%",
-                transition: "background 0.15s",
+                textAlign: "left", width: "100%",
               }}
             >
               <div style={{
@@ -689,7 +688,7 @@ function MissionList({ missions, bodyMap, colorMap, hoveredMission, onSelect, on
               }}>
                 {m.events.length} evt
               </div>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -714,16 +713,13 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
   return (
     <div style={{ flex: 1, overflowY: "auto" }}>
       <div style={{ padding: "16px 16px 0" }}>
-        <button
+        <Button
+          size="sm"
           onClick={onBack}
-          style={{
-            background: "none", border: "none", color: theme.text.subtle,
-            fontSize: sz(10), cursor: "pointer", padding: "2px 0", marginBottom: 14,
-            fontFamily: theme.font.mono,
-          }}
+          style={{ padding: "2px 0", marginBottom: 14, color: theme.text.subtle }}
         >
           &larr; All missions
-        </button>
+        </Button>
 
         <div style={{
           fontSize: sz(9), fontFamily: theme.font.mono,
@@ -794,16 +790,14 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
             const nearestName = bodyMap.get(evt.nearestBody)?.name || "";
             const evtLabel = evt.type.replace(/([a-z])([A-Z])/g, "$1 $2");
             return (
-              <button
+              <Button
                 key={evt.uri || i}
                 onClick={() => onEventClick(evt)}
+                active={isSelected}
                 style={{
                   display: "block", width: "100%", textAlign: "left",
                   padding: "8px 10px", marginBottom: 2,
-                  background: isSelected ? theme.surface.cardHover : "transparent",
-                  border: "none", borderRadius: 6,
-                  cursor: "pointer", position: "relative",
-                  transition: "background 0.15s",
+                  borderRadius: 6, position: "relative",
                 }}
               >
                 {/* Timeline dot */}
@@ -852,7 +846,7 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
                     <span>{evt.longitudeDeg.toFixed(0)}° lon</span>
                   </div>
                 )}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -862,7 +856,7 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
 }
 
 function Tag({ label, color }: { label: string; color: string }) {
-  const { sz } = useTheme();
+  const { theme, sz } = useTheme();
   return (
     <span style={{
       fontSize: sz(9), fontFamily: theme.font.mono,

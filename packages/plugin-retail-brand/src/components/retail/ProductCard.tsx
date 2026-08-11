@@ -1,4 +1,4 @@
-import { useTheme } from "@trustgraph/trustkit";
+import { useTheme, Button } from "@trustgraph/trustkit";
 import { withGlow } from "@trustgraph/trustkit";
 import type { RecommendedProduct } from "../../hooks/useRetailBuild";
 
@@ -186,23 +186,14 @@ export function ProductCard({ product, onSelect, rank }: ProductCardProps) {
 
       {/* Select button */}
       <div style={{ padding: "0 12px 10px" }}>
-        <button
+        <Button
           onClick={onSelect}
           disabled={!product.inStock}
-          style={{
-            width: "100%",
-            padding: "7px 0",
-            borderRadius: 6,
-            border: `1px solid ${product.inStock ? withGlow(theme.palette.blue, 0.3) : theme.border.subtle}`,
-            background: product.inStock ? withGlow(theme.palette.blue, 0.08) : theme.surface.card,
-            color: product.inStock ? theme.palette.blue : theme.text.disabled,
-            fontSize: sz(11), fontWeight: 600,
-            fontFamily: theme.font.mono,
-            cursor: product.inStock ? "pointer" : "not-allowed",
-          }}
+          color={theme.palette.blue}
+          style={{ width: "100%" }}
         >
           {product.inStock ? "Select" : "Unavailable"}
-        </button>
+        </Button>
       </div>
     </div>
   );

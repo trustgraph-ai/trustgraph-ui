@@ -19,6 +19,8 @@ export { Button } from "./Button";
 export { Select } from "./Select";
 export { FormLabel } from "./FormLabel";
 export { SelectableListItem } from "./SelectableListItem";
+export { QueryWorkbench } from "./QueryWorkbench";
+export type { QueryExample, QueryPresetItem } from "./QueryWorkbench";
 
 // New foundation components
 export { TextInput } from "./TextInput";

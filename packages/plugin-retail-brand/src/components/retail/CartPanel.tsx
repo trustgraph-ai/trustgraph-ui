@@ -1,4 +1,4 @@
-import { useTheme } from "@trustgraph/trustkit";
+import { useTheme, Button } from "@trustgraph/trustkit";
 import { withGlow } from "@trustgraph/trustkit";
 import type { CartItem } from "../../hooks/useRetailCart";
 import type { RecommendedProduct } from "../../hooks/useRetailBuild";
@@ -111,21 +111,14 @@ function ExtraItemRow({ item, onRemove }: { item: CartItem; onRemove: () => void
       }}>
         ${item.price.toFixed(0)}
       </span>
-      <button
+      <Button
+        size="sm"
         onClick={onRemove}
-        style={{
-          background: "none",
-          border: "none",
-          color: theme.text.hint,
-          cursor: "pointer",
-          fontSize: sz(12),
-          padding: "0 4px",
-          fontFamily: theme.font.mono,
-        }}
         title="Remove"
+        style={{ padding: "0 4px", color: theme.text.hint }}
       >
         x
-      </button>
+      </Button>
     </div>
   );
 }
@@ -185,23 +178,14 @@ function CrossSellCard({ product, onAdd }: { product: RecommendedProduct; onAdd:
         </div>
       </div>
       <div style={{ padding: "0 12px 10px" }}>
-        <button
+        <Button
           onClick={onAdd}
           disabled={!product.inStock}
-          style={{
-            width: "100%",
-            padding: "7px 0",
-            borderRadius: 6,
-            border: `1px solid ${product.inStock ? withGlow(theme.palette.cyan, 0.3) : theme.border.subtle}`,
-            background: product.inStock ? withGlow(theme.palette.cyan, 0.08) : theme.surface.card,
-            color: product.inStock ? theme.palette.cyan : theme.text.disabled,
-            fontSize: sz(11), fontWeight: 600,
-            fontFamily: theme.font.mono,
-            cursor: product.inStock ? "pointer" : "not-allowed",
-          }}
+          color={theme.palette.cyan}
+          style={{ width: "100%" }}
         >
           {product.inStock ? "Add to Cart" : "Unavailable"}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -370,24 +354,14 @@ export function CartPanel({
 
       {/* Place order button */}
       {isFinalized && (
-        <button
+        <Button
           onClick={onPlaceOrder}
-          style={{
-            width: "100%",
-            padding: "14px 0",
-            borderRadius: 8,
-            border: `1px solid ${theme.palette.emerald}`,
-            background: withGlow(theme.palette.emerald, 0.12),
-            color: theme.palette.emerald,
-            fontSize: sz(14),
-            fontWeight: 700,
-            fontFamily: theme.font.mono,
-            cursor: "pointer",
-            letterSpacing: 0.5,
-          }}
+          color={theme.palette.emerald}
+          size="lg"
+          style={{ width: "100%", letterSpacing: 0.5 }}
         >
           Place Order
-        </button>
+        </Button>
       )}
 
       <style>{`

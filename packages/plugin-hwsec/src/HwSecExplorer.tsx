@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useTheme, LoadingState } from "@trustgraph/trustkit";
+import { useTheme, LoadingState, Input } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useHwSecData } from "./useHwSecData";
 import type { HwNode } from "./useHwSecData";
@@ -77,7 +77,7 @@ function securityKindLabel(kind: string): string {
 }
 
 function Section({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
-  const { sz } = useTheme();
+  const { theme, sz } = useTheme();
   return (
     <div style={{ marginBottom: 18 }}>
       <div style={{
@@ -735,20 +735,11 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
           Hardware Security Explorer
         </div>
 
-        <input
-          type="text"
+        <Input
           placeholder="Search entities..."
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          style={{
-            flex: 1, maxWidth: 300,
-            padding: "5px 10px", borderRadius: 6,
-            background: "rgba(255,255,255,0.03)",
-            border: `1px solid ${theme.border.default}`,
-            color: theme.text.primary, fontSize: sz(11),
-            fontFamily: theme.font.sans,
-            outline: "none",
-          }}
+          onChange={setSearchTerm}
+          style={{ flex: 1, maxWidth: 300, fontSize: sz(11) }}
         />
 
         <div style={{
