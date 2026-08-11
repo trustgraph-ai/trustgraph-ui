@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { useTheme } from "@trustgraph/trustkit";
+import { useTheme, Button } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useLawData } from "./useLawData";
 import type {
@@ -1343,24 +1343,20 @@ export function LawExplorer(_props: LawExplorerProps) {
           overflow: "hidden",
         }}>
           {(["en", "lt"] as const).map(l => (
-            <button
+            <Button
               key={l}
+              size="sm"
+              active={lang === l}
               onClick={() => setLang(l)}
               style={{
-                padding: "4px 12px",
-                fontSize: sz(11),
-                fontWeight: 600,
-                fontFamily: theme.font.mono,
-                background: lang === l ? theme.palette.amber + "20" : "transparent",
-                color: lang === l ? theme.palette.amber : theme.text.subtle,
-                border: "none",
-                cursor: "pointer",
                 textTransform: "uppercase",
+                borderRadius: 0,
                 borderRight: l === "en" ? "1px solid rgba(255,255,255,0.1)" : "none",
+                ...(lang === l ? { background: theme.palette.amber + "20", color: theme.palette.amber } : {}),
               }}
             >
               {l}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -1381,27 +1377,27 @@ export function LawExplorer(_props: LawExplorerProps) {
           {MODE_META.map(m => {
             const isActive = mode === m.key;
             return (
-              <button
+              <Button
                 key={m.key}
                 onClick={() => { setMode(m.key); setSelectedUri(null); }}
-                title={lang === "lt" ? m.lt : m.en}
+                active={isActive}
                 style={{
                   width: 40,
                   height: 40,
                   borderRadius: 8,
-                  border: "none",
-                  background: isActive ? theme.palette[m.paletteKey] + "18" : "transparent",
-                  color: isActive ? theme.palette[m.paletteKey] : theme.text.hint,
                   fontSize: sz(18),
-                  cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  transition: "all 0.15s ease",
+                  padding: 0,
+                  ...(isActive
+                    ? { background: theme.palette[m.paletteKey] + "18", color: theme.palette[m.paletteKey] }
+                    : { color: theme.text.hint }),
                 }}
+                title={lang === "lt" ? m.lt : m.en}
               >
                 {m.icon}
-              </button>
+              </Button>
             );
           })}
         </div>

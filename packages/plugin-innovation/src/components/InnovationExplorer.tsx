@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useTheme, LoadingState } from "@trustgraph/trustkit";
+import { useTheme, LoadingState, Button, Input } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useInnovationData } from "../useInnovationData";
 import type { IINode } from "../useInnovationData";
@@ -141,7 +141,7 @@ function matchesCategory(node: IINode, cat: CategoryFilter): boolean {
 }
 
 function Section({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
-  const { sz } = useTheme();
+  const { theme, sz } = useTheme();
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{
@@ -473,19 +473,14 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
         fontFamily: theme.font.mono, fontSize: sz(11),
       }}>
         {([["browse", "⊞ Browse"], ["pathfinder", "⇢ Pathfinder"], ["gtm", "🚀 GTM Advisor"]] as const).map(([m, label]) => (
-          <button
+          <Button
             key={m}
+            size="sm"
+            active={mode === m}
             onClick={() => setMode(m)}
-            style={{
-              padding: "5px 14px", borderRadius: 5, border: "none", cursor: "pointer",
-              background: mode === m ? "rgba(255,255,255,0.08)" : "transparent",
-              color: mode === m ? theme.text.primary : theme.text.faint,
-              fontFamily: theme.font.mono, fontSize: sz(11),
-              fontWeight: mode === m ? 600 : 400, transition: "all 0.15s",
-            }}
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -541,34 +536,23 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
 
         {/* Search */}
         <div style={{ padding: "10px 12px 6px", borderBottom: `1px solid ${theme.border.subtle}` }}>
-          <input
+          <Input
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={setSearchTerm}
             placeholder="Search entities..."
-            style={{
-              width: "100%", padding: "7px 10px", borderRadius: 6, fontSize: sz(12),
-              background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
-              color: theme.text.primary, outline: "none",
-              fontFamily: theme.font.sans,
-            }}
           />
           {/* Category filters */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8, marginBottom: 4 }}>
             {CATEGORIES.map(c => (
-              <button
+              <Button
                 key={c.key}
+                size="sm"
+                active={category === c.key}
                 onClick={() => setCategory(c.key)}
-                style={{
-                  padding: "3px 8px", borderRadius: 4, fontSize: sz(10), border: "none",
-                  cursor: "pointer",
-                  background: category === c.key ? `${c.color}22` : "transparent",
-                  color: category === c.key ? c.color : theme.text.faint,
-                  fontFamily: theme.font.mono,
-                  transition: "all 0.15s",
-                }}
+                style={category === c.key ? { background: `${c.color}22`, color: c.color } : { color: theme.text.faint }}
               >
                 {c.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

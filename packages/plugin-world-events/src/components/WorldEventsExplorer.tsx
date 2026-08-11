@@ -3,7 +3,7 @@ import { geoNaturalEarth1, geoPath, geoContains } from "d3-geo";
 import type { GeoPermissibleObjects } from "d3-geo";
 import { feature } from "topojson-client";
 import type { Topology } from "topojson-specification";
-import { useTheme, LoadingState } from "@trustgraph/trustkit";
+import { useTheme, LoadingState, Button } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useWorldEvents } from "../useWorldEvents";
 import type { WorldEvent, EventSummary, GridCell, SearchFilters } from "../useWorldEvents";
@@ -289,68 +289,56 @@ export function WorldEventsExplorer({
           const c = colorForType(et.type);
           const isActive = activeTypes.size === 0 || activeTypes.has(et.type);
           return (
-            <button
+            <Button
               key={et.type}
+              size="sm"
+              active={isActive}
               onClick={() => toggleType(et.type)}
               style={{
-                padding: "2px 8px",
                 borderRadius: 10,
                 border: `1px solid ${isActive ? c + "66" : theme.border.default}`,
                 background: isActive ? c + "15" : "transparent",
                 color: isActive ? c : theme.text.disabled,
-                fontSize: sz(9),
-                fontFamily: theme.font.mono,
-                cursor: "pointer",
-                transition: "all 0.15s",
                 opacity: isActive ? 1 : 0.5,
                 whiteSpace: "nowrap",
               }}
             >
               {et.label}
               <span style={{ marginLeft: 4, opacity: 0.5 }}>{et.count}</span>
-            </button>
+            </Button>
           );
         })}
 
         <div style={{ flex: 1 }} />
 
         {selectedCell && (
-          <button
+          <Button
+            size="sm"
             onClick={() => setSelectedCell(null)}
-            style={{
-              padding: "2px 8px", borderRadius: 10,
-              border: `1px solid ${theme.palette.cyan}44`, background: theme.palette.cyan + "15",
-              color: theme.palette.cyan, fontSize: sz(9), fontFamily: theme.font.mono, cursor: "pointer",
-            }}
+            style={{ borderRadius: 10, border: `1px solid ${theme.palette.cyan}44`, background: theme.palette.cyan + "15", color: theme.palette.cyan }}
           >
             Region {selectedCell.avgLat.toFixed(0)},{selectedCell.avgLon.toFixed(0)} x
-          </button>
+          </Button>
         )}
 
         {selectedCountry && (
-          <button
+          <Button
+            size="sm"
             onClick={() => { setSelectedCountry(null); setSelectedCell(null); }}
-            style={{
-              padding: "2px 8px", borderRadius: 10,
-              border: `1px solid ${theme.palette.amber}44`, background: theme.palette.amber + "15",
-              color: theme.palette.amber, fontSize: sz(9), fontFamily: theme.font.mono, cursor: "pointer",
-            }}
+            style={{ borderRadius: 10, border: `1px solid ${theme.palette.amber}44`, background: theme.palette.amber + "15", color: theme.palette.amber }}
           >
             {selectedCountry} x
-          </button>
+          </Button>
         )}
 
         {hasFilters && (
-          <button
+          <Button
+            size="sm"
             onClick={clearFilters}
-            style={{
-              padding: "2px 8px", borderRadius: 10,
-              border: `1px solid ${theme.border.default}`, background: "transparent",
-              color: theme.text.faint, fontSize: sz(9), fontFamily: theme.font.mono, cursor: "pointer",
-            }}
+            style={{ borderRadius: 10 }}
           >
             Clear all
-          </button>
+          </Button>
         )}
 
         <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: theme.font.mono }}>
@@ -527,7 +515,7 @@ export function WorldEventsExplorer({
                     {listEvents.map(e => {
                       const c = colorForType(e.type);
                       return (
-                        <button
+                        <Button
                           key={e.id}
                           onClick={() => handleEventSelect(e)}
                           disabled={detailLoading}
@@ -536,16 +524,11 @@ export function WorldEventsExplorer({
                             alignItems: "flex-start",
                             gap: 8,
                             padding: "8px 14px",
-                            border: "none",
+                            borderRadius: 0,
                             borderBottom: `1px solid ${theme.border.default}`,
-                            background: "transparent",
-                            cursor: detailLoading ? "wait" : "pointer",
                             textAlign: "left",
                             width: "100%",
-                            transition: "background 0.15s",
                           }}
-                          onMouseEnter={(ev) => { (ev.target as HTMLElement).closest("button")!.style.background = "rgba(255,255,255,0.03)"; }}
-                          onMouseLeave={(ev) => { (ev.target as HTMLElement).closest("button")!.style.background = "transparent"; }}
                         >
                           <div style={{
                             width: 6, height: 6, borderRadius: 3,
@@ -570,7 +553,7 @@ export function WorldEventsExplorer({
                               {e.yearLabel}
                             </div>
                           </div>
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>
@@ -605,16 +588,13 @@ function EventDetail({ event, typeColor, onBack, theme, sz, outcomeColors }: {
 
   return (
     <div style={{ padding: 20 }}>
-      <button
+      <Button
+        size="sm"
         onClick={onBack}
-        style={{
-          background: "none", border: "none", color: theme.text.hint,
-          fontSize: sz(10), cursor: "pointer", padding: "2px 0", marginBottom: 16,
-          fontFamily: theme.font.mono,
-        }}
+        style={{ padding: "2px 0", marginBottom: 16, color: theme.text.hint }}
       >
         &larr; Back to list
-      </button>
+      </Button>
 
       <div style={{
         fontSize: sz(9), fontFamily: theme.font.mono,

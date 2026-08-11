@@ -2,7 +2,7 @@ import { useTheme } from "../../theme/ThemeContext";
 
 type ButtonSize = "sm" | "md" | "lg";
 
-interface ButtonProps {
+export interface ButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
@@ -10,6 +10,9 @@ interface ButtonProps {
   active?: boolean;
   size?: ButtonSize;
   style?: React.CSSProperties;
+  title?: string;
+  onMouseEnter?: React.MouseEventHandler<HTMLButtonElement>;
+  onMouseLeave?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 const sizeStyles: Record<ButtonSize, { padding: string; borderRadius: number }> = {
@@ -26,6 +29,9 @@ export function Button({
   active = true,
   size = "md",
   style,
+  title,
+  onMouseEnter,
+  onMouseLeave,
 }: ButtonProps) {
   const { theme, sz } = useTheme();
   const c = color ?? theme.palette.emerald;
@@ -35,6 +41,9 @@ export function Button({
     <button
       onClick={onClick}
       disabled={disabled}
+      title={title}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       style={{
         padding,
         borderRadius,

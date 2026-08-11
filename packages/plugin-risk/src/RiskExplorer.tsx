@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useTheme, LoadingState } from "@trustgraph/trustkit";
+import { useTheme, LoadingState, Input } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useRiskData } from "./useRiskData";
 import type { RiskNode } from "./useRiskData";
@@ -53,7 +53,8 @@ function kindLabel(kind: string): string {
 
 /* ── shared sub-components ────────────────────────────────────────── */
 
-function Section({ title, color, children, sz }: { title: string; color: string; children: React.ReactNode; sz: (n: number) => number }) {
+function Section({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
+  const { theme, sz } = useTheme();
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{
@@ -389,7 +390,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         </div>
 
         {/* Risk heat grid */}
-        <Section title="Risk Scores" color={theme.palette.rose} sz={sz}>
+        <Section title="Risk Scores" color={theme.palette.rose}>
           {sortedRisksByScore.length === 0 ? (
             <div style={{ fontSize: sz(11), color: theme.text.faint }}>No risks loaded</div>
           ) : (
@@ -442,7 +443,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         </Section>
 
         {/* Top actors */}
-        <Section title="Top Actors by Event Count" color={theme.palette.amber} sz={sz}>
+        <Section title="Top Actors by Event Count" color={theme.palette.amber}>
           {topActorsByEventCount.length === 0 ? (
             <div style={{ fontSize: sz(11), color: theme.text.faint }}>No actors in time window</div>
           ) : (
@@ -493,7 +494,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         </Section>
 
         {/* Most impacted assets */}
-        <Section title="Most Impacted Assets" color={theme.palette.blue} sz={sz}>
+        <Section title="Most Impacted Assets" color={theme.palette.blue}>
           {topAssetsByEventCount.length === 0 ? (
             <div style={{ fontSize: sz(11), color: theme.text.faint }}>No assets in time window</div>
           ) : (
@@ -554,7 +555,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
       <div>
         {renderDetailHeader(node)}
 
-        <Section title="Connected Risks" color={theme.palette.rose} sz={sz}>
+        <Section title="Connected Risks" color={theme.palette.rose}>
           {conn.connRisks.size === 0 ? (
             <div style={{ fontSize: sz(11), color: theme.text.faint }}>No risks in time window</div>
           ) : (
@@ -600,7 +601,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           )}
         </Section>
 
-        <Section title="Impacted Assets" color={theme.palette.blue} sz={sz}>
+        <Section title="Impacted Assets" color={theme.palette.blue}>
           {conn.connAssets.size === 0 ? (
             <div style={{ fontSize: sz(11), color: theme.text.faint }}>No assets in time window</div>
           ) : (
@@ -658,7 +659,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           {renderDescription(node.uri)}
         </div>
 
-        <Section title="Threat Actors" color={theme.palette.amber} sz={sz}>
+        <Section title="Threat Actors" color={theme.palette.amber}>
           {conn.connActors.size === 0 ? (
             <div style={{ fontSize: sz(11), color: theme.text.faint }}>No actors in time window</div>
           ) : (
@@ -676,7 +677,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           )}
         </Section>
 
-        <Section title="Impacted Assets" color={theme.palette.blue} sz={sz}>
+        <Section title="Impacted Assets" color={theme.palette.blue}>
           {conn.connAssets.size === 0 ? (
             <div style={{ fontSize: sz(11), color: theme.text.faint }}>No assets in time window</div>
           ) : (
@@ -707,7 +708,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
       <div>
         {renderDetailHeader(node)}
 
-        <Section title="Threat Actors" color={theme.palette.amber} sz={sz}>
+        <Section title="Threat Actors" color={theme.palette.amber}>
           {conn.connActors.size === 0 ? (
             <div style={{ fontSize: sz(11), color: theme.text.faint }}>No actors in time window</div>
           ) : (
@@ -725,7 +726,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           )}
         </Section>
 
-        <Section title="Associated Risks" color={theme.palette.rose} sz={sz}>
+        <Section title="Associated Risks" color={theme.palette.rose}>
           {conn.connRisks.size === 0 ? (
             <div style={{ fontSize: sz(11), color: theme.text.faint }}>No risks in time window</div>
           ) : (
@@ -805,7 +806,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         </div>
 
         {/* Actor / Risk / Asset badges */}
-        <Section title="Actor" color={theme.palette.amber} sz={sz}>
+        <Section title="Actor" color={theme.palette.amber}>
           <div style={{ display: "flex", flexWrap: "wrap" }}>
             {eventActors.length === 0
               ? <span style={{ fontSize: sz(11), color: theme.text.faint }}>None</span>
@@ -815,7 +816,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           </div>
         </Section>
 
-        <Section title="Risk" color={theme.palette.rose} sz={sz}>
+        <Section title="Risk" color={theme.palette.rose}>
           <div style={{ display: "flex", flexWrap: "wrap" }}>
             {eventRisks.length === 0
               ? <span style={{ fontSize: sz(11), color: theme.text.faint }}>None</span>
@@ -829,7 +830,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
           </div>
         </Section>
 
-        <Section title="Asset" color={theme.palette.blue} sz={sz}>
+        <Section title="Asset" color={theme.palette.blue}>
           <div style={{ display: "flex", flexWrap: "wrap" }}>
             {eventAssets.length === 0
               ? <span style={{ fontSize: sz(11), color: theme.text.faint }}>None</span>
@@ -841,7 +842,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
 
         {/* Incident Response */}
         {processes.length > 0 && (
-          <Section title="Incident Response" color={theme.palette.emerald} sz={sz}>
+          <Section title="Incident Response" color={theme.palette.emerald}>
             {processes.map(procUri => renderProcessDetail(procUri))}
           </Section>
         )}
@@ -1009,7 +1010,7 @@ export function RiskExplorer(_props: RiskExplorerProps) {
 
   function renderEventList(title: string, eventUris: string[]) {
     return (
-      <Section title={title} color={theme.palette.cyan} sz={sz}>
+      <Section title={title} color={theme.palette.cyan}>
         {eventUris.length === 0 ? (
           <div style={{ fontSize: sz(11), color: theme.text.faint }}>No events in time window</div>
         ) : (
@@ -1314,17 +1315,10 @@ export function RiskExplorer(_props: RiskExplorerProps) {
         }}>
           {/* Search */}
           <div style={{ padding: "10px 12px 8px", borderBottom: `1px solid ${theme.border.subtle}` }}>
-            <input
+            <Input
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+              onChange={setSearchTerm}
               placeholder="Search actors, risks, assets..."
-              className="risk-explorer-search"
-              style={{
-                width: "100%", padding: "7px 10px", borderRadius: 6, fontSize: sz(12),
-                background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
-                color: theme.text.primary, outline: "none",
-                fontFamily: theme.font.sans,
-              }}
             />
           </div>
 

@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { useTheme, StreamingResponse } from "@trustgraph/trustkit";
+import { useTheme, StreamingResponse, Button, Input } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useInference } from "@trustgraph/react-state";
 import type { IINode } from "../useInnovationData";
@@ -112,18 +112,13 @@ function EntityPicker({
           >✕</span>
         </div>
       ) : (
-        <input
+        <Input
           value={search}
-          onChange={e => { setSearch(e.target.value); setOpen(true); }}
+          onChange={v => { setSearch(v); setOpen(true); }}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
           autoFocus={open}
-          style={{
-            width: "100%", padding: "8px 12px", borderRadius: 6, fontSize: sz(13),
-            background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
-            color: theme.text.primary, outline: "none",
-            fontFamily: theme.font.sans,
-          }}
+          style={{ fontSize: sz(13) }}
         />
       )}
       {open && matches.length > 0 && (
@@ -846,20 +841,13 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
                     Use AI to synthesise the above intelligence into an actionable GTM plan
                   </div>
                 </div>
-                <button
+                <Button
                   onClick={handleGenerate}
                   disabled={isStreaming}
-                  style={{
-                    padding: "8px 20px", borderRadius: 6, cursor: "pointer",
-                    background: isStreaming ? "rgba(255,255,255,0.04)" : `${theme.palette.emerald}22`,
-                    color: isStreaming ? theme.text.faint : theme.palette.emerald,
-                    fontSize: sz(12), fontWeight: 600, border: `1px solid ${theme.palette.emerald}44`,
-                    fontFamily: theme.font.mono,
-                    transition: "all 0.15s",
-                  }}
+                  color={theme.palette.emerald}
                 >
                   {isStreaming ? "Generating..." : "Generate"}
-                </button>
+                </Button>
               </div>
             )}
 

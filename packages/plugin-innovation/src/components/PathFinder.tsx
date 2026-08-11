@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { useTheme } from "@trustgraph/trustkit";
+import { useTheme, Button, Input } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import type { IINode } from "../useInnovationData";
 
@@ -121,18 +121,13 @@ function EntityPicker({
           >✕</span>
         </div>
       ) : (
-        <input
+        <Input
           value={search}
-          onChange={e => { setSearch(e.target.value); setOpen(true); }}
+          onChange={v => { setSearch(v); setOpen(true); }}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
           autoFocus={open}
-          style={{
-            width: "100%", padding: "8px 12px", borderRadius: 6, fontSize: sz(13),
-            background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
-            color: theme.text.primary, outline: "none",
-            fontFamily: theme.font.sans,
-          }}
+          style={{ fontSize: sz(13) }}
         />
       )}
       {open && matches.length > 0 && (
@@ -755,23 +750,13 @@ export function PathFinder({ nodes, abbreviations, adjacency, onSelectNode }: Pa
             />
           </div>
           <div style={{ paddingTop: 16 }}>
-            <button
+            <Button
               onClick={handleFind}
               disabled={!startUri || !endUri || startUri === endUri || searching}
-              style={{
-                padding: "8px 20px", borderRadius: 6,
-                background: startUri && endUri && startUri !== endUri
-                  ? `${theme.palette.emerald}22` : "rgba(255,255,255,0.04)",
-                color: startUri && endUri && startUri !== endUri
-                  ? theme.palette.emerald : theme.text.faint,
-                fontSize: sz(12), fontWeight: 600, cursor: "pointer",
-                fontFamily: theme.font.mono,
-                transition: "all 0.15s",
-                border: `1px solid ${startUri && endUri ? theme.palette.emerald + "44" : theme.border.default}`,
-              }}
+              color={theme.palette.emerald}
             >
               {searching ? "Searching..." : "Find Paths"}
-            </button>
+            </Button>
           </div>
         </div>
 

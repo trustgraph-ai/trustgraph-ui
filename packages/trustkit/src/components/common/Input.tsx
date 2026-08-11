@@ -8,12 +8,14 @@ interface InputProps {
   disabled?: boolean;
   onSubmit?: () => void;
   onCancel?: () => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
   autoFocus?: boolean;
   style?: React.CSSProperties;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  function Input({ value, onChange, placeholder, disabled, onSubmit, onCancel, autoFocus, style }, ref) {
+  function Input({ value, onChange, placeholder, disabled, onSubmit, onCancel, onFocus, onBlur, autoFocus, style }, ref) {
     const { theme, sz } = useTheme();
 
     return (
@@ -34,6 +36,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         placeholder={placeholder}
         disabled={disabled}
         autoFocus={autoFocus}
+        onFocus={onFocus}
+        onBlur={onBlur}
         style={{
           padding: "5px 8px",
           borderRadius: 4,

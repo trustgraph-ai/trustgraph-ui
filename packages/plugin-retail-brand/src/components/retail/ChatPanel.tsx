@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useTheme } from "@trustgraph/trustkit";
+import { useTheme, Button } from "@trustgraph/trustkit";
 import { withGlow } from "@trustgraph/trustkit";
 import type { ChatMessage } from "../../hooks/useRetailChat";
 
@@ -149,28 +149,21 @@ export function ChatPanel({
               }}
             >
               {suggestedPrompts.map((prompt) => (
-                <button
+                <Button
                   key={prompt}
                   onClick={() => {
                     setInput(prompt);
                     inputRef.current?.focus();
                   }}
                   style={{
-                    padding: "8px 14px",
-                    borderRadius: 8,
-                    border: `1px solid ${theme.border.medium}`,
-                    background: theme.surface.card,
-                    color: theme.text.muted,
-                    fontSize: sz(12),
-                    cursor: "pointer",
-                    fontFamily: theme.font.sans,
                     maxWidth: 320,
                     textAlign: "left",
                     lineHeight: 1.4,
+                    fontFamily: theme.font.sans,
                   }}
                 >
                   {prompt}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -227,29 +220,14 @@ export function ChatPanel({
             lineHeight: 1.5,
           }}
         />
-        <button
+        <Button
           onClick={handleSubmit}
           disabled={!input.trim() || isQuerying}
-          style={{
-            padding: "10px 18px",
-            borderRadius: 8,
-            border: `1px solid ${theme.palette.emerald}44`,
-            background:
-              !input.trim() || isQuerying
-                ? theme.surface.card
-                : `${theme.palette.emerald}1a`,
-            color:
-              !input.trim() || isQuerying ? theme.text.disabled : theme.palette.emerald,
-            cursor:
-              !input.trim() || isQuerying ? "not-allowed" : "pointer",
-            fontSize: sz(13),
-            fontWeight: 600,
-            fontFamily: theme.font.mono,
-            whiteSpace: "nowrap",
-          }}
+          color={theme.palette.emerald}
+          style={{ whiteSpace: "nowrap" }}
         >
           {isQuerying ? "..." : "Send"}
-        </button>
+        </Button>
       </div>
 
       <style>{`

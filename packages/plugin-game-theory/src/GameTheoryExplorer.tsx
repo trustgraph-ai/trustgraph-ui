@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useGameTheoryData } from "./useGameTheoryData";
 import type { GTNode } from "./useGameTheoryData";
-import { useTheme } from "@trustgraph/trustkit";
+import { useTheme, Button, Select } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 
 const GT_SPINNER_ID = "gt-spinner-keyframes";
@@ -57,7 +57,8 @@ const NODE_SIZE = 30;
 /*  Helper: Section header                                             */
 /* ------------------------------------------------------------------ */
 
-function Section({ title, color, borderColor, sz, children }: { title: string; color: string; borderColor?: string; sz: (px: number) => number; children: React.ReactNode }) {
+function Section({ title, color, borderColor, children }: { title: string; color: string; borderColor?: string; children: React.ReactNode }) {
+  const { theme, sz } = useTheme();
   return (
     <div style={{ marginBottom: sz(16) }}>
       <div style={{
@@ -1135,7 +1136,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
           </div>
         )}
         {actions.length > 0 && (
-          <Section title="Actions" color={theme.text.subtle} sz={sz}>
+          <Section title="Actions" color={theme.text.subtle}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
               {actions.map(au => (
                 <span key={au} style={{
@@ -1150,7 +1151,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
           </Section>
         )}
         {payoffUris.length > 0 && (
-          <Section title="Payoffs" color={theme.text.subtle} sz={sz}>
+          <Section title="Payoffs" color={theme.text.subtle}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {payoffUris.map(pu => {
                 const plUri = data.payoffPlayer.get(pu);
@@ -1250,38 +1251,28 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
         alignItems: "center",
       }}>
         {([["tree", "\u229E Game Tree"], ["matrix", "\u229E Payoff Matrix"], ["sandbox", "\u229E Sandbox"]] as const).map(([m, label]) => (
-          <button
+          <Button
             key={m}
+            size="sm"
+            active={mode === m}
             onClick={() => setMode(m as ExplorerMode)}
-            style={{
-              padding: "5px 14px", borderRadius: 5, border: "none", cursor: "pointer",
-              background: mode === m ? theme.surface.cardHover : "transparent",
-              color: mode === m ? theme.text.primary : theme.text.faint,
-              fontFamily: theme.font.mono, fontSize: sz(11),
-              fontWeight: mode === m ? 600 : 400, transition: "all 0.15s",
-            }}
           >
             {label}
-          </button>
+          </Button>
         ))}
 
         <div style={{ flex: 1 }} />
 
         {games.length > 1 && (
-          <select
+          <Select
             value={activeGameUri || ""}
-            onChange={e => setSelectedGameUri(e.target.value || null)}
-            style={{
-              background: theme.surface.cardHover, border: `1px solid ${theme.border.medium}`,
-              borderRadius: 4, padding: "3px 8px", color: theme.text.secondary,
-              fontFamily: theme.font.mono, fontSize: sz(10),
-              outline: "none",
-            }}
+            onChange={v => setSelectedGameUri(v || null)}
+            style={{ fontSize: sz(10) }}
           >
             {games.map(g => (
               <option key={g.uri} value={g.uri}>{g.label}</option>
             ))}
-          </select>
+          </Select>
         )}
       </div>
 
@@ -1333,22 +1324,14 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
               }}>
                 Parameter Sandbox
               </div>
-              <button
-                onClick={resetOverrides}
-                style={{
-                  padding: "2px 8px", borderRadius: 3, border: `1px solid ${theme.border.medium}`,
-                  background: theme.surface.cardHover, color: theme.text.muted,
-                  fontFamily: theme.font.mono, fontSize: sz(9),
-                  cursor: "pointer",
-                }}
-              >
+              <Button size="sm" onClick={resetOverrides}>
                 Reset
-              </button>
+              </Button>
             </div>
 
             {/* Probability sliders */}
             {chanceActions.length > 0 && (
-              <Section title="Probabilities" color={theme.palette.cyan} sz={sz}>
+              <Section title="Probabilities" color={theme.palette.cyan}>
                 {chanceActions.map(ca => {
                   const val = probOverrides.get(ca.actionUri) ?? data.probabilities.get(ca.actionUri) ?? 0;
                   return (
@@ -1380,7 +1363,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
 
             {/* Payoff sliders */}
             {payoffEntries.length > 0 && (
-              <Section title="Payoffs" color={theme.palette.amber} sz={sz}>
+              <Section title="Payoffs" color={theme.palette.amber}>
                 {payoffEntries.map(pe => {
                   const val = utilOverrides.get(pe.payoffUri) ?? data.utilities.get(pe.payoffUri) ?? 0;
                   const col = playerColorMap.get(pe.playerUri) || theme.text.muted;

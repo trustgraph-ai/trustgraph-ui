@@ -5,6 +5,9 @@ import { useMcpToolInvoke } from "../../hooks/useMcpToolInvoke";
 import type { SelectedItem, AgentPattern, AgentTaskType, AgentTool, ToolArgument, McpTool, ToolService } from "./types";
 import { LoadingState } from "../common";
 import { useTheme } from "../../theme/ThemeContext";
+import { Button } from "../common/Button";
+import { Input } from "../common/Input";
+import { FormLabel } from "../common/FormLabel";
 
 interface ConfigEditorProps {
   selected: SelectedItem | null;
@@ -62,16 +65,9 @@ function Editor({ selected, onDelete }: { selected: SelectedItem; onDelete?: () 
         marginBottom: 16,
       }}>
         <div>
-          <div style={{
-            fontSize: sz(10),
-            fontFamily: theme.font.mono,
-            fontWeight: 600,
-            color: kindColor(selected.kind, theme.palette),
-            letterSpacing: "0.1em",
-            marginBottom: 4,
-          }}>
+          <FormLabel style={{ color: kindColor(selected.kind, theme.palette) }}>
             {kindLabel(selected.kind)}
-          </div>
+          </FormLabel>
           <div style={{
             fontSize: sz(18),
             fontWeight: 700,
@@ -80,24 +76,11 @@ function Editor({ selected, onDelete }: { selected: SelectedItem; onDelete?: () 
             {selected.key}
           </div>
         </div>
-        <button
-          onClick={handleDelete}
-          disabled={isDeleting}
-          style={{
-            padding: "5px 12px",
-            borderRadius: 4,
-            border: `1px solid ${theme.palette.rose}33`,
-            background: "transparent",
-            color: theme.palette.rose,
-            fontSize: sz(10),
-            fontFamily: theme.font.mono,
-            fontWeight: 600,
-            cursor: isDeleting ? "wait" : "pointer",
-            opacity: isDeleting ? 0.5 : 1,
-          }}
-        >
+        <Button size="md" onClick={handleDelete} disabled={isDeleting}
+          color={theme.palette.rose} active={false}
+          style={{ border: `1px solid ${theme.palette.rose}33`, color: theme.palette.rose }}>
           {isDeleting ? "Deleting..." : "Delete"}
-        </button>
+        </Button>
       </div>
 
       {selected.kind === "agent-pattern" && (
@@ -153,44 +136,11 @@ interface FieldsProps<T> {
 // ── Common form primitives ───────────────────────────────────────
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  const { theme, sz } = useTheme();
   return (
     <div style={{ marginBottom: 14 }}>
-      <div style={{
-        fontSize: sz(9),
-        fontFamily: theme.font.mono,
-        color: theme.text.faint,
-        letterSpacing: "0.1em",
-        textTransform: "uppercase",
-        marginBottom: 4,
-      }}>
-        {label}
-      </div>
+      <FormLabel>{label.toUpperCase()}</FormLabel>
       {children}
     </div>
-  );
-}
-
-function TextInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
-  const { theme, sz } = useTheme();
-  return (
-    <input
-      type="text"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      style={{
-        width: "100%",
-        padding: "7px 10px",
-        borderRadius: 6,
-        border: `1px solid ${theme.border.default}`,
-        background: theme.surface.card,
-        color: theme.text.primary,
-        fontSize: sz(12),
-        fontFamily: theme.font.mono,
-        outline: "none",
-      }}
-    />
   );
 }
 
@@ -219,50 +169,14 @@ function TextArea({ value, onChange, rows = 3, placeholder }: { value: string; o
   );
 }
 
-function NumberInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const { theme, sz } = useTheme();
-  return (
-    <input
-      type="number"
-      value={value}
-      onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)}
-      style={{
-        width: 100,
-        padding: "7px 10px",
-        borderRadius: 6,
-        border: `1px solid ${theme.border.default}`,
-        background: theme.surface.card,
-        color: theme.text.primary,
-        fontSize: sz(12),
-        fontFamily: theme.font.mono,
-        outline: "none",
-      }}
-    />
-  );
-}
-
 function SaveButton({ onClick, isDirty, isSaving, saveError }: { onClick: () => void; isDirty: boolean; isSaving?: boolean; saveError?: string | null }) {
   const { theme, sz } = useTheme();
   return (
     <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 12 }}>
-      <button
-        onClick={onClick}
-        disabled={!isDirty || isSaving}
-        style={{
-          padding: "7px 18px",
-          borderRadius: 6,
-          border: `1px solid ${isDirty ? theme.palette.emerald + "44" : theme.border.default}`,
-          background: isDirty ? `${theme.palette.emerald}1a` : "transparent",
-          color: isDirty ? theme.palette.emerald : theme.text.faint,
-          fontSize: sz(11),
-          fontFamily: theme.font.mono,
-          fontWeight: 600,
-          cursor: isDirty && !isSaving ? "pointer" : "default",
-          transition: "all 0.2s",
-        }}
-      >
+      <Button size="lg" onClick={onClick} disabled={!isDirty || isSaving}
+        color={theme.palette.emerald} active={isDirty}>
         {isSaving ? "Saving..." : "Save"}
-      </button>
+      </Button>
       {saveError && (
         <span style={{ fontSize: sz(11), color: theme.palette.red }}>{saveError}</span>
       )}
@@ -287,9 +201,11 @@ function PatternFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentP
 
   return (
     <>
-      <Field label="Name"><TextInput value={name} onChange={setName} /></Field>
+      <Field label="Name"><Input value={name} onChange={setName} style={{ width: "100%" }} /></Field>
       <Field label="Description"><TextArea value={description} onChange={setDescription} rows={4} /></Field>
-      <Field label="Max Iterations"><NumberInput value={maxIterations} onChange={setMaxIterations} /></Field>
+      <Field label="Max Iterations">
+        <Input value={String(maxIterations)} onChange={(v) => setMaxIterations(parseInt(v, 10) || 0)} style={{ width: 100 }} />
+      </Field>
       <SaveButton
         onClick={() => onSave({ ...data, name, description, max_iterations: maxIterations })}
         isDirty={isDirty}
@@ -303,13 +219,12 @@ function PatternFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentP
 // ── Task Type fields ─────────────────────────────────────────────
 
 function TaskTypeFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTaskType>) {
-  const { theme, sz } = useTheme();
+  const { theme } = useTheme();
   const [name, setName] = useState(data.name || "");
   const [description, setDescription] = useState(data.description || "");
   const [framing, setFraming] = useState(data.framing || "");
   const [validPatterns, setValidPatterns] = useState<string[]>(data.valid_patterns || []);
 
-  // Fetch all available patterns for the multi-select
   const { keys: patternKeys } = useConfigItems("agent-pattern");
 
   useEffect(() => {
@@ -333,32 +248,17 @@ function TaskTypeFields({ data, onSave, isSaving, saveError }: FieldsProps<Agent
 
   return (
     <>
-      <Field label="Name"><TextInput value={name} onChange={setName} /></Field>
+      <Field label="Name"><Input value={name} onChange={setName} style={{ width: "100%" }} /></Field>
       <Field label="Description"><TextArea value={description} onChange={setDescription} rows={3} /></Field>
       <Field label="Framing"><TextArea value={framing} onChange={setFraming} rows={4} placeholder="Text injected into the agent prompt for this task type" /></Field>
       <Field label="Valid Patterns">
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {patternKeys.map(p => {
-            const active = validPatterns.includes(p);
-            return (
-              <button
-                key={p}
-                onClick={() => togglePattern(p)}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 4,
-                  border: `1px solid ${active ? theme.palette.cyan + "44" : theme.border.default}`,
-                  background: active ? `${theme.palette.cyan}1a` : "transparent",
-                  color: active ? theme.palette.cyan : theme.text.subtle,
-                  fontSize: sz(11),
-                  fontFamily: theme.font.mono,
-                  cursor: "pointer",
-                }}
-              >
-                {p}
-              </button>
-            );
-          })}
+          {patternKeys.map(p => (
+            <Button key={p} size="md" onClick={() => togglePattern(p)}
+              color={theme.palette.cyan} active={validPatterns.includes(p)}>
+              {p}
+            </Button>
+          ))}
         </div>
       </Field>
       <SaveButton
@@ -459,66 +359,40 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
 
   return (
     <>
-      <Field label="Name"><TextInput value={name} onChange={setName} /></Field>
+      <Field label="Name"><Input value={name} onChange={setName} style={{ width: "100%" }} /></Field>
       <Field label="Description"><TextArea value={description} onChange={setDescription} rows={3} placeholder="Shown to the LLM" /></Field>
       <Field label="Type">
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {TOOL_TYPES.map(t => (
-            <button
-              key={t}
-              onClick={() => setType(t)}
-              style={{
-                padding: "4px 10px",
-                borderRadius: 4,
-                border: `1px solid ${type === t ? theme.palette.emerald + "44" : theme.border.default}`,
-                background: type === t ? `${theme.palette.emerald}1a` : "transparent",
-                color: type === t ? theme.palette.emerald : theme.text.subtle,
-                fontSize: sz(10),
-                fontFamily: theme.font.mono,
-                cursor: "pointer",
-              }}
-            >
+            <Button key={t} size="sm" onClick={() => setType(t)}
+              color={theme.palette.emerald} active={type === t}>
               {t}
-            </button>
+            </Button>
           ))}
         </div>
       </Field>
 
       {/* Type-specific fields */}
       {type === "knowledge-query" && (
-        <Field label="Collection"><TextInput value={collection} onChange={setCollection} /></Field>
+        <Field label="Collection"><Input value={collection} onChange={setCollection} style={{ width: "100%" }} /></Field>
       )}
       {type === "prompt" && (
-        <Field label="Template ID"><TextInput value={templateId} onChange={setTemplateId} placeholder="e.g. extract-definitions" /></Field>
+        <Field label="Template ID"><Input value={templateId} onChange={setTemplateId} placeholder="e.g. extract-definitions" style={{ width: "100%" }} /></Field>
       )}
       {type === "mcp-tool" && (
-        <Field label="MCP Tool ID"><TextInput value={mcpToolId} onChange={setMcpToolId} /></Field>
+        <Field label="MCP Tool ID"><Input value={mcpToolId} onChange={setMcpToolId} style={{ width: "100%" }} /></Field>
       )}
       {type === "tool-service" && (
-        <Field label="Service ID"><TextInput value={service} onChange={setService} /></Field>
+        <Field label="Service ID"><Input value={service} onChange={setService} style={{ width: "100%" }} /></Field>
       )}
 
       <Field label="Arguments">
         <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
           {(["fields", "json"] as const).map(mode => (
-            <button
-              key={mode}
-              onClick={() => switchArgsMode(mode)}
-              style={{
-                padding: "3px 10px",
-                borderRadius: 4,
-                fontSize: sz(10),
-                fontFamily: theme.font.mono,
-                fontWeight: 600,
-                cursor: "pointer",
-                background: argsMode === mode ? theme.surface.cardHover : "transparent",
-                border: `1px solid ${argsMode === mode ? theme.border.default : "transparent"}`,
-                color: argsMode === mode ? theme.text.muted : theme.text.hint,
-                textTransform: "capitalize",
-              }}
-            >
+            <Button key={mode} size="sm" onClick={() => switchArgsMode(mode)}
+              active={argsMode === mode}>
               {mode === "fields" ? "Fields" : "JSON"}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -555,101 +429,33 @@ function ToolFields({ data, onSave, isSaving, saveError }: FieldsProps<AgentTool
               }}>
                 <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
                   <div style={{ flex: 2 }}>
-                    <div style={{ fontSize: sz(9), color: theme.text.hint, marginBottom: 2, fontFamily: theme.font.mono }}>NAME</div>
-                    <input
-                      type="text"
-                      value={arg.name}
-                      onChange={(e) => updateArg(i, "name", e.target.value)}
-                      placeholder="arg_name"
-                      style={{
-                        width: "100%",
-                        padding: "5px 8px",
-                        borderRadius: 4,
-                        border: `1px solid ${theme.border.default}`,
-                        background: "transparent",
-                        color: theme.text.primary,
-                        fontSize: sz(11),
-                        fontFamily: theme.font.mono,
-                        outline: "none",
-                      }}
-                    />
+                    <FormLabel>{`NAME`}</FormLabel>
+                    <Input value={arg.name} onChange={(v) => updateArg(i, "name", v)}
+                      placeholder="arg_name" style={{ width: "100%", background: "transparent" }} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: sz(9), color: theme.text.hint, marginBottom: 2, fontFamily: theme.font.mono }}>TYPE</div>
-                    <input
-                      type="text"
-                      value={arg.type}
-                      onChange={(e) => updateArg(i, "type", e.target.value)}
-                      placeholder="string"
-                      style={{
-                        width: "100%",
-                        padding: "5px 8px",
-                        borderRadius: 4,
-                        border: `1px solid ${theme.border.default}`,
-                        background: "transparent",
-                        color: theme.text.primary,
-                        fontSize: sz(11),
-                        fontFamily: theme.font.mono,
-                        outline: "none",
-                      }}
-                    />
+                    <FormLabel>{`TYPE`}</FormLabel>
+                    <Input value={arg.type} onChange={(v) => updateArg(i, "type", v)}
+                      placeholder="string" style={{ width: "100%", background: "transparent" }} />
                   </div>
-                  <button
-                    onClick={() => removeArg(i)}
-                    style={{
-                      alignSelf: "flex-end",
-                      padding: "5px 8px",
-                      borderRadius: 4,
-                      border: `1px solid ${theme.palette.rose}33`,
-                      background: "transparent",
-                      color: theme.palette.rose,
-                      fontSize: sz(10),
-                      fontFamily: theme.font.mono,
-                      cursor: "pointer",
-                    }}
-                  >
+                  <Button size="sm" onClick={() => removeArg(i)}
+                    color={theme.palette.rose} active={false}
+                    style={{ alignSelf: "flex-end", border: `1px solid ${theme.palette.rose}33`, color: theme.palette.rose }}>
                     ×
-                  </button>
+                  </Button>
                 </div>
                 <div>
-                  <div style={{ fontSize: sz(9), color: theme.text.hint, marginBottom: 2, fontFamily: theme.font.mono }}>DESCRIPTION</div>
-                  <input
-                    type="text"
-                    value={arg.description}
-                    onChange={(e) => updateArg(i, "description", e.target.value)}
-                    placeholder="What this argument does..."
-                    style={{
-                      width: "100%",
-                      padding: "5px 8px",
-                      borderRadius: 4,
-                      border: `1px solid ${theme.border.default}`,
-                      background: "transparent",
-                      color: theme.text.primary,
-                      fontSize: sz(11),
-                      fontFamily: theme.font.mono,
-                      outline: "none",
-                    }}
-                  />
+                  <FormLabel>{`DESCRIPTION`}</FormLabel>
+                  <Input value={arg.description} onChange={(v) => updateArg(i, "description", v)}
+                    placeholder="What this argument does..." style={{ width: "100%", background: "transparent" }} />
                 </div>
               </div>
             ))}
-            <button
-              onClick={addArg}
-              style={{
-                padding: "6px 12px",
-                borderRadius: 4,
-                border: `1px solid ${theme.palette.cyan}33`,
-                background: "transparent",
-                color: theme.palette.cyan,
-                fontSize: sz(10),
-                fontFamily: theme.font.mono,
-                fontWeight: 600,
-                cursor: "pointer",
-                alignSelf: "flex-start",
-              }}
-            >
+            <Button size="md" onClick={addArg}
+              color={theme.palette.cyan} active={false}
+              style={{ alignSelf: "flex-start", border: `1px solid ${theme.palette.cyan}33`, color: theme.palette.cyan }}>
               + Add argument
-            </button>
+            </Button>
           </div>
         )}
       </Field>
@@ -679,9 +485,9 @@ function McpToolFields({ data, onSave, isSaving, saveError, itemKey }: FieldsPro
 
   return (
     <>
-      <Field label="Remote Name"><TextInput value={remoteName} onChange={setRemoteName} /></Field>
-      <Field label="URL"><TextInput value={url} onChange={setUrl} placeholder="https://..." /></Field>
-      <Field label="Auth Token"><TextInput value={authToken} onChange={setAuthToken} placeholder="optional" /></Field>
+      <Field label="Remote Name"><Input value={remoteName} onChange={setRemoteName} style={{ width: "100%" }} /></Field>
+      <Field label="URL"><Input value={url} onChange={setUrl} placeholder="https://..." style={{ width: "100%" }} /></Field>
+      <Field label="Auth Token"><Input value={authToken} onChange={setAuthToken} placeholder="optional" style={{ width: "100%" }} /></Field>
       <SaveButton
         onClick={() => onSave({ "remote-name": remoteName, url, ...(authToken && { "auth-token": authToken }) })}
         isDirty={isDirty}
@@ -717,16 +523,7 @@ function McpToolTester({ toolKey }: { toolKey: string }) {
       paddingTop: 20,
       borderTop: `1px solid ${theme.border.default}`,
     }}>
-      <div style={{
-        fontSize: sz(10),
-        fontFamily: theme.font.mono,
-        fontWeight: 600,
-        color: theme.text.faint,
-        letterSpacing: "0.1em",
-        marginBottom: 12,
-      }}>
-        TEST
-      </div>
+      <FormLabel style={{ marginBottom: 12 }}>TEST</FormLabel>
 
       <Field label="Parameters (JSON)">
         <textarea
@@ -755,39 +552,14 @@ function McpToolTester({ toolKey }: { toolKey: string }) {
       </Field>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-        <button
-          onClick={handleRun}
-          disabled={isInvoking}
-          style={{
-            padding: "6px 14px",
-            borderRadius: 6,
-            border: `1px solid ${theme.palette.purple}44`,
-            background: isInvoking ? "transparent" : `${theme.palette.purple}1a`,
-            color: isInvoking ? theme.text.disabled : theme.palette.purple,
-            fontSize: sz(11),
-            fontFamily: theme.font.mono,
-            fontWeight: 600,
-            cursor: isInvoking ? "wait" : "pointer",
-          }}
-        >
+        <Button size="md" onClick={handleRun} disabled={isInvoking}
+          color={theme.palette.purple} active={!isInvoking}>
           {isInvoking ? "Running..." : "Run"}
-        </button>
+        </Button>
         {(response || error) && (
-          <button
-            onClick={reset}
-            style={{
-              padding: "6px 12px",
-              borderRadius: 6,
-              border: `1px solid ${theme.border.default}`,
-              background: "transparent",
-              color: theme.text.faint,
-              fontSize: sz(11),
-              fontFamily: theme.font.mono,
-              cursor: "pointer",
-            }}
-          >
+          <Button size="md" onClick={reset} active={false}>
             Clear
-          </button>
+          </Button>
         )}
       </div>
 
@@ -855,8 +627,8 @@ function ToolServiceFields({ data, onSave, isSaving, saveError }: FieldsProps<To
 
   return (
     <>
-      <Field label="Request Queue"><TextInput value={requestQueue} onChange={setRequestQueue} placeholder="non-persistent://tg/request/..." /></Field>
-      <Field label="Response Queue"><TextInput value={responseQueue} onChange={setResponseQueue} placeholder="non-persistent://tg/response/..." /></Field>
+      <Field label="Request Queue"><Input value={requestQueue} onChange={setRequestQueue} placeholder="non-persistent://tg/request/..." style={{ width: "100%" }} /></Field>
+      <Field label="Response Queue"><Input value={responseQueue} onChange={setResponseQueue} placeholder="non-persistent://tg/response/..." style={{ width: "100%" }} /></Field>
       <Field label="Config Params (JSON)">
         <textarea
           value={paramsJson}
