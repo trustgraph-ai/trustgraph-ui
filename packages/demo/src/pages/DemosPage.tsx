@@ -5,13 +5,14 @@ import type { ManifestSection } from "../usePluginManifest";
 interface DemosPageProps {
   onNavigate?: (view: string) => void;
   sections?: ManifestSection[];
+  pageKey?: string;
 }
 
-export function DemosPage({ onNavigate, sections = [] }: DemosPageProps) {
+export function DemosPage({ onNavigate, sections = [], pageKey = "demos" }: DemosPageProps) {
   const { theme, sz } = useTheme();
 
   return (
-    <PageGuidance pageKey="demos">
+    <PageGuidance pageKey={pageKey}>
     <div style={{
       padding: "48px 28px",
       height: "var(--page-height)",

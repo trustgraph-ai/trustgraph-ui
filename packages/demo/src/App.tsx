@@ -99,7 +99,7 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
       <Routes>
         <Route path="/" element={<HomePage onNavigate={handleNavigate} sections={byTab("home")} />} />
         {navTabs.filter(t => t.key !== "home").map(t => (
-          <Route key={t.key} path={`/${t.key}`} element={<DemosPage onNavigate={handleNavigate} sections={byTab(t.key)} />} />
+          <Route key={t.key} path={`/${t.key}`} element={<DemosPage onNavigate={handleNavigate} sections={byTab(t.key)} pageKey={t.key} />} />
         ))}
         <Route
           path="/graph"
