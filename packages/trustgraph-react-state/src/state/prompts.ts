@@ -46,23 +46,22 @@ export const usePrompts = () => {
   });
 
   // Query to fetch all prompt templates
-  // First gets the template index (list of template IDs), then fetches each template's configuration
+  // Lists prompt config keys, filters for template.* prefix, then fetches each template's configuration
   const promptsQuery = useQuery({
     queryKey: ["prompts"],
     enabled: isSocketReady,
     queryFn: () => {
-      // Step 1: Get the template index (array of template IDs)
       return socket
         .config()
-        .getConfig([{ type: "prompt", key: "template-index" }])
+        .list("prompt")
         .then((res) => {
-          if (res["error"]) {
-            console.log("Error:", res);
-            throw res.error.message;
-          }
-          const promptIds = JSON.parse(res.values[0].value);
+          const keys = res?.directory || [];
+          const promptIds = keys
+            .filter((k) => k.startsWith("template."))
+            .map((k) => k.slice("template.".length));
 
-          // Step 2: Fetch configuration for each template using their IDs
+          if (promptIds.length === 0) return [];
+
           return socket
             .config()
             .getConfig(
@@ -76,7 +75,6 @@ export const usePrompts = () => {
                 console.log("Error:", r);
                 throw r.error.message;
               }
-              // Parse template configurations and pair them with their IDs
               const config = r.values.map((c) => JSON.parse(c.value));
               return promptIds.map((id, ix) => [id, config[ix]]);
             });
@@ -150,40 +148,23 @@ export const usePrompts = () => {
   });
 
   // Mutation for creating a new prompt template
-  // Updates both the template index and creates the template configuration
   const createPromptMutation = useMutation({
     mutationFn: ({ id, prompt, onSuccess }) => {
-      // Step 1: Get current template index
       return socket
         .config()
-        .getConfig([{ type: "prompt", key: "template-index" }])
-        .then((res) => JSON.parse(res.values[0].value))
-        .then((existingIds) => {
-          // Step 2: Add new template ID to the index
-          const newIds = [...existingIds, id];
-          // Step 3: Update both the template index and create the new template configuration
-          return socket
-            .config()
-            .putConfig([
-              {
-                type: "prompt",
-                key: "template-index",
-                value: JSON.stringify(newIds),
-              },
-              {
-                type: "prompt",
-                key: "template." + id,
-                value: JSON.stringify(prompt),
-              },
-            ])
-            .then((x) => {
-              if (x["error"]) {
-                console.log("Error:", x);
-                throw x.error.message;
-              }
-              // Execute callback if provided
-              if (onSuccess) onSuccess();
-            });
+        .putConfig([
+          {
+            type: "prompt",
+            key: "template." + id,
+            value: JSON.stringify(prompt),
+          },
+        ])
+        .then((x) => {
+          if (x["error"]) {
+            console.log("Error:", x);
+            throw x.error.message;
+          }
+          if (onSuccess) onSuccess();
         });
     },
     onError: (err) => {
@@ -198,44 +179,20 @@ export const usePrompts = () => {
   });
 
   // Mutation for deleting a prompt template
-  // Removes the template from both the index and deletes its configuration
   const deletePromptMutation = useMutation({
     mutationFn: ({ id, onSuccess }) => {
-      // Step 1: Get current template index
       return socket
         .config()
-        .getConfig([{ type: "prompt", key: "template-index" }])
-        .then((res) => JSON.parse(res.values[0].value))
-        .then((existingIds) => {
-          // Step 2: Remove the template ID from the index
-          const newIds = existingIds.filter((existingId) => existingId !== id);
-          // Step 3: Update the template index
-          return socket
-            .config()
-            .putConfig([
-              {
-                type: "prompt",
-                key: "template-index",
-                value: JSON.stringify(newIds),
-              },
-            ])
-            .then(() => {
-              // Step 4: Delete the template configuration
-              return socket.config().deleteConfig([
-                {
-                  type: "prompt",
-                  key: "template." + id,
-                },
-              ]);
-            })
-            .then((x) => {
-              if (x["error"]) {
-                console.log("Error:", x);
-                throw x.error.message;
-              }
-              // Execute callback if provided
-              if (onSuccess) onSuccess();
-            });
+        .deleteConfig({
+          type: "prompt",
+          key: "template." + id,
+        })
+        .then((x) => {
+          if (x["error"]) {
+            console.log("Error:", x);
+            throw x.error.message;
+          }
+          if (onSuccess) onSuccess();
         });
     },
     onError: (err) => {

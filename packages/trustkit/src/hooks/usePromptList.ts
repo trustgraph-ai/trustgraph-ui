@@ -20,22 +20,11 @@ export function usePromptList() {
     try {
       const config = socket.config();
 
-      // Fetch the template index to get all template IDs
-      const result = await config.getConfig([
-        { type: "prompt", key: "template-index" },
-      ]) as any;
-
-      // Parse response — template-index is a JSON array of IDs
-      const values = result?.values || [];
-      let templateIds: string[] = [];
-
-      if (values.length > 0 && values[0]?.value) {
-        try {
-          templateIds = JSON.parse(values[0].value);
-        } catch {
-          templateIds = [];
-        }
-      }
+      const result = await (config as any).list("prompt") as { directory?: string[] };
+      const keys = result?.directory || [];
+      const templateIds = keys
+        .filter((k: string) => k.startsWith("template."))
+        .map((k: string) => k.slice("template.".length));
 
       const items: PromptListItem[] = [
         { id: "system", label: "System Prompt", isSystem: true },
@@ -58,14 +47,12 @@ export function usePromptList() {
     load();
   }, [load]);
 
-  // Create a new prompt template
   const create = useCallback(async (name: string): Promise<string | null> => {
     try {
       const config = socket.config();
       const id = name.trim().toLowerCase().replace(/\s+/g, "-");
       const key = `template.${id}`;
 
-      // Create the prompt with empty template
       await config.putConfig([
         {
           type: "prompt",
@@ -77,25 +64,6 @@ export function usePromptList() {
         },
       ]);
 
-      // Update template-index to include the new ID
-      const indexResult = await config.getConfig([
-        { type: "prompt", key: "template-index" },
-      ]) as any;
-
-      let templateIds: string[] = [];
-      const values = indexResult?.values || [];
-      if (values.length > 0 && values[0]?.value) {
-        try { templateIds = JSON.parse(values[0].value); } catch { /* empty */ }
-      }
-
-      if (!templateIds.includes(id)) {
-        templateIds.push(id);
-        await config.putConfig([
-          { type: "prompt", key: "template-index", value: JSON.stringify(templateIds) },
-        ]);
-      }
-
-      // Reload the list
       await load();
 
       return key;

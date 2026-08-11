@@ -1315,18 +1315,33 @@ export class FlowsApi {
     );
   }
 
+  /**
+   * Lists available configuration keys for a given type
+   */
+  list(type: string) {
+    return this.api
+      .makeRequest<ConfigRequest, ConfigResponse>(
+        "config",
+        {
+          operation: "list",
+          type: type,
+        },
+        60000,
+      )
+      .then((r) => r);
+  }
+
   // Prompt management - specialized config operations for AI prompts
 
   /**
-   * Retrieves list of available prompt templates
+   * Retrieves list of available prompt template IDs
    */
   getPrompts() {
-    return this.getConfigAll().then((r) => {
-      const config = r as Record<
-        string,
-        Record<string, Record<string, string>>
-      >;
-      return JSON.parse(config.config.prompt["template-index"]);
+    return this.list("prompt").then((r: any) => {
+      const keys: string[] = r?.directory || [];
+      return keys
+        .filter((k: string) => k.startsWith("template."))
+        .map((k: string) => k.slice("template.".length));
     });
   }
 
@@ -2290,15 +2305,14 @@ export class ConfigApi {
   // Specialized prompt management methods
 
   /**
-   * Retrieves available prompt templates
+   * Retrieves available prompt template IDs
    */
   getPrompts() {
-    return this.getConfigAll().then((r) => {
-      const config = r as Record<
-        string,
-        Record<string, Record<string, string>>
-      >;
-      return JSON.parse(config.config.prompt["template-index"]);
+    return this.list("prompt").then((r: any) => {
+      const keys: string[] = r?.directory || [];
+      return keys
+        .filter((k: string) => k.startsWith("template."))
+        .map((k: string) => k.slice("template.".length));
     });
   }
 
