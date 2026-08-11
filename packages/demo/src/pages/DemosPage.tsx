@@ -25,7 +25,7 @@ export function DemosPage({ onNavigate, plugins = [] }: DemosPageProps) {
             fontWeight: 700,
             color: theme.text.primary,
             marginBottom: 6,
-            fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+            fontFamily: theme.font.sans,
           }}>
             Demos
           </h1>

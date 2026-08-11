@@ -1,22 +1,11 @@
 import { useState } from "react";
 import { useLogin, useAuth, useAuthStore } from "@trustgraph/react-state";
+import { useTheme } from "@trustgraph/trustkit";
 
 type Mode = "credentials" | "api-key";
 
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "10px 12px", borderRadius: 8,
-  background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(255,255,255,0.1)",
-  color: "#E5E5E5", fontSize: 14, marginBottom: 16,
-  outline: "none", boxSizing: "border-box",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "block", fontSize: 12, color: "#999", marginBottom: 6,
-  fontFamily: "'IBM Plex Mono', monospace",
-};
-
 export function LoginPage() {
+  const { theme } = useTheme();
   const [mode, setMode] = useState<Mode>("api-key");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +13,19 @@ export function LoginPage() {
   const { login, isLoading, error } = useLogin();
   const { error: authError } = useAuth();
   const setToken = useAuthStore((s) => s.setToken);
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "10px 12px", borderRadius: 8,
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    color: "#E5E5E5", fontSize: 14, marginBottom: 16,
+    outline: "none", boxSizing: "border-box",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: "block", fontSize: 12, color: "#999", marginBottom: 6,
+    fontFamily: theme.font.mono,
+  };
 
   const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +47,7 @@ export function LoginPage() {
       width: "100%", minHeight: "100vh", display: "flex",
       alignItems: "center", justifyContent: "center",
       background: "#0A0A0F",
-      fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+      fontFamily: theme.font.sans,
     }}>
       <div style={{
         width: 360, padding: 32, borderRadius: 12,
@@ -64,7 +66,7 @@ export function LoginPage() {
           </div>
           <div style={{
             fontSize: 12, color: "#666", marginTop: 4,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             Sign in to continue
           </div>
@@ -83,7 +85,7 @@ export function LoginPage() {
               style={{
                 flex: 1, padding: "7px 0", borderRadius: 6,
                 border: "none", fontSize: 12, cursor: "pointer",
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 background: mode === m
                   ? "rgba(255,255,255,0.08)"
                   : "transparent",

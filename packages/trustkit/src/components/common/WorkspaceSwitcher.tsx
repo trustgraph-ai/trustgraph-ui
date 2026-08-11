@@ -8,7 +8,7 @@ import {
 } from "@trustgraph/react-state";
 import { useTheme } from "../../theme/ThemeContext";
 
-const FONT = "'IBM Plex Mono', monospace";
+const FONT = "${theme.font.mono}";
 
 function Pill({
   label,

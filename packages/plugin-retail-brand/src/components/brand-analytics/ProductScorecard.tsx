@@ -4,7 +4,7 @@ import { useTheme } from "@trustgraph/trustkit";
 import { withGlow } from "@trustgraph/trustkit";
 import type { ProductScorecardData } from "../../hooks/useProductScorecard";
 
-const mono = "'IBM Plex Mono', monospace";
+const mono = "${theme.font.mono}";
 
 function Stars({ rating }: { rating: number }) {
   const { theme, sz } = useTheme();

@@ -145,7 +145,7 @@ function Section({ title, color, children }: { title: string; color: string; chi
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{
-        fontSize: sz(8), color, fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(8), color, fontFamily: theme.font.mono,
         textTransform: "uppercase", letterSpacing: "0.06em",
         marginBottom: 6, paddingBottom: 4,
         borderBottom: `1px solid ${color}22`,
@@ -470,7 +470,7 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
       <div style={{
         display: "flex", gap: 4, padding: "8px 16px",
         borderBottom: `1px solid ${theme.border.subtle}`,
-        fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(11),
+        fontFamily: theme.font.mono, fontSize: sz(11),
       }}>
         {([["browse", "⊞ Browse"], ["pathfinder", "⇢ Pathfinder"], ["gtm", "🚀 GTM Advisor"]] as const).map(([m, label]) => (
           <button
@@ -480,7 +480,7 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
               padding: "5px 14px", borderRadius: 5, border: "none", cursor: "pointer",
               background: mode === m ? "rgba(255,255,255,0.08)" : "transparent",
               color: mode === m ? theme.text.primary : theme.text.faint,
-              fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(11),
+              fontFamily: theme.font.mono, fontSize: sz(11),
               fontWeight: mode === m ? 600 : 400, transition: "all 0.15s",
             }}
           >
@@ -531,7 +531,7 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
         <div style={{
           padding: "10px 16px", borderBottom: `1px solid ${theme.border.subtle}`,
           display: "flex", gap: 12, fontSize: sz(10), color: theme.text.faint,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
         }}>
           <span><span style={{ color: theme.palette.blue }}>{stats.orgs}</span> orgs</span>
           <span><span style={{ color: theme.palette.amber }}>{stats.people}</span> people</span>
@@ -549,7 +549,7 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
               width: "100%", padding: "7px 10px", borderRadius: 6, fontSize: sz(12),
               background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
               color: theme.text.primary, outline: "none",
-              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontFamily: theme.font.sans,
             }}
           />
           {/* Category filters */}
@@ -563,7 +563,7 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
                   cursor: "pointer",
                   background: category === c.key ? `${c.color}22` : "transparent",
                   color: category === c.key ? c.color : theme.text.faint,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   transition: "all 0.15s",
                 }}
               >
@@ -579,7 +579,7 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
             <div key={kind} style={{ marginBottom: 12, padding: "0 12px" }}>
               <div style={{
                 fontSize: sz(9), color: KIND_COLORS[kind] || theme.text.faint,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 textTransform: "uppercase", letterSpacing: "0.05em",
                 marginBottom: 4, paddingBottom: 2,
                 borderBottom: `1px solid ${(KIND_COLORS[kind] || theme.text.faint)}15`,
@@ -665,7 +665,7 @@ export function InnovationExplorer(_props: InnovationExplorerProps) {
                   </div>
                   <div style={{
                     fontSize: sz(10), color: KIND_COLORS[selected.kind] || theme.text.muted,
-                    fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase",
+                    fontFamily: theme.font.mono, textTransform: "uppercase",
                     letterSpacing: "0.05em",
                   }}>
                     {kindLabel(selected.kind)}

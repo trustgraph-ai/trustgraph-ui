@@ -59,7 +59,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         alignSelf: "flex-end",
         maxWidth: "80%",
       }}>
-        <div style={{ fontSize: sz(10), color: withGlow(theme.semantic.user, 0.53), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 6 }}>
+        <div style={{ fontSize: sz(10), color: withGlow(theme.semantic.user, 0.53), fontFamily: theme.font.mono, marginBottom: 6 }}>
           YOU
         </div>
         <div style={{ fontSize: sz(14), color: theme.text.primary, lineHeight: 1.5 }}>
@@ -81,7 +81,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         <div style={{
           fontSize: sz(10),
           color: withGlow(typeStyles.color, 0.53),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           marginBottom: 6,
           display: "flex",
           alignItems: "center",

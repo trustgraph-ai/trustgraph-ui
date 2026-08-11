@@ -44,7 +44,7 @@ function SectionHeader({ children }: { children: string }) {
   return (
     <div style={{
       fontSize: sz(10),
-      fontFamily: "'IBM Plex Mono', monospace",
+      fontFamily: theme.font.mono,
       color: theme.text.subtle,
       textTransform: "uppercase",
       letterSpacing: 0.5,
@@ -70,7 +70,7 @@ function BuildItemRow({ item }: { item: CartItem }) {
       </span>
       <span style={{
         fontSize: sz(10), color: theme.text.hint, width: 70,
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         textTransform: "uppercase",
       }}>
         {item.slot || "Extra"}
@@ -80,7 +80,7 @@ function BuildItemRow({ item }: { item: CartItem }) {
       </span>
       <span style={{
         fontSize: sz(11), color: theme.text.muted,
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         flexShrink: 0,
       }}>
         ${item.price.toFixed(0)}
@@ -106,7 +106,7 @@ function ExtraItemRow({ item, onRemove }: { item: CartItem; onRemove: () => void
       </span>
       <span style={{
         fontSize: sz(11), color: theme.text.muted,
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         flexShrink: 0,
       }}>
         ${item.price.toFixed(0)}
@@ -120,7 +120,7 @@ function ExtraItemRow({ item, onRemove }: { item: CartItem; onRemove: () => void
           cursor: "pointer",
           fontSize: sz(12),
           padding: "0 4px",
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
         }}
         title="Remove"
       >
@@ -172,13 +172,13 @@ function CrossSellCard({ product, onAdd }: { product: RecommendedProduct; onAdd:
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{
             fontSize: sz(15), fontWeight: 700, color: theme.palette.emerald,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             ${product.price.toFixed(0)}
           </div>
           <div style={{
             fontSize: sz(9), color: product.inStock ? theme.palette.emerald : theme.palette.red,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
           </div>
@@ -196,7 +196,7 @@ function CrossSellCard({ product, onAdd }: { product: RecommendedProduct; onAdd:
             background: product.inStock ? withGlow(theme.palette.cyan, 0.08) : theme.surface.card,
             color: product.inStock ? theme.palette.cyan : theme.text.disabled,
             fontSize: sz(11), fontWeight: 600,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             cursor: product.inStock ? "pointer" : "not-allowed",
           }}
         >
@@ -280,7 +280,7 @@ export function CartPanel({
           <span style={{ fontSize: sz(11), color: theme.text.subtle }}>Build subtotal</span>
           <span style={{
             fontSize: sz(12), fontWeight: 600, color: theme.text.muted,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             ${buildTotal.toFixed(0)}
           </span>
@@ -315,7 +315,7 @@ export function CartPanel({
               <span style={{ fontSize: sz(11), color: theme.text.subtle }}>Extras subtotal</span>
               <span style={{
                 fontSize: sz(12), fontWeight: 600, color: theme.palette.cyan,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 ${extrasTotal.toFixed(0)}
               </span>
@@ -341,7 +341,7 @@ export function CartPanel({
         </span>
         <span style={{
           fontSize: sz(20), fontWeight: 700, color: theme.palette.emerald,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
         }}>
           ${total.toFixed(0)}
         </span>
@@ -381,7 +381,7 @@ export function CartPanel({
             color: theme.palette.emerald,
             fontSize: sz(14),
             fontWeight: 700,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             cursor: "pointer",
             letterSpacing: 0.5,
           }}

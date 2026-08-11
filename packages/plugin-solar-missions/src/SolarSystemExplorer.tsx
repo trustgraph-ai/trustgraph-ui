@@ -188,7 +188,7 @@ export function SolarSystemExplorer({
   if (error) {
     return (
       <div style={{ height: "var(--page-height)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
-        <div style={{ color: theme.palette.rose, fontSize: sz(14), fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ color: theme.palette.rose, fontSize: sz(14), fontFamily: theme.font.mono }}>
           Failed to load solar system data
         </div>
         <div style={{ color: theme.text.muted, fontSize: sz(11) }}>{error.message}</div>
@@ -538,7 +538,7 @@ export function SolarSystemExplorer({
                   x={px} y={py - r - 6}
                   fill={isTarget ? color : theme.text.hint}
                   fontSize={isTarget ? sz(9) : sz(7)}
-                  fontFamily="'IBM Plex Mono', monospace"
+                  fontFamily={theme.font.mono}
                   textAnchor="middle"
                   fontWeight={isTarget ? 600 : 400}
                 >
@@ -560,7 +560,7 @@ export function SolarSystemExplorer({
                 x={lx + 8} y={ly - 6}
                 fill={color}
                 fontSize={sz(9)}
-                fontFamily="'IBM Plex Mono', monospace"
+                fontFamily={theme.font.mono}
                 fontWeight={600}
                 style={{ pointerEvents: "none" }}
               >
@@ -620,10 +620,10 @@ function MissionList({ missions, bodyMap, colorMap, hoveredMission, onSelect, on
         padding: "14px 16px",
         borderBottom: `1px solid ${theme.border.default}`,
       }}>
-        <div style={{ fontSize: sz(12), color: theme.text.primary, fontWeight: 600, fontFamily: "'IBM Plex Sans', sans-serif" }}>
+        <div style={{ fontSize: sz(12), color: theme.text.primary, fontWeight: 600, fontFamily: theme.font.sans }}>
           Solar System Missions
         </div>
-        <div style={{ fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace", marginTop: 4 }}>
+        <div style={{ fontSize: sz(9), color: theme.text.faint, fontFamily: theme.font.mono, marginTop: 4 }}>
           {missions.length} missions · {missions.reduce((s, m) => s + m.events.length, 0)} events
         </div>
       </div>
@@ -656,14 +656,14 @@ function MissionList({ missions, bodyMap, colorMap, hoveredMission, onSelect, on
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{
                   fontSize: sz(12), color: theme.text.primary, fontWeight: 600,
-                  fontFamily: "'IBM Plex Sans', sans-serif",
+                  fontFamily: theme.font.sans,
                   lineHeight: 1.3,
                 }}>
                   {m.name}
                 </div>
                 <div style={{
                   fontSize: sz(9), color: theme.text.subtle,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   marginTop: 3, display: "flex", gap: 6, alignItems: "center",
                 }}>
                   <span>{m.agency}</span>
@@ -675,7 +675,7 @@ function MissionList({ missions, bodyMap, colorMap, hoveredMission, onSelect, on
                 {targets && (
                   <div style={{
                     fontSize: sz(9), color: theme.text.subtle,
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: theme.font.mono,
                     marginTop: 2,
                   }}>
                     {targets}
@@ -684,7 +684,7 @@ function MissionList({ missions, bodyMap, colorMap, hoveredMission, onSelect, on
               </div>
               <div style={{
                 fontSize: sz(8), color: theme.text.subtle,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 marginTop: 4,
               }}>
                 {m.events.length} evt
@@ -719,14 +719,14 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
           style={{
             background: "none", border: "none", color: theme.text.subtle,
             fontSize: sz(10), cursor: "pointer", padding: "2px 0", marginBottom: 14,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}
         >
           &larr; All missions
         </button>
 
         <div style={{
-          fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: sz(9), fontFamily: theme.font.mono,
           color, textTransform: "uppercase",
           letterSpacing: "0.05em", marginBottom: 6,
         }}>
@@ -736,7 +736,7 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
         <div style={{
           fontSize: sz(18), fontWeight: 700, color: theme.text.primary,
           lineHeight: 1.3, marginBottom: 10,
-          fontFamily: "'IBM Plex Sans', sans-serif",
+          fontFamily: theme.font.sans,
         }}>
           {mission.name}
         </div>
@@ -750,7 +750,7 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
         {targets.length > 0 && (
           <div style={{ marginBottom: 16 }}>
             <div style={{
-              fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: sz(9), color: theme.text.faint, fontFamily: theme.font.mono,
               textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6,
             }}>
               Targets
@@ -761,7 +761,7 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
                 const bColor = BODY_COLORS[bKey] || theme.text.muted;
                 return (
                   <span key={t} style={{
-                    fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: sz(10), fontFamily: theme.font.mono,
                     color: bColor, padding: "2px 8px", borderRadius: 10,
                     border: `1px solid ${bColor}33`, background: `${bColor}10`,
                   }}>
@@ -776,7 +776,7 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
 
       <div style={{ padding: "0 16px 16px" }}>
         <div style={{
-          fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: sz(9), color: theme.text.faint, fontFamily: theme.font.mono,
           textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10,
         }}>
           Events ({mission.events.length})
@@ -817,7 +817,7 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
 
                 <div style={{
                   fontSize: sz(9), color: theme.text.faint,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   marginBottom: 2,
                 }}>
                   {evt.date}
@@ -825,7 +825,7 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
                 </div>
                 <div style={{
                   fontSize: sz(10), color: isSelected ? theme.text.primary : theme.text.secondary,
-                  fontFamily: "'IBM Plex Sans', sans-serif",
+                  fontFamily: theme.font.sans,
                   fontWeight: 600, marginBottom: 2,
                 }}>
                   {evtLabel}
@@ -833,7 +833,7 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
                 {isSelected && evt.description && (
                   <div style={{
                     fontSize: sz(10), color: theme.text.muted,
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: theme.font.sans,
                     lineHeight: 1.5, marginTop: 6,
                     padding: "8px 10px", borderRadius: 6,
                     background: theme.surface.card,
@@ -845,7 +845,7 @@ function MissionDetail({ mission, bodyMap, color, selectedEvent, onEventClick, o
                 {isSelected && (
                   <div style={{
                     fontSize: sz(8), color: theme.text.subtle,
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: theme.font.mono,
                     marginTop: 4, display: "flex", gap: 8,
                   }}>
                     <span>{evt.distanceAu.toFixed(2)} AU</span>
@@ -865,7 +865,7 @@ function Tag({ label, color }: { label: string; color: string }) {
   const { sz } = useTheme();
   return (
     <span style={{
-      fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+      fontSize: sz(9), fontFamily: theme.font.mono,
       padding: "2px 8px", borderRadius: 10,
       border: `1px solid ${color}33`,
       color, background: `${color}08`,

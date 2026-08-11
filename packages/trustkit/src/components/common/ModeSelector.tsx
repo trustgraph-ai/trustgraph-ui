@@ -44,7 +44,7 @@ export function ModeSelector({
               padding: `${sz(5)}px ${sz(14)}px`,
               borderRadius: 6,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               fontWeight: 600,
               cursor: disabled ? "default" : "pointer",
               background: isActive ? `${accent}26` : "transparent",

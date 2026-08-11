@@ -1311,7 +1311,7 @@ export function LawExplorer(_props: LawExplorerProps) {
       height: "var(--page-height)",
       display: "flex",
       flexDirection: "column",
-      fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+      fontFamily: theme.font.sans,
     }}>
       {/* Top bar */}
       <div style={{
@@ -1350,7 +1350,7 @@ export function LawExplorer(_props: LawExplorerProps) {
                 padding: "4px 12px",
                 fontSize: sz(11),
                 fontWeight: 600,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 background: lang === l ? theme.palette.amber + "20" : "transparent",
                 color: lang === l ? theme.palette.amber : theme.text.subtle,
                 border: "none",

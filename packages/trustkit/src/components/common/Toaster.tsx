@@ -52,7 +52,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
           flex: 1,
           fontSize: sz(12),
           color: theme.text.secondary,
-          fontFamily: "'IBM Plex Sans', sans-serif",
+          fontFamily: theme.font.sans,
           lineHeight: 1.4,
         }}
       >

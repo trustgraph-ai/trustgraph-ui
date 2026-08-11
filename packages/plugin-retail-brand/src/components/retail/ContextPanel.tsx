@@ -14,7 +14,7 @@ function SectionHeader({ children }: { children: string }) {
   return (
     <div style={{
       fontSize: sz(10),
-      fontFamily: "'IBM Plex Mono', monospace",
+      fontFamily: theme.font.mono,
       color: theme.text.subtle,
       textTransform: "uppercase",
       letterSpacing: 0.5,
@@ -56,7 +56,7 @@ function RequirementRow({ req }: { req: CategoryRequirement }) {
         {qty && (
           <span style={{
             fontSize: sz(8), color: theme.text.subtle,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             padding: "1px 4px", borderRadius: 3,
             background: withGlow(ps.color, 0.08),
           }}>
@@ -65,7 +65,7 @@ function RequirementRow({ req }: { req: CategoryRequirement }) {
         )}
         <span style={{
           fontSize: sz(8), color: ps.color,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           padding: "1px 4px", borderRadius: 3,
           background: withGlow(ps.color, 0.1),
           border: `1px solid ${withGlow(ps.color, 0.2)}`,
@@ -132,7 +132,7 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
           }}>
             <span style={{
               fontSize: sz(10), color: theme.text.subtle,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
             }}>
               {activity.requirements.length}
             </span>
@@ -166,7 +166,7 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
             {essential.length > 0 && (
               <span style={{
                 fontSize: sz(9), color: PRIORITY_STYLES.essential.color,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 {essential.length} essential
               </span>
@@ -174,7 +174,7 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
             {recommended.length > 0 && (
               <span style={{
                 fontSize: sz(9), color: PRIORITY_STYLES.recommended.color,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 {recommended.length} recommended
               </span>
@@ -182,7 +182,7 @@ function ActivityCard({ activity }: { activity: ActivityTemplate }) {
             {optional.length > 0 && (
               <span style={{
                 fontSize: sz(9), color: PRIORITY_STYLES.optional.color,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 {optional.length} optional
               </span>
@@ -286,7 +286,7 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
                   </span>
                   <span style={{
                     fontSize: sz(10), color: theme.text.subtle,
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: theme.font.mono,
                   }}>
                     {cat.productCount > 0 ? `${cat.productCount} items` : ""}
                   </span>
@@ -321,7 +321,7 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
             <div style={{ marginBottom: 8 }}>
               <div style={{
                 fontSize: sz(10), color: theme.palette.red, fontWeight: 600,
-                marginBottom: 4, fontFamily: "'IBM Plex Mono', monospace",
+                marginBottom: 4, fontFamily: theme.font.mono,
               }}>
                 HARD ({hardConstraints.length})
               </div>
@@ -337,7 +337,7 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
                     <div style={{ fontSize: sz(11), color: theme.text.muted }}>{c.name}</div>
                     <div style={{
                       fontSize: sz(9), color: theme.text.subtle,
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                     }}>
                       {c.slotTypes.join(" + ")}
                     </div>
@@ -351,7 +351,7 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
             <div>
               <div style={{
                 fontSize: sz(10), color: theme.palette.amber, fontWeight: 600,
-                marginBottom: 4, fontFamily: "'IBM Plex Mono', monospace",
+                marginBottom: 4, fontFamily: theme.font.mono,
               }}>
                 SOFT ({softConstraints.length})
               </div>
@@ -367,7 +367,7 @@ export function ContextPanel({ flow, context }: ContextPanelProps) {
                     <div style={{ fontSize: sz(11), color: theme.text.muted }}>{c.name}</div>
                     <div style={{
                       fontSize: sz(9), color: theme.text.subtle,
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                     }}>
                       {c.slotTypes.join(" + ")}
                     </div>

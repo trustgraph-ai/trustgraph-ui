@@ -246,7 +246,7 @@ export function WorldEventsExplorer({
   if (error) {
     return (
       <div style={{ height: "var(--page-height)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
-        <div style={{ color: theme.palette.rose, fontSize: sz(14), fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ color: theme.palette.rose, fontSize: sz(14), fontFamily: theme.font.mono }}>
           Failed to load events
         </div>
         <div style={{ color: theme.text.muted, fontSize: sz(11) }}>{error.message}</div>
@@ -257,7 +257,7 @@ export function WorldEventsExplorer({
   if (gridCells.length === 0) {
     return (
       <div style={{ height: "var(--page-height)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
-        <div style={{ color: theme.text.muted, fontSize: sz(14), fontFamily: "'IBM Plex Mono', monospace" }}>
+        <div style={{ color: theme.text.muted, fontSize: sz(14), fontFamily: theme.font.mono }}>
           No geo-temporal events found
         </div>
         <div style={{ color: theme.text.hint, fontSize: sz(11) }}>
@@ -282,7 +282,7 @@ export function WorldEventsExplorer({
         flexWrap: "wrap",
         minHeight: 40,
       }}>
-        <span style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace", marginRight: 4 }}>
+        <span style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: theme.font.mono, marginRight: 4 }}>
           TYPE
         </span>
         {eventTypes.slice(0, 14).map(et => {
@@ -299,7 +299,7 @@ export function WorldEventsExplorer({
                 background: isActive ? c + "15" : "transparent",
                 color: isActive ? c : theme.text.disabled,
                 fontSize: sz(9),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 cursor: "pointer",
                 transition: "all 0.15s",
                 opacity: isActive ? 1 : 0.5,
@@ -320,7 +320,7 @@ export function WorldEventsExplorer({
             style={{
               padding: "2px 8px", borderRadius: 10,
               border: `1px solid ${theme.palette.cyan}44`, background: theme.palette.cyan + "15",
-              color: theme.palette.cyan, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer",
+              color: theme.palette.cyan, fontSize: sz(9), fontFamily: theme.font.mono, cursor: "pointer",
             }}
           >
             Region {selectedCell.avgLat.toFixed(0)},{selectedCell.avgLon.toFixed(0)} x
@@ -333,7 +333,7 @@ export function WorldEventsExplorer({
             style={{
               padding: "2px 8px", borderRadius: 10,
               border: `1px solid ${theme.palette.amber}44`, background: theme.palette.amber + "15",
-              color: theme.palette.amber, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer",
+              color: theme.palette.amber, fontSize: sz(9), fontFamily: theme.font.mono, cursor: "pointer",
             }}
           >
             {selectedCountry} x
@@ -346,14 +346,14 @@ export function WorldEventsExplorer({
             style={{
               padding: "2px 8px", borderRadius: 10,
               border: `1px solid ${theme.border.default}`, background: "transparent",
-              color: theme.text.faint, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer",
+              color: theme.text.faint, fontSize: sz(9), fontFamily: theme.font.mono, cursor: "pointer",
             }}
           >
             Clear all
           </button>
         )}
 
-        <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: theme.font.mono }}>
           {listLoading ? "Searching..." : `${listEvents.length} of ${totalEvents}`}
         </span>
       </div>
@@ -450,7 +450,7 @@ export function WorldEventsExplorer({
                       x={c.x} y={c.y + 3}
                       fill={theme.text.primary}
                       fontSize={r > 8 ? sz(8) : sz(6)}
-                      fontFamily="'IBM Plex Mono', monospace"
+                      fontFamily={theme.font.mono}
                       textAnchor="middle"
                       opacity={isSelected ? 1 : isHovered ? 0.9 : 0.7}
                       style={{ pointerEvents: "none" }}
@@ -468,7 +468,7 @@ export function WorldEventsExplorer({
               <text
                 x={MAP_W - 8} y={MAP_H - 8}
                 fill={theme.text.subtle} fontSize={sz(10)}
-                fontFamily="'IBM Plex Mono', monospace"
+                fontFamily={theme.font.mono}
                 textAnchor="end"
               >
                 {hoveredCountry}
@@ -505,20 +505,20 @@ export function WorldEventsExplorer({
                 alignItems: "center",
                 justifyContent: "space-between",
               }}>
-                <span style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
+                <span style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: theme.font.mono }}>
                   {listLoading ? "Searching..." : `${listEvents.length} events`}
                 </span>
               </div>
               <div style={{ flex: 1, overflowY: "auto" }}>
                 {listLoading ? (
                   <div style={{ padding: 20, textAlign: "center" }}>
-                    <div style={{ color: theme.text.hint, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
+                    <div style={{ color: theme.text.hint, fontSize: sz(11), fontFamily: theme.font.mono }}>
                       Searching...
                     </div>
                   </div>
                 ) : listEvents.length === 0 ? (
                   <div style={{ padding: 20, textAlign: "center" }}>
-                    <div style={{ color: theme.text.hint, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
+                    <div style={{ color: theme.text.hint, fontSize: sz(11), fontFamily: theme.font.mono }}>
                       No events match filters
                     </div>
                   </div>
@@ -554,7 +554,7 @@ export function WorldEventsExplorer({
                           <div style={{ minWidth: 0 }}>
                             <div style={{
                               fontSize: sz(11), color: theme.text.primary, fontWeight: 600,
-                              fontFamily: "'IBM Plex Sans', sans-serif",
+                              fontFamily: theme.font.sans,
                               lineHeight: 1.3,
                               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                             }}>
@@ -562,7 +562,7 @@ export function WorldEventsExplorer({
                             </div>
                             <div style={{
                               fontSize: sz(9), color: theme.text.hint,
-                              fontFamily: "'IBM Plex Mono', monospace",
+                              fontFamily: theme.font.mono,
                               marginTop: 2,
                             }}>
                               <span style={{ color: c + "aa" }}>{e.typeLabel}</span>
@@ -610,14 +610,14 @@ function EventDetail({ event, typeColor, onBack, theme, sz, outcomeColors }: {
         style={{
           background: "none", border: "none", color: theme.text.hint,
           fontSize: sz(10), cursor: "pointer", padding: "2px 0", marginBottom: 16,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
         }}
       >
         &larr; Back to list
       </button>
 
       <div style={{
-        fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(9), fontFamily: theme.font.mono,
         color: typeColor, textTransform: "uppercase",
         letterSpacing: "0.05em", marginBottom: 8,
       }}>
@@ -627,18 +627,18 @@ function EventDetail({ event, typeColor, onBack, theme, sz, outcomeColors }: {
       <div style={{
         fontSize: sz(18), fontWeight: 700, color: theme.text.primary,
         lineHeight: 1.3, marginBottom: 12,
-        fontFamily: "'IBM Plex Sans', sans-serif",
+        fontFamily: theme.font.sans,
       }}>
         {event.name}
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <span style={{ fontSize: sz(13), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.subtle }}>
+        <span style={{ fontSize: sz(13), fontFamily: theme.font.mono, color: theme.text.subtle }}>
           {event.date || event.yearLabel}
         </span>
         {event.outcome && (
           <span style={{
-            fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(9), fontFamily: theme.font.mono,
             padding: "2px 8px", borderRadius: 10,
             background: outcomeColor + "18",
             border: `1px solid ${outcomeColor}44`,
@@ -652,7 +652,7 @@ function EventDetail({ event, typeColor, onBack, theme, sz, outcomeColors }: {
       {event.impact && (
         <div style={{ marginBottom: 20 }}>
           <div style={{
-            fontSize: sz(9), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(9), color: theme.text.hint, fontFamily: theme.font.mono,
             textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6,
           }}>
             Impact
@@ -686,12 +686,12 @@ function MetaField({ label, value, theme, sz }: { label: string; value: string; 
   return (
     <div>
       <div style={{
-        fontSize: sz(9), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(9), color: theme.text.hint, fontFamily: theme.font.mono,
         textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2,
       }}>
         {label}
       </div>
-      <div style={{ fontSize: sz(11), color: theme.text.muted, fontFamily: "'IBM Plex Mono', monospace" }}>
+      <div style={{ fontSize: sz(11), color: theme.text.muted, fontFamily: theme.font.mono }}>
         {value}
       </div>
     </div>

@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef, useMemo } from "react";
 import { useTheme } from "../../theme/ThemeContext";
 import { SectionLabel } from "../common";
+import { Button } from "../common/Button";
+import { SelectableListItem } from "../common/SelectableListItem";
 
 type ResultView = "raw" | "table";
 
@@ -167,21 +169,11 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
         <SectionLabel>GRAPHQL QUERY</SectionLabel>
 
         <div style={{ position: "relative" }}>
-          <button
+          <Button size="md" active={false}
             onClick={() => { setShowExamples(!showExamples); setShowPresets(false); }}
-            style={{
-              padding: "4px 10px",
-              borderRadius: 4,
-              border: `1px solid ${theme.border.default}`,
-              background: "transparent",
-              color: theme.text.subtle,
-              fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
-              cursor: "pointer",
-            }}
-          >
+            style={{ padding: "4px 10px" }}>
             Examples
-          </button>
+          </Button>
           {showExamples && (
             <div style={{
               position: "absolute",
@@ -197,27 +189,11 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
               boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
             }}>
               {EXAMPLE_QUERIES.map((ex, i) => (
-                <button
-                  key={i}
+                <SelectableListItem key={i} isSelected={false}
                   onClick={() => { setQuery(ex.query); setShowExamples(false); }}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    padding: "6px 10px",
-                    border: "none",
-                    borderRadius: 4,
-                    background: "transparent",
-                    color: theme.text.muted,
-                    fontSize: sz(11),
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    cursor: "pointer",
-                    textAlign: "left",
-                  }}
-                  onMouseEnter={(e) => { (e.target as HTMLElement).style.background = theme.surface.cardHover; }}
-                  onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
-                >
+                  style={{ padding: "6px 10px", marginBottom: 0, borderRadius: 4, color: theme.text.muted }}>
                   {ex.label}
-                </button>
+                </SelectableListItem>
               ))}
             </div>
           )}
@@ -225,21 +201,11 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
 
         {presets && presets.length > 0 && (
           <div style={{ position: "relative" }}>
-            <button
+            <Button size="md" active={false}
               onClick={() => { setShowPresets(!showPresets); setShowExamples(false); }}
-              style={{
-                padding: "4px 10px",
-                borderRadius: 4,
-                border: `1px solid ${theme.border.default}`,
-                background: "transparent",
-                color: theme.text.subtle,
-                fontSize: sz(10),
-                fontFamily: "'IBM Plex Mono', monospace",
-                cursor: "pointer",
-              }}
-            >
+              style={{ padding: "4px 10px" }}>
               Presets
-            </button>
+            </Button>
             {showPresets && (
               <div style={{
                 position: "absolute",
@@ -255,28 +221,11 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
                 boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
               }}>
                 {presets.map((p) => (
-                  <button
-                    key={p.key}
+                  <SelectableListItem key={p.key} isSelected={false}
                     onClick={() => { setQuery(p.query); setShowPresets(false); }}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      padding: "6px 10px",
-                      border: "none",
-                      borderRadius: 4,
-                      background: "transparent",
-                      color: theme.text.muted,
-                      fontSize: sz(11),
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      cursor: "pointer",
-                      textAlign: "left",
-                    }}
-                    onMouseEnter={(e) => { (e.target as HTMLElement).style.background = theme.surface.cardHover; }}
-                    onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
-                    title={p.description}
-                  >
+                    style={{ padding: "6px 10px", marginBottom: 0, borderRadius: 4, color: theme.text.muted }}>
                     {p.title}
-                  </button>
+                  </SelectableListItem>
                 ))}
               </div>
             )}
@@ -285,40 +234,18 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
 
         <div style={{ flex: 1 }} />
 
-        <button
+        <Button size="md" active={false}
           onClick={() => { setQuery(""); setResult(null); setError(null); setElapsed(null); }}
-          style={{
-            padding: "4px 10px",
-            borderRadius: 4,
-            border: `1px solid ${theme.border.default}`,
-            background: "transparent",
-            color: theme.text.faint,
-            fontSize: sz(10),
-            fontFamily: "'IBM Plex Mono', monospace",
-            cursor: "pointer",
-          }}
-        >
+          style={{ padding: "4px 10px" }}>
           Clear
-        </button>
+        </Button>
 
-        <button
-          onClick={execute}
-          disabled={isRunning || !onExecute}
-          style={{
-            padding: "4px 14px",
-            borderRadius: 4,
-            border: `1px solid ${onExecute ? theme.palette.emerald + "66" : theme.border.default}`,
-            background: onExecute ? theme.palette.emerald + "18" : "transparent",
-            color: onExecute ? theme.palette.emerald : theme.text.disabled,
-            fontSize: sz(10),
-            fontFamily: "'IBM Plex Mono', monospace",
-            cursor: onExecute ? "pointer" : "default",
-            fontWeight: 600,
-          }}
-        >
+        <Button size="md" onClick={execute} disabled={isRunning || !onExecute}
+          color={theme.palette.emerald} active={!!onExecute}
+          style={{ padding: "4px 14px" }}>
           {isRunning ? "Running…" : "Execute"}
           <span style={{ marginLeft: 6, opacity: 0.5, fontWeight: 400 }}>Ctrl+Enter</span>
-        </button>
+        </Button>
       </div>
 
       {/* Editor */}
@@ -336,7 +263,7 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
           paddingRight: 8,
           color: theme.text.hint,
           fontSize: sz(11),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           lineHeight: "1.5",
           userSelect: "none",
           borderRight: `1px solid ${theme.border.default}`,
@@ -361,7 +288,7 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
             outline: "none",
             color: theme.text.primary,
             fontSize: sz(12),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             lineHeight: "1.5",
             resize: "none",
             overflow: "auto",
@@ -378,17 +305,17 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
           alignItems: "center",
           gap: 8,
         }}>
-          <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: theme.font.mono, textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Results
           </span>
           {result && !error && (
-            <span style={{ fontSize: sz(9), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <span style={{ fontSize: sz(9), color: theme.text.faint, fontFamily: theme.font.mono }}>
               {elapsed !== null && `${(elapsed / 1000).toFixed(2)}s`}
               {tableData && ` · ${tableData.rows.length} rows`}
             </span>
           )}
           {error && (
-            <span style={{ fontSize: sz(9), color: theme.palette.rose, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <span style={{ fontSize: sz(9), color: theme.palette.rose, fontFamily: theme.font.mono }}>
               Error{elapsed !== null && ` · ${(elapsed / 1000).toFixed(2)}s`}
             </span>
           )}
@@ -396,23 +323,19 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
           {formattedResult && (
             <div style={{ display: "flex", gap: 2 }}>
               {(["table", "raw"] as const).map((v) => (
-                <button
-                  key={v}
+                <Button key={v} size="sm"
                   onClick={() => setResultView(v)}
+                  active={resultView === v}
                   style={{
                     padding: "2px 8px",
                     borderRadius: 3,
                     border: `1px solid ${resultView === v ? theme.border.default : "transparent"}`,
                     background: resultView === v ? theme.surface.cardHover : "transparent",
                     color: resultView === v ? theme.text.muted : theme.text.hint,
-                    fontSize: sz(9),
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    cursor: "pointer",
                     textTransform: "capitalize",
-                  }}
-                >
+                  }}>
                   {v}
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -420,7 +343,7 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
 
         <div style={{ flex: 1, overflow: "auto" }}>
           {isRunning && (
-            <div style={{ padding: 32, textAlign: "center", color: theme.text.faint, fontSize: sz(12), fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ padding: 32, textAlign: "center", color: theme.text.faint, fontSize: sz(12), fontFamily: theme.font.mono }}>
               Executing query…
             </div>
           )}
@@ -433,14 +356,14 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
               background: theme.palette.rose + "10",
               border: `1px solid ${theme.palette.rose}33`,
             }}>
-              <div style={{ fontSize: sz(11), color: theme.palette.rose, fontFamily: "'IBM Plex Mono', monospace", whiteSpace: "pre-wrap" }}>
+              <div style={{ fontSize: sz(11), color: theme.palette.rose, fontFamily: theme.font.mono, whiteSpace: "pre-wrap" }}>
                 {error}
               </div>
             </div>
           )}
 
           {!isRunning && !error && !result && (
-            <div style={{ padding: 32, textAlign: "center", color: theme.text.hint, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ padding: 32, textAlign: "center", color: theme.text.hint, fontSize: sz(11), fontFamily: theme.font.mono }}>
               {onExecute
                 ? "Write a query and press Ctrl+Enter to execute."
                 : "GraphQL endpoint not connected."}
@@ -452,7 +375,7 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
               margin: 0,
               padding: "12px 16px",
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               color: theme.text.muted,
               lineHeight: "1.5",
               whiteSpace: "pre-wrap",
@@ -468,7 +391,7 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
                 width: "100%",
                 borderCollapse: "collapse",
                 fontSize: sz(11),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 <thead>
                   <tr>
@@ -513,7 +436,7 @@ export function GraphqlWorkbench({ onExecute, presets }: GraphqlWorkbenchProps) 
               margin: 0,
               padding: "12px 16px",
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               color: theme.text.muted,
               lineHeight: "1.5",
               whiteSpace: "pre-wrap",

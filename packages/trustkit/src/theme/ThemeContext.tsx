@@ -31,6 +31,7 @@ function deepMerge(base: Theme, override: DeepPartial<Theme>): Theme {
     text: { ...base.text, ...override.text },
     surface: { ...base.surface, ...override.surface },
     border: { ...base.border, ...override.border },
+    font: { ...base.font, ...override.font },
   };
 }
 

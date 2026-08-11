@@ -76,7 +76,7 @@ export function RawNodeSearch({
             background: theme.surface.card,
             color: theme.text.primary,
             fontSize: sz(13),
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontFamily: theme.font.sans,
             outline: "none",
           }}
         />
@@ -86,7 +86,7 @@ export function RawNodeSearch({
       {stats && (
         <div style={{
           fontSize: sz(10),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.text.hint,
           marginBottom: 12,
           padding: "0 2px",
@@ -99,7 +99,7 @@ export function RawNodeSearch({
       {(isFetching || (!ready && query)) && (
         <div style={{
           fontSize: sz(11),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.palette.amber,
           marginBottom: 8,
           padding: "0 2px",
@@ -139,7 +139,7 @@ export function RawNodeSearch({
               fontSize: sz(12),
               color: node.color,
               fontWeight: 600,
-              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontFamily: theme.font.sans,
             }}>
               {node.label}
             </div>

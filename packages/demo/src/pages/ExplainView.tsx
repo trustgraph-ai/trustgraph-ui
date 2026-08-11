@@ -858,7 +858,7 @@ export function ExplainView() {
                 disabled={isQuerying}
                 style={{
                   padding: "5px 14px", borderRadius: 6, fontSize: sz(11),
-                  fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600,
+                  fontFamily: theme.font.mono, fontWeight: 600,
                   cursor: isQuerying ? "default" : "pointer",
                   background: queryMode === mode ? withGlow(theme.palette.cyan, 0.15) : "transparent",
                   border: `1px solid ${queryMode === mode ? withGlow(theme.palette.cyan, 0.4) : theme.border.default}`,
@@ -890,7 +890,7 @@ export function ExplainView() {
               border: `1px solid ${withGlow(theme.semantic.error, 0.2)}`,
               marginBottom: 12,
             }}>
-              <div style={{ fontSize: sz(10), color: withGlow(theme.semantic.error, 0.53), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 6 }}>ERROR</div>
+              <div style={{ fontSize: sz(10), color: withGlow(theme.semantic.error, 0.53), fontFamily: theme.font.mono, marginBottom: 6 }}>ERROR</div>
               <div style={{ fontSize: sz(13), color: theme.text.secondary, lineHeight: 1.6 }}>{error}</div>
             </div>
           )}
@@ -910,14 +910,14 @@ export function ExplainView() {
                   background: withGlow(theme.semantic.answer, 0.08),
                   border: `1px solid ${withGlow(theme.semantic.answer, 0.2)}`,
                 }}>
-                  <div style={{ fontSize: sz(10), color: withGlow(theme.semantic.answer, 0.53), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 8 }}>
+                  <div style={{ fontSize: sz(10), color: withGlow(theme.semantic.answer, 0.53), fontFamily: theme.font.mono, marginBottom: 8 }}>
                     <span style={{ color: theme.semantic.answer }}>✓</span> RESPONSE
                   </div>
                   <div style={{ fontSize: sz(14), color: theme.text.primary, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{response}</div>
                 </div>
               )}
               {isQuerying && (
-                <div style={{ padding: "8px 12px", fontSize: sz(11), color: withGlow(theme.palette.cyan, 0.6), fontFamily: "'IBM Plex Mono', monospace", marginTop: 12 }}>
+                <div style={{ padding: "8px 12px", fontSize: sz(11), color: withGlow(theme.palette.cyan, 0.6), fontFamily: theme.font.mono, marginTop: 12 }}>
                   {response ? "Streaming..." : "Processing query..."}
                 </div>
               )}
@@ -940,7 +940,7 @@ export function ExplainView() {
                     background: withGlow(color, 0.08),
                     border: `1px solid ${withGlow(color, 0.2)}`,
                   }}>
-                    <div style={{ fontSize: sz(10), color: withGlow(color, 0.6), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 6, textTransform: "uppercase", fontWeight: 600 }}>
+                    <div style={{ fontSize: sz(10), color: withGlow(color, 0.6), fontFamily: theme.font.mono, marginBottom: 6, textTransform: "uppercase", fontWeight: 600 }}>
                       {msg.type}
                     </div>
                     <div style={{ fontSize: sz(13), color: theme.text.secondary, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{msg.text}</div>
@@ -951,7 +951,7 @@ export function ExplainView() {
           )}
 
           {queryMode === "agent" && isQuerying && agentMessages.length === 0 && (
-            <div style={{ padding: "8px 12px", fontSize: sz(11), color: withGlow(theme.palette.cyan, 0.6), fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ padding: "8px 12px", fontSize: sz(11), color: withGlow(theme.palette.cyan, 0.6), fontFamily: theme.font.mono }}>
               Agent is working...
             </div>
           )}
@@ -971,7 +971,7 @@ export function ExplainView() {
               padding: "8px 16px", borderBottom: `1px solid ${theme.border.default}`,
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
-              <div style={{ fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
+              <div style={{ fontSize: sz(11), fontFamily: theme.font.mono }}>
                 <span style={{ fontWeight: 600, color: theme.palette.amber }}>SOURCE</span>
                 {sourcePanel.documentTitle ? (
                   <span style={{ color: theme.text.secondary, marginLeft: 8 }}>
@@ -1013,12 +1013,12 @@ export function ExplainView() {
             {/* Chunk text content */}
             <div style={{ flex: 1, padding: "12px 16px", overflowY: "auto" }}>
               {sourcePanel.loading && (
-                <div style={{ fontSize: sz(11), color: withGlow(theme.palette.amber, 0.6), fontFamily: "'IBM Plex Mono', monospace" }}>
+                <div style={{ fontSize: sz(11), color: withGlow(theme.palette.amber, 0.6), fontFamily: theme.font.mono }}>
                   Loading source text...
                 </div>
               )}
               {sourcePanel.error && (
-                <div style={{ fontSize: sz(11), color: theme.semantic.error, fontFamily: "'IBM Plex Mono', monospace" }}>
+                <div style={{ fontSize: sz(11), color: theme.semantic.error, fontFamily: theme.font.mono }}>
                   {sourcePanel.error}
                 </div>
               )}
@@ -1078,7 +1078,7 @@ export function ExplainView() {
             )}
 
             {isQuerying && explainNodes.length === 0 && (
-              <div style={{ padding: "8px 12px", fontSize: sz(11), color: withGlow(theme.palette.cyan, 0.6), fontFamily: "'IBM Plex Mono', monospace" }}>
+              <div style={{ padding: "8px 12px", fontSize: sz(11), color: withGlow(theme.palette.cyan, 0.6), fontFamily: theme.font.mono }}>
                 Waiting for explain events...
               </div>
             )}
@@ -1131,7 +1131,7 @@ function ExplainCard({ node, index, onEntityClick, onEdgeClick, onSourceClick }:
           {index + 1}
         </span>
         <span style={{
-          fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: sz(11), fontFamily: theme.font.mono,
           color: typeColor, fontWeight: 600, textTransform: "uppercase",
         }}>
           {node.eventType}
@@ -1169,7 +1169,7 @@ function EventDataView({ eventType, data, onEntityClick, onEdgeClick, onSourceCl
   onSourceClick?: (source: ProvenanceChain) => void;
 }) {
   const { theme, sz } = useTheme();
-  const mono = { fontFamily: "'IBM Plex Mono', monospace" } as const;
+  const mono = { fontFamily: theme.font.mono } as const;
 
   switch (eventType) {
     case "question": {
@@ -1359,7 +1359,7 @@ function EdgeSelectionView({ sel, onClick, onSourceClick }: {
   onSourceClick?: (source: ProvenanceChain) => void;
 }) {
   const { theme, sz } = useTheme();
-  const mono = { fontFamily: "'IBM Plex Mono', monospace" } as const;
+  const mono = { fontFamily: theme.font.mono } as const;
 
   return (
     <div
@@ -1419,7 +1419,7 @@ function EdgeSelectionView({ sel, onClick, onSourceClick }: {
       {(sel.concept || sel.score != null) && (
         <div style={{
           fontSize: sz(10), color: theme.text.subtle, lineHeight: 1.4, marginTop: 2,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           display: "flex", alignItems: "center", gap: 8,
         }}>
           {sel.concept && (

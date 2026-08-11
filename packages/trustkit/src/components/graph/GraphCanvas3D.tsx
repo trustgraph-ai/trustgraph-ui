@@ -356,7 +356,7 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
                 fillOpacity={clamp(dc.scale * 0.8, 0.05, 1)}
                 fontSize={sz(11) * dc.scale}
                 fontWeight="bold"
-                fontFamily="'IBM Plex Mono', monospace"
+                fontFamily={theme.font.mono}
                 textAnchor="middle"
               >
                 {dc.label.toUpperCase()}
@@ -473,7 +473,7 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
                     fillOpacity={alpha * (isHighlighted ? 1 : 0.7)}
                     fontSize={sz(isHovered ? 8.5 : 7) * scale}
                     fontWeight={isHighlighted ? "bold" : "normal"}
-                    fontFamily="'IBM Plex Sans', sans-serif"
+                    fontFamily={theme.font.sans}
                     textAnchor="middle"
                   >
                     {truncateLabel(node.label)}
@@ -498,7 +498,7 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
         bottom: 16,
         left: 16,
         fontSize: sz(10),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         color: theme.text.hint,
       }}>
         drag to rotate · scroll to zoom · right-drag to pan
@@ -523,10 +523,10 @@ export function GraphCanvas3D({ entities, relationships, ontology, highlightedEn
             zIndex: 10,
             minWidth: 180,
           }}>
-            <div style={{ color: p.node.color, fontWeight: 700, fontSize: sz(13), fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: p.node.color, fontWeight: 700, fontSize: sz(13), fontFamily: theme.font.mono }}>
               {p.node.icon} {p.node.label}
             </div>
-            <div style={{ color: "#888", fontSize: sz(11), marginTop: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: "#888", fontSize: sz(11), marginTop: 4, fontFamily: theme.font.mono }}>
               {Object.entries(p.node.props || {}).map(([k, v]) => (
                 <div key={k}><span style={{ color: "#666" }}>{k}:</span> <span style={{ color: "#ccc" }}>{String(v)}</span></div>
               ))}

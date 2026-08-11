@@ -81,7 +81,7 @@ function Section({ title, color, children }: { title: string; color: string; chi
   return (
     <div style={{ marginBottom: 18 }}>
       <div style={{
-        fontSize: sz(8), color, fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(8), color, fontFamily: theme.font.mono,
         textTransform: "uppercase", letterSpacing: "0.06em",
         marginBottom: 8, paddingBottom: 4,
         borderBottom: `1px solid ${color}22`,
@@ -340,7 +340,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
               fontSize: sz(6), padding: "1px 3px", borderRadius: 3,
               background: "rgba(255,255,255,0.06)",
               color: theme.text.hint,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
             }}>
               ~
             </span>
@@ -351,7 +351,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
               fontSize: sz(7), padding: "1px 4px", borderRadius: 4,
               background: trustColor(theme.palette, trust) + "18",
               color: trustColor(theme.palette, trust),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
             }}>
               T{trust}
             </span>
@@ -362,7 +362,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
               fontSize: sz(7), padding: "1px 4px", borderRadius: 4,
               background: theme.palette.rose + "18",
               color: theme.palette.rose,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
             }}>
               {sc}
             </span>
@@ -373,7 +373,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
               fontSize: sz(7), padding: "1px 4px", borderRadius: 4,
               background: theme.palette.cyan + "18",
               color: theme.palette.cyan,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
             }}>
               {ic}
             </span>
@@ -399,7 +399,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "center",
           height: "100%", color: theme.text.hint, fontSize: sz(12),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
         }}>
           Select an entity to view details
         </div>
@@ -440,7 +440,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
             <span style={{
               fontSize: sz(8), padding: "2px 6px", borderRadius: 4,
               background: color + "18", color, border: `1px solid ${color}33`,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               textTransform: "uppercase", letterSpacing: "0.06em",
             }}>
               {selected.kind}
@@ -451,7 +451,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                 background: trustColor(theme.palette, trust) + "18",
                 color: trustColor(theme.palette, trust),
                 border: `1px solid ${trustColor(theme.palette, trust)}33`,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 Trust Level {trust}
               </span>
@@ -504,7 +504,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                 </span>
                 <span style={{
                   fontSize: sz(8), color: theme.text.hint,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                 }}>
                   {parent.kind}
                 </span>
@@ -541,7 +541,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                     </span>
                     <span style={{
                       fontSize: sz(8), color: theme.text.hint,
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                     }}>
                       {child.kind}
                     </span>
@@ -576,14 +576,14 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                       <span style={{
                         fontSize: sz(8), padding: "1px 5px", borderRadius: 4,
                         background: ic + "18", color: ic, border: `1px solid ${ic}33`,
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: theme.font.mono,
                       }}>
                         {proto}
                       </span>
                     )}
                     <span style={{
                       fontSize: sz(8), color: theme.text.hint,
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                     }}>
                       {iface.kind.replace("Interface", "").toLowerCase() || "generic"}
                     </span>
@@ -617,7 +617,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                         fontSize: sz(8), padding: "1px 5px", borderRadius: 4,
                         background: theme.palette.blue + "18", color: theme.palette.blue,
                         border: `1px solid ${theme.palette.blue}33`,
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: theme.font.mono,
                       }}>
                         v{ver}
                       </span>
@@ -628,7 +628,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                         background: (signed ? theme.palette.emerald : theme.palette.rose) + "18",
                         color: signed ? theme.palette.emerald : theme.palette.rose,
                         border: `1px solid ${(signed ? theme.palette.emerald : theme.palette.rose)}33`,
-                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontFamily: theme.font.mono,
                       }}>
                         {signed ? "signed" : "unsigned"}
                       </span>
@@ -649,7 +649,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                 <div key={kind} style={{ marginBottom: 10 }}>
                   <div style={{
                     fontSize: sz(9), color: kc, marginBottom: 4,
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: theme.font.mono,
                     display: "flex", alignItems: "center", gap: 4,
                   }}>
                     <span>{KIND_ICONS[kind] || "●"}</span>
@@ -701,7 +701,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                     </span>
                     <span style={{
                       fontSize: sz(8), color: theme.text.hint,
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                     }}>
                       {other.kind}
                     </span>
@@ -729,7 +729,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
       }}>
         <div style={{
           fontSize: sz(13), fontWeight: 700, color: theme.palette.blue,
-          fontFamily: "'IBM Plex Sans', sans-serif",
+          fontFamily: theme.font.sans,
           whiteSpace: "nowrap",
         }}>
           Hardware Security Explorer
@@ -746,7 +746,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
             background: "rgba(255,255,255,0.03)",
             border: `1px solid ${theme.border.default}`,
             color: theme.text.primary, fontSize: sz(11),
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontFamily: theme.font.sans,
             outline: "none",
           }}
         />
@@ -761,7 +761,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
           ].map(s => (
             <div key={s.label} style={{
               fontSize: sz(9), color: theme.text.hint,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               display: "flex", alignItems: "center", gap: 4,
             }}>
               <span style={{
@@ -795,7 +795,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
           }}>
             <div style={{
               fontSize: sz(8), color: theme.text.hint, marginBottom: 6,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               textTransform: "uppercase", letterSpacing: "0.06em",
             }}>
               Legend
@@ -806,7 +806,7 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
                   fontSize: sz(7), padding: "1px 5px", borderRadius: 4,
                   background: (KIND_COLORS[kind] || "#888") + "18",
                   color: KIND_COLORS[kind] || "#888",
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   display: "flex", alignItems: "center", gap: 3,
                 }}>
                   <span>{KIND_ICONS[kind]}</span>
@@ -818,28 +818,28 @@ export function HwSecExplorer(_props: HwSecExplorerProps) {
               <span style={{
                 fontSize: sz(7), padding: "1px 5px", borderRadius: 4,
                 background: theme.palette.emerald + "18", color: theme.palette.emerald,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 T5 = trust
               </span>
               <span style={{
                 fontSize: sz(7), padding: "1px 5px", borderRadius: 4,
                 background: theme.palette.rose + "18", color: theme.palette.rose,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 3 = security
               </span>
               <span style={{
                 fontSize: sz(7), padding: "1px 5px", borderRadius: 4,
                 background: theme.palette.cyan + "18", color: theme.palette.cyan,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 2 = interfaces
               </span>
               <span style={{
                 fontSize: sz(7), padding: "1px 5px", borderRadius: 4,
                 background: "rgba(255,255,255,0.06)", color: theme.text.hint,
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 ~ = inferred
               </span>

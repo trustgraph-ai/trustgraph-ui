@@ -31,7 +31,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
         style={{
           fontSize: sz(10),
           color: withGlow(color, 0.53),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           marginBottom: 4,
         }}
       >
@@ -163,7 +163,7 @@ export function ChatPanel({
                     color: theme.text.muted,
                     fontSize: sz(12),
                     cursor: "pointer",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: theme.font.sans,
                     maxWidth: 320,
                     textAlign: "left",
                     lineHeight: 1.4,
@@ -221,7 +221,7 @@ export function ChatPanel({
             background: theme.surface.card,
             color: theme.text.primary,
             fontSize: sz(13),
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontFamily: theme.font.sans,
             outline: "none",
             resize: "none",
             lineHeight: 1.5,
@@ -244,7 +244,7 @@ export function ChatPanel({
               !input.trim() || isQuerying ? "not-allowed" : "pointer",
             fontSize: sz(13),
             fontWeight: 600,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             whiteSpace: "nowrap",
           }}
         >

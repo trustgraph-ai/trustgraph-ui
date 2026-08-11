@@ -49,7 +49,7 @@ export function EmptyState({ message, icon, action }: EmptyStateProps) {
             borderRadius: 6,
             padding: "6px 14px",
             cursor: "pointer",
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}
         >
           {action.label}

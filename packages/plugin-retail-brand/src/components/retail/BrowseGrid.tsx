@@ -67,13 +67,13 @@ function BrowseProductCard({ product }: { product: RecommendedProduct }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{
             fontSize: sz(18), fontWeight: 700, color: theme.palette.emerald,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             ${product.price.toFixed(2)}
           </div>
           <div style={{
             fontSize: sz(9), color: product.inStock ? theme.palette.emerald : theme.palette.red,
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
           }}>
             {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
           </div>
@@ -91,7 +91,7 @@ export function BrowseGrid({ products }: BrowseGridProps) {
     <div style={{ padding: 20 }}>
       <div style={{
         fontSize: sz(10),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         color: theme.text.subtle,
         textTransform: "uppercase",
         letterSpacing: 0.5,

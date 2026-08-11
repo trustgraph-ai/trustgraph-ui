@@ -35,7 +35,7 @@ export function AgentStepList({ steps, isQuerying, error }: AgentStepListProps) 
         <div style={{
           fontSize: sz(10),
           color: "rgba(239,68,68,0.53)",
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           marginBottom: 6,
         }}>
           ERROR
@@ -66,7 +66,7 @@ export function AgentStepList({ steps, isQuerying, error }: AgentStepListProps) 
           padding: "8px 12px",
           fontSize: sz(11),
           color: withGlow(theme.palette.amber, 0.6),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
         }}>
           Agent is thinking...
         </div>

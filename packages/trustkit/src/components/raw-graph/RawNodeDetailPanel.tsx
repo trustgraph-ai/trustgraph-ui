@@ -32,7 +32,7 @@ export function RawNodeDetailPanel({
         <div style={{
           color: nodeColor,
           fontSize: sz(11),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           fontWeight: 600,
         }}>
           NODE
@@ -69,7 +69,7 @@ export function RawNodeDetailPanel({
       {detail.isLoading && (
         <div style={{
           fontSize: sz(11),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.text.hint,
           marginBottom: 12,
         }}>
@@ -92,7 +92,7 @@ export function RawNodeDetailPanel({
               >
                 <div style={{
                   fontSize: sz(10),
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   color: theme.text.faint,
                   marginBottom: 3,
                   textTransform: "uppercase",
@@ -168,7 +168,7 @@ function SectionHeader({ children, theme, sz }: { children: string; theme: Theme
   return (
     <div style={{
       fontSize: sz(10),
-      fontFamily: "'IBM Plex Mono', monospace",
+      fontFamily: theme.font.mono,
       fontWeight: 600,
       color: theme.text.faint,
       letterSpacing: "0.1em",
@@ -195,7 +195,7 @@ function RelationshipGroup({
     <div style={{ marginBottom: 12 }}>
       <div style={{
         fontSize: sz(10),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         color: theme.text.subtle,
         marginBottom: 4,
       }}>
@@ -218,7 +218,7 @@ function RelationshipGroup({
             background: `${c}11`,
             color: c,
             fontSize: sz(12),
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontFamily: theme.font.sans,
             cursor: "pointer",
             transition: "all 0.2s",
           }}

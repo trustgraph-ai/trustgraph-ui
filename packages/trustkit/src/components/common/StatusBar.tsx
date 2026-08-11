@@ -36,7 +36,7 @@ export function StatusBar() {
       padding: "8px 28px", borderTop: `1px solid ${theme.border.subtle}`,
       background: theme.surface.overlay, backdropFilter: "blur(8px)",
       display: "flex", justifyContent: "space-between", alignItems: "center",
-      fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: theme.text.hint,
+      fontFamily: theme.font.mono, fontSize: 10, color: theme.text.hint,
     }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         {activeActivity ? (

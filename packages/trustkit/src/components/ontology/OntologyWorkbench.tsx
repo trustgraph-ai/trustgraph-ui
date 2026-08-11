@@ -12,6 +12,7 @@ import { OntologyValidator } from "../../utils/ontology-validator";
 import { OntologyExporter } from "../../utils/ontology-exporter";
 import { OntologyImporter } from "../../utils/ontology-importer";
 import { LoadingState } from "../common";
+import { Button } from "../common/Button";
 import { useTheme } from "../../theme/ThemeContext";
 
 type View = "metadata" | "class" | "property";
@@ -157,12 +158,12 @@ export function OntologyWorkbench() {
         <OntologyList ontologies={typedOntologies} selectedId={selectedOntologyId} onSelect={(id) => { setSelectedOntologyId(id); setSelectedClassId(null); setSelectedPropertyId(null); setView("metadata"); }} onCreate={handleCreate} />
         <div style={{ marginTop: "auto", padding: "8px 16px", borderTop: `1px solid ${theme.border.default}` }}>
           <input ref={fileInputRef} type="file" accept=".owl,.rdf,.ttl,.xml" onChange={handleImportFile} style={{ display: "none" }} />
-          <button onClick={() => fileInputRef.current?.click()}
-            style={{ width: "100%", padding: "5px 10px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: "transparent", color: theme.text.faint, fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+          <Button size="md" active={false} onClick={() => fileInputRef.current?.click()}
+            style={{ width: "100%" }}>
             Import OWL/Turtle...
-          </button>
+          </Button>
           {importError && (
-            <div style={{ marginTop: 6, padding: "4px 8px", borderRadius: 4, background: `${theme.palette.red}1a`, color: theme.palette.red, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1.4 }}>
+            <div style={{ marginTop: 6, padding: "4px 8px", borderRadius: 4, background: `${theme.palette.red}1a`, color: theme.palette.red, fontSize: sz(9), fontFamily: theme.font.mono, lineHeight: 1.4 }}>
               {importError}
             </div>
           )}
@@ -191,25 +192,26 @@ export function OntologyWorkbench() {
 
             {/* Toolbar */}
             <div style={{ marginTop: "auto", padding: 12, borderTop: `1px solid ${theme.border.default}`, display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <button onClick={() => setView("metadata")}
-                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${view === "metadata" ? theme.palette.cyan + "44" : theme.border.default}`, background: view === "metadata" ? `${theme.palette.cyan}1a` : "transparent", color: view === "metadata" ? theme.palette.cyan : theme.text.faint, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+              <Button size="sm" onClick={() => setView("metadata")}
+                color={theme.palette.cyan} active={view === "metadata"}>
                 Metadata
-              </button>
-              <button onClick={() => setShowValidation(!showValidation)}
-                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${showValidation ? theme.palette.amber + "44" : theme.border.default}`, background: showValidation ? `${theme.palette.amber}1a` : "transparent", color: showValidation ? theme.palette.amber : theme.text.faint, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+              </Button>
+              <Button size="sm" onClick={() => setShowValidation(!showValidation)}
+                color={theme.palette.amber} active={showValidation}>
                 Validate
-              </button>
+              </Button>
               <select onChange={(e) => { if (e.target.value) handleExport(e.target.value as "owl" | "rdf" | "turtle"); e.target.value = ""; }}
-                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: "transparent", color: theme.text.faint, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: "transparent", color: theme.text.faint, fontSize: sz(9), fontFamily: theme.font.mono, cursor: "pointer" }}>
                 <option value="">Export...</option>
                 <option value="owl">OWL/XML</option>
                 <option value="rdf">RDF/XML</option>
                 <option value="turtle">Turtle</option>
               </select>
-              <button onClick={() => { if (selectedOntologyId && window.confirm(`Delete ontology "${ontology.metadata.name || selectedOntologyId}"? This cannot be undone.`)) handleDelete(selectedOntologyId); }}
-                style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${theme.palette.red}44`, background: "transparent", color: theme.palette.red, fontSize: sz(9), fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer" }}>
+              <Button size="sm" onClick={() => { if (selectedOntologyId && window.confirm(`Delete ontology "${ontology.metadata.name || selectedOntologyId}"? This cannot be undone.`)) handleDelete(selectedOntologyId); }}
+                color={theme.palette.red} active={false}
+                style={{ border: `1px solid ${theme.palette.red}44`, color: theme.palette.red }}>
                 Delete
-              </button>
+              </Button>
             </div>
           </div>
 

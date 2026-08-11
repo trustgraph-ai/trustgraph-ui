@@ -302,7 +302,7 @@ export function GraphCanvasSVG({ entities, relationships, ontology, highlightedE
                 fill={data.color + "44"}
                 fontSize={sz(11)}
                 fontWeight="bold"
-                fontFamily="'IBM Plex Mono', monospace"
+                fontFamily={theme.font.mono}
                 textAnchor="middle"
               >
                 {data.label.toUpperCase()}
@@ -416,7 +416,7 @@ export function GraphCanvasSVG({ entities, relationships, ontology, highlightedE
                   fillOpacity={alpha * (isHighlighted ? 1 : 0.75)}
                   fontSize={sz(isHovered ? 8.5 : 7)}
                   fontWeight={isHighlighted ? "bold" : "normal"}
-                  fontFamily="'IBM Plex Sans', sans-serif"
+                  fontFamily={theme.font.sans}
                   textAnchor="middle"
                 >
                   {truncateLabel(node.label)}
@@ -447,10 +447,10 @@ export function GraphCanvasSVG({ entities, relationships, ontology, highlightedE
             borderRadius: 8, padding: "10px 14px", pointerEvents: "none",
             backdropFilter: "blur(12px)", zIndex: 10, minWidth: 180,
           }}>
-            <div style={{ color: node.color, fontWeight: 700, fontSize: sz(13), fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: node.color, fontWeight: 700, fontSize: sz(13), fontFamily: theme.font.mono }}>
               {node.icon} {node.label}
             </div>
-            <div style={{ color: theme.text.muted, fontSize: sz(11), marginTop: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: theme.text.muted, fontSize: sz(11), marginTop: 4, fontFamily: theme.font.mono }}>
               {Object.entries(node.props || {}).map(([k, v]) => (
                 <div key={k}><span style={{ color: theme.text.faint }}>{k}:</span> <span style={{ color: theme.text.secondary }}>{String(v)}</span></div>
               ))}

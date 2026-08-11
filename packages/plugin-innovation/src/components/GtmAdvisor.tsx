@@ -122,7 +122,7 @@ function EntityPicker({
             width: "100%", padding: "8px 12px", borderRadius: 6, fontSize: sz(13),
             background: "rgba(255,255,255,0.04)", border: `1px solid ${theme.border.default}`,
             color: theme.text.primary, outline: "none",
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontFamily: theme.font.sans,
           }}
         />
       )}
@@ -195,7 +195,7 @@ function Section({ title, color, count, children }: {
         }}>▶</span>
         <span style={{
           fontSize: sz(11), fontWeight: 600, color,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           textTransform: "uppercase", letterSpacing: "0.04em",
         }}>
           {title}
@@ -203,7 +203,7 @@ function Section({ title, color, count, children }: {
         <span style={{
           fontSize: sz(9), color: theme.text.hint, background: "rgba(255,255,255,0.04)",
           padding: "1px 6px", borderRadius: 3,
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
         }}>
           {count}
         </span>
@@ -233,7 +233,7 @@ function EntityChip({ node, color, subtitle, onClick, kindColorFn }: {
     >
       <span style={{ fontSize: sz(11), color: c, fontWeight: 500 }}>{node.label}</span>
       {subtitle && (
-        <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace" }}>
+        <span style={{ fontSize: sz(9), color: theme.text.hint, fontFamily: theme.font.mono }}>
           {subtitle}
         </span>
       )}
@@ -646,7 +646,7 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
 
         <div style={{ marginBottom: 20 }}>
           <div style={{
-            fontSize: sz(9), color: theme.palette.emerald, fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: sz(9), color: theme.palette.emerald, fontFamily: theme.font.mono,
             textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6,
           }}>Your organisation or capability</div>
           <EntityPicker
@@ -854,7 +854,7 @@ export function GtmAdvisor(props: GtmAdvisorProps) {
                     background: isStreaming ? "rgba(255,255,255,0.04)" : `${theme.palette.emerald}22`,
                     color: isStreaming ? theme.text.faint : theme.palette.emerald,
                     fontSize: sz(12), fontWeight: 600, border: `1px solid ${theme.palette.emerald}44`,
-                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontFamily: theme.font.mono,
                     transition: "all 0.15s",
                   }}
                 >

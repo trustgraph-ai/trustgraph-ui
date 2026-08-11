@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useAuth, useAuthStore, useBootstrapStatus } from "@trustgraph/react-state";
 import { SocketProvider } from "@trustgraph/react-provider";
 import { useConnectionState } from "@trustgraph/react-provider";
+import { useTheme } from "@trustgraph/trustkit";
 import { LoginPage } from "./pages/LoginPage";
 import App from "./App";
 
@@ -74,12 +75,13 @@ function AuthFailedGuard({ children }: { children: React.ReactNode }) {
 }
 
 function CenteredMessage({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme();
   return (
     <div style={{
       width: "100%", minHeight: "100vh", display: "flex",
       alignItems: "center", justifyContent: "center",
       background: "#0A0A0F", color: "#E5E5E5",
-      fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+      fontFamily: theme.font.sans,
       textAlign: "center",
     }}>
       <div style={{

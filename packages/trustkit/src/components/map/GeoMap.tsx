@@ -242,7 +242,7 @@ export function GeoMap({
                 background: preset === p.id ? fillColor : "transparent",
                 color: preset === p.id ? theme.text.primary : theme.text.faint,
                 fontSize: sz(10),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 cursor: "pointer",
                 transition: "all 0.15s",
               }}
@@ -327,7 +327,7 @@ export function GeoMap({
               y={pf.y + 3}
               fill={theme.palette.amber}
               fontSize={sz(8)}
-              fontFamily="'IBM Plex Mono', monospace"
+              fontFamily={theme.font.mono}
               opacity={0.7}
             >
               {pf.name}
@@ -368,7 +368,7 @@ export function GeoMap({
                 y={m.y + 3}
                 fill={m.color || theme.palette.amber}
                 fontSize={sz(9)}
-                fontFamily="'IBM Plex Mono', monospace"
+                fontFamily={theme.font.mono}
                 opacity={hoveredMarker === m.id ? 1 : 0.7}
               >
                 {m.label}
@@ -384,7 +384,7 @@ export function GeoMap({
             y={height - 12}
             fill={theme.text.subtle}
             fontSize={sz(10)}
-            fontFamily="'IBM Plex Mono', monospace"
+            fontFamily={theme.font.mono}
           >
             {hoveredFeature}
           </text>

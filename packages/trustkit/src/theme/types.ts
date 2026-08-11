@@ -46,12 +46,18 @@ export interface ThemeBorder {
   grid: string;
 }
 
+export interface ThemeFont {
+  mono: string;
+  sans: string;
+}
+
 export interface Theme {
   palette: ThemePalette;
   semantic: ThemeSemantic;
   text: ThemeText;
   surface: ThemeSurface;
   border: ThemeBorder;
+  font: ThemeFont;
 }
 
 export type DeepPartial<T> = {

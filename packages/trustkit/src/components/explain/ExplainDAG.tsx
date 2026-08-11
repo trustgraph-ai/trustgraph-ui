@@ -218,7 +218,7 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
                       fill={nodeColor}
                       fontSize={sz(10)}
                       fontWeight={600}
-                      fontFamily="'IBM Plex Mono', monospace"
+                      fontFamily={theme.font.mono}
                       style={{ pointerEvents: "none" }}
                     >
                       {label}
@@ -237,7 +237,7 @@ export function ExplainDAG({ layout, selectedNodeId, onNodeClick }: ExplainDAGPr
                     fill={nodeColor}
                     fontSize={sz(10)}
                     fontWeight={600}
-                    fontFamily="'IBM Plex Mono', monospace"
+                    fontFamily={theme.font.mono}
                     style={{ pointerEvents: "none" }}
                   >
                     <tspan x={pos.x + NODE_W / 2} dy={0}>{line1}</tspan>

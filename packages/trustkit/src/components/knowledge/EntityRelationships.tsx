@@ -59,7 +59,7 @@ export function EntityRelationships({
             <div style={{
               fontSize: sz(10),
               color: theme.text.faint,
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               marginTop: 2,
             }}>
               {r.predicate.replace(/_/g, " ")}

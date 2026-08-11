@@ -140,7 +140,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
             onClick={isDone ? () => setStep(s) : undefined}
             style={{
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               fontWeight: 600,
               color: isActive ? theme.palette.cyan : isDone ? theme.palette.emerald : theme.text.disabled,
               cursor: isDone ? "pointer" : "default",
@@ -165,7 +165,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
         marginBottom: 16,
       }}>
         <div>
-          <div style={{ fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", color: theme.palette.amber, fontWeight: 600, marginBottom: 4 }}>
+          <div style={{ fontSize: sz(11), fontFamily: theme.font.mono, color: theme.palette.amber, fontWeight: 600, marginBottom: 4 }}>
             SUBMIT FOR PROCESSING
           </div>
           <div style={{ fontSize: sz(14), fontWeight: 700, color: theme.text.primary }}>
@@ -208,7 +208,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
                 >
                   <div style={{ fontSize: sz(13), fontWeight: 600, color: theme.palette.amber }}>{id}</div>
                   {desc && <div style={{ fontSize: sz(11), color: theme.text.subtle, marginTop: 2 }}>{desc}</div>}
-                  {bp && <div style={{ fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint, marginTop: 2 }}>blueprint: {bp}</div>}
+                  {bp && <div style={{ fontSize: sz(10), fontFamily: theme.font.mono, color: theme.text.faint, marginTop: 2 }}>blueprint: {bp}</div>}
                 </div>
               );
             })}
@@ -220,7 +220,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
               padding: "8px 14px",
               borderRadius: 6,
               fontSize: sz(11),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               fontWeight: 600,
               cursor: "pointer",
               background: "transparent",
@@ -241,7 +241,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
 
           {/* Blueprint selector */}
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint, marginBottom: 6, letterSpacing: "0.05em" }}>BLUEPRINT</div>
+            <div style={{ fontSize: sz(10), fontFamily: theme.font.mono, color: theme.text.faint, marginBottom: 6, letterSpacing: "0.05em" }}>BLUEPRINT</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {bpList.map((bp: any) => {
                 const id = bp.id || bp[0];
@@ -295,7 +295,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
                   if (schema.enum && schema.enum.length > 0) {
                     return (
                       <div key={flowParamName} style={{ marginBottom: 10 }}>
-                        <div style={{ fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint, marginBottom: 4 }}>
+                        <div style={{ fontSize: sz(10), fontFamily: theme.font.mono, color: theme.text.faint, marginBottom: 4 }}>
                           {label}
                           {isInheriting && <span style={{ color: theme.text.disabled, marginLeft: 6 }}>(from {controlledBy})</span>}
                         </div>
@@ -304,7 +304,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
                           onChange={(e) => setNewFlowParams(prev => ({ ...prev, [flowParamName]: e.target.value }))}
                           style={{
                             width: "100%", padding: "6px 10px", fontSize: sz(11),
-                            fontFamily: "'IBM Plex Mono', monospace",
+                            fontFamily: theme.font.mono,
                             color: theme.text.primary, background: theme.surface.base,
                             border: `1px solid ${theme.border.medium}`, borderRadius: 6, outline: "none",
                           }}
@@ -334,7 +334,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
 
                 return (
                   <div style={{ marginTop: 12 }}>
-                    <div style={{ fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint, marginBottom: 8, letterSpacing: "0.05em" }}>PARAMETERS</div>
+                    <div style={{ fontSize: sz(10), fontFamily: theme.font.mono, color: theme.text.faint, marginBottom: 8, letterSpacing: "0.05em" }}>PARAMETERS</div>
                     {basicParams.map(renderParam)}
 
                     {advancedParams.length > 0 && (
@@ -343,7 +343,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
                           onClick={() => setShowAdvanced(!showAdvanced)}
                           style={{
                             background: "none", border: "none", cursor: "pointer",
-                            fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+                            fontSize: sz(10), fontFamily: theme.font.mono,
                             color: theme.text.muted, padding: "6px 0", marginTop: 4,
                           }}
                         >
@@ -428,7 +428,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
             onClick={() => setCreatingCollection(true)}
             style={{
               marginTop: 12, padding: "8px 14px", borderRadius: 6,
-              fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600,
+              fontSize: sz(11), fontFamily: theme.font.mono, fontWeight: 600,
               cursor: "pointer", background: "transparent",
               border: `1px dashed ${theme.border.medium}`, color: theme.text.muted, width: "100%",
             }}
@@ -457,7 +457,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
           <InputField label="DESCRIPTION" value={newCollDescription} onChange={setNewCollDescription} placeholder="What this collection contains..." />
 
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace", color: theme.text.faint, marginBottom: 4, letterSpacing: "0.05em" }}>TAGS</div>
+            <div style={{ fontSize: sz(10), fontFamily: theme.font.mono, color: theme.text.faint, marginBottom: 4, letterSpacing: "0.05em" }}>TAGS</div>
             <input
               type="text"
               placeholder="Add tag, press Enter..."
@@ -472,7 +472,7 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
               }}
               style={{
                 width: "100%", padding: "6px 10px", fontSize: sz(11),
-                fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+                fontFamily: theme.font.sans,
                 color: theme.text.primary, background: "transparent",
                 border: `1px solid ${theme.border.medium}`, borderRadius: 6, outline: "none",
               }}
@@ -528,15 +528,15 @@ export function SubmitDialog({ documentTitle, onSubmit, onCancel }: SubmitDialog
             border: `1px solid ${theme.border.default}`,
             marginBottom: 16,
           }}>
-            <div style={{ fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 10 }}>
+            <div style={{ fontSize: sz(11), fontFamily: theme.font.mono, marginBottom: 10 }}>
               <span style={{ color: theme.text.faint }}>Document: </span>
               <span style={{ color: theme.palette.cyan }}>{documentTitle}</span>
             </div>
-            <div style={{ fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", marginBottom: 10 }}>
+            <div style={{ fontSize: sz(11), fontFamily: theme.font.mono, marginBottom: 10 }}>
               <span style={{ color: theme.text.faint }}>Flow: </span>
               <span style={{ color: theme.palette.amber }}>{creatingFlow ? `${newFlowId} (new)` : selectedFlowId}</span>
             </div>
-            <div style={{ fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ fontSize: sz(11), fontFamily: theme.font.mono }}>
               <span style={{ color: theme.text.faint }}>Collection: </span>
               <span style={{ color: theme.palette.emerald }}>{creatingCollection ? `${newCollId} (new)` : selectedCollection}</span>
             </div>
@@ -590,7 +590,7 @@ function InputField({ label, value, onChange, placeholder, small }: {
   return (
     <div style={{ marginBottom: small ? 8 : 12 }}>
       <div style={{
-        fontSize: sz(10), fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: sz(10), fontFamily: theme.font.mono,
         color: theme.text.faint, marginBottom: 4, letterSpacing: "0.05em",
       }}>
         {label}
@@ -603,7 +603,7 @@ function InputField({ label, value, onChange, placeholder, small }: {
         style={{
           width: "100%", padding: small ? "5px 8px" : "6px 10px",
           fontSize: sz(small ? 11 : 12),
-          fontFamily: "'IBM Plex Sans', -apple-system, sans-serif",
+          fontFamily: theme.font.sans,
           color: theme.text.primary, background: "transparent",
           border: `1px solid ${theme.border.medium}`, borderRadius: 6, outline: "none",
         }}

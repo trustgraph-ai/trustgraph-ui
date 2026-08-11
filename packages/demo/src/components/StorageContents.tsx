@@ -200,7 +200,7 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
 
   if (loading) {
     return (
-      <div style={{ fontSize: sz(11), color: theme.text.disabled, fontFamily: "'IBM Plex Mono', monospace" }}>
+      <div style={{ fontSize: sz(11), color: theme.text.disabled, fontFamily: theme.font.mono }}>
         Loading contents...
       </div>
     );
@@ -255,7 +255,7 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
                   <span style={{ color: theme.text.faint, marginRight: 4 }}>{isExpanded ? "▾" : "▸"}</span>
                   <span style={{ color: theme.palette.cyan, fontWeight: 600 }}>{doc.label}</span>
                 </span>
-                <span style={{ color: theme.text.disabled, fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(9) }}>
+                <span style={{ color: theme.text.disabled, fontFamily: theme.font.mono, fontSize: sz(9) }}>
                   {doc.pages.length > 0 && `${doc.pages.length}pg `}
                   {docChunks > 0 && `${docChunks}ch`}
                 </span>
@@ -285,7 +285,7 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
                             <span style={{ color: theme.text.faint, marginRight: 4 }}>{pageExpanded ? "▾" : "▸"}</span>
                             <span style={{ color: storeColor }}>{page.label}</span>
                           </span>
-                          <span style={{ color: theme.text.disabled, fontFamily: "'IBM Plex Mono', monospace", fontSize: sz(9) }}>
+                          <span style={{ color: theme.text.disabled, fontFamily: theme.font.mono, fontSize: sz(9) }}>
                             {page.charLength > 0 && `${page.charLength}ch `}
                             {page.chunks.length}chunks
                           </span>
@@ -298,7 +298,7 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
                               <div key={chunk.uri} style={{
                                 padding: "2px 6px",
                                 fontSize: sz(9),
-                                fontFamily: "'IBM Plex Mono', monospace",
+                                fontFamily: theme.font.mono,
                                 color: theme.text.faint,
                               }}>
                                 {chunk.label}
@@ -318,7 +318,7 @@ export function StorageContents({ collection, storeColor }: StorageContentsProps
                     <div key={chunk.uri} style={{
                       padding: "2px 6px",
                       fontSize: sz(9),
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: theme.font.mono,
                       color: theme.text.faint,
                     }}>
                       {chunk.label}

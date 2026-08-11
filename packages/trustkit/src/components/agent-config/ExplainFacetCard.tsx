@@ -45,7 +45,7 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
         {event.stepNumber !== undefined && (
           <span style={{
             fontSize: sz(9),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             fontWeight: 700,
             color: theme.text.muted,
             marginRight: 4,
@@ -106,7 +106,7 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
             <pre style={{
               margin: "4px 0 0",
               fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               color: theme.text.secondary,
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
@@ -126,7 +126,7 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
                 key={c}
                 style={{
                   fontSize: sz(10),
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontFamily: theme.font.mono,
                   padding: "1px 6px",
                   borderRadius: 3,
                   background: c === event.action ? `${theme.palette.emerald}20` : theme.surface.card,
@@ -148,7 +148,7 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
             {event.concepts.map((c, i) => (
               <span key={i} style={{
                 fontSize: sz(10),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
                 padding: "1px 6px",
                 borderRadius: 3,
                 background: `${theme.palette.blue}15`,
@@ -187,7 +187,7 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
           {event.scores.length > 0 && (
             <div style={{
               fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               color: theme.text.secondary,
               lineHeight: 1.6,
             }}>
@@ -275,7 +275,7 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
           paddingTop: 6,
           borderTop: `1px solid ${theme.border.subtle}`,
           fontSize: sz(9),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.text.faint,
         }}>
           {event.inToken !== undefined && (
@@ -303,7 +303,7 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
           paddingTop: 6,
           borderTop: `1px solid ${theme.border.subtle}`,
           fontSize: sz(9),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.text.hint,
         }}>
           Unrecognised facets: {event.unknownTypeNames.join(", ")}
@@ -315,7 +315,7 @@ export function ExplainFacetCard({ event, isSelected, onClick }: ExplainFacetCar
         <div style={{
           marginTop: 4,
           fontSize: sz(9),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: theme.text.hint,
         }}>
           {event.extraPredicates.map(({ predicateName, values }) => (
@@ -342,7 +342,7 @@ function TypeBadge({ name, known, isError }: { name: string; known: boolean; isE
   return (
     <span style={{
       fontSize: sz(9),
-      fontFamily: "'IBM Plex Mono', monospace",
+      fontFamily: theme.font.mono,
       padding: "1px 5px",
       borderRadius: 3,
       background: `${color}15`,
@@ -360,7 +360,7 @@ function Facet({ label, children }: { label: string; children: React.ReactNode }
     <div style={{ marginBottom: 6 }}>
       <div style={{
         fontSize: sz(9),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         color: theme.text.faint,
         letterSpacing: "0.05em",
         textTransform: "uppercase",

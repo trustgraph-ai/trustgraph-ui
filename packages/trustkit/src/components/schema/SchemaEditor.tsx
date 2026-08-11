@@ -6,6 +6,7 @@ import { SchemaFieldsList } from "./SchemaFieldsList";
 import { SchemaIndexesSection } from "./SchemaIndexesSection";
 import { SchemaValidationErrors } from "./SchemaValidationErrors";
 import { useTheme } from "../../theme/ThemeContext";
+import { Button } from "../common/Button";
 
 interface SchemaEditorProps {
   schemaId: string;
@@ -35,20 +36,20 @@ export function SchemaEditor({ schemaId, schema, existingSchemas, onSave, onDele
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: 20 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: sz(14), color: theme.text.primary, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>{form.name || schemaId}</div>
-          <div style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: "'IBM Plex Mono', monospace", marginTop: 2 }}>{schemaId}</div>
+          <div style={{ fontSize: sz(14), color: theme.text.primary, fontFamily: theme.font.mono, fontWeight: 600 }}>{form.name || schemaId}</div>
+          <div style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: theme.font.mono, marginTop: 2 }}>{schemaId}</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           {isDirty && (
-            <button onClick={handleSave}
-              style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${theme.palette.emerald}44`, background: `${theme.palette.emerald}1a`, color: theme.palette.emerald, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+            <Button size="lg" onClick={handleSave} color={theme.palette.emerald}>
               Save
-            </button>
+            </Button>
           )}
-          <button onClick={() => { if (window.confirm(`Delete schema "${form.name || schemaId}"?`)) onDelete(schemaId); }}
-            style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${theme.palette.red}44`, background: "transparent", color: theme.palette.red, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, cursor: "pointer" }}>
+          <Button size="lg" onClick={() => { if (window.confirm(`Delete schema "${form.name || schemaId}"?`)) onDelete(schemaId); }}
+            color={theme.palette.red} active={false}
+            style={{ border: `1px solid ${theme.palette.red}44`, color: theme.palette.red }}>
             Delete
-          </button>
+          </Button>
         </div>
       </div>
 

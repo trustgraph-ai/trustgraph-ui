@@ -163,7 +163,7 @@ export function GraphRagView({ collection: collectionProp }: GraphRagViewProps) 
                 padding: "8px 12px",
                 fontSize: sz(11),
                 color: withGlow(theme.palette.cyan, 0.6),
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: theme.font.mono,
               }}>
                 Waiting for explain events...
               </div>

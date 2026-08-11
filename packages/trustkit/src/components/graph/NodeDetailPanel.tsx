@@ -26,7 +26,7 @@ export function NodeDetailPanel({ node, relationships, entities, ontology, prope
       background: theme.surface.overlay, padding: 24, overflowY: "auto",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <div style={{ color: ontology[node.domain].color, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>
+        <div style={{ color: ontology[node.domain].color, fontSize: sz(11), fontFamily: theme.font.mono, fontWeight: 600 }}>
           {ontology[node.domain].label.toUpperCase()} ENTITY
         </div>
         <button onClick={onClose} style={{ background: "none", border: "none", color: theme.text.faint, cursor: "pointer", fontSize: sz(18) }}>×</button>
@@ -39,7 +39,7 @@ export function NodeDetailPanel({ node, relationships, entities, ontology, prope
         {Object.entries(node.props || {}).map(([k, v]) => (
           <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${theme.border.subtle}` }}>
             <span style={{ fontSize: sz(12), color: theme.text.subtle }}>{propertyLabels[k] || k}</span>
-            <span style={{ fontSize: sz(12), color: theme.text.primary, fontFamily: "'IBM Plex Mono', monospace", textAlign: "right" }}>{String(v)}</span>
+            <span style={{ fontSize: sz(12), color: theme.text.primary, fontFamily: theme.font.mono, textAlign: "right" }}>{String(v)}</span>
           </div>
         ))}
       </div>
@@ -60,7 +60,7 @@ export function NodeDetailPanel({ node, relationships, entities, ontology, prope
               <div style={{ fontSize: sz(11), color: theme.text.muted }}>
                 <span style={{ color: other?.color || theme.text.subtle }}>{direction} {other?.label}</span>
               </div>
-              <div style={{ fontSize: sz(10), color: theme.text.faint, fontFamily: "'IBM Plex Mono', monospace", marginTop: 2 }}>
+              <div style={{ fontSize: sz(10), color: theme.text.faint, fontFamily: theme.font.mono, marginTop: 2 }}>
                 {r.predicate.replace(/_/g, " ")}
               </div>
             </Card>

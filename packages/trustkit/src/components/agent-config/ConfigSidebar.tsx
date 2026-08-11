@@ -38,7 +38,7 @@ export function ConfigSidebar({ selected, onSelect, generation }: ConfigSidebarP
     }}>
       <div style={{
         fontSize: sz(10),
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: theme.font.mono,
         fontWeight: 600,
         color: theme.text.faint,
         letterSpacing: "0.1em",
@@ -110,7 +110,7 @@ function ConfigSection({
       }}>
         <div style={{
           fontSize: sz(9),
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: theme.font.mono,
           color: sectionColor,
           letterSpacing: "0.1em",
           textTransform: "uppercase",
@@ -126,7 +126,7 @@ function ConfigSection({
             background: showCreate ? `${sectionColor}1a` : "transparent",
             color: showCreate ? sectionColor : theme.text.faint,
             fontSize: sz(9),
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: theme.font.mono,
             cursor: "pointer",
           }}
         >
@@ -154,7 +154,7 @@ function ConfigSection({
               background: theme.surface.card,
               color: theme.text.primary,
               fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               outline: "none",
             }}
           />
@@ -168,7 +168,7 @@ function ConfigSection({
               background: `${sectionColor}1a`,
               color: !newKey.trim() ? theme.text.disabled : sectionColor,
               fontSize: sz(9),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               cursor: "pointer",
             }}
           >
@@ -203,7 +203,7 @@ function ConfigSection({
               background: isSelected ? `${sectionColor}1a` : "transparent",
               color: isSelected ? sectionColor : theme.text.secondary,
               fontSize: sz(10),
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: theme.font.mono,
               cursor: "pointer",
               transition: "all 0.15s",
             }}

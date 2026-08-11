@@ -294,7 +294,7 @@ export function ExplainGraph({
                   fill={theme.text.primary}
                   fillOpacity={isDimmed ? 0.15 : isHighlighted || isEdgeHovered ? 0.9 : 0.5}
                   fontSize={sz(8)}
-                  fontFamily="'IBM Plex Mono', monospace"
+                  fontFamily={theme.font.mono}
                   textAnchor="middle"
                 >
                   {edge.label}
@@ -370,7 +370,7 @@ export function ExplainGraph({
                   fillOpacity={alpha * (isHighlighted ? 1 : 0.7)}
                   fontSize={sz(isHovered ? 9 : 8)}
                   fontWeight={isHighlighted ? "bold" : "normal"}
-                  fontFamily="'IBM Plex Sans', sans-serif"
+                  fontFamily={theme.font.sans}
                   textAnchor="middle"
                 >
                   {node.label}
@@ -414,7 +414,7 @@ export function ExplainGraph({
             borderRadius: 8, padding: "8px 12px",
             pointerEvents: "none", backdropFilter: "blur(12px)", zIndex: 10,
           }}>
-            <div style={{ color: node.color || theme.palette.blue, fontWeight: 700, fontSize: sz(12), fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: node.color || theme.palette.blue, fontWeight: 700, fontSize: sz(12), fontFamily: theme.font.mono }}>
               {node.label}
             </div>
           </div>
@@ -440,11 +440,11 @@ export function ExplainGraph({
             pointerEvents: "none", backdropFilter: "blur(12px)", zIndex: 10,
             maxWidth: 280,
           }}>
-            <div style={{ color: theme.palette.cyan, fontWeight: 700, fontSize: sz(11), fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div style={{ color: theme.palette.cyan, fontWeight: 700, fontSize: sz(11), fontFamily: theme.font.mono }}>
               {edge.label}
             </div>
             {(edge.concept || edge.score != null) && (
-              <div style={{ color: theme.text.muted, fontSize: sz(10), marginTop: 4, lineHeight: 1.4, fontFamily: "'IBM Plex Mono', monospace" }}>
+              <div style={{ color: theme.text.muted, fontSize: sz(10), marginTop: 4, lineHeight: 1.4, fontFamily: theme.font.mono }}>
                 {edge.concept && (
                   <div><span style={{ color: theme.text.faint }}>concept: </span><span style={{ color: theme.palette.orange }}>{edge.concept}</span></div>
                 )}
