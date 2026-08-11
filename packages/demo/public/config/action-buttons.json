@@ -1,0 +1,20 @@
+{
+  "global": [
+    {
+      "id": "quick-start",
+      "label": "Quick Start",
+      "icon": "🚀",
+      "body": "Welcome to **TrustGraph**!\n\n1. Upload a document in **Document Ingestion**\n2. Explore the graph in **Context Graph Explorer**\n3. Ask questions with **Graph RAG Query**\n\nFor step-by-step tutorials, see the [guides](https://docs.trustgraph.ai/guides/).",
+      "color": "cyan",
+      "order": 1
+    },
+    {
+      "id": "feedback",
+      "label": "Give Feedback",
+      "icon": "💬",
+      "body": "We'd love to hear from you!\n\n- Join the conversation on [Discord](https://discord.gg/trustgraph)\n- Report issues on [GitHub](https://github.com/trustgraph-ai/trustgraph/issues)",
+      "color": "purple",
+      "order": 2
+    }
+  ]
+}

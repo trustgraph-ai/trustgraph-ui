@@ -1,6 +1,7 @@
 export { SectionLabel } from "./SectionLabel";
 export { FilterButton } from "./FilterButton";
 export { Header } from "./Header";
+export type { NavTab } from "./Header";
 export { StatusBar } from "./StatusBar";
 export { Typewriter } from "./Typewriter";
 export { Card } from "./Card";
@@ -31,3 +32,9 @@ export { ModeSelector } from "./ModeSelector";
 export { Toolbar } from "./Toolbar";
 export { PageLayout } from "./PageLayout";
 export { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+export { GuidanceBanner } from "./GuidanceBanner";
+export type { GuidanceEntry, GuidancePosition } from "./GuidanceBanner";
+export { PageGuidance } from "./PageGuidance";
+export { GuidanceSlot } from "./GuidanceSlot";
+export type { SlotPosition } from "./GuidanceSlot";
+export { ActionButtonBar } from "./ActionButtonBar";

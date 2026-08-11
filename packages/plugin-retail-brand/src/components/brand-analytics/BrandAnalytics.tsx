@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, createContext, useContext } from "react";
-import { useTheme, Button } from "@trustgraph/trustkit";
+import { useTheme, Button, PageGuidance, GuidanceSlot } from "@trustgraph/trustkit";
 import { withGlow } from "@trustgraph/trustkit";
 import { useBrandAnalytics, BUDGET_TIERS } from "../../hooks/useBrandAnalytics";
 import { useProductScorecard } from "../../hooks/useProductScorecard";
@@ -141,6 +141,7 @@ function FilterBar({
           </Pill>
         ))}
         <span style={{ flex: 1 }} />
+        <GuidanceSlot id="welcome" buttonOffset={{ top: -12, left: "-2.5em" }} />
         <Button size="sm" onClick={onRefresh} disabled={isLoading}>
           {isLoading ? "Loading..." : "Refresh"}
         </Button>
@@ -460,6 +461,7 @@ export function BrandAnalytics(_props: BrandAnalyticsProps) {
   const hoverCtx = { onEnter: handleEnter, onLeave: handleLeave };
 
   return (
+    <PageGuidance pageKey="brand-analytics">
     <div style={{ display: "flex", flexDirection: "column", height: "var(--page-height)", overflow: "hidden" }}>
       <FilterBar
         budgetTierIndex={data.budgetTierIndex}
@@ -517,5 +519,6 @@ export function BrandAnalytics(_props: BrandAnalyticsProps) {
         </div>
       )}
     </div>
+    </PageGuidance>
   );
 }

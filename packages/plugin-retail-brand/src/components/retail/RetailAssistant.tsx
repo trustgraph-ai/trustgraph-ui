@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { useTheme } from "@trustgraph/trustkit";
+import { useTheme, PageGuidance, GuidanceSlot } from "@trustgraph/trustkit";
 import { useRetailOrchestrator } from "../../hooks/useRetailOrchestrator";
 import { useRetailContext } from "../../hooks/useRetailContext";
 import { ChatPanel } from "./ChatPanel";
@@ -110,13 +110,18 @@ export function RetailAssistant(_props: RetailAssistantProps) {
   }, [orch]);
 
   return (
+    <PageGuidance pageKey="retail-assistant">
     <div
       style={{
         display: "flex",
         height: "var(--page-height)",
         overflow: "hidden",
+        position: "relative",
       }}
     >
+      <div style={{ position: "absolute", top: "1em", left: 16, zIndex: 100 }}>
+        <GuidanceSlot id="welcome" buttonOffset={{ top: 0, left: 0 }} />
+      </div>
       {/* Chat panel */}
       <div
         style={{
@@ -218,5 +223,6 @@ export function RetailAssistant(_props: RetailAssistantProps) {
         <ContextPanel flow={flow} context={context} />
       </div>
     </div>
+    </PageGuidance>
   );
 }

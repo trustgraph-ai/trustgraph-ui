@@ -7,6 +7,8 @@ import {
   RawGraphExplorer3D,
   ModeSelector,
   SectionLabel,
+  PageGuidance,
+  GuidanceSlot,
   useTheme,
 } from "@trustgraph/trustkit";
 import { DevPanel } from "../components/DevPanel";
@@ -37,7 +39,7 @@ export function RawGraphPage() {
   const { theme, sz } = useTheme();
 
   return (
-    <>
+    <PageGuidance pageKey="graph-explorer">
       {/* Mode selector bar */}
       <div style={{
         padding: `${sz(10)}px ${sz(28)}px`,
@@ -64,11 +66,16 @@ export function RawGraphPage() {
       </div>
 
       {/* Active view */}
-      {mode === "simple" && <SimpleRawGraphView />}
-      {mode === "detail" && <RawGraphWithDetail />}
-      {mode === "search" && <RawGraphWithSearch />}
-      {mode === "full" && <RawGraphExplorer />}
-      {mode === "3d" && <RawGraphExplorer3D />}
+      <div style={{ position: "relative", flex: 1 }}>
+        <div style={{ position: "absolute", top: "3.5em", left: 28, zIndex: 100 }}>
+          <GuidanceSlot id="welcome" buttonOffset={{ top: 0, left: 0 }} />
+        </div>
+        {mode === "simple" && <SimpleRawGraphView />}
+        {mode === "detail" && <RawGraphWithDetail />}
+        {mode === "search" && <RawGraphWithSearch />}
+        {mode === "full" && <RawGraphExplorer />}
+        {mode === "3d" && <RawGraphExplorer3D />}
+      </div>
 
       <DevPanel
         explanation="This page demonstrates 4 levels of composition for schema-free graph navigation. All use the same Tier 1 hooks — the difference is which Tier 2 pieces they include. Use the selector above to switch."
@@ -165,6 +172,6 @@ function MyGraph() {
           { name: "useNodeDetail", tier: "1", description: "Fresh detail fetch for a single node" },
         ]}
       />
-    </>
+    </PageGuidance>
   );
 }

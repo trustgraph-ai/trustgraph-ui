@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { useTheme, Button } from "@trustgraph/trustkit";
+import { useTheme, Button, PageGuidance, GuidanceSlot } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useLawData } from "./useLawData";
 import type {
@@ -1307,6 +1307,7 @@ export function LawExplorer(_props: LawExplorerProps) {
   // ─── Main render ────────────────────────────────────────────────────
 
   return (
+    <PageGuidance pageKey="law">
     <div style={{
       height: "var(--page-height)",
       display: "flex",
@@ -1324,7 +1325,7 @@ export function LawExplorer(_props: LawExplorerProps) {
         flexShrink: 0,
       }}>
         <span style={{ fontSize: sz(18) }}>{"\u2696"}</span>
-        <div style={{ flex: 1 }}>
+        <div>
           <div style={{ fontSize: sz(14), fontWeight: 700, color: theme.text.primary }}>
             {lang === "lt" ? "Teises aktai kontekste" : "Law in Context"}
           </div>
@@ -1334,6 +1335,8 @@ export function LawExplorer(_props: LawExplorerProps) {
             </div>
           )}
         </div>
+        <GuidanceSlot id="welcome" buttonOffset={{ top: -2, left: 8 }} />
+        <div style={{ flex: 1 }} />
 
         {/* Language toggle */}
         <div style={{
@@ -1412,5 +1415,6 @@ export function LawExplorer(_props: LawExplorerProps) {
         </div>
       </div>
     </div>
+    </PageGuidance>
   );
 }

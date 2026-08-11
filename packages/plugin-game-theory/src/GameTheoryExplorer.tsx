@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useGameTheoryData } from "./useGameTheoryData";
 import type { GTNode } from "./useGameTheoryData";
-import { useTheme, Button, Select } from "@trustgraph/trustkit";
+import { useTheme, Button, Select, PageGuidance, GuidanceSlot } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 
 const GT_SPINNER_ID = "gt-spinner-keyframes";
@@ -1239,6 +1239,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
   /* ---- Render ------------------------------------------------------- */
 
   return (
+    <PageGuidance pageKey="game-theory">
     <div style={{
       display: "flex", flexDirection: "column", height: "var(--page-height)", overflow: "hidden",
       borderTop: `1px solid ${theme.border.default}`,
@@ -1260,6 +1261,7 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
             {label}
           </Button>
         ))}
+        <GuidanceSlot id="welcome" buttonOffset={{ top: -12, left: 8 }} />
 
         <div style={{ flex: 1 }} />
 
@@ -1432,5 +1434,6 @@ export function GameTheoryExplorer(_props: GameTheoryExplorerProps) {
         </div>
       )}
     </div>
+    </PageGuidance>
   );
 }

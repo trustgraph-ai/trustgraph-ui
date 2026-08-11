@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { useSocket } from "@trustgraph/react-provider";
 import { useSessionStore } from "@trustgraph/react-state";
-import { useTheme, Button, Input } from "@trustgraph/trustkit";
+import { useTheme, Button, Input, PageGuidance, GuidanceSlot } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 import { useOcsfData } from "./useOcsfData";
 import type { OcsfNode } from "./useOcsfData";
@@ -1836,6 +1836,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
   /* ── main layout ────────────────────────────────────────────────── */
 
   return (
+    <PageGuidance pageKey="threat-overview">
     <div style={{
       display: "flex", flexDirection: "column", height: "var(--page-height)", overflow: "hidden",
       borderTop: `1px solid ${theme.border.default}`,
@@ -1855,6 +1856,7 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
               Risk Event Browser
             </span>
           )}
+          <GuidanceSlot id="welcome" buttonOffset={{ top: -2, left: "2.5em" }} />
         </div>
 
         <div style={{ display: "flex", gap: 6 }}>
@@ -1932,5 +1934,6 @@ export function ThreatExplorer(_props: ThreatExplorerProps) {
         </div>
       </div>
     </div>
+    </PageGuidance>
   );
 }

@@ -33,6 +33,7 @@ export interface ThemeText {
 
 export interface ThemeSurface {
   base: string;
+  elevated: string;
   overlay: string;
   overlayLight: string;
   card: string;

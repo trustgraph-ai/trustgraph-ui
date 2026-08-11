@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTheme } from "../../theme/ThemeContext";
 import { Button } from "./Button";
 import { SelectableListItem } from "./SelectableListItem";
+import { GuidanceSlot } from "./GuidanceSlot";
 
 export interface SearchPreset {
   key: string;
@@ -104,6 +105,7 @@ export function SearchInput({
         style={{ padding: "12px 20px", fontSize: sz(13) }}>
         {isLoading ? "..." : buttonText}
       </Button>
+      <GuidanceSlot id="query-input" buttonOffset={{ top: -12, left: -12 }} />
     </div>
   );
 }

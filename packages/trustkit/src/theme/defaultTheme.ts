@@ -33,6 +33,7 @@ export const defaultTheme: Theme = {
   },
   surface: {
     base: "#0A0A0F",
+    elevated: "#1E222D",
     overlay: "rgba(15,15,20,0.95)",
     overlayLight: "rgba(15,15,20,0.8)",
     card: "rgba(255,255,255,0.02)",

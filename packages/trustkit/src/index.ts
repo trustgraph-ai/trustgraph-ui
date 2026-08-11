@@ -1,6 +1,6 @@
 // Components — common
-export { SectionLabel, FilterButton, Header, StatusBar, Typewriter, Card, Badge, LoadingState, Toaster, SearchInput, FilterBar, MessageBubble, TextInput, Input, Button, Select, FormLabel, SelectableListItem, SplitPane, DetailPanel, EmptyState, ModeSelector, Toolbar, PageLayout, WorkspaceSwitcher } from "./components/common";
-export type { FilterItem, Message, SearchPreset } from "./components/common";
+export { SectionLabel, FilterButton, Header, StatusBar, Typewriter, Card, Badge, LoadingState, Toaster, SearchInput, FilterBar, MessageBubble, TextInput, Input, Button, Select, FormLabel, SelectableListItem, SplitPane, DetailPanel, EmptyState, ModeSelector, Toolbar, PageLayout, WorkspaceSwitcher, GuidanceBanner, PageGuidance, GuidanceSlot, ActionButtonBar } from "./components/common";
+export type { FilterItem, Message, SearchPreset, GuidanceEntry, GuidancePosition, NavTab } from "./components/common";
 
 // Components — graph
 export { GraphCanvas, GraphCanvasSVG, GraphCanvas3D, ExplainGraph, NodeDetailPanel, ZoomControls } from "./components/graph";
@@ -55,6 +55,9 @@ export { usePromptTest } from "./hooks/usePromptTest";
 export type { PromptTestResult } from "./hooks/usePromptTest";
 export { useConfigItems } from "./hooks/useConfigItems";
 export { useConfigItem } from "./hooks/useConfigItem";
+export { useGuidance } from "./hooks/useGuidance";
+export { useActionButtons } from "./hooks/useActionButtons";
+export type { ActionButtonEntry } from "./hooks/useActionButtons";
 export type { NodeDetail, NodeProperty, NodeRelationship } from "./hooks/useNodeDetail";
 export { useOntologySchema } from "./hooks/useOntologySchema";
 export type { OntologyClass, OntologyProperty, OntologySchema } from "./hooks/useOntologySchema";

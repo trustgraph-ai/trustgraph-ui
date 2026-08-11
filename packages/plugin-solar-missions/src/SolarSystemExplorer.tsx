@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useSolarMissions } from "./useSolarMissions";
 import type { SolarMission, MissionEvent, CelestialBody } from "./useSolarMissions";
-import { useTheme, Button } from "@trustgraph/trustkit";
+import { useTheme, Button, PageGuidance, GuidanceSlot } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
 
 const SOLAR_SPINNER_ID = "solar-spinner-keyframes";
@@ -197,7 +197,12 @@ export function SolarSystemExplorer({
   }
 
   return (
-    <div style={{ display: "flex", height: "var(--page-height)", overflow: "hidden" }}>
+    <PageGuidance pageKey="solar-missions">
+    <div style={{ position: "relative", height: "var(--page-height)", overflow: "hidden" }}>
+      <div style={{ position: "absolute", top: "1em", left: 28, zIndex: 100 }}>
+        <GuidanceSlot id="welcome" buttonOffset={{ top: 0, left: 0 }} />
+      </div>
+      <div style={{ display: "flex", height: "100%" }}>
       {/* Solar system SVG */}
       <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#030308" }}>
         <svg
@@ -600,7 +605,9 @@ export function SolarSystemExplorer({
           />
         )}
       </div>
+      </div>
     </div>
+    </PageGuidance>
   );
 }
 

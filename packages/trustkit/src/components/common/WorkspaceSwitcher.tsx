@@ -46,7 +46,7 @@ function Pill({
           display: "flex",
           alignItems: "center",
           gap: sz(6),
-          padding: `${sz(4)}px ${sz(10)}px`,
+          padding: `${sz(6)}px ${sz(12)}px`,
           borderRadius: 6,
           border: `1px solid ${color}33`,
           background: `${color}0D`,

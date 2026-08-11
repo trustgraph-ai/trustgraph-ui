@@ -16,6 +16,7 @@ const presets: ThemePreset[] = [
     theme: {
       surface: {
         base: "#050510",
+        elevated: "#151520",
         overlay: "rgba(8,8,18,0.97)",
         overlayLight: "rgba(8,8,18,0.85)",
         card: "rgba(255,255,255,0.015)",
@@ -54,6 +55,7 @@ const presets: ThemePreset[] = [
       },
       surface: {
         base: "#F5F5F7",
+        elevated: "#FFFFFF",
         overlay: "rgba(255,255,255,0.97)",
         overlayLight: "rgba(255,255,255,0.85)",
         card: "rgba(0,0,0,0.03)",
@@ -111,6 +113,7 @@ const presets: ThemePreset[] = [
     theme: {
       surface: {
         base: "#0F0A08",
+        elevated: "#221A14",
         overlay: "rgba(20,14,10,0.95)",
         overlayLight: "rgba(20,14,10,0.8)",
         card: "rgba(255,200,150,0.02)",
