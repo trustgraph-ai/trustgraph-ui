@@ -35,26 +35,6 @@
       "version": "asdlkj"
     }
   ],
-  "threat-intel": [
-    {
-      "id": "welcome",
-      "title": "Threat Intelligence Dashboard",
-      "body": "This dashboard provides **SPARQL-powered analytics** over your threat intelligence knowledge graph.\n\nUse the mode buttons to switch between different views:\n- **Overview** — high-level threat landscape\n- **Graph** — explore entity relationships\n- **Query** — run custom SPARQL queries\n\nData is pulled live from the knowledge graph, so results reflect whatever has been ingested.",
-      "color": "rose",
-      "position": "below-right",
-      "version": "asdlkj"
-    }
-  ],
-  "market-dynamics": [
-    {
-      "id": "welcome",
-      "title": "Market Dynamics Explorer",
-      "body": "Explore economic ecosystems through multiple lenses:\n\n- **Risk Pressure Map** — visualise where economic pressure concentrates\n- **Cascade Flows** — trace how shocks propagate through the system\n- **Financial Tension** — chart stress between market actors\n- **Circular Flow** — follow money and goods through the economy\n\nSwitch between **2D** and **3D** views using the toolbar. Click any node to drill into its relationships.",
-      "color": "emerald",
-      "position": "below-right",
-      "version": "asdlkj"
-    }
-  ],
   "solar-missions": [
     {
       "id": "welcome",

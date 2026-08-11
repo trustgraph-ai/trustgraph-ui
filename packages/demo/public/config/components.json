@@ -228,5 +228,32 @@
         "globalName": "ThreatPlugin"
       }
     ]
+  },
+  {
+    "title": "Local",
+    "description": "Local development.",
+    "tab": "local",
+    "navLabel": "Local",
+    "navIcon": "⚒",
+    "components": [
+      {
+        "id": "threat-intel",
+        "title": "Threat Intel",
+        "icon": "!",
+        "paletteKey": "rose",
+        "description": "Threat intelligence dashboard with SPARQL analytics and knowledge graph exploration.",
+        "url": "/plugins/threat-intel.iife.js",
+        "globalName": "ThreatIntelPlugin"
+      },
+      {
+        "id": "market-dynamics",
+        "title": "Market Dynamics",
+        "icon": "📊",
+        "paletteKey": "emerald",
+        "description": "Economic ecosystem explorer with risk pressure maps, cascade flows, financial tension charts, and circular flow analysis.",
+        "url": "/plugins/market-dynamics.iife.js",
+        "globalName": "MarketDynamicsPlugin"
+      }
+    ]
   }
 ]
