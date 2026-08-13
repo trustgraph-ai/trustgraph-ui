@@ -24,6 +24,6 @@ dist-ssr
 *.sw?
 *~
 
-packages/demo/public/plugins/*.js
-packages/demo/public/plugins/*.png
-packages/demo/public/plugins/*.jpg
+packages/portal/public/plugins/*.js
+packages/portal/public/plugins/*.png
+packages/portal/public/plugins/*.jpg

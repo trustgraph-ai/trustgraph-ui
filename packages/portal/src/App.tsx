@@ -4,7 +4,7 @@ import type { DomainKey, Entity } from "@trustgraph/trustkit";
 import { Header, StatusBar, Toaster, useGraphData, toast, WorkspaceSwitcher, ActionButtonBar, ThemeProvider, useTheme } from "@trustgraph/trustkit";
 import { useLogout, useWorkspaceSync } from "@trustgraph/react-state";
 import { useThemeSettings, ThemePanel } from "./components/ThemePanel";
-import { HomePage, DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, SparqlPage, GraphqlPage } from "./pages";
+import { DemosPage, IngestPage, ExploreView, GraphRagPage, DocRagPage, AgentPage, GraphView, QueryView, ExplainView, DataView, OntologyView, RawGraphPage, PromptPage, AgentConfigPage, OntologyManagePage, SchemaPage, SparqlPage, GraphqlPage } from "./pages";
 import { PluginErrorBoundary } from "./RemotePlugin";
 import { usePluginManifest } from "./usePluginManifest";
 
@@ -55,10 +55,10 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
   }, [isLoading, entities.length]);
 
   const handleNavigate = (view: string) => {
-    navigate(view === "home" ? "/" : `/${view}`);
+    navigate(`/${view}`);
   };
 
-  const activeView = location.pathname === "/" ? "home" : location.pathname.slice(1);
+  const activeView = location.pathname.slice(1) || navTabs[0]?.key || "";
 
   return (
     <div style={{
@@ -100,8 +100,10 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
       </div>
 
       <Routes>
-        <Route path="/" element={<HomePage onNavigate={handleNavigate} sections={byTab("home")} />} />
-        {navTabs.filter(t => t.key !== "home").map(t => (
+        {navTabs.length > 0 && (
+          <Route path="/" element={<Navigate to={`/${navTabs[0].key}`} replace />} />
+        )}
+        {navTabs.map(t => (
           <Route key={t.key} path={`/${t.key}`} element={<DemosPage onNavigate={handleNavigate} sections={byTab(t.key)} pageKey={t.key} />} />
         ))}
         <Route
@@ -124,7 +126,7 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
             </PluginErrorBoundary>
           } />
         ) : null)}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={navTabs.length > 0 ? <Navigate to={`/${navTabs[0].key}`} replace /> : null} />
       </Routes>
 
       <StatusBar />

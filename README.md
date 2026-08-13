@@ -10,7 +10,7 @@ Monorepo for TrustGraph's web UI, built with React 19, TypeScript, and Vite.
 | `@trustgraph/client` | TypeScript client for TrustGraph APIs |
 | `@trustgraph/react-provider` | React provider for TrustGraph WebSocket connections |
 | `@trustgraph/react-state` | React state management hooks |
-| `@trustgraph/demo` | Demo application showcasing all workflows |
+| `@trustgraph/portal` | Portal application showcasing all workflows |
 
 ## Getting Started
 
@@ -20,11 +20,11 @@ npm run build
 npm run dev
 ```
 
-The dev server starts the demo app at `http://localhost:5173`.
+The dev server starts the portal app at `http://localhost:5173`.
 
 ## Scripts
 
-- `npm run dev` — Start the demo app dev server
-- `npm run build` — Build all packages and the demo app
+- `npm run dev` — Start the portal app dev server
+- `npm run build` — Build all packages and the portal app
 - `npm run test` — Run tests across client, provider, and state packages
 - `npm run lint` — Lint the entire workspace

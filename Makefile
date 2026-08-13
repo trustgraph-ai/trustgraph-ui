@@ -7,7 +7,7 @@ all: service-package container
 ui:
 	npm run build
 	rm -rf trustgraph-ui/trustgraph_ui/ui/
-	cp -r packages/demo/dist/ trustgraph-ui/trustgraph_ui/ui/
+	cp -r packages/portal/dist/ trustgraph-ui/trustgraph_ui/ui/
 
 service-package: ui update-package-versions
 	cd trustgraph-ui && pip wheel -w ../pkgs/ --no-deps .
