@@ -218,7 +218,7 @@ Place the `.iife.js` file where the `url` points to. For the container,
 this is typically a volume-mounted `/plugins/` directory.
 
 For local development in the monorepo, add an entry to
-`packages/demo/scripts/copy-plugins.mjs` so the build copies it
+`packages/portal/scripts/copy-plugins.mjs` so the build copies it
 automatically.
 
 ## Multi-component plugins

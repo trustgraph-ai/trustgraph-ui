@@ -4,9 +4,9 @@
   "type": "module",
   "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "npm -w @trustgraph/demo run dev",
+    "dev": "npm -w @trustgraph/portal run dev",
     "build:plugins": "npm -w @trustgraph/plugin-game-theory -w @trustgraph/plugin-hwsec -w @trustgraph/plugin-innovation -w @trustgraph/plugin-law -w @trustgraph/plugin-playground -w @trustgraph/plugin-retail-brand -w @trustgraph/plugin-risk -w @trustgraph/plugin-solar-missions -w @trustgraph/plugin-threat -w @trustgraph/plugin-world-events run build",
-    "build": "npm -w @trustgraph/client run build && npm -w @trustgraph/react-provider run build && npm -w @trustgraph/react-state run build && npm -w @trustgraph/trustkit run build && npm run build:plugins && npm -w @trustgraph/demo run build",
+    "build": "npm -w @trustgraph/client run build && npm -w @trustgraph/react-provider run build && npm -w @trustgraph/react-state run build && npm -w @trustgraph/trustkit run build && npm run build:plugins && npm -w @trustgraph/portal run build",
     "lint": "eslint .",
     "test": "npm -w @trustgraph/client -w @trustgraph/react-provider -w @trustgraph/react-state -w @trustgraph/trustkit run test"
   },
