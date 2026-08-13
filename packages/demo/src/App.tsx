@@ -82,6 +82,9 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
         <ActionButtonBar configKey="global" />
         <div style={{ width: 12 }} />
         <WorkspaceSwitcher />
+        <div style={{ marginLeft: sz(12) }}>
+          <ThemePanel settings={themeSettings} />
+        </div>
         <button
           onClick={logout}
           style={{
@@ -126,7 +129,6 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
 
       <StatusBar />
       <Toaster />
-      <ThemePanel settings={themeSettings} />
     </div>
   );
 }
