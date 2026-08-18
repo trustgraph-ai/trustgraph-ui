@@ -67,7 +67,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/trustgraph-ai/trustgraph-react-provider.git"
+    "url": "https://github.com/trustgraph-ai/trustgraph-ui",
+    "directory": "packages/trustgraph-react-provider"
   },
   "bugs": {
     "url": "https://github.com/trustgraph-ai/trustgraph-react-provider/issues"
