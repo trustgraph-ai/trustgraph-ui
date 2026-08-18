@@ -54,7 +54,7 @@ jobs:
         run: npm run build
 
       - name: Run tests
-        run: npm test -- --run
+        run: npm test
 
       - name: Get version
         id: version
