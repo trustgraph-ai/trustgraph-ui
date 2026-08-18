@@ -3,11 +3,12 @@ export { SectionLabel, FilterButton, Header, StatusBar, Typewriter, Card, Badge,
 export type { FilterItem, Message, SearchPreset, GuidanceEntry, GuidancePosition, NavTab } from "./components/common";
 
 // Components — graph
-export { GraphCanvas, GraphCanvasSVG, GraphCanvas3D, ExplainGraph, NodeDetailPanel, ZoomControls } from "./components/graph";
-export type { ExplainGraphNode, ExplainGraphEdge } from "./components/graph";
+export { GraphCanvas, GraphCanvasSVG, GraphCanvas3D, ExplainGraph, NodeDetailPanel, ZoomControls, FlowView, TimelineView, TTPMap, EventTimeline, PathFinder } from "./components/graph";
+export type { ExplainGraphNode, ExplainGraphEdge, FlowViewProps, FlowChain, FlowStep, NodeStyle, NodeStyleFn, TimelineViewProps, TimelineGroup, TimelineEvent, TTPMapProps, TTPRecord, EventTimelineProps, TimeBucket, PathFinderProps, PathNode } from "./components/graph";
 
 // Components — knowledge
-export { EntityBadge, EntityProperties, EntityRelationships, GraphExplorer } from "./components/knowledge";
+export { EntityBadge, EntityProperties, EntityRelationships, GraphExplorer, EmbeddingExplorer } from "./components/knowledge";
+export type { EmbeddingExplorerProps } from "./components/knowledge";
 
 // Components — raw graph
 export { RawGraphCanvas, RawGraphCanvas3D, RawNodeDetailPanel, RawNodeSearch, SimpleRawGraphView, RawGraphWithDetail, RawGraphWithSearch, RawGraphExplorer, RawGraphExplorer3D } from "./components/raw-graph";
