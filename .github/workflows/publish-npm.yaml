@@ -1,0 +1,70 @@
+name: Publish npm packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Build & publish
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Upgrade npm for OIDC support
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build all packages
+        run: npm run build
+
+      - name: Run tests
+        run: npm test -- --run
+
+      - name: Get tag version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Set version from tag
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          for PKG in packages/trustgraph-client packages/trustgraph-react-provider packages/trustgraph-react-state packages/trustkit; do
+            npm -w "./${PKG}" version "$VERSION" --no-git-tag-version
+            echo "$(node -p "require('./${PKG}/package.json').name")@${VERSION}"
+          done
+
+      - name: Publish @trustgraph/client
+        working-directory: packages/trustgraph-client
+        run: npm publish --access public --provenance
+
+      - name: Publish @trustgraph/react-provider
+        working-directory: packages/trustgraph-react-provider
+        run: npm publish --access public --provenance
+
+      - name: Publish @trustgraph/react-state
+        working-directory: packages/trustgraph-react-state
+        run: npm publish --access public --provenance
+
+      - name: Publish @trustgraph/trustkit
+        working-directory: packages/trustkit
+        run: npm publish --access public --provenance
