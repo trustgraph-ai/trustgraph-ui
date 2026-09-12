@@ -800,11 +800,42 @@ export interface Workspace {
   created: string;
 }
 
+export interface IamUser {
+  id: string;
+  username: string;
+  name: string;
+  email: string;
+  default_workspace: string;
+  enabled: boolean;
+  must_change_password: boolean;
+  roles: string[];
+  created: string;
+}
+
+export interface IamApiKey {
+  id: string;
+  user_id: string;
+  name: string;
+  prefix: string;
+  expires: string;
+  created: string;
+  last_used: string;
+}
+
+export interface CreateUserParams {
+  username: string;
+  password: string;
+  name?: string;
+  email?: string;
+  workspace?: string;
+  must_change_password?: boolean;
+}
+
 /**
- * IamApi - Identity and workspace discovery over the authenticated
- * socket. IAM is the one surface that lives outside workspace tenancy;
- * these calls run as the `iam` service and the gateway injects the
- * caller's identity from the connection's token.
+ * IamApi - Identity, user, workspace, and API key management over the
+ * authenticated socket. IAM is the one surface that lives outside
+ * workspace tenancy; these calls run as the `iam` service and the
+ * gateway injects the caller's identity from the connection's token.
  */
 export class IamApi {
   api: BaseApi;
@@ -813,43 +844,190 @@ export class IamApi {
     this.api = api;
   }
 
-  // The caller's own user record, including their home workspace.
-  whoami(): Promise<WhoamiResult> {
-    return this.api
-      .makeRequest<{ operation: string }, { user?: Record<string, unknown> }>(
-        "iam",
-        { operation: "whoami" },
-      )
-      .then((r) => {
-        const user = r.user ?? {};
-        return {
-          id: String(user.id ?? ""),
-          username: String(user.username ?? ""),
-          name: String(user.name ?? ""),
-          email: String(user.email ?? ""),
-          default_workspace: String(user.default_workspace ?? ""),
-          roles: Array.isArray(user.roles) ? (user.roles as string[]) : [],
-          enabled: !!user.enabled,
-        };
-      });
+  private call<T>(req: Record<string, unknown>): Promise<T> {
+    return this.api.makeRequest<Record<string, unknown>, T>("iam", req);
   }
 
-  // The workspaces the caller has access to (one for an ordinary user,
-  // all for an admin — driven entirely by what the gateway returns).
+  // --- Identity ---
+
+  whoami(): Promise<WhoamiResult> {
+    return this.call<{ user?: Record<string, unknown> }>({
+      operation: "whoami",
+    }).then((r) => {
+      const user = r.user ?? {};
+      return {
+        id: String(user.id ?? ""),
+        username: String(user.username ?? ""),
+        name: String(user.name ?? ""),
+        email: String(user.email ?? ""),
+        default_workspace: String(user.default_workspace ?? ""),
+        roles: Array.isArray(user.roles) ? (user.roles as string[]) : [],
+        enabled: !!user.enabled,
+      };
+    });
+  }
+
+  // --- Users ---
+
+  listUsers(workspace?: string): Promise<IamUser[]> {
+    return this.call<{ users?: IamUser[] }>({
+      operation: "list-users",
+      ...(workspace ? { workspace } : {}),
+    }).then((r) => r.users ?? []);
+  }
+
+  getUser(userId: string): Promise<IamUser> {
+    return this.call<{ user: IamUser }>({
+      operation: "get-user",
+      user_id: userId,
+    }).then((r) => r.user);
+  }
+
+  createUser(params: CreateUserParams): Promise<IamUser> {
+    return this.call<{ user: IamUser }>({
+      operation: "create-user",
+      user: {
+        username: params.username,
+        password: params.password,
+        name: params.name ?? "",
+        email: params.email ?? "",
+        enabled: true,
+        must_change_password: params.must_change_password ?? false,
+        roles: [],
+      },
+      ...(params.workspace ? { workspace: params.workspace } : {}),
+    }).then((r) => r.user);
+  }
+
+  updateUser(
+    userId: string,
+    fields: { name?: string; email?: string },
+  ): Promise<IamUser> {
+    return this.call<{ user: IamUser }>({
+      operation: "update-user",
+      user_id: userId,
+      user: fields,
+    }).then((r) => r.user);
+  }
+
+  enableUser(userId: string): Promise<void> {
+    return this.call<object>({
+      operation: "enable-user",
+      user_id: userId,
+    }).then(() => {});
+  }
+
+  disableUser(userId: string): Promise<void> {
+    return this.call<object>({
+      operation: "disable-user",
+      user_id: userId,
+    }).then(() => {});
+  }
+
+  deleteUser(userId: string): Promise<void> {
+    return this.call<object>({
+      operation: "delete-user",
+      user_id: userId,
+    }).then(() => {});
+  }
+
+  resetPassword(userId: string): Promise<string> {
+    return this.call<{ temporary_password: string }>({
+      operation: "reset-password",
+      user_id: userId,
+    }).then((r) => r.temporary_password);
+  }
+
+  changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    return this.call<object>({
+      operation: "change-password",
+      user_id: userId,
+      password: currentPassword,
+      new_password: newPassword,
+    }).then(() => {});
+  }
+
+  // --- Workspaces ---
+
   listMyWorkspaces(): Promise<Workspace[]> {
-    return this.api
-      .makeRequest<
-        { operation: string },
-        { workspaces?: Record<string, unknown>[] }
-      >("iam", { operation: "list-my-workspaces" })
-      .then((r) =>
-        (r.workspaces ?? []).map((w) => ({
-          id: String(w.id ?? ""),
-          name: String(w.name ?? ""),
-          enabled: !!w.enabled,
-          created: String(w.created ?? ""),
-        })),
-      );
+    return this.call<{ workspaces?: Record<string, unknown>[] }>({
+      operation: "list-my-workspaces",
+    }).then((r) =>
+      (r.workspaces ?? []).map((w) => ({
+        id: String(w.id ?? ""),
+        name: String(w.name ?? ""),
+        enabled: !!w.enabled,
+        created: String(w.created ?? ""),
+      })),
+    );
+  }
+
+  listWorkspaces(): Promise<Workspace[]> {
+    return this.call<{ workspaces?: Workspace[] }>({
+      operation: "list-workspaces",
+    }).then((r) => r.workspaces ?? []);
+  }
+
+  getWorkspace(id: string): Promise<Workspace> {
+    return this.call<{ workspace: Workspace }>({
+      operation: "get-workspace",
+      workspace_record: { id },
+    }).then((r) => r.workspace);
+  }
+
+  createWorkspace(id: string, name?: string): Promise<Workspace> {
+    return this.call<{ workspace: Workspace }>({
+      operation: "create-workspace",
+      workspace_record: { id, name: name ?? id, enabled: true },
+    }).then((r) => r.workspace);
+  }
+
+  updateWorkspace(
+    id: string,
+    fields: { name?: string; enabled?: boolean },
+  ): Promise<Workspace> {
+    return this.call<{ workspace: Workspace }>({
+      operation: "update-workspace",
+      workspace_record: { id, ...fields },
+    }).then((r) => r.workspace);
+  }
+
+  disableWorkspace(id: string): Promise<void> {
+    return this.call<object>({
+      operation: "disable-workspace",
+      workspace_record: { id },
+    }).then(() => {});
+  }
+
+  // --- API Keys ---
+
+  listApiKeys(userId: string): Promise<IamApiKey[]> {
+    return this.call<{ api_keys?: IamApiKey[] }>({
+      operation: "list-api-keys",
+      user_id: userId,
+    }).then((r) => r.api_keys ?? []);
+  }
+
+  createApiKey(
+    userId: string,
+    name: string,
+    expires?: string,
+  ): Promise<{ plaintext: string; key: IamApiKey }> {
+    return this.call<{ api_key_plaintext: string; api_key: IamApiKey }>({
+      operation: "create-api-key",
+      key: { user_id: userId, name, expires: expires ?? "" },
+    }).then((r) => ({ plaintext: r.api_key_plaintext, key: r.api_key }));
+  }
+
+  revokeApiKey(keyId: string): Promise<void> {
+    return this.call<object>({
+      operation: "revoke-api-key",
+      key_id: keyId,
+    }).then(() => {});
   }
 }
 
