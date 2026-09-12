@@ -29,6 +29,7 @@ export interface ManifestSection {
   tab: string;
   navLabel?: string;
   navIcon?: string;
+  hidden?: boolean;
   components: ResolvedPlugin[];
 }
 
@@ -38,6 +39,7 @@ interface RawSection {
   tab: string;
   navLabel?: string;
   navIcon?: string;
+  hidden?: boolean;
   components: PluginManifestEntry[];
 }
 
@@ -133,6 +135,7 @@ export function usePluginManifest(
             tab: s.tab,
             navLabel: s.navLabel,
             navIcon: s.navIcon,
+            hidden: s.hidden,
             components: await resolveEntries(s.components, builtins),
           })),
         );
@@ -156,7 +159,7 @@ export function usePluginManifest(
     const seen = new Set<string>();
     const result: { key: string; label: string; icon?: string }[] = [];
     for (const s of sections) {
-      if (seen.has(s.tab)) continue;
+      if (seen.has(s.tab) || s.hidden) continue;
       seen.add(s.tab);
       result.push({
         key: s.tab,
