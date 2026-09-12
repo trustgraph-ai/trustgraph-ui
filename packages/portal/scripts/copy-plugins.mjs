@@ -68,6 +68,24 @@ const plugins = [
       { src: "dist/world-events.iife.js", name: "world-events.iife.js" },
     ],
   },
+  {
+    pkg: "plugin-workspace-admin",
+    files: [
+      { src: "dist/workspace-admin.iife.js", name: "workspace-admin.iife.js" },
+    ],
+  },
+  {
+    pkg: "plugin-api-keys",
+    files: [
+      { src: "dist/api-keys.iife.js", name: "api-keys.iife.js" },
+    ],
+  },
+  {
+    pkg: "plugin-user-admin",
+    files: [
+      { src: "dist/user-admin.iife.js", name: "user-admin.iife.js" },
+    ],
+  },
 ];
 
 mkdirSync(dest, { recursive: true });
