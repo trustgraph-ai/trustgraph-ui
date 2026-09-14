@@ -43,7 +43,7 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
   const { entities, isLoading } = useGraphData();
   const logout = useLogout();
   const { theme, sz } = useTheme();
-  const { sections, navTabs, byTab } = usePluginManifest("/config/components.json", BUILTIN_COMPONENTS);
+  const { sections, navTabs, allTabs, byTab } = usePluginManifest("/config/components.json", BUILTIN_COMPONENTS);
   const allComponents = sections.flatMap(s => s.components);
 
   useWorkspaceSync();
@@ -103,8 +103,8 @@ function AppShell({ themeSettings }: { themeSettings: ReturnType<typeof useTheme
         {navTabs.length > 0 && (
           <Route path="/" element={<Navigate to={`/${navTabs[0].key}`} replace />} />
         )}
-        {navTabs.map(t => (
-          <Route key={t.key} path={`/${t.key}`} element={<DemosPage onNavigate={handleNavigate} sections={byTab(t.key)} pageKey={t.key} />} />
+        {allTabs.map(t => (
+          <Route key={t} path={`/${t}`} element={<DemosPage onNavigate={handleNavigate} sections={byTab(t)} pageKey={t} />} />
         ))}
         <Route
           path="/graph"

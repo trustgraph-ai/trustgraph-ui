@@ -170,11 +170,22 @@ export function usePluginManifest(
     return result;
   })();
 
+  const allTabs = (() => {
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const s of sections) {
+      if (seen.has(s.tab)) continue;
+      seen.add(s.tab);
+      result.push(s.tab);
+    }
+    return result;
+  })();
+
   const byTab = (tab: string) => sections.filter(s => s.tab === tab);
 
   // Backward compat helpers
   const workflows = byTab("home").flatMap(s => s.components);
   const demos = byTab("demos").flatMap(s => s.components);
 
-  return { sections, navTabs, byTab, workflows, demos, isLoading, error };
+  return { sections, navTabs, allTabs, byTab, workflows, demos, isLoading, error };
 }
