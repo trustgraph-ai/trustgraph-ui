@@ -42,6 +42,24 @@ class Api:
             web.route("*", "/api/v1/{tail:.*}", self.proxy),
         ])
 
+        self.proxy_routes = []
+        for spec in config.get("proxy", []) or []:
+            if "=" not in spec:
+                logger.warning("Ignoring malformed --proxy value: %s", spec)
+                continue
+            local_path, upstream = spec.split("=", 1)
+            local_path = "/" + local_path.strip("/")
+            upstream = upstream.rstrip("/")
+            self.proxy_routes.append((local_path, upstream))
+            logger.info("Proxy: %s -> %s", local_path, upstream)
+
+        for local_path, upstream in self.proxy_routes:
+            handler = self._make_proxy_handler(upstream)
+            self.app.add_routes([
+                web.route("*", local_path + "/{path:.*}", handler),
+                web.route("*", local_path, handler),
+            ])
+
         self.app.add_routes([web.get("/{tail:.*}", self.everything)])
 
         self.ui = importlib.resources.files().joinpath("ui")
@@ -377,6 +395,48 @@ class Api:
             await s2c_task
 
         return ws_server
+
+    def _make_proxy_handler(self, upstream):
+
+        async def handler(request):
+            path = request.match_info.get("path", "")
+            target = f"{upstream}/{path}" if path else upstream
+            if request.query_string:
+                target += f"?{request.query_string}"
+
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.request(
+                        request.method,
+                        target,
+                        headers={
+                            k: v for k, v in request.headers.items()
+                            if k.lower() not in (
+                                "host", "content-length",
+                            )
+                        },
+                        data=(await request.read())
+                            if request.has_body else None,
+                        allow_redirects=False,
+                    ) as resp:
+                        body = await resp.read()
+                        return web.Response(
+                            status=resp.status,
+                            headers={
+                                k: v for k, v in resp.headers.items()
+                                if k.lower() not in (
+                                    "transfer-encoding",
+                                    "content-encoding",
+                                    "content-length",
+                                )
+                            },
+                            body=body,
+                        )
+            except Exception as e:
+                logger.error("Proxy error for %s: %s", target, e)
+                return web.Response(status=502, text=str(e))
+
+        return handler
 
     def run(self):
 

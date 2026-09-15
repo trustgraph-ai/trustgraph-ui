@@ -47,6 +47,14 @@ def run():
         help=f'Prometheus metrics port (default: 8000)',
     )
 
+    parser.add_argument(
+        '--proxy',
+        action='append',
+        default=[],
+        metavar='PATH=URL',
+        help='Reverse proxy mapping (e.g. /demo-data=https://example.com/data). Repeatable.',
+    )
+
     args = parser.parse_args()
     args = vars(args)
 
