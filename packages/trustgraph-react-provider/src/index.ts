@@ -19,4 +19,6 @@ export type { SocketProviderProps } from "./types";
 export type {
   BaseApi, ConnectionState, StreamingMetadata,
   Workspace, IamUser, IamApiKey, CreateUserParams, WhoamiResult,
+  BulkTriple, BulkMetadata, EntityContext, ExtractedRow, BulkProgressCallback,
 } from "@trustgraph/client";
+export { BulkApi } from "@trustgraph/client";

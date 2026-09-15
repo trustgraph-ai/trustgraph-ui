@@ -15,6 +15,12 @@ export default defineConfig({
         secure: false,
         ws: true,
       },
+      "/demo-data": {
+        target: "https://github.com/trustgraph-ai/demo-standard/raw/refs/heads/master/datasets",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/demo-data/, ""),
+      },
     },
   },
 })

@@ -125,6 +125,15 @@
     "navIcon": "▷",
     "components": [
       {
+        "id": "demo-data",
+        "title": "Demo Data Loader",
+        "icon": "⬇",
+        "paletteKey": "emerald",
+        "description": "Load demo datasets into TrustGraph.",
+        "url": "/plugins/demo-data.iife.js",
+        "globalName": "DemoDataPlugin"
+      },
+      {
         "id": "solar-missions",
         "title": "Solar System Missions",
         "icon": "◉",

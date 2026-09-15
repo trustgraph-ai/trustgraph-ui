@@ -86,6 +86,12 @@ const plugins = [
       { src: "dist/user-admin.iife.js", name: "user-admin.iife.js" },
     ],
   },
+  {
+    pkg: "plugin-demo-data",
+    files: [
+      { src: "dist/demo-data.iife.js", name: "demo-data.iife.js" },
+    ],
+  },
 ];
 
 mkdirSync(dest, { recursive: true });

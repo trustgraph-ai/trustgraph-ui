@@ -778,6 +778,10 @@ export class BaseApi {
   iam() {
     return new IamApi(this);
   }
+
+  bulk() {
+    return new BulkApi(this);
+  }
 }
 
 // The caller's own user record, as returned by the `whoami` IAM
@@ -2785,6 +2789,154 @@ export class CollectionManagementApi {
         collection,
       },
       30000,
+    );
+  }
+}
+
+export interface BulkTriple {
+  s: Term;
+  p: Term;
+  o: Term;
+}
+
+export interface BulkMetadata {
+  id: string;
+  metadata: unknown[];
+  collection: string;
+}
+
+export interface EntityContext {
+  entity: Term;
+  context: string;
+}
+
+export type BulkProgressCallback = (sent: number) => void;
+
+export interface ExtractedRow {
+  metadata: BulkMetadata;
+  schema_name: string;
+  values: Record<string, string>;
+  confidence: number;
+  source_span: string;
+}
+
+async function* batchIterable<T>(items: Iterable<T> | AsyncIterable<T>, size: number): AsyncGenerator<T[]> {
+  let batch: T[] = [];
+  for await (const item of items) {
+    batch.push(item);
+    if (batch.length >= size) {
+      yield batch;
+      batch = [];
+    }
+  }
+  if (batch.length > 0) yield batch;
+}
+
+/**
+ * BulkApi - Bulk import operations over dedicated WebSocket connections.
+ *
+ * Unlike other API classes that multiplex over the main socket, bulk
+ * operations open short-lived connections to flow-specific endpoints
+ * (e.g. /api/v1/flow/{flow}/import/triples) and stream batched data.
+ *
+ * All import methods accept Iterables (arrays or generators), enabling
+ * memory-bounded streaming for large datasets.
+ */
+export class BulkApi {
+  api: BaseApi;
+
+  constructor(api: BaseApi) {
+    this.api = api;
+  }
+
+  private buildWsUrl(path: string): string {
+    const params: string[] = [];
+    if (this.api.token) params.push(`token=${encodeURIComponent(this.api.token)}`);
+    if (this.api.workspace) params.push(`workspace=${encodeURIComponent(this.api.workspace)}`);
+    const qs = params.length ? `?${params.join("&")}` : "";
+    return `${path}${qs}`;
+  }
+
+  private async sendBatched(
+    url: string,
+    items: Iterable<unknown> | AsyncIterable<unknown>,
+    batchSize: number,
+    buildMessage: (batch: unknown[]) => unknown,
+    onProgress?: BulkProgressCallback,
+  ): Promise<void> {
+    const ws = new WebSocket(url);
+    let sent = 0;
+
+    await new Promise<void>((resolve, reject) => {
+      ws.onopen = () => resolve();
+      ws.onerror = (e) => reject(e);
+    });
+
+    try {
+      for await (const batch of batchIterable(items, batchSize)) {
+        ws.send(JSON.stringify(buildMessage(batch)));
+        sent += batch.length;
+        onProgress?.(sent);
+      }
+    } finally {
+      ws.close();
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      ws.onclose = () => resolve();
+      ws.onerror = (e) => reject(e);
+    });
+  }
+
+  importTriples(
+    flow: string,
+    triples: Iterable<BulkTriple> | AsyncIterable<BulkTriple>,
+    metadata?: BulkMetadata,
+    batchSize: number = 100,
+    onProgress?: BulkProgressCallback,
+  ): Promise<void> {
+    const url = this.buildWsUrl(`/api/v1/flow/${flow}/import/triples`);
+    const meta = metadata ?? { id: "", metadata: [], collection: "default" };
+    return this.sendBatched(url, triples, batchSize,
+      (batch) => ({ metadata: meta, triples: batch }),
+      onProgress,
+    );
+  }
+
+  importEntityContexts(
+    flow: string,
+    contexts: Iterable<EntityContext> | AsyncIterable<EntityContext>,
+    metadata?: BulkMetadata,
+    batchSize: number = 100,
+    onProgress?: BulkProgressCallback,
+  ): Promise<void> {
+    const url = this.buildWsUrl(`/api/v1/flow/${flow}/import/entity-contexts`);
+    const meta = metadata ?? { id: "", metadata: [], collection: "default" };
+    return this.sendBatched(url, contexts, batchSize,
+      (batch) => ({ metadata: meta, entities: batch }),
+      onProgress,
+    );
+  }
+
+  importRows(
+    flow: string,
+    rows: Iterable<ExtractedRow> | AsyncIterable<ExtractedRow>,
+    batchSize: number = 200,
+    onProgress?: BulkProgressCallback,
+  ): Promise<void> {
+    const url = this.buildWsUrl(`/api/v1/flow/${flow}/import/rows`);
+    let template: Omit<ExtractedRow, "values"> | null = null;
+
+    return this.sendBatched(url, rows, batchSize,
+      (batch) => {
+        const typedBatch = batch as ExtractedRow[];
+        if (!template) {
+          const { values: _, ...rest } = typedBatch[0];
+          template = rest;
+        }
+        return { ...template, values: typedBatch.map((r) => r.values) };
+      },
+      onProgress,
     );
   }
 }
