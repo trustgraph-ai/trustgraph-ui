@@ -7,6 +7,7 @@ import type { DatasetIndexEntry, Manifest, LogEntry, Phase } from "./types";
 import { parseTurtleTriples, parseTurtleEntityContexts } from "./turtle-parser";
 import { buildSdlPipeline } from "./sdl-pipeline";
 import type { SdlDescriptor } from "./sdl-pipeline";
+import { marked } from "marked";
 
 const BASE_URL = "/demo-data";
 
@@ -31,42 +32,28 @@ function resolvePath(baseDir: string, file: string): string {
   return baseDir ? `${baseDir}/${file}` : file;
 }
 
-function markdownToHtml(md: string): string {
-  const escape = (s: string) =>
-    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-  const inline = (text: string) =>
-    escape(text)
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      .replace(/`(.+?)`/g, "<code>$1</code>");
-
-  const lines = md.split("\n");
-  const out: string[] = [];
-  let inList = false;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trimEnd();
-
-    if (/^#{1,3}\s/.test(trimmed)) {
-      if (inList) { out.push("</ul>"); inList = false; }
-      const level = trimmed.match(/^(#+)/)![1].length;
-      const text = trimmed.replace(/^#+\s+/, "");
-      out.push(`<h${level}>${inline(text)}</h${level}>`);
-    } else if (/^[-*]\s/.test(trimmed)) {
-      if (!inList) { out.push("<ul>"); inList = true; }
-      out.push(`<li>${inline(trimmed.replace(/^[-*]\s+/, ""))}</li>`);
-    } else if (trimmed === "") {
-      if (inList) { out.push("</ul>"); inList = false; }
-    } else {
-      if (inList) { out.push("</ul>"); inList = false; }
-      out.push(`<p>${inline(trimmed)}</p>`);
+function renderMarkdown(md: string, baseUrl?: string): string {
+  const renderer = new marked.Renderer();
+  const origLink = renderer.link;
+  renderer.link = function (token) {
+    const html = origLink.call(this, token);
+    return html.replace("<a ", '<a target="_blank" rel="noopener" ');
+  };
+  const origImage = renderer.image;
+  renderer.image = function (token) {
+    if (baseUrl && token.href && !/^https?:\/\//.test(token.href) && !token.href.startsWith("/")) {
+      token.href = `${baseUrl}/${token.href}`;
     }
+    return origImage.call(this, token);
+  };
+  let html = marked(md, { renderer }) as string;
+  if (baseUrl) {
+    html = html.replace(/\bsrc="([^"]+)"/g, (match, src) => {
+      if (/^https?:\/\//.test(src) || src.startsWith("/")) return match;
+      return `src="${baseUrl}/${src}"`;
+    });
   }
-  if (inList) out.push("</ul>");
-
-  return out.join("\n");
+  return html;
 }
 
 type LogFn = (msg: string, status?: LogEntry["status"]) => void;
@@ -243,27 +230,6 @@ async function runLoader(
       tracker.log(`prompt/${entry.key}`, "success");
     }
 
-    let currentIndex: string[] = [];
-    try {
-      const resp = await socket.config().getConfig([
-        { type: "prompt", key: "template-index" },
-      ]);
-      const vals = (resp as { values?: { value: string }[] }).values;
-      if (vals?.length) currentIndex = JSON.parse(vals[0].value);
-    } catch {
-      // no existing index
-    }
-
-    for (const entry of manifest.prompts) {
-      if (!currentIndex.includes(entry.key)) {
-        currentIndex.push(entry.key);
-      }
-    }
-
-    await socket.config().putConfig([
-      { type: "prompt", key: "template-index", value: JSON.stringify(currentIndex) },
-    ]);
-    tracker.log(`Template index updated`, "success");
   }
 
   // 8. Upload schema
@@ -694,8 +660,9 @@ export function DemoDataLoader() {
     setManifest(m);
     if (m.detail) {
       try {
-        const md = await fetchText(resolvePath(dirOf(entry.path), m.detail));
-        setDetailHtml(markdownToHtml(md));
+        const detailDir = dirOf(entry.path);
+        const md = await fetchText(resolvePath(detailDir, m.detail));
+        setDetailHtml(renderMarkdown(md, `${BASE_URL}/${detailDir}`));
       } catch {
         // detail file missing — not critical
       }
@@ -923,13 +890,16 @@ export function DemoDataLoader() {
           </div>
           {detailHtml ? (
             <div
-              dangerouslySetInnerHTML={{ __html: detailHtml }}
+              dangerouslySetInnerHTML={{ __html: `<style>.dd-detail p{margin:0.6em 0}.dd-detail img{max-width:100%;height:auto;border-radius:8px;margin:8px auto;display:block}.dd-detail a{color:inherit;text-decoration:underline}</style>${detailHtml}` }}
+              className="dd-detail"
               style={{
                 fontSize: sz(13),
                 fontFamily: theme.font.sans,
                 color: theme.text.secondary,
                 lineHeight: 1.7,
                 marginBottom: 24,
+                maxWidth: "100%",
+                overflow: "hidden",
               }}
             />
           ) : manifest.description ? (
