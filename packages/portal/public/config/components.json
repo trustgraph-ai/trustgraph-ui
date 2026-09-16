@@ -119,17 +119,17 @@
   },
   {
     "title": "Demos",
-    "description": "Interactive demonstrations showcasing TrustGraph capabilities with real-world datasets.",
+    "description": "Explore what TrustGraph can do. Each demo app is paired with a dataset and ontology — start by loading a dataset with the Demo Data Loader, then try the matching app.",
     "tab": "demos",
     "navLabel": "Demos",
     "navIcon": "▷",
     "components": [
       {
-        "id": "demo-data",
+        "id": "demo-loader",
         "title": "Demo Data Loader",
         "icon": "⬇",
         "paletteKey": "emerald",
-        "description": "Load demo datasets into TrustGraph.",
+        "description": "Start here — browse and load ready-made datasets to explore TrustGraph.",
         "url": "/plugins/demo-data.iife.js",
         "globalName": "DemoDataPlugin"
       },
