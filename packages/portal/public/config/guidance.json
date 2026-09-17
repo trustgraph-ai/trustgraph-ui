@@ -1,4 +1,13 @@
 {
+  "demo-loader": [
+    {
+      "id": "welcome",
+      "title": "Demo Data Loader",
+      "body": "Browse the available demo datasets and load them into TrustGraph.\n\nEach dataset comes with a **knowledge graph**, **ontology**, and **example queries** — everything you need to explore a scenario end-to-end.\n\nClick a card to see what's included, then hit **Load Dataset** to get started. Once loaded, switch to the matching workspace and try the demo apps on the **Demos** tab.",
+      "color": "emerald",
+      "position": "below-right"
+    }
+  ],
   "demos": [
     {
       "id": "welcome",
