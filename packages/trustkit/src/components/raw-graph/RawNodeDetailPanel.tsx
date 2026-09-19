@@ -65,6 +65,21 @@ export function RawNodeDetailPanel({
         {detail.label}
       </div>
 
+      {/* Thumbnail */}
+      {detail.image && (
+        <img
+          src={detail.image}
+          alt=""
+          style={{
+            width: "100%",
+            maxHeight: sz(180),
+            objectFit: "cover",
+            borderRadius: 8,
+            marginBottom: 12,
+          }}
+        />
+      )}
+
       {/* Loading */}
       {detail.isLoading && (
         <div style={{

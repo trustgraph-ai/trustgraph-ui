@@ -1,0 +1,116 @@
+{
+  "title": "TrustGraph Workflows",
+  "description": "Each workflow demonstrates how trustkit components compose to create a full experience.",
+  "pageKey": "workflows",
+  "cards": [
+    {
+      "title": "Document Ingestion",
+      "icon": "⬆",
+      "paletteKey": "amber",
+      "description": "Load documents and process them into knowledge.",
+      "screenshot": "/doc-ingest.jpg",
+      "target": "urn:component:ingest"
+    },
+    {
+      "title": "Context Graph Explorer",
+      "icon": "◈",
+      "paletteKey": "emerald",
+      "description": "Explore the context graph visually.",
+      "screenshot": "/ctxt-graph.jpg",
+      "target": "urn:component:context-graph-navigator"
+    },
+    {
+      "title": "Graph RAG Query",
+      "icon": "◉",
+      "paletteKey": "blue",
+      "description": "Ask questions with knowledge graph provenance.",
+      "screenshot": "/graph-rag.jpg",
+      "target": "urn:component:graph-rag"
+    },
+    {
+      "title": "Agent Query",
+      "icon": "⚡",
+      "paletteKey": "amber",
+      "description": "Multi-step reasoning agent with provenance.",
+      "screenshot": "/agent-retrieval.jpg",
+      "target": "urn:component:agent"
+    },
+    {
+      "title": "Document RAG Query",
+      "icon": "◉",
+      "paletteKey": "purple",
+      "description": "Semantic document search with grounded answers.",
+      "screenshot": "/doc-rag.jpg",
+      "target": "urn:component:document-rag"
+    },
+    {
+      "title": "Graph Navigator",
+      "icon": "◎",
+      "paletteKey": "cyan",
+      "description": "Explore any graph — no schema required.",
+      "screenshot": "/ss-raw-graph.png",
+      "target": "urn:component:graph-navigator"
+    },
+    {
+      "title": "Prompt Management",
+      "icon": "✎",
+      "paletteKey": "amber",
+      "description": "Browse, edit, and test LLM prompt templates.",
+      "screenshot": "/prompts.jpg",
+      "target": "urn:component:prompts"
+    },
+    {
+      "title": "Agent Console",
+      "icon": "⚙",
+      "paletteKey": "cyan",
+      "description": "Configure agent patterns, task types, and tools.",
+      "screenshot": "/agent.jpg",
+      "target": "urn:component:agent-config"
+    },
+    {
+      "title": "Table Explorer",
+      "icon": "▤",
+      "paletteKey": "blue",
+      "description": "Search structured data across schemas.",
+      "screenshot": "/ss-data.png",
+      "target": "urn:component:table-explorer"
+    },
+    {
+      "title": "Ontology Viewer",
+      "icon": "◇",
+      "paletteKey": "purple",
+      "description": "Browse classes, properties, and relationships.",
+      "target": "urn:component:ontology"
+    },
+    {
+      "title": "Ontology Management",
+      "icon": "◆",
+      "paletteKey": "emerald",
+      "description": "Create, edit, validate, and export OWL ontologies.",
+      "screenshot": "/ontology.jpg",
+      "target": "urn:component:ontology-manage"
+    },
+    {
+      "title": "Schema Management",
+      "icon": "▦",
+      "paletteKey": "blue",
+      "description": "Define and manage structured data schemas.",
+      "screenshot": "/schema.jpg",
+      "target": "urn:component:schemas"
+    },
+    {
+      "title": "SPARQL Query",
+      "icon": "⟐",
+      "paletteKey": "purple",
+      "description": "Execute SPARQL queries against the knowledge graph.",
+      "target": "urn:component:sparql"
+    },
+    {
+      "title": "GraphQL Query",
+      "icon": "⬡",
+      "paletteKey": "cyan",
+      "description": "Execute GraphQL queries against structured data.",
+      "target": "urn:component:graphql"
+    }
+  ]
+}

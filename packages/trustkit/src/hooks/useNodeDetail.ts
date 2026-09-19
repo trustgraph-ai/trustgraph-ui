@@ -21,6 +21,7 @@ export interface NodeRelationship {
 export interface NodeDetail {
   uri: string;
   label: string;
+  image?: string;
   properties: NodeProperty[];
   relationships: NodeRelationship[];
   isLoading: boolean;
@@ -29,6 +30,7 @@ export interface NodeDetail {
 // ── Helpers ──────────────────────────────────────────────────────
 
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
+const SCHEMA_IMAGE = "https://schema.org/image";
 
 function getTermValue(term: { t: string; i?: string; v?: string }): string {
   if (term.t === "i") return term.i || "";
@@ -128,6 +130,7 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
 
         // Parse outgoing triples
         let label = getLocalName(uri);
+        let image: string | undefined;
         const propMap = new Map<string, string[]>();
         const outRelMap = new Map<string, { predicate: string; predicateUri: string; targets: Set<string> }>();
 
@@ -137,6 +140,11 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
 
           if (pred === RDFS_LABEL) {
             label = obj;
+            continue;
+          }
+
+          if (pred === SCHEMA_IMAGE) {
+            image = obj;
             continue;
           }
 
@@ -204,6 +212,7 @@ export function useNodeDetail(uri: string | null): NodeDetail | null {
           setDetail({
             uri,
             label,
+            image,
             properties,
             relationships,
             isLoading: false,

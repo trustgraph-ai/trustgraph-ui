@@ -1,14 +1,10 @@
+import { useState } from "react";
 import type { DomainKey, Entity, OntologyDomain, FilterItem } from "@trustgraph/trustkit";
 import { GraphCanvasSVG as GraphCanvas, NodeDetailPanel, LoadingState, FilterBar, useGraphData } from "@trustgraph/trustkit";
 
-interface GraphViewProps {
-  activeFilter: DomainKey | null;
-  onFilterChange: (filter: DomainKey | null) => void;
-  selectedNode: Entity | null;
-  onNodeSelect: (node: Entity | null) => void;
-}
-
-export function GraphView({ activeFilter, onFilterChange, selectedNode, onNodeSelect }: GraphViewProps) {
+export function GraphView() {
+  const [activeFilter, onFilterChange] = useState<DomainKey | null>(null);
+  const [selectedNode, onNodeSelect] = useState<Entity | null>(null);
   const { entities, relationships, ontology, propertyLabels, isLoading, isError } = useGraphData();
 
   const highlightedEntities = selectedNode

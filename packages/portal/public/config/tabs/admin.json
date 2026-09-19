@@ -1,0 +1,28 @@
+{
+  "title": "Administration",
+  "description": "Administration and management tools. Requires admin permissions.",
+  "pageKey": "admin",
+  "cards": [
+    {
+      "title": "User Management",
+      "icon": "◉",
+      "paletteKey": "blue",
+      "description": "Create, update, enable and manage user accounts.",
+      "target": "urn:component:user-admin"
+    },
+    {
+      "title": "Workspace Management",
+      "icon": "◈",
+      "paletteKey": "cyan",
+      "description": "Create and manage workspaces.",
+      "target": "urn:component:workspace-admin"
+    },
+    {
+      "title": "API Key Management",
+      "icon": "⚿",
+      "paletteKey": "amber",
+      "description": "Create, view and revoke API keys for user accounts.",
+      "target": "urn:component:api-keys"
+    }
+  ]
+}

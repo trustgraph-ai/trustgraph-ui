@@ -188,7 +188,40 @@ async function runLoader(
     }
   }
 
-  // 5. Upload queries
+  // 5. Load catalog
+  if (manifest.catalog?.length) {
+    tracker.start("Load catalog metadata");
+    for (const doc of manifest.catalog) {
+      for (const file of doc.files) {
+        const fileUrl = `${BASE_URL}/${resolvePath(baseDir, file)}`;
+
+        const flow = doc.flow ?? "default";
+        const metadata = {
+          id: doc.document_id,
+          metadata: [] as unknown[],
+          collection: doc.collection,
+        };
+
+        tracker.log(`Streaming triples from ${file}...`);
+        let tripleCount = 0;
+        await socket.bulk().importTriples(
+          flow, parseTurtleTriples(fileUrl), metadata, 100,
+          (sent) => { tripleCount = sent; },
+        );
+        tracker.log(`${tripleCount} triples imported`, "success");
+
+        tracker.log(`Streaming entity contexts from ${file}...`);
+        let ctxCount = 0;
+        await socket.bulk().importEntityContexts(
+          flow, parseTurtleEntityContexts(fileUrl), metadata, 100,
+          (sent) => { ctxCount = sent; },
+        );
+        tracker.log(`${ctxCount} entity contexts imported`, "success");
+      }
+    }
+  }
+
+  // 6. Upload queries
   if (manifest.queries?.length) {
     tracker.start("Upload queries");
     let total = 0;
@@ -387,6 +420,10 @@ function ManifestSummary({ manifest }: { manifest: Manifest }) {
   if (manifest.knowledge?.length) {
     const fileCount = manifest.knowledge.reduce((n, k) => n + k.files.length, 0);
     items.push(`${manifest.knowledge.length} document(s), ${fileCount} file(s)`);
+  }
+  if (manifest.catalog?.length) {
+    const fileCount = manifest.catalog.reduce((n, k) => n + k.files.length, 0);
+    items.push(`${manifest.catalog.length} catalog(s), ${fileCount} file(s)`);
   }
   if (manifest.queries?.length) items.push(`${manifest.queries.length} query file(s)`);
   if (manifest.tools?.length) items.push(`${manifest.tools.length} tool(s)`);
@@ -722,6 +759,27 @@ export function DemoDataLoader() {
         }
       }
 
+      if (manifest.catalog?.length) {
+        for (const doc of manifest.catalog) {
+          tracker.start(`Parse catalog ${doc.document_id}`);
+          tracker.log(`Collection: ${doc.collection}, format: ${doc.format}`);
+          for (const file of doc.files) {
+            const fileUrl = `${BASE_URL}/${resolvePath(baseDir, file)}`;
+
+            tracker.log(`Streaming ${file}...`);
+            const { items: triples, count } = await countAsyncIterable(parseTurtleTriples(fileUrl));
+            tracker.log(`${count} triples parsed`, "success");
+
+            const show = count <= 10 ? triples : triples.slice(0, 5);
+            for (const t of show) tracker.log(formatTriple(t));
+            if (count > 10) tracker.log(`... and ${count - 5} more`);
+
+            const { count: ctxCount } = await countAsyncIterable(parseTurtleEntityContexts(fileUrl));
+            tracker.log(`${ctxCount} entity contexts parsed`, "success");
+          }
+        }
+      }
+
       if (manifest.structured_data?.length) {
         for (const entry of manifest.structured_data) {
           tracker.start(`Parse ${entry.file}`);
@@ -755,9 +813,9 @@ export function DemoDataLoader() {
         }
       }
 
-      if (!manifest.knowledge?.length && !manifest.structured_data?.length) {
+      if (!manifest.knowledge?.length && !manifest.catalog?.length && !manifest.structured_data?.length) {
         tracker.start("Check manifest");
-        tracker.log("No knowledge or structured data entries found", "warning");
+        tracker.log("No knowledge, catalog, or structured data entries found", "warning");
       }
 
       tracker.start("Complete");
