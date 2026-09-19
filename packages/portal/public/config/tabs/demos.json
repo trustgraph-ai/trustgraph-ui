@@ -1,0 +1,93 @@
+{
+  "title": "Demos",
+  "description": "Explore what TrustGraph can do. Each demo app is paired with a dataset and ontology — start by loading a dataset with the Demo Data Loader, then try the matching app.",
+  "pageKey": "demos",
+  "cards": [
+    {
+      "title": "Demo Data Loader",
+      "icon": "⬇",
+      "paletteKey": "emerald",
+      "description": "Start here — browse and load ready-made datasets to explore TrustGraph.",
+      "target": "urn:component:demo-loader"
+    },
+    {
+      "title": "Solar System Missions",
+      "icon": "◉",
+      "paletteKey": "amber",
+      "description": "Explore space missions across the solar system.",
+      "screenshot": "/plugins/solar-missions.png",
+      "target": "urn:component:solar-missions"
+    },
+    {
+      "title": "Hardware Security Explorer",
+      "icon": "◈",
+      "paletteKey": "blue",
+      "description": "Hardware decomposition tree with security annotations.",
+      "target": "urn:component:hwsec"
+    },
+    {
+      "title": "Playground",
+      "icon": "△",
+      "paletteKey": "rose",
+      "description": "Experimental sandbox for trying things out.",
+      "target": "urn:component:playground"
+    },
+    {
+      "title": "World Events Explorer",
+      "icon": "⊕",
+      "paletteKey": "cyan",
+      "description": "Geo-temporal event explorer with map, timeline, and filters.",
+      "target": "urn:component:world-events"
+    },
+    {
+      "title": "Retail Shopping Assistant",
+      "icon": "◈",
+      "paletteKey": "emerald",
+      "description": "AI shopping assistant for PC builds, gifts, and camping gear.",
+      "target": "urn:component:retail-assistant"
+    },
+    {
+      "title": "Brand Analytics",
+      "icon": "◎",
+      "paletteKey": "purple",
+      "description": "Brand intelligence from interaction signals. See what users buy, reject, and why.",
+      "target": "urn:component:brand-analytics"
+    },
+    {
+      "title": "Risk Management",
+      "icon": "🛡",
+      "paletteKey": "rose",
+      "description": "Enterprise risk explorer with time-windowed event analysis, threat actors, assets, and incident response tracking.",
+      "target": "urn:component:risk"
+    },
+    {
+      "title": "Game Theory",
+      "icon": "♟",
+      "paletteKey": "purple",
+      "description": "Interactive game tree visualizer with payoff matrices, backward induction, Nash equilibria, and what-if sandbox.",
+      "screenshot": "/plugins/game-theory.png",
+      "target": "urn:component:game-theory"
+    },
+    {
+      "title": "Innovation Intelligence",
+      "icon": "🔍",
+      "paletteKey": "cyan",
+      "description": "Innovation ecosystem explorer for navigating organisations, capabilities, procurement routes, and people.",
+      "target": "urn:component:innovation"
+    },
+    {
+      "title": "Law in Context",
+      "icon": "⚖",
+      "paletteKey": "amber",
+      "description": "Multilingual legal explorer: institutions, civic rights, compliance obligations, emergency powers, and legislative structure.",
+      "target": "urn:component:law-in-context"
+    },
+    {
+      "title": "Threat Explorer",
+      "icon": "⚠",
+      "paletteKey": "cyan",
+      "description": "Cybersecurity investigation tool: pivot through risk events, actors, assets, and categories. Drill into raw OCSF events for evidence.",
+      "target": "urn:component:threat-explorer"
+    }
+  ]
+}

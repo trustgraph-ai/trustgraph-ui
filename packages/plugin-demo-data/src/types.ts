@@ -64,6 +64,7 @@ export interface Manifest {
   flows?: ManifestFlow[];
   ontology?: ManifestOntology[];
   knowledge?: ManifestKnowledge[];
+  catalog?: ManifestKnowledge[];
   queries?: ManifestQuery[];
   tools?: ManifestTool[];
   prompts?: ManifestPrompt[];

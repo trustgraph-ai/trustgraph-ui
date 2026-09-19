@@ -1,25 +1,30 @@
 import { Card, PageGuidance, GuidanceSlot, useTheme } from "@trustgraph/trustkit";
 import type { ThemePalette } from "@trustgraph/trustkit";
-import type { ManifestSection } from "../usePluginManifest";
+import { useNavigation } from "../navigation";
+import type { CardGridConfig } from "../navigation";
 
-interface HomePageProps {
-  onNavigate?: (view: string) => void;
-  sections?: ManifestSection[];
+interface CardGridProps {
+  config?: unknown;
 }
 
-export function HomePage({ onNavigate, sections = [] }: HomePageProps) {
+export function CardGrid({ config }: CardGridProps) {
   const { theme, sz } = useTheme();
+  const { navigate } = useNavigation();
+
+  const gridConfig = config as CardGridConfig | undefined;
+  if (!gridConfig) return null;
+
+  const pageKey = gridConfig.pageKey ?? "grid";
 
   return (
-    <PageGuidance pageKey="workflows">
-    <div style={{
-      padding: "48px 28px",
-      height: "var(--page-height)",
-      overflowY: "auto",
-    }}>
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-        {sections.map((section, si) => (
-          <div key={si} style={{ marginBottom: 48 }}>
+    <PageGuidance pageKey={pageKey}>
+      <div style={{
+        padding: "48px 28px",
+        height: "var(--page-height)",
+        overflowY: "auto",
+      }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <div style={{ marginBottom: 48 }}>
             <div style={{ marginBottom: 32 }}>
               <h1 style={{
                 fontSize: sz(24),
@@ -28,15 +33,15 @@ export function HomePage({ onNavigate, sections = [] }: HomePageProps) {
                 marginBottom: 6,
                 fontFamily: theme.font.sans,
               }}>
-                {si === 0 && <GuidanceSlot id="welcome" />}
-                {section.title}
+                <GuidanceSlot id="welcome" />
+                {gridConfig.title}
               </h1>
               <p style={{
                 fontSize: sz(13),
                 color: theme.text.muted,
                 lineHeight: 1.5,
               }}>
-                {section.description}
+                {gridConfig.description}
               </p>
             </div>
 
@@ -45,14 +50,17 @@ export function HomePage({ onNavigate, sections = [] }: HomePageProps) {
               gridTemplateColumns: "repeat(3, 1fr)",
               gap: 12,
             }}>
-              {section.components.map((wf) => {
-                const color = theme.palette[wf.paletteKey as keyof ThemePalette];
+              {gridConfig.cards.map((card) => {
+                const color = theme.palette[card.paletteKey as keyof ThemePalette];
                 return (
                   <Card
-                    key={wf.id}
+                    key={card.title}
                     borderColor={color + "22"}
                     padding={0}
-                    onClick={onNavigate ? () => onNavigate(wf.id) : undefined}
+                    onClick={() => navigate({
+                      intent: card.intent,
+                      target: card.target,
+                    })}
                   >
                     <div style={{
                       height: 80,
@@ -61,8 +69,8 @@ export function HomePage({ onNavigate, sections = [] }: HomePageProps) {
                       position: "relative",
                     }}>
                       <img
-                        src={wf.screenshot || "/placeholder.png"}
-                        alt={wf.title}
+                        src={card.screenshot || "/placeholder.png"}
+                        alt={card.title}
                         style={{
                           width: "100%",
                           height: "100%",
@@ -90,7 +98,7 @@ export function HomePage({ onNavigate, sections = [] }: HomePageProps) {
                         justifyContent: "center",
                         fontSize: sz(14),
                       }}>
-                        {wf.icon}
+                        {card.icon}
                       </div>
                     </div>
 
@@ -101,14 +109,14 @@ export function HomePage({ onNavigate, sections = [] }: HomePageProps) {
                         color: color,
                         marginBottom: 3,
                       }}>
-                        {wf.title}
+                        {card.title}
                       </div>
                       <div style={{
                         fontSize: sz(11),
                         color: theme.text.subtle,
                         lineHeight: 1.4,
                       }}>
-                        {wf.description}
+                        {card.description}
                       </div>
                     </div>
                   </Card>
@@ -116,9 +124,8 @@ export function HomePage({ onNavigate, sections = [] }: HomePageProps) {
               })}
             </div>
           </div>
-        ))}
+        </div>
       </div>
-    </div>
     </PageGuidance>
   );
 }

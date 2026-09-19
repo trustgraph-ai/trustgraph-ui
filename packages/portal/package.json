@@ -10,10 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@trustgraph/trustkit": "*",
+    "@tanstack/react-query": "^5.90.21",
     "@trustgraph/react-provider": "*",
     "@trustgraph/react-state": "*",
-    "@tanstack/react-query": "^5.90.21",
+    "@trustgraph/trustkit": "*",
+    "marked": "^18.0.13",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.4"

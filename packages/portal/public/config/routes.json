@@ -1,0 +1,34 @@
+[
+  {
+    "target": "urn:tab:welcome",
+    "component": "welcome"
+  },
+  {
+    "target": "urn:tab:home",
+    "component": "home-grid"
+  },
+  {
+    "target": "urn:tab:demos",
+    "component": "demos-grid"
+  },
+  {
+    "target": "urn:tab:admin",
+    "component": "admin-grid"
+  },
+  {
+    "target": "urn:tab:search",
+    "component": "search"
+  },
+  {
+    "intent": "graph",
+    "component": "graph"
+  },
+  {
+    "intent": "query",
+    "component": "query"
+  },
+  {
+    "intent": "explain",
+    "component": "explain"
+  }
+]

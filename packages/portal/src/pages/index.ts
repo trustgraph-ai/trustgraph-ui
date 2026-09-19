@@ -1,4 +1,6 @@
-export { HomePage } from "./HomePage";
+export { WelcomePage } from "./WelcomePage";
+export { DocsViewer } from "./DocsViewer";
+export { SearchPage } from "./SearchPage";
 export { IngestPage } from "./IngestPage";
 export { ExploreView } from "./ExploreView";
 export { GraphRagPage } from "./GraphRagPage";
@@ -15,5 +17,4 @@ export { AgentConfigPage } from "./AgentConfigPage";
 export { OntologyManagePage } from "./OntologyManagePage";
 export { SchemaPage } from "./SchemaPage";
 export { SparqlPage } from "./SparqlPage";
-export { DemosPage } from "./DemosPage";
 export { GraphqlPage } from "./GraphqlPage";

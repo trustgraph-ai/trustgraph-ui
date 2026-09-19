@@ -1,0 +1,214 @@
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix schema:  <https://schema.org/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix cat:     <http://trustgraph.ai/catalogs/> .
+@prefix data:    <http://trustgraph.ai/datasets/> .
+@prefix gt:      <http://trustgraph.ai/schemas/gametheory#> .
+@prefix ds:      <http://trustgraph.ai/datasets/clacton-gambit-2026#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+
+# ── Catalog ─────────────────────────────────────────────────────────
+
+cat:clacton-gambit-2026 a dcat:Catalog ;
+    rdfs:label "Clacton By-election 2026 - Game Theory Analysis" ;
+    rdfs:comment "A game-theoretic analysis of the strategic dynamics surrounding the 2026 Clacton by-election." ;
+    dcterms:title "Clacton By-election 2026 — Game Theory Analysis" ;
+    dcterms:description "A game-theoretic analysis of the strategic dynamics surrounding the 2026 Clacton by-election." ;
+    dcterms:publisher <http://trustgraph.ai/organization> ;
+    dcterms:language <http://id.loc.gov/vocabulary/iso639-1/en> ;
+    dcat:themeTaxonomy <http://publications.europa.eu/resource/authority/data-theme> ;
+    dcat:dataset data:clacton-gambit-2026 .
+
+# ── Publisher ───────────────────────────────────────────────────────
+
+<http://trustgraph.ai/organization> a foaf:Organization ;
+    rdfs:label "TrustGraph AI" ;
+    rdfs:comment "Publisher and creator of the dataset." ;
+    foaf:name "TrustGraph AI" ;
+    foaf:homepage <https://trustgraph.ai> .
+
+# ── Dataset: The Clacton Gambit ─────────────────────────────────────
+
+data:clacton-gambit-2026 a dcat:Dataset ;
+
+    # ── Description ──
+
+    rdfs:label "The Clacton Gambit: 2026 By-election Scenario" ;
+    rdfs:comment "A game-theoretic RDF model of the 2026 Clacton by-election, capturing strategic choices, chance nodes, media dynamics, and utility payoffs." ;
+    dcterms:title "The Clacton Gambit: 2026 By-election Scenario" ;
+    dcterms:description """A game-theoretic RDF model of the 2026 Clacton by-election,
+capturing Nigel Farage's strategic resignation dilemma, the Establishment
+Coalition's counter-strategies, chance-based media dynamics, and the
+resulting utility payoffs for each player.""" ;
+    dcterms:abstract """Quantifies expected utility payoffs and risk profiles when
+a populist incumbent faces a parliamentary standards inquiry and must
+choose between pre-emptive resignation or awaiting the verdict.""" ;
+
+    # ── Creator / Publisher ──
+
+    dcterms:creator <http://trustgraph.ai/organization> ;
+    dcterms:publisher <http://trustgraph.ai/organization> ;
+    dcterms:issued "2026-09-18"^^xsd:date ;
+    dcterms:license <https://creativecommons.org/licenses/by/4.0/> ;
+
+    # ── Subjects & Tags ──
+
+    dcat:keyword "game theory", "UK politics", "by-election", "Clacton",
+                 "strategic resignation", "decision tree", "payoff matrix",
+                 "Reform UK", "populism", "media dynamics" ;
+    dcat:theme <http://publications.europa.eu/resource/authority/data-theme/GOVE> ;
+    dcterms:subject <http://dbpedia.org/resource/Game_theory> ,
+                    <http://dbpedia.org/resource/By-election> ,
+                    <http://dbpedia.org/resource/Clacton_(UK_Parliament_constituency)> ;
+    dcterms:temporal ds:temporal ;
+    dcterms:spatial <http://dbpedia.org/resource/Clacton-on-Sea> ;
+
+    # ── Data Structures ──
+
+    dcat:conformsTo <http://trustgraph.ai/schemas/gametheory> ;
+    dcterms:type gt:Game ;
+    schema:variableMeasured ds:variable-utility-payoff ,
+                            ds:variable-branch-probability ;
+
+    # ── Use Cases & Problems Solved ──
+
+    schema:audience ds:audience ;
+    schema:potentialAction ds:usecase-strategic-decision-analysis ,
+                           ds:usecase-media-impact-modelling ,
+                           ds:usecase-coalition-strategy-assessment ;
+
+    # ── Preview / Screenshot ──
+
+    schema:image <https://raw.githubusercontent.com/trustgraph-ai/demo-standard/master/datasets/game-theory/thumbnail.jpg> ;
+
+    # ── Documentation ──
+
+    dcat:landingPage <https://raw.githubusercontent.com/trustgraph-ai/demo-standard/refs/heads/master/datasets/game-theory/description.md> ;
+    dcterms:bibliographicCitation "TrustGraph AI. The Clacton Gambit: A Game-Theoretic Model of the 2026 By-election. 2026." ;
+
+    # ── Distribution ──
+
+    dcat:distribution ds:distribution-ntriples ,
+                      ds:distribution-turtle ;
+
+    dcat:accessService ds:service-table-explorer ,
+                       ds:service-document-rag ,
+                       ds:service-context-graph-navigator ,
+                       ds:service-graph-navigator ,
+                       ds:service-search ,
+                       ds:service-game-theory .
+
+# ── Temporal Coverage ──────────────────────────────────────────────
+
+ds:temporal a dcterms:PeriodOfTime ;
+    rdfs:label "Temporal Coverage" ;
+    rdfs:comment "The time period covered by this dataset, spanning the 2026 Clacton by-election campaign." ;
+    dcat:startDate "2026-06-01"^^xsd:date ;
+    dcat:endDate "2026-09-18"^^xsd:date .
+
+# ── Variables Measured ─────────────────────────────────────────────
+
+ds:variable-utility-payoff a schema:PropertyValue ;
+    rdfs:label "Utility Payoff" ;
+    rdfs:comment "Integer payoff score assigned to each player at each outcome node, ranging from -5 to +5." ;
+    schema:name "Utility Payoff" ;
+    schema:unitText "relative utility" ;
+    schema:minValue "-5"^^xsd:integer ;
+    schema:maxValue "5"^^xsd:integer .
+
+ds:variable-branch-probability a schema:PropertyValue ;
+    rdfs:label "Branch Probability" ;
+    rdfs:comment "Probability weight on each outgoing action from a chance node, between 0.0 and 1.0." ;
+    schema:name "Branch Probability" ;
+    schema:unitText "probability" ;
+    schema:minValue "0.0"^^xsd:float ;
+    schema:maxValue "1.0"^^xsd:float .
+
+# ── Audience ───────────────────────────────────────────────────────
+
+ds:audience a schema:Audience ;
+    rdfs:label "Target Audience" ;
+    rdfs:comment "The intended consumers of this dataset." ;
+    schema:audienceType "Political analysts, strategic advisors, political science researchers, and game theory students" .
+
+# ── Use Cases ──────────────────────────────────────────────────────
+
+ds:usecase-strategic-decision-analysis a schema:Action ;
+    rdfs:label "Strategic Decision Analysis" ;
+    rdfs:comment "Evaluate optimal strategies for political actors facing standards inquiries and forced by-elections." ;
+    schema:name "Strategic Decision Analysis" ;
+    schema:description "Evaluate optimal strategies for political actors facing standards inquiries and forced by-elections." .
+
+ds:usecase-media-impact-modelling a schema:Action ;
+    rdfs:label "Media Impact Modelling" ;
+    rdfs:comment "Model the probabilistic effect of media coverage on political outcomes using chance nodes." ;
+    schema:name "Media Impact Modelling" ;
+    schema:description "Model the probabilistic effect of media coverage on political outcomes using chance nodes." .
+
+ds:usecase-coalition-strategy-assessment a schema:Action ;
+    rdfs:label "Coalition Strategy Assessment" ;
+    rdfs:comment "Analyse whether establishment parties should contest or boycott a populist-triggered by-election." ;
+    schema:name "Coalition Strategy Assessment" ;
+    schema:description "Analyse whether establishment parties should contest or boycott a populist-triggered by-election." .
+
+# ── Distributions ──────────────────────────────────────────────────
+
+ds:distribution-ntriples a dcat:Distribution ;
+    rdfs:label "N-Triples dump" ;
+    rdfs:comment "The dataset serialised as N-Triples." ;
+    dcterms:title "N-Triples dump" ;
+    dcat:downloadURL <https://raw.githubusercontent.com/trustgraph-ai/demo-standard/master/datasets/game-theory/clacton-byelection.nt> ;
+    dcat:mediaType "application/n-triples" .
+
+ds:distribution-turtle a dcat:Distribution ;
+    rdfs:label "Turtle serialisation" ;
+    rdfs:comment "The dataset serialised as Turtle." ;
+    dcterms:title "Turtle serialisation" ;
+    dcat:downloadURL <https://raw.githubusercontent.com/trustgraph-ai/demo-standard/master/datasets/game-theory/clacton-byelection.ttl> ;
+    dcat:mediaType "text/turtle" .
+
+# ── Access Service ─────────────────────────────────────────────────
+
+ds:service-table-explorer a dcat:DataService ;
+    rdfs:label "Table Explorer" ;
+    rdfs:comment "Tabular view of the dataset triples." ;
+    dcterms:title "Table Explorer" ;
+    dcterms:identifier "urn:component:table-explorer" ;
+    dcat:servesDataset data:clacton-gambit-2026 .
+
+ds:service-document-rag a dcat:DataService ;
+    rdfs:label "Document RAG" ;
+    rdfs:comment "Retrieval-augmented generation query interface over the dataset." ;
+    dcterms:title "Document RAG" ;
+    dcterms:identifier "urn:component:document-rag" ;
+    dcat:servesDataset data:clacton-gambit-2026 .
+
+ds:service-context-graph-navigator a dcat:DataService ;
+    rdfs:label "Context Graph Navigator" ;
+    rdfs:comment "Contextual graph exploration starting from a selected entity." ;
+    dcterms:title "Context Graph Navigator" ;
+    dcterms:identifier "urn:component:context-graph-navigator" ;
+    dcat:servesDataset data:clacton-gambit-2026 .
+
+ds:service-graph-navigator a dcat:DataService ;
+    rdfs:label "Graph Navigator" ;
+    rdfs:comment "Full graph visualisation of the dataset." ;
+    dcterms:title "Graph Navigator" ;
+    dcterms:identifier "urn:component:graph-navigator" ;
+    dcat:servesDataset data:clacton-gambit-2026 .
+
+ds:service-search a dcat:DataService ;
+    rdfs:label "Search" ;
+    rdfs:comment "Semantic search over the knowledge graph using embeddings." ;
+    dcterms:title "Search" ;
+    dcterms:identifier "urn:component:search" ;
+    dcat:servesDataset data:clacton-gambit-2026 .
+
+ds:service-game-theory a dcat:DataService ;
+    rdfs:label "Game Theory Explorer" ;
+    rdfs:comment "Dedicated game theory visualisation and analysis interface." ;
+    dcterms:title "Game Theory Explorer" ;
+    dcterms:identifier "urn:component:game-theory" ;
+    dcat:servesDataset data:clacton-gambit-2026 .
