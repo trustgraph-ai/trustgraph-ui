@@ -17,12 +17,14 @@ function convertTerm(term: Quad["subject"] | Quad["predicate"] | Quad["object"])
   return { t: "i", i: term.value };
 }
 
-function convertQuad(quad: Quad): BulkTriple {
-  return {
+function convertQuad(quad: Quad, graph?: string): BulkTriple {
+  const triple: BulkTriple = {
     s: convertTerm(quad.subject) as IriTerm,
     p: convertTerm(quad.predicate) as IriTerm,
     o: convertTerm(quad.object),
   };
+  if (graph) triple.g = { t: "i", i: graph };
+  return triple;
 }
 
 async function* streamQuads(url: string): AsyncGenerator<Quad> {
@@ -78,9 +80,9 @@ async function* streamQuads(url: string): AsyncGenerator<Quad> {
   if (error) throw error;
 }
 
-export async function* parseTurtleTriples(url: string): AsyncGenerator<BulkTriple> {
+export async function* parseTurtleTriples(url: string, graph?: string): AsyncGenerator<BulkTriple> {
   for await (const quad of streamQuads(url)) {
-    yield convertQuad(quad);
+    yield convertQuad(quad, graph);
   }
 }
 

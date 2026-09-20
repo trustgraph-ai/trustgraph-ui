@@ -202,10 +202,10 @@ async function runLoader(
           collection: doc.collection,
         };
 
-        tracker.log(`Streaming triples from ${file}...`);
+        tracker.log(`Streaming triples from ${file} (graph: urn:graph:catalog)...`);
         let tripleCount = 0;
         await socket.bulk().importTriples(
-          flow, parseTurtleTriples(fileUrl), metadata, 100,
+          flow, parseTurtleTriples(fileUrl, "urn:graph:catalog"), metadata, 100,
           (sent) => { tripleCount = sent; },
         );
         tracker.log(`${tripleCount} triples imported`, "success");
