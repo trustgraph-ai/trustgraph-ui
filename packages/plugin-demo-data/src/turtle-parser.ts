@@ -23,7 +23,7 @@ function convertQuad(quad: Quad, graph?: string): BulkTriple {
     p: convertTerm(quad.predicate) as IriTerm,
     o: convertTerm(quad.object),
   };
-  if (graph) triple.g = { t: "i", i: graph };
+  if (graph) triple.g = graph;
   return triple;
 }
 
