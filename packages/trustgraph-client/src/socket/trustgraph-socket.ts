@@ -2797,7 +2797,7 @@ export interface BulkTriple {
   s: Term;
   p: Term;
   o: Term;
-  g?: Term;
+  g?: string;
 }
 
 export interface BulkMetadata {

@@ -25,6 +25,8 @@ interface CatalogEntry {
   uri: string;
   title: string;
   description: string;
+  image?: string;
+  landingPage?: string;
   datasets: DatasetEntry[];
 }
 
@@ -33,7 +35,7 @@ PREFIX dcat: <http://www.w3.org/ns/dcat#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX schema: <https://schema.org/>
 
-SELECT ?catalog ?catTitle ?catDesc
+SELECT ?catalog ?catTitle ?catDesc ?catImage ?catLandingPage
        ?dataset ?dsTitle ?dsDesc ?dsAbstract ?dsImage ?dsLandingPage
        ?keyword
        ?service ?svcLabel ?svcId
@@ -41,6 +43,8 @@ WHERE {
   ?catalog a dcat:Catalog .
   OPTIONAL { ?catalog dcterms:title ?catTitle }
   OPTIONAL { ?catalog dcterms:description ?catDesc }
+  OPTIONAL { ?catalog schema:image ?catImage }
+  OPTIONAL { ?catalog dcat:landingPage ?catLandingPage }
   OPTIONAL {
     ?catalog dcat:dataset ?dataset .
     OPTIONAL { ?dataset dcterms:title ?dsTitle }
@@ -71,6 +75,8 @@ function groupCatalogs(rows: Record<string, string>[]): CatalogEntry[] {
         uri: catUri,
         title: row.catTitle || "Untitled Catalog",
         description: row.catDesc || "",
+        image: row.catImage || undefined,
+        landingPage: row.catLandingPage || undefined,
         datasets: [],
       });
     }
@@ -288,14 +294,45 @@ export function WelcomePage() {
       <div style={{ display: "flex", flexDirection: "column", gap: sz(24) }}>
         {catalogs.map((cat) => (
           <div key={cat.uri}>
-            <h2 style={{ fontSize: sz(22), fontWeight: 600, marginBottom: sz(4) }}>
-              {cat.title}
-            </h2>
-            {cat.description && (
-              <p style={{ fontSize: sz(13), color: theme.text.muted, marginBottom: sz(16), lineHeight: 1.5 }}>
-                {cat.description}
-              </p>
-            )}
+            <div style={{ display: "flex", gap: sz(16), marginBottom: sz(16) }}>
+              {cat.image && (
+                <img
+                  src={cat.image}
+                  alt=""
+                  onClick={() => cat.landingPage && navigate({
+                    target: "urn:component:docs",
+                    params: { url: cat.landingPage, title: cat.title },
+                  })}
+                  style={{
+                    width: sz(120),
+                    height: sz(80),
+                    objectFit: "cover",
+                    borderRadius: 8,
+                    flexShrink: 0,
+                    cursor: cat.landingPage ? "pointer" : undefined,
+                  }}
+                />
+              )}
+              <div>
+                <h2
+                  onClick={() => cat.landingPage && navigate({
+                    target: "urn:component:docs",
+                    params: { url: cat.landingPage, title: cat.title },
+                  })}
+                  style={{
+                    fontSize: sz(22), fontWeight: 600, marginBottom: sz(4),
+                    cursor: cat.landingPage ? "pointer" : undefined,
+                  }}
+                >
+                  {cat.title}
+                </h2>
+                {cat.description && (
+                  <p style={{ fontSize: sz(13), color: theme.text.muted, lineHeight: 1.5 }}>
+                    {cat.description}
+                  </p>
+                )}
+              </div>
+            </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: sz(16) }}>
               {cat.datasets.map((ds) => (
