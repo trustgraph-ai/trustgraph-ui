@@ -12,6 +12,13 @@
       "target": "urn:component:ingest"
     },
     {
+      "title": "Search",
+      "icon": "◇",
+      "paletteKey": "rose",
+      "description": "Semantic search across the knowledge graph.",
+      "target": "urn:component:search"
+    },
+    {
       "title": "Context Graph Explorer",
       "icon": "◈",
       "paletteKey": "emerald",

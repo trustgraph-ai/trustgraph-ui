@@ -291,10 +291,18 @@ export function WelcomePage() {
         <p style={{ color: theme.text.faint, fontSize: sz(14) }}>{error}</p>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: sz(24) }}>
+      <h3 style={{
+        fontSize: sz(12), fontWeight: 600, textTransform: "uppercase",
+        letterSpacing: "0.08em", color: theme.text.muted,
+        marginBottom: 0, paddingBottom: sz(8),
+        borderBottom: `1px solid ${theme.border.default}`,
+      }}>
+        Catalogs
+      </h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: sz(32), marginTop: sz(12) }}>
         {catalogs.map((cat) => (
           <div key={cat.uri}>
-            <div style={{ display: "flex", gap: sz(16), marginBottom: sz(16) }}>
+            <div style={{ display: "flex", gap: sz(16), marginBottom: sz(24) }}>
               {cat.image && (
                 <img
                   src={cat.image}
@@ -334,7 +342,15 @@ export function WelcomePage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: sz(16) }}>
+            <h3 style={{
+              fontSize: sz(12), fontWeight: 600, textTransform: "uppercase",
+              letterSpacing: "0.08em", color: theme.text.muted,
+              marginBottom: 0, paddingBottom: sz(8), marginLeft: sz(16),
+              borderBottom: `1px solid ${theme.border.default}`,
+            }}>
+              Datasets
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: sz(16), marginLeft: sz(16), marginTop: sz(12) }}>
               {cat.datasets.map((ds) => (
                 <div
                   key={ds.uri}
