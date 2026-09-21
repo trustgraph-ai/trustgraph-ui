@@ -4,12 +4,7 @@
     "icon": "⌂",
     "target": "urn:tab:welcome"
   },
-  {
-    "label": "Search",
-    "icon": "⟐",
-    "target": "urn:tab:search"
-  },
-  {
+{
     "label": "Workflows",
     "icon": "◈",
     "target": "urn:tab:home"
@@ -23,6 +18,6 @@
     "label": "Admin",
     "icon": "⚙",
     "target": "urn:tab:admin",
-    "hidden": true
+    "hidden": false
   }
 ]
