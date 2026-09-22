@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, type KeyboardEvent } from "react";
+import { useState, useEffect, useCallback, useMemo, type KeyboardEvent } from "react";
 import { useTheme } from "@trustgraph/trustkit";
 import { useSocket } from "@trustgraph/react-provider";
-import { useSessionStore, useWorkspaceStore, useSettings } from "@trustgraph/react-state";
+import { useSessionStore, useWorkspaceStore, useSettings, useLibrary, useProcessing } from "@trustgraph/react-state";
 import { useNavigation } from "../navigation";
 
 interface ServiceEntry {
@@ -132,6 +132,45 @@ export function WelcomePage() {
   const { settings } = useSettings();
   const collection = settings.collection;
   const { navigate } = useNavigation();
+
+  const { documents } = useLibrary();
+  const { processing } = useProcessing();
+
+  const processedDocs = useMemo(() => {
+    const docs = (documents || []) as { id: string; title?: string; comments?: string; tags?: string[] }[];
+    const procs = (processing || []) as { "document-id": string; flow?: string; collection?: string }[];
+    const docMap = new Map(docs.map((d) => [d.id, d]));
+    const result = new Map<string, {
+      id: string;
+      title: string;
+      comments?: string;
+      tags: string[];
+      submissions: { flow: string; collection: string }[];
+    }>();
+    for (const proc of procs) {
+      const docId = proc["document-id"];
+      const doc = docMap.get(docId);
+      if (!doc) continue;
+      if (!result.has(docId)) {
+        result.set(docId, {
+          id: docId,
+          title: doc.title || docId.split("/").pop() || docId,
+          comments: doc.comments,
+          tags: doc.tags || [],
+          submissions: [],
+        });
+      }
+      const key = `${proc.flow || "default"}:${proc.collection || "default"}`;
+      const entry = result.get(docId)!;
+      if (!entry.submissions.some((s) => `${s.flow}:${s.collection}` === key)) {
+        entry.submissions.push({
+          flow: proc.flow || "default",
+          collection: proc.collection || "default",
+        });
+      }
+    }
+    return Array.from(result.values());
+  }, [documents, processing]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [catalogs, setCatalogs] = useState<CatalogEntry[]>([]);
@@ -300,6 +339,9 @@ export function WelcomePage() {
         Catalogs
       </h3>
       <div style={{ display: "flex", flexDirection: "column", gap: sz(32), marginTop: sz(12) }}>
+        {!loading && catalogs.length === 0 && (
+          <p style={{ color: theme.text.muted, fontSize: sz(13) }}>No catalogs found.</p>
+        )}
         {catalogs.map((cat) => (
           <div key={cat.uri}>
             <div style={{ display: "flex", gap: sz(16), marginBottom: sz(24) }}>
@@ -351,6 +393,9 @@ export function WelcomePage() {
               Datasets
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: sz(16), marginLeft: sz(16), marginTop: sz(12) }}>
+              {cat.datasets.length === 0 && (
+                <p style={{ color: theme.text.muted, fontSize: sz(13) }}>No datasets found.</p>
+              )}
               {cat.datasets.map((ds) => (
                 <div
                   key={ds.uri}
@@ -462,6 +507,86 @@ export function WelcomePage() {
                     )}
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <h3 style={{
+        fontSize: sz(12), fontWeight: 600, textTransform: "uppercase",
+        letterSpacing: "0.08em", color: theme.text.muted,
+        marginBottom: 0, paddingBottom: sz(8), marginTop: sz(32),
+        borderBottom: `1px solid ${theme.border.default}`,
+      }}>
+        Documents Submitted
+      </h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: sz(12), marginTop: sz(12) }}>
+        {processedDocs.length === 0 && (
+          <p style={{ color: theme.text.muted, fontSize: sz(13) }}>No processed documents.</p>
+        )}
+        {processedDocs.map((doc) => (
+          <div
+            key={doc.id}
+            style={{
+              padding: sz(16),
+              borderRadius: 10,
+              background: theme.surface.overlay,
+              border: `1px solid ${theme.border.default}`,
+            }}
+          >
+            <div style={{ fontSize: sz(15), fontWeight: 600, marginBottom: sz(4) }}>
+              {doc.title}
+            </div>
+            {doc.comments && (
+              <p style={{
+                fontSize: sz(13), color: theme.text.muted,
+                lineHeight: 1.5, marginBottom: sz(8),
+              }}>
+                {doc.comments.length > 200 ? doc.comments.substring(0, 200) + "…" : doc.comments}
+              </p>
+            )}
+            {doc.tags.length > 0 && (
+              <div style={{
+                display: "flex", flexWrap: "wrap", gap: sz(6),
+                marginBottom: sz(8),
+              }}>
+                {doc.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    style={{
+                      fontSize: sz(11),
+                      padding: `${sz(2)}px ${sz(8)}px`,
+                      borderRadius: 99,
+                      background: theme.surface.base,
+                      border: `1px solid ${theme.border.default}`,
+                      color: theme.text.muted,
+                      fontFamily: theme.font.mono,
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div style={{
+              display: "flex", flexWrap: "wrap", gap: sz(6),
+            }}>
+              {doc.submissions.map((sub) => (
+                <span
+                  key={`${sub.flow}:${sub.collection}`}
+                  style={{
+                    fontSize: sz(10),
+                    padding: `${sz(2)}px ${sz(8)}px`,
+                    borderRadius: 99,
+                    background: `${theme.palette.amber}18`,
+                    border: `1px solid ${theme.palette.amber}40`,
+                    color: theme.palette.amber,
+                    fontFamily: theme.font.mono,
+                  }}
+                >
+                  {sub.flow} → {sub.collection}
+                </span>
               ))}
             </div>
           </div>
