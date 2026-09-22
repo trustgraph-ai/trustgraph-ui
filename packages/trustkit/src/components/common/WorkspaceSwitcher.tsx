@@ -10,6 +10,12 @@ import { useTheme } from "../../theme/ThemeContext";
 
 const FONT = "${theme.font.mono}";
 
+interface PillItem {
+  id: string;
+  name?: string;
+  description?: string;
+}
+
 function Pill({
   label,
   value,
@@ -20,7 +26,7 @@ function Pill({
   label: string;
   value: string;
   color: string;
-  items: string[];
+  items: PillItem[];
   onSelect: (id: string) => void;
 }) {
   const { theme, sz } = useTheme();
@@ -59,7 +65,7 @@ function Pill({
         }}
       >
         <span style={{ opacity: 0.6, fontSize: sz(10) }}>{label}</span>
-        <span style={{ fontWeight: 600 }}>{value}</span>
+        <span style={{ fontWeight: 600 }}>{items.find((i) => i.id === value)?.name || value}</span>
         {!single && (
           <span style={{ fontSize: sz(8), opacity: 0.5 }}>▼</span>
         )}
@@ -82,11 +88,11 @@ function Pill({
             boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
           }}
         >
-          {[...items].sort((a, b) => a.localeCompare(b)).map((id) => (
+          {[...items].sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id)).map((item) => (
             <div
-              key={id}
+              key={item.id}
               onClick={() => {
-                onSelect(id);
+                onSelect(item.id);
                 setOpen(false);
               }}
               style={{
@@ -95,19 +101,27 @@ function Pill({
                 cursor: "pointer",
                 fontSize: sz(11),
                 fontFamily: FONT,
-                color: id === value ? color : theme.text.muted,
-                fontWeight: id === value ? 600 : 400,
-                background: id === value ? `${color}11` : "transparent",
+                color: item.id === value ? color : theme.text.muted,
+                fontWeight: item.id === value ? 600 : 400,
+                background: item.id === value ? `${color}11` : "transparent",
                 transition: "all 0.1s",
               }}
               onMouseEnter={(e) => {
-                if (id !== value) e.currentTarget.style.background = `${color}0A`;
+                if (item.id !== value) e.currentTarget.style.background = `${color}0A`;
               }}
               onMouseLeave={(e) => {
-                if (id !== value) e.currentTarget.style.background = "transparent";
+                if (item.id !== value) e.currentTarget.style.background = "transparent";
               }}
             >
-              {id}
+              <div>{item.name || item.id}</div>
+              {item.description && (
+                <div style={{
+                  fontSize: sz(9), color: theme.text.muted,
+                  fontWeight: 400, marginTop: 2,
+                }}>
+                  {item.description}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -126,26 +140,36 @@ export function WorkspaceSwitcher() {
   const collection = settings.collection;
   const { theme, sz } = useTheme();
 
-  const workspaceIds = workspaces.map((w) => w.id);
+  const workspaceItems: PillItem[] = workspaces.map((w) => ({
+    id: w.id,
+    name: (w as any).name || undefined,
+  }));
 
-  const collList = Array.isArray(collections) ? collections as Array<{ collection?: string; name?: string }> : [];
-  const collectionIds = collList.length > 0
-    ? collList.map((c) => c.collection || c.name || "default")
-    : ["default"];
+  const collList = Array.isArray(collections) ? collections as Array<{ collection?: string; name?: string; description?: string }> : [];
+  const collectionItems: PillItem[] = collList.length > 0
+    ? collList.map((c) => ({
+        id: c.collection || c.name || "default",
+        name: c.name || undefined,
+        description: c.description || undefined,
+      }))
+    : [{ id: "default", name: "Default" }];
 
-  const flowList = Array.isArray(flows) ? flows as Array<{ id: string }> : [];
-  const flowIds = flowList.length > 0
-    ? flowList.map((f) => f.id)
-    : [flowId];
+  const flowList = Array.isArray(flows) ? flows as Array<{ id: string; description?: string; blueprint?: string }> : [];
+  const flowItems: PillItem[] = flowList.length > 0
+    ? flowList.map((f) => ({
+        id: f.id,
+        description: f.description || f.blueprint || undefined,
+      }))
+    : [{ id: flowId }];
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: sz(6) }}>
-      {workspaceIds.length > 0 && (
+      {workspaceItems.length > 0 && (
         <Pill
           label="WS"
           value={activeWorkspace || "—"}
           color={theme.palette.cyan}
-          items={workspaceIds}
+          items={workspaceItems}
           onSelect={switchWorkspace}
         />
       )}
@@ -153,14 +177,14 @@ export function WorkspaceSwitcher() {
         label="COL"
         value={collection}
         color={theme.palette.emerald}
-        items={collectionIds}
+        items={collectionItems}
         onSelect={(id) => updateSetting("collection", id)}
       />
       <Pill
         label="FLOW"
         value={flowId}
         color={theme.palette.amber}
-        items={flowIds}
+        items={flowItems}
         onSelect={setFlowId}
       />
     </div>
