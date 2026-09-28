@@ -27,8 +27,8 @@ function convertQuad(quad: Quad, graph?: string): BulkTriple {
   return triple;
 }
 
-async function* streamQuads(url: string): AsyncGenerator<Quad> {
-  const response = await fetch(url);
+async function* streamQuads(url: string, headers?: Record<string, string>): AsyncGenerator<Quad> {
+  const response = await fetch(url, headers ? { headers } : undefined);
   if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status}`);
   const body = response.body;
   if (!body) throw new Error(`No response body for ${url}`);
@@ -80,14 +80,14 @@ async function* streamQuads(url: string): AsyncGenerator<Quad> {
   if (error) throw error;
 }
 
-export async function* parseTurtleTriples(url: string, graph?: string): AsyncGenerator<BulkTriple> {
-  for await (const quad of streamQuads(url)) {
+export async function* parseTurtleTriples(url: string, graph?: string, headers?: Record<string, string>): AsyncGenerator<BulkTriple> {
+  for await (const quad of streamQuads(url, headers)) {
     yield convertQuad(quad, graph);
   }
 }
 
-export async function* parseTurtleEntityContexts(url: string): AsyncGenerator<EntityContext> {
-  for await (const quad of streamQuads(url)) {
+export async function* parseTurtleEntityContexts(url: string, headers?: Record<string, string>): AsyncGenerator<EntityContext> {
+  for await (const quad of streamQuads(url, headers)) {
     if (quad.object.termType === "Literal") {
       yield {
         entity: convertTerm(quad.subject) as IriTerm,
