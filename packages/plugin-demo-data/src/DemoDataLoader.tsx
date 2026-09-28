@@ -8,17 +8,20 @@ import { parseTurtleTriples, parseTurtleEntityContexts } from "./turtle-parser";
 import { buildSdlPipeline } from "./sdl-pipeline";
 import type { SdlDescriptor } from "./sdl-pipeline";
 import { marked } from "marked";
+import { getDatasetHeaders } from "./dataset-headers";
 
 const BASE_URL = "/demo-data";
 
 async function fetchJson<T>(path: string): Promise<T> {
-  const resp = await fetch(`${BASE_URL}/${path}`);
+  const headers = await getDatasetHeaders();
+  const resp = await fetch(`${BASE_URL}/${path}`, { headers });
   if (!resp.ok) throw new Error(`Failed to fetch ${path}: ${resp.status}`);
   return resp.json();
 }
 
 async function fetchText(path: string): Promise<string> {
-  const resp = await fetch(`${BASE_URL}/${path}`);
+  const headers = await getDatasetHeaders();
+  const resp = await fetch(`${BASE_URL}/${path}`, { headers });
   if (!resp.ok) throw new Error(`Failed to fetch ${path}: ${resp.status}`);
   return resp.text();
 }
@@ -109,6 +112,7 @@ async function runLoader(
   tracker: PhaseTracker,
   onWorkspaceCreated?: () => void,
 ) {
+  const headers = await getDatasetHeaders();
   const previousWorkspace = socket.workspace;
   try {
 
@@ -172,7 +176,7 @@ async function runLoader(
         tracker.log(`Streaming triples from ${file}...`);
         let tripleCount = 0;
         await socket.bulk().importTriples(
-          flow, parseTurtleTriples(fileUrl), metadata, 100,
+          flow, parseTurtleTriples(fileUrl, undefined, headers), metadata, 100,
           (sent) => { tripleCount = sent; },
         );
         tracker.log(`${tripleCount} triples imported`, "success");
@@ -180,7 +184,7 @@ async function runLoader(
         tracker.log(`Streaming entity contexts from ${file}...`);
         let ctxCount = 0;
         await socket.bulk().importEntityContexts(
-          flow, parseTurtleEntityContexts(fileUrl), metadata, 100,
+          flow, parseTurtleEntityContexts(fileUrl, headers), metadata, 100,
           (sent) => { ctxCount = sent; },
         );
         tracker.log(`${ctxCount} entity contexts imported`, "success");
@@ -205,7 +209,7 @@ async function runLoader(
         tracker.log(`Streaming triples from ${file} (graph: urn:graph:catalog)...`);
         let tripleCount = 0;
         await socket.bulk().importTriples(
-          flow, parseTurtleTriples(fileUrl, "urn:graph:catalog"), metadata, 100,
+          flow, parseTurtleTriples(fileUrl, "urn:graph:catalog", headers), metadata, 100,
           (sent) => { tripleCount = sent; },
         );
         tracker.log(`${tripleCount} triples imported`, "success");
@@ -213,7 +217,7 @@ async function runLoader(
         tracker.log(`Streaming entity contexts from ${file}...`);
         let ctxCount = 0;
         await socket.bulk().importEntityContexts(
-          flow, parseTurtleEntityContexts(fileUrl), metadata, 100,
+          flow, parseTurtleEntityContexts(fileUrl, headers), metadata, 100,
           (sent) => { ctxCount = sent; },
         );
         tracker.log(`${ctxCount} entity contexts imported`, "success");
@@ -736,6 +740,7 @@ export function DemoDataLoader() {
 
     const baseDir = dirOf(selected.path);
     const tracker = new PhaseTracker(setPhases);
+    const headers = await getDatasetHeaders();
 
     try {
       if (manifest.knowledge?.length) {
@@ -746,14 +751,14 @@ export function DemoDataLoader() {
             const fileUrl = `${BASE_URL}/${resolvePath(baseDir, file)}`;
 
             tracker.log(`Streaming ${file}...`);
-            const { items: triples, count } = await countAsyncIterable(parseTurtleTriples(fileUrl));
+            const { items: triples, count } = await countAsyncIterable(parseTurtleTriples(fileUrl, undefined, headers));
             tracker.log(`${count} triples parsed`, "success");
 
             const show = count <= 10 ? triples : triples.slice(0, 5);
             for (const t of show) tracker.log(formatTriple(t));
             if (count > 10) tracker.log(`... and ${count - 5} more`);
 
-            const { count: ctxCount } = await countAsyncIterable(parseTurtleEntityContexts(fileUrl));
+            const { count: ctxCount } = await countAsyncIterable(parseTurtleEntityContexts(fileUrl, headers));
             tracker.log(`${ctxCount} entity contexts parsed`, "success");
           }
         }
@@ -767,14 +772,14 @@ export function DemoDataLoader() {
             const fileUrl = `${BASE_URL}/${resolvePath(baseDir, file)}`;
 
             tracker.log(`Streaming ${file}...`);
-            const { items: triples, count } = await countAsyncIterable(parseTurtleTriples(fileUrl));
+            const { items: triples, count } = await countAsyncIterable(parseTurtleTriples(fileUrl, undefined, headers));
             tracker.log(`${count} triples parsed`, "success");
 
             const show = count <= 10 ? triples : triples.slice(0, 5);
             for (const t of show) tracker.log(formatTriple(t));
             if (count > 10) tracker.log(`... and ${count - 5} more`);
 
-            const { count: ctxCount } = await countAsyncIterable(parseTurtleEntityContexts(fileUrl));
+            const { count: ctxCount } = await countAsyncIterable(parseTurtleEntityContexts(fileUrl, headers));
             tracker.log(`${ctxCount} entity contexts parsed`, "success");
           }
         }
