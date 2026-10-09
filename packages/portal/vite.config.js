@@ -21,6 +21,12 @@ export default defineConfig({
         secure: true,
         rewrite: (path) => path.replace(/^\/demo-data/, ""),
       },
+      "/config-svc": {
+        target: "https://config-svc.app.trustgraph.ai",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/config-svc/, ""),
+      },
     },
   },
 })
