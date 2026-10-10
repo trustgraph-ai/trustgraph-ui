@@ -1,8 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 
+export interface Advisory {
+  id: string;
+  severity: string;
+  summary: string;
+  url: string;
+  fixed_in: string;
+}
+
 export type VersionStatus =
   | { status: "current" }
-  | { status: "patch-available"; version: string }
+  | { status: "patch-available"; version: string; advisories?: Advisory[] }
   | {
       status: "upgrade-available";
       upgrade: {
@@ -11,6 +19,7 @@ export type VersionStatus =
         description: string;
         announcement: string;
       };
+      advisories?: Advisory[];
     };
 
 export interface VersionCheckResult {

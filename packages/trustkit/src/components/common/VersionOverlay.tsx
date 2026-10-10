@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "../../theme/ThemeContext";
-import type { VersionCheckResult } from "../../hooks/useVersionCheck";
+import type { VersionCheckResult, Advisory } from "../../hooks/useVersionCheck";
 
 interface VersionOverlayProps {
   versionCheck: VersionCheckResult;
@@ -26,6 +26,7 @@ export function VersionOverlay({ versionCheck }: VersionOverlayProps) {
   const isPatch = check.status === "patch-available";
   const newVersion = isPatch ? check.version : check.upgrade.version;
   const accentColor = isPatch ? theme.palette.amber : theme.semantic.error;
+  const advisories: Advisory[] = ("advisories" in check && check.advisories) || [];
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) closeOverlay();
@@ -131,6 +132,78 @@ export function VersionOverlay({ versionCheck }: VersionOverlayProps) {
           >
             {check.upgrade.description}
           </p>
+        )}
+
+        {/* Advisories */}
+        {advisories.length > 0 && (
+          <div style={{ marginBottom: sz(16) }}>
+            <div
+              style={{
+                fontSize: sz(11),
+                fontWeight: 600,
+                color: theme.semantic.error,
+                marginBottom: sz(8),
+                fontFamily: theme.font.mono,
+              }}
+            >
+              Security Advisories
+            </div>
+            {advisories.map((a) => {
+              const sevColor =
+                a.severity === "critical" || a.severity === "high"
+                  ? theme.semantic.error
+                  : a.severity === "medium"
+                    ? theme.palette.amber
+                    : theme.text.subtle;
+              return (
+                <div
+                  key={a.id}
+                  style={{
+                    padding: `${sz(8)}px ${sz(10)}px`,
+                    marginBottom: sz(4),
+                    borderRadius: sz(6),
+                    border: `1px solid ${sevColor}33`,
+                    background: `${sevColor}0a`,
+                    fontSize: sz(11),
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: sz(4) }}>
+                    <span
+                      style={{
+                        fontFamily: theme.font.mono,
+                        fontSize: sz(9),
+                        color: sevColor,
+                        textTransform: "uppercase",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {a.severity}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: theme.font.mono,
+                        fontSize: sz(9),
+                        color: theme.text.subtle,
+                      }}
+                    >
+                      fixed in {a.fixed_in}
+                    </span>
+                  </div>
+                  <a
+                    href={a.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      color: theme.text.secondary,
+                      textDecoration: "none",
+                    }}
+                  >
+                    {a.summary}
+                  </a>
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {/* Actions */}
