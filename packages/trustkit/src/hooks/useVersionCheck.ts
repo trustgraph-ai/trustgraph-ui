@@ -85,7 +85,12 @@ export function useVersionCheck(): VersionCheckResult {
         const params = new URLSearchParams({ version });
         if (variant) params.set("variant", variant);
 
-        const cResp = await fetch(`${CHECK_URL}?${params}`);
+        const cResp = await fetch(`${CHECK_URL}?${params}`, {
+          headers: {
+            "X-Timezone": Intl.DateTimeFormat().resolvedOptions().timeZone,
+            "X-Language": navigator.language,
+          },
+        });
         if (!cResp.ok) {
           if (!cancelled) setLoading(false);
           return;
