@@ -5,6 +5,7 @@ const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
 const RDFS_DOMAIN = "http://www.w3.org/2000/01/rdf-schema#domain";
 const RDFS_RANGE = "http://www.w3.org/2000/01/rdf-schema#range";
 const RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment";
+const RDFS_SUBCLASS_OF = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
 const OWL_CLASS = "http://www.w3.org/2002/07/owl#Class";
 const OWL_OBJECT_PROPERTY = "http://www.w3.org/2002/07/owl#ObjectProperty";
 const OWL_DATATYPE_PROPERTY = "http://www.w3.org/2002/07/owl#DatatypeProperty";
@@ -37,10 +38,16 @@ export interface OntologyProperty {
   range?: string;
 }
 
+export interface SubClassRelation {
+  child: string;
+  parent: string;
+}
+
 export interface OntologySchema {
   classes: OntologyClass[];
   objectProperties: OntologyProperty[];
   datatypeProperties: OntologyProperty[];
+  subClassRelations: SubClassRelation[];
   // Sets for quick lookup
   objectPropertyUris: Set<string>;
   datatypePropertyUris: Set<string>;
@@ -74,44 +81,72 @@ export function useOntologySchema() {
     collection,
   });
 
-  // Query for all triples to get labels, domains, ranges
-  const allTriples = useTriples({
-    limit: 1000,
+  // Targeted metadata queries
+  const labelTriples = useTriples({
+    p: { t: "i", i: RDFS_LABEL },
+    limit: 500,
+    collection,
+  });
+
+  const domainTriples = useTriples({
+    p: { t: "i", i: RDFS_DOMAIN },
+    limit: 500,
+    collection,
+  });
+
+  const rangeTriples = useTriples({
+    p: { t: "i", i: RDFS_RANGE },
+    limit: 500,
+    collection,
+  });
+
+  const commentTriples = useTriples({
+    p: { t: "i", i: RDFS_COMMENT },
+    limit: 500,
+    collection,
+  });
+
+  const subClassTriples = useTriples({
+    p: { t: "i", i: RDFS_SUBCLASS_OF },
+    limit: 500,
     collection,
   });
 
   const isLoading = classTriples.isLoading || objectPropertyTriples.isLoading ||
-                    datatypePropertyTriples.isLoading || allTriples.isLoading;
+                    datatypePropertyTriples.isLoading || labelTriples.isLoading ||
+                    domainTriples.isLoading || rangeTriples.isLoading ||
+                    commentTriples.isLoading || subClassTriples.isLoading;
   const isError = classTriples.isError || objectPropertyTriples.isError ||
-                  datatypePropertyTriples.isError || allTriples.isError;
+                  datatypePropertyTriples.isError || labelTriples.isError ||
+                  domainTriples.isError || rangeTriples.isError ||
+                  commentTriples.isError || subClassTriples.isError;
   const error = classTriples.error || objectPropertyTriples.error ||
-                datatypePropertyTriples.error || allTriples.error;
+                datatypePropertyTriples.error || labelTriples.error ||
+                domainTriples.error || rangeTriples.error ||
+                commentTriples.error || subClassTriples.error;
 
   const schema = useMemo((): OntologySchema | undefined => {
     if (isLoading || isError) return undefined;
 
-    // Build a map of URI -> metadata from all triples
+    // Build a map of URI -> metadata from targeted queries
     const metadata = new Map<string, { label?: string; domain?: string; range?: string; comment?: string }>();
 
-    for (const triple of allTriples.triples || []) {
-      const subject = getTermValue(triple.s);
-      const predicate = getTermValue(triple.p);
-      const value = getTermValue(triple.o);
+    const ensure = (uri: string) => {
+      if (!metadata.has(uri)) metadata.set(uri, {});
+      return metadata.get(uri)!;
+    };
 
-      if (!metadata.has(subject)) {
-        metadata.set(subject, {});
-      }
-      const meta = metadata.get(subject)!;
-
-      if (predicate === RDFS_LABEL) {
-        meta.label = value;
-      } else if (predicate === RDFS_DOMAIN) {
-        meta.domain = value;
-      } else if (predicate === RDFS_RANGE) {
-        meta.range = value;
-      } else if (predicate === RDFS_COMMENT) {
-        meta.comment = value;
-      }
+    for (const triple of labelTriples.triples || []) {
+      ensure(getTermValue(triple.s)).label = getTermValue(triple.o);
+    }
+    for (const triple of domainTriples.triples || []) {
+      ensure(getTermValue(triple.s)).domain = getTermValue(triple.o);
+    }
+    for (const triple of rangeTriples.triples || []) {
+      ensure(getTermValue(triple.s)).range = getTermValue(triple.o);
+    }
+    for (const triple of commentTriples.triples || []) {
+      ensure(getTermValue(triple.s)).comment = getTermValue(triple.o);
     }
 
     // Build classes list
@@ -156,10 +191,22 @@ export function useOntologySchema() {
       });
     }
 
+    // Build subclass relations
+    const classUriSet = new Set(classes.map((c) => c.uri));
+    const subClassRelations: SubClassRelation[] = [];
+    for (const triple of subClassTriples.triples || []) {
+      const child = getTermValue(triple.s);
+      const parent = getTermValue(triple.o);
+      if (classUriSet.has(child) && classUriSet.has(parent)) {
+        subClassRelations.push({ child, parent });
+      }
+    }
+
     return {
       classes,
       objectProperties,
       datatypeProperties,
+      subClassRelations,
       objectPropertyUris,
       datatypePropertyUris,
     };
@@ -168,7 +215,11 @@ export function useOntologySchema() {
     classTriples.triples,
     objectPropertyTriples.triples,
     datatypePropertyTriples.triples,
-    allTriples.triples,
+    labelTriples.triples,
+    domainTriples.triples,
+    rangeTriples.triples,
+    commentTriples.triples,
+    subClassTriples.triples,
   ]);
 
   return {

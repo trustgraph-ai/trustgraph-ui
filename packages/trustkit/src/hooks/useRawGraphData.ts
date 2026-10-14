@@ -204,8 +204,8 @@ export function useRawGraphData() {
 
       // Fetch outgoing and incoming triples in parallel
       const [outgoing, incoming] = await Promise.all([
-        api.triplesQuery(makeIriTerm(uri), undefined, undefined, 500, collection, ""),
-        api.triplesQuery(undefined, undefined, makeIriTerm(uri), 500, collection, ""),
+        api.triplesQuery(makeIriTerm(uri), undefined, undefined, 500, collection, undefined),
+        api.triplesQuery(undefined, undefined, makeIriTerm(uri), 500, collection, undefined),
       ]);
 
       const allTriples = [...outgoing, ...incoming];
@@ -300,7 +300,7 @@ export function useRawGraphData() {
   const findStartNode = useCallback(async (): Promise<string | null> => {
     try {
       const api = socket.flow(flowId);
-      const sample = await api.triplesQuery(undefined, undefined, undefined, 100, collection, "");
+      const sample = await api.triplesQuery(undefined, undefined, undefined, 100, collection, undefined);
 
       // Count URI occurrences to find the most connected
       const counts = new Map<string, number>();
