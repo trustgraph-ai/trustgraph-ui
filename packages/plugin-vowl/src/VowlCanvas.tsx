@@ -424,6 +424,81 @@ export function VowlCanvas({
             const to = nodeIndex.get(edge.to);
             if (!from || !to) return null;
 
+            const edgeSelected = isSelected("objectProperty", edge.uri);
+            const edgeLabelW = labelWidth(edge.label);
+            const edgeMaxChars = Math.floor((MAX_LABEL_W - LABEL_PAD) / CHAR_WIDTH_MONO);
+            const isSelfLoop = edge.from === edge.to;
+
+            // Self-loop: render as a loop arc above the node
+            if (isSelfLoop) {
+              const LOOP_H = 55;
+              const r = CLASS_RADIUS;
+              const lsx = from.x + r * Math.cos(-Math.PI / 6);
+              const lsy = from.y + r * Math.sin(-Math.PI / 6);
+              const lex = from.x + r * Math.cos(-5 * Math.PI / 6);
+              const ley = from.y + r * Math.sin(-5 * Math.PI / 6);
+              const lcp1x = from.x + 50;
+              const lcp1y = from.y - r - LOOP_H;
+              const lcp2x = from.x - 50;
+              const lcp2y = from.y - r - LOOP_H;
+              const loopLabelX = from.x;
+              const loopLabelY = from.y - r - LOOP_H + 5;
+
+              return (
+                <g key={`edge-${i}`}>
+                  <defs>
+                    <marker
+                      id={`arrow-${i}`}
+                      markerWidth="8"
+                      markerHeight="6"
+                      refX="8"
+                      refY="3"
+                      orient="auto"
+                    >
+                      <path d="M0,0 L8,3 L0,6" fill={edgeSelected ? selectedStroke : theme.text.subtle} />
+                    </marker>
+                  </defs>
+                  <path
+                    d={`M ${lsx},${lsy} C ${lcp1x},${lcp1y} ${lcp2x},${lcp2y} ${lex},${ley}`}
+                    fill="none"
+                    stroke={edgeSelected ? selectedStroke : theme.text.subtle}
+                    strokeWidth={edgeSelected ? 2.5 : 1.5}
+                    markerEnd={`url(#arrow-${i})`}
+                    opacity={edgeSelected ? 0.9 : 0.6}
+                  />
+                  <rect
+                    x={loopLabelX - edgeLabelW / 2}
+                    y={loopLabelY - 9}
+                    width={edgeLabelW}
+                    height={18}
+                    rx={4}
+                    fill={edgeSelected ? `${selectedStroke}22` : theme.surface.overlay}
+                    stroke={edgeSelected ? selectedStroke : theme.text.subtle}
+                    strokeWidth={edgeSelected ? 1.5 : 0.5}
+                    opacity={0.9}
+                    style={{ cursor: "pointer" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelect({ type: "objectProperty", uri: edge.uri });
+                    }}
+                  >
+                    <title>{edge.label}</title>
+                  </rect>
+                  <text
+                    x={loopLabelX}
+                    y={loopLabelY + 4}
+                    textAnchor="middle"
+                    fontSize={sz(9)}
+                    fontFamily={theme.font.mono}
+                    fill={edgeSelected ? selectedStroke : theme.text.secondary}
+                    style={{ cursor: "pointer", pointerEvents: "none" }}
+                  >
+                    {truncate(edge.label, edgeMaxChars)}
+                  </text>
+                </g>
+              );
+            }
+
             const dx = to.x - from.x;
             const dy = to.y - from.y;
             const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -443,10 +518,6 @@ export function VowlCanvas({
             const cpy = my + ny * curveOff;
             const labelX = isBidi ? 0.25 * sx + 0.5 * cpx + 0.25 * ex : mx;
             const labelY = isBidi ? 0.25 * sy + 0.5 * cpy + 0.25 * ey : my;
-
-            const edgeSelected = isSelected("objectProperty", edge.uri);
-            const edgeLabelW = labelWidth(edge.label);
-            const edgeMaxChars = Math.floor((MAX_LABEL_W - LABEL_PAD) / CHAR_WIDTH_MONO);
 
             return (
               <g key={`edge-${i}`}>
