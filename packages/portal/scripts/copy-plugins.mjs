@@ -92,6 +92,12 @@ const plugins = [
       { src: "dist/demo-data.iife.js", name: "demo-data.iife.js" },
     ],
   },
+  {
+    pkg: "plugin-vowl",
+    files: [
+      { src: "dist/vowl.iife.js", name: "vowl.iife.js" },
+    ],
+  },
 ];
 
 mkdirSync(dest, { recursive: true });
