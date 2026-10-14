@@ -61,7 +61,7 @@ export { useActionButtons } from "./hooks/useActionButtons";
 export type { ActionButtonEntry } from "./hooks/useActionButtons";
 export type { NodeDetail, NodeProperty, NodeRelationship } from "./hooks/useNodeDetail";
 export { useOntologySchema } from "./hooks/useOntologySchema";
-export type { OntologyClass, OntologyProperty, OntologySchema } from "./hooks/useOntologySchema";
+export type { OntologyClass, OntologyProperty, OntologySchema, SubClassRelation } from "./hooks/useOntologySchema";
 export { useEntityNeighbourhood } from "./hooks/useEntityNeighbourhood";
 export type { EntityNeighbourhood } from "./hooks/useEntityNeighbourhood";
 export { useDomainFilter } from "./hooks/useDomainFilter";

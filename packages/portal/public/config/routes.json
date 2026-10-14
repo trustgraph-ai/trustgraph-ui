@@ -20,6 +20,10 @@
     "component": "search"
   },
   {
+    "target": "urn:component:vowl",
+    "component": "vowl"
+  },
+  {
     "intent": "graph",
     "component": "graph"
   },

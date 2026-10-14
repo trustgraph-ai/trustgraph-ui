@@ -147,5 +147,10 @@
     "id": "api-keys",
     "url": "/plugins/api-keys.iife.js",
     "globalName": "ApiKeysPlugin"
+  },
+  {
+    "id": "vowl",
+    "url": "/plugins/vowl.iife.js",
+    "globalName": "VowlPlugin"
   }
 ]

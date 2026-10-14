@@ -83,6 +83,13 @@
       "target": "urn:component:table-explorer"
     },
     {
+      "title": "Ontology Visualisation",
+      "icon": "◎",
+      "paletteKey": "purple",
+      "description": "Visualise ontologies using VOWL notation.",
+      "target": "urn:component:vowl"
+    },
+    {
       "title": "Ontology Viewer",
       "icon": "◇",
       "paletteKey": "purple",
