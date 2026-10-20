@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { useTheme, SplitPane, RawNodeDetailPanel } from "@trustgraph/trustkit";
 import type { Theme } from "@trustgraph/trustkit";
@@ -38,6 +38,13 @@ function truncate(s: string, max: number): string {
   return s.length > max ? s.substring(0, max) + "…" : s;
 }
 
+interface RdfClass {
+  uri: string;
+  label: string;
+}
+
+const MAX_DROPDOWN_CLASSES = 15;
+
 export function SearchPage() {
   const { theme, sz } = useTheme();
   const location = useLocation();
@@ -57,6 +64,87 @@ export function SearchPage() {
   const [panelUri, setPanelUri] = useState<string | null>(null);
   const seqRef = useRef(0);
 
+  const [knownClasses, setKnownClasses] = useState<RdfClass[]>([]);
+  const [hasMoreClasses, setHasMoreClasses] = useState(false);
+  const [selectedType, setSelectedType] = useState<string>("");
+  const [typeQuery, setTypeQuery] = useState("");
+  const [typeSuggestions, setTypeSuggestions] = useState<RdfClass[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [typeSearching, setTypeSearching] = useState(false);
+  const typeSearchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const api = socket.flow(flowId);
+    const sparql = `
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      SELECT DISTINCT ?type ?label WHERE {
+        ?s a ?type .
+        OPTIONAL { ?type rdfs:label ?label }
+      }
+      LIMIT ${MAX_DROPDOWN_CLASSES}
+    `;
+    api.sparqlQuery(sparql, collection).then((r) => {
+      const map = new Map<string, string>();
+      for (const row of r.rows) {
+        if (row.type && !map.has(row.type)) {
+          map.set(row.type, row.label || localName(row.type));
+        }
+      }
+      const classes = Array.from(map, ([uri, label]) => ({ uri, label }));
+      classes.sort((a, b) => a.label.localeCompare(b.label));
+      setKnownClasses(classes);
+      setHasMoreClasses(classes.length >= MAX_DROPDOWN_CLASSES);
+    }).catch(() => {});
+  }, [socket, flowId, collection]);
+
+  const searchClassesByName = useCallback((input: string) => {
+    if (typeSearchTimer.current) clearTimeout(typeSearchTimer.current);
+    const trimmed = input.trim();
+    if (!trimmed) {
+      setTypeSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    typeSearchTimer.current = setTimeout(async () => {
+      setTypeSearching(true);
+      try {
+        const api = socket.flow(flowId);
+        const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\\\$&");
+        const sparql = `
+          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          SELECT DISTINCT ?type ?label WHERE {
+            ?s a ?type .
+            ?type rdfs:label ?label .
+            FILTER(REGEX(?label, "${escaped}", "i"))
+          }
+          LIMIT ${MAX_DROPDOWN_CLASSES}
+        `;
+        const r = await api.sparqlQuery(sparql, collection);
+        const map = new Map<string, string>();
+        for (const row of r.rows) {
+          if (row.type && !map.has(row.type)) {
+            map.set(row.type, row.label || localName(row.type));
+          }
+        }
+        const classes = Array.from(map, ([uri, label]) => ({ uri, label }));
+        classes.sort((a, b) => a.label.localeCompare(b.label));
+        setTypeSuggestions(classes);
+        setShowSuggestions(true);
+      } catch {
+        setTypeSuggestions([]);
+      } finally {
+        setTypeSearching(false);
+      }
+    }, 300);
+  }, [socket, flowId, collection]);
+
+  const selectedTypeLabel = useMemo(() => {
+    if (!selectedType) return "";
+    const found = knownClasses.find((c) => c.uri === selectedType);
+    return found ? found.label : localName(selectedType);
+  }, [selectedType, knownClasses]);
+
   const handleSearch = useCallback(async () => {
     const trimmed = query.trim();
     if (!trimmed) return;
@@ -74,7 +162,7 @@ export function SearchPage() {
       const vec = embResult?.[0];
       if (!vec || seq !== seqRef.current) return;
 
-      const geResult = await api.graphEmbeddingsQuery(vec, 20, collection) as
+      const geResult = await api.graphEmbeddingsQuery(vec, 20, collection, selectedType || undefined) as
         { entity: { t: string; i?: string }; score: number }[];
       if (seq !== seqRef.current) return;
 
@@ -137,7 +225,7 @@ export function SearchPage() {
     } finally {
       if (seq === seqRef.current) setLoading(false);
     }
-  }, [query, socket, flowId, collection]);
+  }, [query, socket, flowId, collection, selectedType]);
 
   useEffect(() => {
     if (initialQuery && !autoSearched.current) {
@@ -171,7 +259,7 @@ export function SearchPage() {
           Search
         </h1>
 
-        <div style={{ display: "flex", gap: sz(8), marginBottom: sz(24) }}>
+        <div style={{ display: "flex", gap: sz(8), marginBottom: sz(12) }}>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -207,6 +295,149 @@ export function SearchPage() {
             {loading ? "Searching…" : "Search"}
           </button>
         </div>
+
+        {knownClasses.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: sz(8), marginBottom: sz(24) }}>
+            <span style={{ fontSize: sz(13), color: theme.text.muted, whiteSpace: "nowrap" }}>
+              Filter by type:
+            </span>
+            {!hasMoreClasses ? (
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                style={{
+                  padding: `${sz(8)}px ${sz(12)}px`,
+                  fontSize: sz(13),
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border.default}`,
+                  background: theme.surface.overlay,
+                  color: theme.text.primary,
+                  fontFamily: theme.font.sans,
+                  outline: "none",
+                  minWidth: sz(180),
+                }}
+              >
+                <option value="">All types</option>
+                {knownClasses.map((c) => (
+                  <option key={c.uri} value={c.uri}>{c.label}</option>
+                ))}
+              </select>
+            ) : (
+              <div style={{ position: "relative", flex: 1, maxWidth: sz(300) }}>
+                <div style={{ display: "flex", alignItems: "center", gap: sz(6) }}>
+                  <input
+                    value={selectedType ? selectedTypeLabel : typeQuery}
+                    onChange={(e) => {
+                      if (selectedType) {
+                        setSelectedType("");
+                        setTypeQuery(e.target.value);
+                      } else {
+                        setTypeQuery(e.target.value);
+                      }
+                      searchClassesByName(e.target.value);
+                    }}
+                    onFocus={() => {
+                      if (typeSuggestions.length > 0) setShowSuggestions(true);
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => setShowSuggestions(false), 200);
+                    }}
+                    placeholder="Type to filter by class…"
+                    style={{
+                      flex: 1,
+                      padding: `${sz(8)}px ${sz(12)}px`,
+                      fontSize: sz(13),
+                      borderRadius: 8,
+                      border: `1px solid ${theme.border.default}`,
+                      background: theme.surface.overlay,
+                      color: selectedType ? theme.text.primary : theme.text.primary,
+                      fontFamily: theme.font.sans,
+                      outline: "none",
+                    }}
+                  />
+                  {selectedType && (
+                    <button
+                      onClick={() => { setSelectedType(""); setTypeQuery(""); setTypeSuggestions([]); }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: theme.text.muted,
+                        cursor: "pointer",
+                        fontSize: sz(16),
+                        padding: `0 ${sz(4)}px`,
+                        lineHeight: 1,
+                      }}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                {(showSuggestions || typeSearching) && (
+                  <div
+                    ref={suggestionsRef}
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      right: 0,
+                      marginTop: sz(4),
+                      background: theme.surface.overlay,
+                      border: `1px solid ${theme.border.default}`,
+                      borderRadius: 8,
+                      maxHeight: sz(200),
+                      overflowY: "auto",
+                      zIndex: 20,
+                      backdropFilter: "blur(12px)",
+                    }}
+                  >
+                    {typeSearching ? (
+                      <div style={{
+                        padding: `${sz(8)}px ${sz(12)}px`,
+                        fontSize: sz(13),
+                        color: theme.text.muted,
+                        fontFamily: theme.font.sans,
+                        fontStyle: "italic",
+                      }}>
+                        Searching…
+                      </div>
+                    ) : typeSuggestions.length > 0 ? (
+                      typeSuggestions.map((c) => (
+                        <div
+                          key={c.uri}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setSelectedType(c.uri);
+                            setTypeQuery("");
+                            setShowSuggestions(false);
+                          }}
+                          style={{
+                            padding: `${sz(8)}px ${sz(12)}px`,
+                            fontSize: sz(13),
+                            cursor: "pointer",
+                            color: theme.text.primary,
+                            fontFamily: theme.font.sans,
+                          }}
+                        >
+                          {c.label}
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{
+                        padding: `${sz(8)}px ${sz(12)}px`,
+                        fontSize: sz(13),
+                        color: theme.text.muted,
+                        fontFamily: theme.font.sans,
+                        fontStyle: "italic",
+                      }}>
+                        No classes found
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {searched && !loading && results.length === 0 && (
           <p style={{ color: theme.text.muted, fontSize: sz(14) }}>No results found.</p>
