@@ -168,6 +168,7 @@ export interface GraphEmbeddingsQueryRequest {
   limit: number;
   user?: string;
   collection?: string;
+  rdf_type?: string;
 }
 
 export interface EntityMatch {

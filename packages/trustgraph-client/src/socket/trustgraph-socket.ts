@@ -102,106 +102,6 @@ const SOCKET_RECONNECTION_TIMEOUT = 2000; // 2 seconds between reconnection
 const SOCKET_URL = "/api/v1/socket"; // WebSocket endpoint path
 
 /**
- * Socket interface defining all available operations for the TrustGraph API
- * This provides a unified interface for various AI/ML and knowledge graph
- * operations
- */
-export interface Socket {
-  close: () => void;
-
-  // Text completion using AI models
-  textCompletion: (system: string, text: string) => Promise<string>;
-
-  // Graph-based Retrieval Augmented Generation
-  graphRag: (text: string, options?: GraphRagOptions) => Promise<string>;
-
-  // Agent interaction with streaming callbacks for different phases
-  // BREAKING CHANGE: Callbacks now receive (chunk, complete, metadata?) instead of full messages
-  agent: (
-    question: string,
-    think: (chunk: string, complete: boolean, metadata?: StreamingMetadata) => void,
-    observe: (chunk: string, complete: boolean, metadata?: StreamingMetadata) => void,
-    answer: (chunk: string, complete: boolean, metadata?: StreamingMetadata) => void,
-    error: (e: string) => void,
-    onExplain?: (event: ExplainEvent) => void,
-  ) => void;
-
-  // Streaming variants for RAG and completion services
-  graphRagStreaming: (
-    text: string,
-    receiver: (chunk: string, complete: boolean, metadata?: StreamingMetadata) => void,
-    onError: (error: string) => void,
-    options?: GraphRagOptions,
-    collection?: string,
-  ) => void;
-
-  documentRagStreaming: (
-    text: string,
-    receiver: (chunk: string, complete: boolean, metadata?: StreamingMetadata) => void,
-    onError: (error: string) => void,
-    docLimit?: number,
-    collection?: string,
-    onExplain?: (event: ExplainEvent) => void,
-  ) => void;
-
-  textCompletionStreaming: (
-    system: string,
-    text: string,
-    receiver: (chunk: string, complete: boolean, metadata?: StreamingMetadata) => void,
-    onError: (error: string) => void,
-  ) => void;
-
-  promptStreaming: (
-    id: string,
-    terms: Record<string, unknown>,
-    receiver: (chunk: string, complete: boolean, metadata?: StreamingMetadata) => void,
-    onError: (error: string) => void,
-  ) => void;
-
-  // Generate embeddings for texts (batch)
-  embeddings: (texts: string[]) => Promise<number[][]>;
-
-  // Query graph using embedding vector
-  graphEmbeddingsQuery: (vec: number[], limit: number) => Promise<EntityMatch[]>;
-
-  // Query knowledge graph triples (subject-predicate-object)
-  triplesQuery: (
-    s?: Term, // Subject (optional)
-    p?: Term, // Predicate (optional)
-    o?: Term, // Object (optional)
-    limit?: number,
-    collection?: string,
-    graph?: string, // Named graph URI filter
-  ) => Promise<Triple[]>;
-
-  // Execute a SPARQL query with streaming batched results
-  sparqlQuery: (
-    query: string,
-    collection?: string,
-    limit?: number,
-    batchSize?: number,
-  ) => Promise<SparqlQueryResult>;
-
-  // Load a document into the system
-  loadDocument: (
-    document: string, // Base64-encoded document
-    id?: string, // Optional document ID
-    metadata?: Triple[], // Optional metadata as triples
-  ) => Promise<void>;
-
-  // Load plain text into the system
-  loadText: (text: string, id?: string, metadata?: Triple[]) => Promise<void>;
-
-  // Load a document into the library with full metadata
-  loadLibraryDocument: (
-    document: string,
-    mimeType: string,
-    id?: string,
-    metadata?: Triple[],
-  ) => Promise<void>;
-}
-
-/**
  * Generates a random message ID using cryptographically secure random values
  * @param length - Number of random characters to generate
  * @returns Random string of specified length
@@ -2119,6 +2019,7 @@ export class FlowApi {
     vec: number[],
     limit: number | undefined,
     collection?: string,
+    rdfType?: string,
   ) {
     return this.api
       .makeRequest<GraphEmbeddingsQueryRequest, GraphEmbeddingsQueryResponse>(
@@ -2128,6 +2029,7 @@ export class FlowApi {
           limit: limit ? limit : 20, // Default to 20 results
           user: this.api.user,
           collection: collection || "default",
+          ...(rdfType ? { rdf_type: rdfType } : {}),
         },
         30000,
         undefined,
