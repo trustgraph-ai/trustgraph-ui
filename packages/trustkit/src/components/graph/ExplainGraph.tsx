@@ -229,6 +229,8 @@ export function ExplainGraph({
 
   const hasHighlights = highlightedNodeIds.length > 0 || highlightedEdgeIds.length > 0;
   const NODE_R = 10;
+  const MAX_NODE_LABEL = 20;
+  const MAX_EDGE_LABEL = 16;
 
   if (containerSize.width === 0) {
     return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
@@ -297,7 +299,7 @@ export function ExplainGraph({
                   fontFamily={theme.font.mono}
                   textAnchor="middle"
                 >
-                  {edge.label}
+                  {edge.label.length > MAX_EDGE_LABEL ? edge.label.substring(0, MAX_EDGE_LABEL) + "…" : edge.label}
                 </text>
                 {/* Arrowhead */}
                 {(() => {
@@ -373,7 +375,7 @@ export function ExplainGraph({
                   fontFamily={theme.font.sans}
                   textAnchor="middle"
                 >
-                  {node.label}
+                  {node.label.length > MAX_NODE_LABEL ? node.label.substring(0, MAX_NODE_LABEL) + "…" : node.label}
                 </text>
               </g>
             );
