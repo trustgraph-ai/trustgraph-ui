@@ -2711,6 +2711,7 @@ export interface BulkMetadata {
 export interface EntityContext {
   entity: Term;
   context: string;
+  rdf_type?: string[];
 }
 
 export type BulkProgressCallback = (sent: number) => void;
