@@ -4,7 +4,7 @@ import { useWorkspaces } from "@trustgraph/react-state";
 import { useTheme, Button, toast, PageGuidance, GuidanceSlot } from "@trustgraph/trustkit";
 import type { BaseApi, BulkTriple } from "@trustgraph/react-provider";
 import type { DatasetIndexEntry, Manifest, LogEntry, Phase } from "./types";
-import { parseTurtleTriples, parseTurtleEntityContexts } from "./turtle-parser";
+import { parseTurtleTriples, parseTurtleEntityContexts, type RdfTypeMap } from "./turtle-parser";
 import { buildSdlPipeline } from "./sdl-pipeline";
 import type { SdlDescriptor } from "./sdl-pipeline";
 import { marked } from "marked";
@@ -173,10 +173,12 @@ async function runLoader(
           collection: doc.collection,
         };
 
+        const typeMap: RdfTypeMap = new Map();
+
         tracker.log(`Streaming triples from ${file}...`);
         let tripleCount = 0;
         await socket.bulk().importTriples(
-          flow, parseTurtleTriples(fileUrl, undefined, headers), metadata, 100,
+          flow, parseTurtleTriples(fileUrl, undefined, headers, typeMap), metadata, 100,
           (sent) => { tripleCount = sent; },
         );
         tracker.log(`${tripleCount} triples imported`, "success");
@@ -184,7 +186,7 @@ async function runLoader(
         tracker.log(`Streaming entity contexts from ${file}...`);
         let ctxCount = 0;
         await socket.bulk().importEntityContexts(
-          flow, parseTurtleEntityContexts(fileUrl, headers), metadata, 100,
+          flow, parseTurtleEntityContexts(fileUrl, headers, typeMap), metadata, 100,
           (sent) => { ctxCount = sent; },
         );
         tracker.log(`${ctxCount} entity contexts imported`, "success");
@@ -206,10 +208,12 @@ async function runLoader(
           collection: doc.collection,
         };
 
+        const catalogTypeMap: RdfTypeMap = new Map();
+
         tracker.log(`Streaming triples from ${file} (graph: urn:graph:catalog)...`);
         let tripleCount = 0;
         await socket.bulk().importTriples(
-          flow, parseTurtleTriples(fileUrl, "urn:graph:catalog", headers), metadata, 100,
+          flow, parseTurtleTriples(fileUrl, "urn:graph:catalog", headers, catalogTypeMap), metadata, 100,
           (sent) => { tripleCount = sent; },
         );
         tracker.log(`${tripleCount} triples imported`, "success");
@@ -217,7 +221,7 @@ async function runLoader(
         tracker.log(`Streaming entity contexts from ${file}...`);
         let ctxCount = 0;
         await socket.bulk().importEntityContexts(
-          flow, parseTurtleEntityContexts(fileUrl, headers), metadata, 100,
+          flow, parseTurtleEntityContexts(fileUrl, headers, catalogTypeMap), metadata, 100,
           (sent) => { ctxCount = sent; },
         );
         tracker.log(`${ctxCount} entity contexts imported`, "success");

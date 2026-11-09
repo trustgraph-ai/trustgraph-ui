@@ -5,6 +5,10 @@ import type { BulkTriple, EntityContext } from "@trustgraph/react-provider";
 type IriTerm = { t: "i"; i: string };
 type LiteralTerm = { t: "l"; v: string; dt?: string; ln?: string };
 
+const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+
+export type RdfTypeMap = Map<string, string[]>;
+
 function convertTerm(term: Quad["subject"] | Quad["predicate"] | Quad["object"]): IriTerm | LiteralTerm {
   if (term.termType === "Literal") {
     const result: LiteralTerm = { t: "l", v: term.value };
@@ -80,19 +84,32 @@ async function* streamQuads(url: string, headers?: Record<string, string>): Asyn
   if (error) throw error;
 }
 
-export async function* parseTurtleTriples(url: string, graph?: string, headers?: Record<string, string>): AsyncGenerator<BulkTriple> {
+export async function* parseTurtleTriples(
+  url: string, graph?: string, headers?: Record<string, string>, typeMap?: RdfTypeMap,
+): AsyncGenerator<BulkTriple> {
   for await (const quad of streamQuads(url, headers)) {
+    if (typeMap && quad.predicate.value === RDF_TYPE && quad.object.termType === "NamedNode") {
+      const entity = quad.subject.value;
+      const types = typeMap.get(entity);
+      if (types) types.push(quad.object.value);
+      else typeMap.set(entity, [quad.object.value]);
+    }
     yield convertQuad(quad, graph);
   }
 }
 
-export async function* parseTurtleEntityContexts(url: string, headers?: Record<string, string>): AsyncGenerator<EntityContext> {
+export async function* parseTurtleEntityContexts(
+  url: string, headers?: Record<string, string>, typeMap?: RdfTypeMap,
+): AsyncGenerator<EntityContext> {
   for await (const quad of streamQuads(url, headers)) {
     if (quad.object.termType === "Literal") {
-      yield {
+      const ec: EntityContext = {
         entity: convertTerm(quad.subject) as IriTerm,
         context: quad.object.value,
       };
+      const types = typeMap?.get(quad.subject.value);
+      if (types?.length) ec.rdf_type = types;
+      yield ec;
     }
   }
 }
