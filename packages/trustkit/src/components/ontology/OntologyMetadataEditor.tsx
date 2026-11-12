@@ -15,21 +15,19 @@ export function OntologyMetadataEditor({ metadata, onUpdateMetadata }: OntologyM
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [version, setVersion] = useState("");
-  const [namespace, setNamespace] = useState("");
-  const [creator, setCreator] = useState("");
+  const [ontologyUri, setOntologyUri] = useState("");
 
   useEffect(() => {
     setName(metadata.name || "");
     setDescription(metadata.description || "");
     setVersion(metadata.version || "");
-    setNamespace(metadata.namespace || "");
-    setCreator(metadata.creator || "");
+    setOntologyUri(metadata.id || "");
   }, [metadata]);
 
-  const isDirty = name !== (metadata.name || "") || description !== (metadata.description || "") || version !== (metadata.version || "") || namespace !== (metadata.namespace || "") || creator !== (metadata.creator || "");
+  const isDirty = name !== (metadata.name || "") || description !== (metadata.description || "") || version !== (metadata.version || "") || ontologyUri !== (metadata.id || "");
 
   const handleSave = () => {
-    onUpdateMetadata({ ...metadata, name: name.trim(), description: description.trim(), version: version.trim(), namespace: namespace.trim(), creator: creator.trim(), modified: new Date().toISOString() });
+    onUpdateMetadata({ id: ontologyUri.trim(), name: name.trim(), description: description.trim(), version: version.trim() });
   };
 
   const inputStyle = { width: "100%", padding: "6px 8px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: theme.surface.card, color: theme.text.primary, fontSize: sz(11), fontFamily: theme.font.mono, outline: "none" };
@@ -61,13 +59,9 @@ export function OntologyMetadataEditor({ metadata, onUpdateMetadata }: OntologyM
           <Input value={version} onChange={setVersion} placeholder="e.g. 1.0.0" style={{ width: "100%" }} />
           <div style={hintStyle}>Version identifier</div>
 
-          <FormLabel>NAMESPACE URI</FormLabel>
-          <Input value={namespace} onChange={setNamespace} placeholder="e.g. http://example.org/myontology#" style={{ width: "100%" }} />
+          <FormLabel>ONTOLOGY URI</FormLabel>
+          <Input value={ontologyUri} onChange={setOntologyUri} placeholder="e.g. http://example.org/myontology#" style={{ width: "100%" }} />
           <div style={hintStyle}>Base URI for all classes and properties in this ontology</div>
-
-          <FormLabel>CREATOR</FormLabel>
-          <Input value={creator} onChange={setCreator} style={{ width: "100%" }} />
-          <div style={hintStyle}>Author or organization</div>
         </div>
       </div>
     </div>

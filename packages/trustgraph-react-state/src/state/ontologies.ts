@@ -4,58 +4,29 @@ import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { useSocket, useConnectionState } from "@trustgraph/react-provider";
 import { useNotification } from "../hooks/useNotification";
 import { useActivity } from "../hooks/useActivity";
+import {
+  normalizeJsonLd,
+  denormalizeToJsonLd,
+} from "../utils/jsonld-ontology";
+import type { NormalizedOntology } from "../utils/jsonld-ontology";
 
-export interface OntologyMetadata {
-  name: string;
-  description: string;
-  version: string;
-  created: string;
-  modified: string;
-  creator: string;
-  namespace: string;
-  imports?: string[];
-}
+export type {
+  NormalizedOntology,
+  OntologyMetadata,
+  OntologyClass,
+  OntologyProperty,
+  LangString,
+  JsonLdNode,
+} from "../utils/jsonld-ontology";
 
-export interface OWLClass {
-  uri: string;
-  type: "owl:Class";
-  "rdfs:label"?: Array<{ value: string; lang?: string }>;
-  "rdfs:comment"?: string;
-  "rdfs:subClassOf"?: string;
-  "owl:equivalentClass"?: string[];
-  "owl:disjointWith"?: string[];
-  "dcterms:identifier"?: string;
-}
-
-export interface OWLBaseProperty {
-  uri: string;
-  "rdfs:label"?: Array<{ value: string; lang?: string }>;
-  "rdfs:domain"?: string;
-  "rdfs:range"?: string;
-  "rdfs:comment"?: string;
-  "owl:functionalProperty"?: boolean;
-  "owl:minCardinality"?: number;
-  "owl:maxCardinality"?: number;
-  "owl:cardinality"?: number;
-  "rdfs:subPropertyOf"?: string;
-}
-
-export interface OWLObjectProperty extends OWLBaseProperty {
-  type: "owl:ObjectProperty";
-  "owl:inverseOf"?: string;
-  "owl:inverseFunctionalProperty"?: boolean;
-}
-
-export interface OWLDatatypeProperty extends OWLBaseProperty {
-  type: "owl:DatatypeProperty";
-}
-
-export interface Ontology {
-  metadata: OntologyMetadata;
-  classes: Record<string, OWLClass>;
-  objectProperties: Record<string, OWLObjectProperty>;
-  datatypeProperties: Record<string, OWLDatatypeProperty>;
-}
+export {
+  normalizeJsonLd,
+  denormalizeToJsonLd,
+  createEmptyOntology,
+  getLocalName,
+  getNamespace,
+  getLabel,
+} from "../utils/jsonld-ontology";
 
 export const useOntologies = () => {
   const socket = useSocket();
@@ -63,7 +34,6 @@ export const useOntologies = () => {
   const queryClient = useQueryClient();
   const notify = useNotification();
 
-  // Only enable queries when socket is connected and ready
   const isSocketReady =
     connectionState?.status === "authenticated";
 
@@ -75,7 +45,12 @@ export const useOntologies = () => {
         .config()
         .getValues("ontology")
         .then((values) => {
-          return values.map((item) => [item.key, JSON.parse(item.value)]);
+          return values.map(
+            (item): [string, NormalizedOntology] => [
+              item.key,
+              normalizeJsonLd(JSON.parse(item.value)),
+            ],
+          );
         })
         .catch((err) => {
           console.log("Error:", err);
@@ -91,7 +66,7 @@ export const useOntologies = () => {
       onSuccess,
     }: {
       id: string;
-      ontology: Ontology;
+      ontology: NormalizedOntology;
       onSuccess?: () => void;
     }) => {
       return socket
@@ -100,7 +75,7 @@ export const useOntologies = () => {
           {
             type: "ontology",
             key: id,
-            value: JSON.stringify(ontology),
+            value: JSON.stringify(denormalizeToJsonLd(ontology)),
           },
         ])
         .then((x) => {
@@ -128,7 +103,7 @@ export const useOntologies = () => {
       onSuccess,
     }: {
       id: string;
-      ontology: Ontology;
+      ontology: NormalizedOntology;
       onSuccess?: () => void;
     }) => {
       return socket
@@ -137,7 +112,7 @@ export const useOntologies = () => {
           {
             type: "ontology",
             key: id,
-            value: JSON.stringify(ontology),
+            value: JSON.stringify(denormalizeToJsonLd(ontology)),
           },
         ])
         .then((x) => {

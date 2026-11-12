@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import type { OWLClass, Ontology } from "@trustgraph/react-state";
+import type { OntologyClass, NormalizedOntology } from "@trustgraph/react-state";
+import { getLocalName } from "@trustgraph/react-state";
 import { useTheme } from "../../theme/ThemeContext";
 import { Button } from "../common/Button";
 import { Input } from "../common/Input";
@@ -8,13 +9,13 @@ import { FormLabel } from "../common/FormLabel";
 
 interface OntologyClassEditorProps {
   classId: string;
-  owlClass: OWLClass;
-  ontology: Ontology;
-  onUpdateClass: (classId: string, updated: OWLClass) => void;
+  ontologyClass: OntologyClass;
+  ontology: NormalizedOntology;
+  onUpdateClass: (classId: string, updated: OntologyClass) => void;
   onDeleteClass: (classId: string) => void;
 }
 
-export function OntologyClassEditor({ classId, owlClass, ontology, onUpdateClass, onDeleteClass }: OntologyClassEditorProps) {
+export function OntologyClassEditor({ classId, ontologyClass, ontology, onUpdateClass, onDeleteClass }: OntologyClassEditorProps) {
   const { theme, sz } = useTheme();
 
   const inputStyle = { width: "100%", padding: "6px 8px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: theme.surface.card, color: theme.text.primary, fontSize: sz(11), fontFamily: theme.font.mono, outline: "none" };
@@ -24,38 +25,39 @@ export function OntologyClassEditor({ classId, owlClass, ontology, onUpdateClass
   const [subClassOf, setSubClassOf] = useState("");
 
   useEffect(() => {
-    setLabelValue(owlClass["rdfs:label"]?.[0]?.value || "");
-    setComment(owlClass["rdfs:comment"] || "");
-    setSubClassOf(owlClass["rdfs:subClassOf"] || "");
-  }, [classId, owlClass]);
+    setLabelValue(ontologyClass.labels[0]?.value || "");
+    setComment(ontologyClass.comment || "");
+    setSubClassOf(ontologyClass.subClassOf?.[0] || "");
+  }, [classId, ontologyClass]);
 
-  const origLabel = owlClass["rdfs:label"]?.[0]?.value || "";
-  const origComment = owlClass["rdfs:comment"] || "";
-  const origSubClassOf = owlClass["rdfs:subClassOf"] || "";
+  const origLabel = ontologyClass.labels[0]?.value || "";
+  const origComment = ontologyClass.comment || "";
+  const origSubClassOf = ontologyClass.subClassOf?.[0] || "";
   const isDirty = labelValue !== origLabel || comment !== origComment || subClassOf !== origSubClassOf;
 
   const handleSave = () => {
-    const updated: OWLClass = {
-      ...owlClass,
-      "rdfs:label": labelValue.trim() ? [{ value: labelValue.trim(), lang: "en" }] : [],
-      "rdfs:comment": comment.trim(),
-      "rdfs:subClassOf": subClassOf || undefined,
+    const updated: OntologyClass = {
+      ...ontologyClass,
+      labels: labelValue.trim() ? [{ value: labelValue.trim(), lang: "en" }] : [],
+      comment: comment.trim() || undefined,
+      subClassOf: subClassOf ? [subClassOf] : undefined,
     };
     onUpdateClass(classId, updated);
   };
 
-  const otherClasses = Object.entries(ontology.classes).filter(([id]) => id !== classId);
+  const displayName = getLocalName(classId);
+  const otherClasses = [...ontology.classes.entries()].filter(([id]) => id !== classId);
   const domainProperties = [
-    ...Object.entries(ontology.objectProperties).filter(([, p]) => p["rdfs:domain"] === classId).map(([id, p]) => ({ id, label: p["rdfs:label"]?.[0]?.value || id, kind: "object" as const })),
-    ...Object.entries(ontology.datatypeProperties).filter(([, p]) => p["rdfs:domain"] === classId).map(([id, p]) => ({ id, label: p["rdfs:label"]?.[0]?.value || id, kind: "datatype" as const })),
+    ...[...ontology.objectProperties.entries()].filter(([, p]) => p.domain === classId).map(([id, p]) => ({ id, label: p.labels[0]?.value || getLocalName(id), kind: "object" as const })),
+    ...[...ontology.datatypeProperties.entries()].filter(([, p]) => p.domain === classId).map(([id, p]) => ({ id, label: p.labels[0]?.value || getLocalName(id), kind: "datatype" as const })),
   ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: 20 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: sz(14), color: theme.text.primary, fontFamily: theme.font.mono, fontWeight: 600 }}>{labelValue || classId}</div>
-          <div style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: theme.font.mono, marginTop: 2 }}>{owlClass.uri}</div>
+          <div style={{ fontSize: sz(14), color: theme.text.primary, fontFamily: theme.font.mono, fontWeight: 600 }}>{labelValue || displayName}</div>
+          <div style={{ fontSize: sz(10), color: theme.text.hint, fontFamily: theme.font.mono, marginTop: 2 }}>{classId}</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           {isDirty && (
@@ -63,7 +65,7 @@ export function OntologyClassEditor({ classId, owlClass, ontology, onUpdateClass
               Save
             </Button>
           )}
-          <Button size="lg" onClick={() => { if (window.confirm(`Delete class "${labelValue || classId}"?`)) onDeleteClass(classId); }}
+          <Button size="lg" onClick={() => { if (window.confirm(`Delete class "${labelValue || displayName}"?`)) onDeleteClass(classId); }}
             color={theme.palette.red} active={false}
             style={{ border: `1px solid ${theme.palette.red}44`, color: theme.palette.red }}>
             Delete
@@ -83,7 +85,7 @@ export function OntologyClassEditor({ classId, owlClass, ontology, onUpdateClass
           <div style={{ ...hintStyle, marginBottom: 16 }}>Brief description of what this class represents</div>
 
           <FormLabel>URI</FormLabel>
-          <input type="text" value={owlClass.uri} readOnly style={{ ...inputStyle, color: theme.text.subtle, background: "transparent" }} />
+          <input type="text" value={classId} readOnly style={{ ...inputStyle, color: theme.text.subtle, background: "transparent" }} />
           <div style={{ ...hintStyle, marginBottom: 16 }}>Unique identifier (read-only)</div>
 
           <div style={{ borderTop: `1px solid ${theme.border.subtle}`, margin: "8px 0 16px" }} />
@@ -92,7 +94,7 @@ export function OntologyClassEditor({ classId, owlClass, ontology, onUpdateClass
           <Select value={subClassOf} onChange={setSubClassOf} style={{ width: "100%" }}>
             <option value="">None (top-level class)</option>
             {otherClasses.map(([id, cls]) => (
-              <option key={id} value={id}>{cls["rdfs:label"]?.[0]?.value || id}</option>
+              <option key={id} value={id}>{cls.labels[0]?.value || getLocalName(id)}</option>
             ))}
           </Select>
           <div style={{ ...hintStyle, marginBottom: 16 }}>Parent class in the hierarchy</div>

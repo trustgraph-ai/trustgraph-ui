@@ -1,12 +1,12 @@
 import { useState, useRef } from "react";
-import type { Ontology } from "@trustgraph/react-state";
+import type { NormalizedOntology } from "@trustgraph/react-state";
 import { useTheme } from "../../theme/ThemeContext";
 import { Input } from "../common/Input";
 import { Button } from "../common/Button";
 import { SelectableListItem } from "../common/SelectableListItem";
 
 interface OntologyListProps {
-  ontologies: Array<[string, Ontology]>;
+  ontologies: Array<[string, NormalizedOntology]>;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onCreate?: (id: string, name: string) => Promise<void>;
@@ -60,8 +60,8 @@ export function OntologyList({ ontologies, selectedId, onSelect, onCreate }: Ont
 
       <div style={{ flex: 1, overflowY: "auto", margin: "0 -16px", padding: "0 16px" }}>
         {ontologies.map(([id, ont]) => {
-          const classCount = Object.keys(ont.classes).length;
-          const propCount = Object.keys(ont.objectProperties).length + Object.keys(ont.datatypeProperties).length;
+          const classCount = ont.classes.size;
+          const propCount = ont.objectProperties.size + ont.datatypeProperties.size;
           return (
             <SelectableListItem key={id} isSelected={selectedId === id} onClick={() => onSelect(id)}>
               <div>{ont.metadata.name || id}</div>

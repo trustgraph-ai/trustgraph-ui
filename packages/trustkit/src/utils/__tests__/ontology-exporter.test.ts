@@ -1,51 +1,23 @@
 import { describe, it, expect } from "vitest";
 import { OntologyExporter } from "../ontology-exporter";
-import type { Ontology } from "@trustgraph/react-state";
+import type { NormalizedOntology, OntologyClass, OntologyProperty } from "@trustgraph/react-state";
 
-function makeOntology(overrides: Partial<Ontology> = {}): Ontology {
+const NS = "http://example.org/onto#";
+
+function makeOntology(): NormalizedOntology {
   return {
-    metadata: {
-      name: "Test Ontology",
-      description: "A test",
-      version: "1.0",
-      created: "2024-01-01",
-      modified: "2024-01-01",
-      creator: "test",
-      namespace: "http://example.org/onto#",
-    },
-    classes: {
-      Person: {
-        uri: "http://example.org/onto#Person",
-        type: "owl:Class",
-        "rdfs:label": [{ value: "Person", lang: "en" }],
-        "rdfs:comment": "A human being",
-      },
-      Student: {
-        uri: "http://example.org/onto#Student",
-        type: "owl:Class",
-        "rdfs:label": [{ value: "Student", lang: "en" }],
-        "rdfs:subClassOf": "Person",
-      },
-    },
-    objectProperties: {
-      knows: {
-        uri: "http://example.org/onto#knows",
-        type: "owl:ObjectProperty",
-        "rdfs:label": [{ value: "knows", lang: "en" }],
-        "rdfs:domain": "Person",
-        "rdfs:range": "Person",
-      },
-    },
-    datatypeProperties: {
-      hasName: {
-        uri: "http://example.org/onto#hasName",
-        type: "owl:DatatypeProperty",
-        "rdfs:label": [{ value: "has name", lang: "en" }],
-        "rdfs:domain": "Person",
-        "rdfs:range": "http://www.w3.org/2001/XMLSchema#string",
-      },
-    },
-    ...overrides,
+    metadata: { id: NS, name: "Test Ontology", description: "A test", version: "1.0" },
+    classes: new Map<string, OntologyClass>([
+      [`${NS}Person`, { id: `${NS}Person`, labels: [{ value: "Person", lang: "en" }], comment: "A human being" }],
+      [`${NS}Student`, { id: `${NS}Student`, labels: [{ value: "Student", lang: "en" }], subClassOf: [`${NS}Person`] }],
+    ]),
+    objectProperties: new Map<string, OntologyProperty>([
+      [`${NS}knows`, { id: `${NS}knows`, propertyType: "object", labels: [{ value: "knows", lang: "en" }], domain: `${NS}Person`, range: `${NS}Person` }],
+    ]),
+    datatypeProperties: new Map<string, OntologyProperty>([
+      [`${NS}hasName`, { id: `${NS}hasName`, propertyType: "datatype", labels: [{ value: "has name", lang: "en" }], domain: `${NS}Person`, range: "http://www.w3.org/2001/XMLSchema#string" }],
+    ]),
+    otherNodes: [],
   };
 }
 
@@ -151,17 +123,36 @@ describe("OntologyExporter", () => {
     });
   });
 
+  describe("JSON-LD export", () => {
+    it("produces valid JSON-LD array", () => {
+      const jsonld = OntologyExporter.export(makeOntology(), { format: "json-ld" });
+      const parsed = JSON.parse(jsonld);
+      expect(Array.isArray(parsed)).toBe(true);
+      expect(parsed.length).toBeGreaterThan(0);
+    });
+
+    it("includes ontology metadata node", () => {
+      const jsonld = OntologyExporter.export(makeOntology(), { format: "json-ld" });
+      const parsed = JSON.parse(jsonld);
+      const ontoNode = parsed.find((n: any) => n["@type"]?.includes("http://www.w3.org/2002/07/owl#Ontology"));
+      expect(ontoNode).toBeDefined();
+      expect(ontoNode["@id"]).toBe(NS);
+    });
+  });
+
   describe("utility methods", () => {
     it("getFileExtension returns correct extensions", () => {
       expect(OntologyExporter.getFileExtension("owl")).toBe(".owl");
       expect(OntologyExporter.getFileExtension("rdf")).toBe(".rdf");
       expect(OntologyExporter.getFileExtension("turtle")).toBe(".ttl");
+      expect(OntologyExporter.getFileExtension("json-ld")).toBe(".jsonld");
     });
 
     it("getMimeType returns correct types", () => {
       expect(OntologyExporter.getMimeType("owl")).toBe("application/rdf+xml");
       expect(OntologyExporter.getMimeType("rdf")).toBe("application/rdf+xml");
       expect(OntologyExporter.getMimeType("turtle")).toBe("text/turtle");
+      expect(OntologyExporter.getMimeType("json-ld")).toBe("application/ld+json");
     });
   });
 
@@ -173,10 +164,10 @@ describe("OntologyExporter", () => {
       const reimported = OntologyImporter.import(ttl, "test.ttl");
 
       expect(reimported.ontology.metadata.name).toBe("Test Ontology");
-      expect(reimported.ontology.classes).toHaveProperty("Person");
-      expect(reimported.ontology.classes).toHaveProperty("Student");
-      expect(reimported.ontology.objectProperties).toHaveProperty("knows");
-      expect(reimported.ontology.datatypeProperties).toHaveProperty("hasName");
+      expect(reimported.ontology.classes.has(`${NS}Person`)).toBe(true);
+      expect(reimported.ontology.classes.has(`${NS}Student`)).toBe(true);
+      expect(reimported.ontology.objectProperties.has(`${NS}knows`)).toBe(true);
+      expect(reimported.ontology.datatypeProperties.has(`${NS}hasName`)).toBe(true);
     });
   });
 });
