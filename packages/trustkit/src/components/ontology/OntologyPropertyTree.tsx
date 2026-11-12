@@ -1,13 +1,14 @@
 import { useState, useRef } from "react";
-import type { OWLObjectProperty, OWLDatatypeProperty } from "@trustgraph/react-state";
+import type { OntologyProperty } from "@trustgraph/react-state";
+import { getLocalName } from "@trustgraph/react-state";
 import { useTheme } from "../../theme/ThemeContext";
 import { Input } from "../common/Input";
 import { Button } from "../common/Button";
 import { SelectableListItem } from "../common/SelectableListItem";
 
 interface OntologyPropertyTreeProps {
-  objectProperties: Record<string, OWLObjectProperty>;
-  datatypeProperties: Record<string, OWLDatatypeProperty>;
+  objectProperties: Map<string, OntologyProperty>;
+  datatypeProperties: Map<string, OntologyProperty>;
   selectedPropertyId: string | null;
   selectedPropertyType: "object" | "datatype" | null;
   onSelectProperty: (id: string, type: "object" | "datatype") => void;
@@ -15,12 +16,12 @@ interface OntologyPropertyTreeProps {
   onCreateDatatypeProperty: (name: string) => void;
 }
 
-function getLabel(prop: OWLObjectProperty | OWLDatatypeProperty, id: string): string {
-  return prop["rdfs:label"]?.[0]?.value || id;
+function propLabel(prop: OntologyProperty, id: string): string {
+  return prop.labels[0]?.value || getLocalName(id);
 }
 
 function PropertySection({ label, count, items, type, selectedId, selectedType, onSelect, onCreate }: {
-  label: string; count: number; items: [string, OWLObjectProperty | OWLDatatypeProperty][]; type: "object" | "datatype";
+  label: string; count: number; items: [string, OntologyProperty][]; type: "object" | "datatype";
   selectedId: string | null; selectedType: "object" | "datatype" | null;
   onSelect: (id: string, type: "object" | "datatype") => void;
   onCreate: (name: string) => void;
@@ -65,7 +66,7 @@ function PropertySection({ label, count, items, type, selectedId, selectedType, 
         return (
           <SelectableListItem key={id} isSelected={isSelected} onClick={() => onSelect(id, type)}
             style={{ padding: "5px 8px", borderRadius: 4, marginBottom: 1 }}>
-            {getLabel(prop, id)}
+            {propLabel(prop, id)}
           </SelectableListItem>
         );
       })}
@@ -80,12 +81,12 @@ function PropertySection({ label, count, items, type, selectedId, selectedType, 
 export function OntologyPropertyTree({ objectProperties, datatypeProperties, selectedPropertyId, selectedPropertyType, onSelectProperty, onCreateObjectProperty, onCreateDatatypeProperty }: OntologyPropertyTreeProps) {
   return (
     <div style={{ padding: 12 }}>
-      <PropertySection label="OBJECT PROPERTIES" count={Object.keys(objectProperties).length}
-        items={Object.entries(objectProperties)} type="object"
+      <PropertySection label="OBJECT PROPERTIES" count={objectProperties.size}
+        items={[...objectProperties.entries()]} type="object"
         selectedId={selectedPropertyId} selectedType={selectedPropertyType}
         onSelect={onSelectProperty} onCreate={onCreateObjectProperty} />
-      <PropertySection label="DATATYPE PROPERTIES" count={Object.keys(datatypeProperties).length}
-        items={Object.entries(datatypeProperties)} type="datatype"
+      <PropertySection label="DATATYPE PROPERTIES" count={datatypeProperties.size}
+        items={[...datatypeProperties.entries()]} type="datatype"
         selectedId={selectedPropertyId} selectedType={selectedPropertyType}
         onSelect={onSelectProperty} onCreate={onCreateDatatypeProperty} />
     </div>

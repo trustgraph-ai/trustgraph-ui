@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useOntologies } from "@trustgraph/react-state";
-import type { Ontology, OWLClass, OWLObjectProperty, OWLDatatypeProperty } from "@trustgraph/react-state";
+import type { NormalizedOntology, OntologyClass, OntologyProperty } from "@trustgraph/react-state";
+import { createEmptyOntology } from "@trustgraph/react-state";
 import { OntologyList } from "./OntologyList";
 import { OntologyClassTree } from "./OntologyClassTree";
 import { OntologyPropertyTree } from "./OntologyPropertyTree";
@@ -10,6 +11,7 @@ import { OntologyMetadataEditor } from "./OntologyMetadataEditor";
 import { OntologyValidationPanel } from "./OntologyValidationPanel";
 import { OntologyValidator } from "../../utils/ontology-validator";
 import { OntologyExporter } from "../../utils/ontology-exporter";
+import type { ExportOptions } from "../../utils/ontology-exporter";
 import { OntologyImporter } from "../../utils/ontology-importer";
 import { LoadingState } from "../common";
 import { Button } from "../common/Button";
@@ -30,21 +32,15 @@ export function OntologyWorkbench() {
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const typedOntologies = ontologies as Array<[string, Ontology]>;
+  const typedOntologies = ontologies as Array<[string, NormalizedOntology]>;
   const selectedOntology = typedOntologies.find(([id]) => id === selectedOntologyId);
-  const ontology: Ontology | null = selectedOntology ? selectedOntology[1] : null;
+  const ontology: NormalizedOntology | null = selectedOntology ? selectedOntology[1] : null;
 
   if (ontologiesLoading) return <LoadingState />;
   if (ontologiesError) return <LoadingState variant="error" message={String(ontologiesError)} />;
 
   const handleCreate = async (id: string, name: string) => {
-    const newOntology: Ontology = {
-      metadata: { name, description: "", version: "1.0.0", created: new Date().toISOString(), modified: new Date().toISOString(), creator: "", namespace: "" },
-      classes: {},
-      objectProperties: {},
-      datatypeProperties: {},
-    };
-    createOntology({ id, ontology: newOntology });
+    createOntology({ id, ontology: createEmptyOntology({ name }) });
     setSelectedOntologyId(id);
   };
 
@@ -57,66 +53,87 @@ export function OntologyWorkbench() {
     }
   };
 
-  const save = (updated: Ontology) => {
+  const save = (updated: NormalizedOntology) => {
     if (!selectedOntologyId) return;
     updateOntology({ id: selectedOntologyId, ontology: updated });
   };
 
-  const handleUpdateClass = (classId: string, updated: OWLClass) => {
+  const handleUpdateClass = (classId: string, updated: OntologyClass) => {
     if (!ontology) return;
-    save({ ...ontology, classes: { ...ontology.classes, [classId]: updated } });
+    const classes = new Map(ontology.classes);
+    classes.set(classId, updated);
+    save({ ...ontology, classes });
   };
 
   const handleDeleteClass = (classId: string) => {
     if (!ontology) return;
-    const { [classId]: _, ...rest } = ontology.classes;
-    save({ ...ontology, classes: rest });
+    const classes = new Map(ontology.classes);
+    classes.delete(classId);
+    save({ ...ontology, classes });
     if (selectedClassId === classId) setSelectedClassId(null);
   };
 
   const handleCreateClass = (name: string) => {
     if (!ontology) return;
-    const id = name.replace(/\s+/g, "");
-    const cls: OWLClass = { uri: `${ontology.metadata.namespace || "#"}${id}`, type: "owl:Class", "rdfs:label": [{ value: name, lang: "en" }] };
-    save({ ...ontology, classes: { ...ontology.classes, [id]: cls } });
-    setSelectedClassId(id);
+    const localName = name.replace(/\s+/g, "");
+    const uri = `${ontology.metadata.id || "#"}${localName}`;
+    const cls: OntologyClass = { id: uri, labels: [{ value: name, lang: "en" }] };
+    const classes = new Map(ontology.classes);
+    classes.set(uri, cls);
+    save({ ...ontology, classes });
+    setSelectedClassId(uri);
     setView("class");
   };
 
-  const handleUpdateProperty = (id: string, updated: OWLObjectProperty | OWLDatatypeProperty, type: "object" | "datatype") => {
+  const handleUpdateProperty = (id: string, updated: OntologyProperty, type: "object" | "datatype") => {
     if (!ontology) return;
-    if (type === "object") save({ ...ontology, objectProperties: { ...ontology.objectProperties, [id]: updated as OWLObjectProperty } });
-    else save({ ...ontology, datatypeProperties: { ...ontology.datatypeProperties, [id]: updated as OWLDatatypeProperty } });
+    if (type === "object") {
+      const objectProperties = new Map(ontology.objectProperties);
+      objectProperties.set(id, updated);
+      save({ ...ontology, objectProperties });
+    } else {
+      const datatypeProperties = new Map(ontology.datatypeProperties);
+      datatypeProperties.set(id, updated);
+      save({ ...ontology, datatypeProperties });
+    }
   };
 
   const handleDeleteProperty = (id: string, type: "object" | "datatype") => {
     if (!ontology) return;
     if (type === "object") {
-      const { [id]: _, ...rest } = ontology.objectProperties;
-      save({ ...ontology, objectProperties: rest });
+      const objectProperties = new Map(ontology.objectProperties);
+      objectProperties.delete(id);
+      save({ ...ontology, objectProperties });
     } else {
-      const { [id]: _, ...rest } = ontology.datatypeProperties;
-      save({ ...ontology, datatypeProperties: rest });
+      const datatypeProperties = new Map(ontology.datatypeProperties);
+      datatypeProperties.delete(id);
+      save({ ...ontology, datatypeProperties });
     }
     if (selectedPropertyId === id) { setSelectedPropertyId(null); setSelectedPropertyType(null); }
   };
 
   const handleCreateObjectProperty = (name: string) => {
     if (!ontology) return;
-    const id = name.replace(/\s+/g, "").charAt(0).toLowerCase() + name.replace(/\s+/g, "").slice(1);
-    const prop: OWLObjectProperty = { uri: `${ontology.metadata.namespace || "#"}${id}`, type: "owl:ObjectProperty", "rdfs:label": [{ value: name, lang: "en" }] };
-    save({ ...ontology, objectProperties: { ...ontology.objectProperties, [id]: prop } });
-    setSelectedPropertyId(id);
+    const localName = name.replace(/\s+/g, "").charAt(0).toLowerCase() + name.replace(/\s+/g, "").slice(1);
+    const uri = `${ontology.metadata.id || "#"}${localName}`;
+    const prop: OntologyProperty = { id: uri, propertyType: "object", labels: [{ value: name, lang: "en" }] };
+    const objectProperties = new Map(ontology.objectProperties);
+    objectProperties.set(uri, prop);
+    save({ ...ontology, objectProperties });
+    setSelectedPropertyId(uri);
     setSelectedPropertyType("object");
     setView("property");
   };
 
   const handleCreateDatatypeProperty = (name: string) => {
     if (!ontology) return;
-    const id = name.replace(/\s+/g, "").charAt(0).toLowerCase() + name.replace(/\s+/g, "").slice(1);
-    const prop: OWLDatatypeProperty = { uri: `${ontology.metadata.namespace || "#"}${id}`, type: "owl:DatatypeProperty", "rdfs:label": [{ value: name, lang: "en" }] };
-    save({ ...ontology, datatypeProperties: { ...ontology.datatypeProperties, [id]: prop } });
-    setSelectedPropertyId(id);
+    const localName = name.replace(/\s+/g, "").charAt(0).toLowerCase() + name.replace(/\s+/g, "").slice(1);
+    const uri = `${ontology.metadata.id || "#"}${localName}`;
+    const prop: OntologyProperty = { id: uri, propertyType: "datatype", labels: [{ value: name, lang: "en" }] };
+    const datatypeProperties = new Map(ontology.datatypeProperties);
+    datatypeProperties.set(uri, prop);
+    save({ ...ontology, datatypeProperties });
+    setSelectedPropertyId(uri);
     setSelectedPropertyType("datatype");
     setView("property");
   };
@@ -128,7 +145,7 @@ export function OntologyWorkbench() {
     try {
       const content = await file.text();
       const result = OntologyImporter.import(content, file.name);
-      const id = file.name.replace(/\.(owl|rdf|ttl|xml)$/i, "").replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
+      const id = file.name.replace(/\.(owl|rdf|ttl|xml|jsonld|json)$/i, "").replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
       const existing = typedOntologies.find(([eid]) => eid === id);
       const finalId = existing ? `${id}-${Date.now()}` : id;
       createOntology({ id: finalId, ontology: result.ontology });
@@ -145,10 +162,10 @@ export function OntologyWorkbench() {
 
   const validationResult = ontology ? OntologyValidator.validate(ontology) : null;
 
-  const handleExport = (format: "owl" | "rdf" | "turtle") => {
+  const handleExport = (format: ExportOptions["format"]) => {
     if (!ontology || !selectedOntologyId) return;
     const content = OntologyExporter.export(ontology, { format });
-    OntologyExporter.downloadFile(content, `${selectedOntologyId}.${OntologyExporter.getFileExtension(format)}`, OntologyExporter.getMimeType(format));
+    OntologyExporter.downloadFile(content, `${selectedOntologyId}${OntologyExporter.getFileExtension(format)}`, OntologyExporter.getMimeType(format));
   };
 
   return (
@@ -157,10 +174,10 @@ export function OntologyWorkbench() {
       <div style={{ width: 240, flexShrink: 0, borderRight: `1px solid ${theme.border.default}`, overflowY: "auto", display: "flex", flexDirection: "column" }}>
         <OntologyList ontologies={typedOntologies} selectedId={selectedOntologyId} onSelect={(id) => { setSelectedOntologyId(id); setSelectedClassId(null); setSelectedPropertyId(null); setView("metadata"); }} onCreate={handleCreate} />
         <div style={{ marginTop: "auto", padding: "8px 16px", borderTop: `1px solid ${theme.border.default}` }}>
-          <input ref={fileInputRef} type="file" accept=".owl,.rdf,.ttl,.xml" onChange={handleImportFile} style={{ display: "none" }} />
+          <input ref={fileInputRef} type="file" accept=".owl,.rdf,.ttl,.xml,.jsonld,.json" onChange={handleImportFile} style={{ display: "none" }} />
           <Button size="md" active={false} onClick={() => fileInputRef.current?.click()}
             style={{ width: "100%" }}>
-            Import OWL/Turtle...
+            Import...
           </Button>
           {importError && (
             <div style={{ marginTop: 6, padding: "4px 8px", borderRadius: 4, background: `${theme.palette.red}1a`, color: theme.palette.red, fontSize: sz(9), fontFamily: theme.font.mono, lineHeight: 1.4 }}>
@@ -200,9 +217,10 @@ export function OntologyWorkbench() {
                 color={theme.palette.amber} active={showValidation}>
                 Validate
               </Button>
-              <select onChange={(e) => { if (e.target.value) handleExport(e.target.value as "owl" | "rdf" | "turtle"); e.target.value = ""; }}
+              <select onChange={(e) => { if (e.target.value) handleExport(e.target.value as ExportOptions["format"]); e.target.value = ""; }}
                 style={{ padding: "3px 8px", borderRadius: 4, border: `1px solid ${theme.border.default}`, background: "transparent", color: theme.text.faint, fontSize: sz(9), fontFamily: theme.font.mono, cursor: "pointer" }}>
                 <option value="">Export...</option>
+                <option value="json-ld">JSON-LD</option>
                 <option value="owl">OWL/XML</option>
                 <option value="rdf">RDF/XML</option>
                 <option value="turtle">Turtle</option>
@@ -230,14 +248,14 @@ export function OntologyWorkbench() {
                 <OntologyMetadataEditor metadata={ontology.metadata}
                   onUpdateMetadata={(metadata) => save({ ...ontology, metadata })} />
               )}
-              {view === "class" && selectedClassId && ontology.classes[selectedClassId] && (
-                <OntologyClassEditor classId={selectedClassId} owlClass={ontology.classes[selectedClassId]}
+              {view === "class" && selectedClassId && ontology.classes.get(selectedClassId) && (
+                <OntologyClassEditor classId={selectedClassId} ontologyClass={ontology.classes.get(selectedClassId)!}
                   ontology={ontology} onUpdateClass={handleUpdateClass} onDeleteClass={handleDeleteClass} />
               )}
-              {view === "property" && selectedPropertyId && selectedPropertyType && (
+              {view === "property" && selectedPropertyId && selectedPropertyType && (selectedPropertyType === "object" ? ontology.objectProperties : ontology.datatypeProperties).get(selectedPropertyId) && (
                 <OntologyPropertyEditor
                   propertyId={selectedPropertyId}
-                  property={selectedPropertyType === "object" ? ontology.objectProperties[selectedPropertyId] : ontology.datatypeProperties[selectedPropertyId]}
+                  property={(selectedPropertyType === "object" ? ontology.objectProperties : ontology.datatypeProperties).get(selectedPropertyId)!}
                   propertyType={selectedPropertyType}
                   ontology={ontology}
                   onUpdateProperty={handleUpdateProperty}

@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { OntologyImporter } from "../ontology-importer";
 
+const NS = "http://example.org/onto#";
+
 describe("OntologyImporter", () => {
   describe("format detection", () => {
     it("detects OWL/XML from <?xml declaration", () => {
@@ -30,6 +32,23 @@ describe("OntologyImporter", () => {
       expect(result.ontology).toBeDefined();
     });
 
+    it("detects JSON-LD from array", () => {
+      const jsonld = JSON.stringify([
+        { "@id": `${NS}Person`, "@type": ["http://www.w3.org/2002/07/owl#Class"], "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": "Person", "@language": "en" }] },
+      ]);
+      const result = OntologyImporter.import(jsonld, "test.jsonld");
+      expect(result.ontology.classes.has(`${NS}Person`)).toBe(true);
+    });
+
+    it("detects JSON-LD from @graph object", () => {
+      const jsonld = JSON.stringify({
+        "@context": { "owl": "http://www.w3.org/2002/07/owl#", "rdfs": "http://www.w3.org/2000/01/rdf-schema#" },
+        "@graph": [{ "@id": `${NS}Thing`, "@type": "owl:Class", "rdfs:label": [{ "@value": "Thing" }] }],
+      });
+      const result = OntologyImporter.import(jsonld, "test.jsonld");
+      expect(result.ontology.classes.has(`${NS}Thing`)).toBe(true);
+    });
+
     it("throws on unrecognized format", () => {
       expect(() => OntologyImporter.import("not valid at all", "test.txt")).toThrow("Unrecognized format");
     });
@@ -40,9 +59,9 @@ describe("OntologyImporter", () => {
       const ttl = `@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix : <http://example.org/onto#> .
+@prefix : <${NS}> .
 
-<http://example.org/onto#> rdf:type owl:Ontology ;
+<${NS}> rdf:type owl:Ontology ;
     rdfs:label "Test Ontology"@en .
 
 :Person rdf:type owl:Class ;
@@ -51,22 +70,23 @@ describe("OntologyImporter", () => {
 
       const result = OntologyImporter.import(ttl);
       expect(result.ontology.metadata.name).toBe("Test Ontology");
-      expect(result.ontology.classes).toHaveProperty("Person");
-      expect(result.ontology.classes.Person["rdfs:label"]?.[0].value).toBe("Person");
-      expect(result.ontology.classes.Person["rdfs:comment"]).toBe("A human being");
+      expect(result.ontology.classes.has(`${NS}Person`)).toBe(true);
+      const person = result.ontology.classes.get(`${NS}Person`)!;
+      expect(person.labels[0].value).toBe("Person");
+      expect(person.comment).toBe("A human being");
     });
 
     it("handles 'a' shorthand for rdf:type", () => {
       const ttl = `@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix : <http://example.org/onto#> .
+@prefix : <${NS}> .
 
 :Animal a owl:Class ;
     rdfs:label "Animal"@en .`;
 
       const result = OntologyImporter.import(ttl);
-      expect(result.ontology.classes).toHaveProperty("Animal");
-      expect(result.ontology.classes.Animal["rdfs:label"]?.[0].value).toBe("Animal");
+      expect(result.ontology.classes.has(`${NS}Animal`)).toBe(true);
+      expect(result.ontology.classes.get(`${NS}Animal`)!.labels[0].value).toBe("Animal");
     });
 
     it("handles prefixes with dots in URLs", () => {
@@ -78,14 +98,14 @@ sosa:Sensor a owl:Class ;
     rdfs:label "Sensor"@en .`;
 
       const result = OntologyImporter.import(ttl);
-      expect(result.ontology.classes).toHaveProperty("Sensor");
-      expect(result.ontology.classes.Sensor.uri).toBe("http://www.w3.org/ns/sosa/Sensor");
+      expect(result.ontology.classes.has("http://www.w3.org/ns/sosa/Sensor")).toBe(true);
+      expect(result.ontology.classes.get("http://www.w3.org/ns/sosa/Sensor")!.id).toBe("http://www.w3.org/ns/sosa/Sensor");
     });
 
     it("handles triple-quoted strings", () => {
       const ttl = `@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix : <http://example.org/onto#> .
+@prefix : <${NS}> .
 
 :Thing a owl:Class ;
     rdfs:comment """A multi-line
@@ -93,14 +113,15 @@ description of a thing
 that spans several lines."""@en .`;
 
       const result = OntologyImporter.import(ttl);
-      expect(result.ontology.classes.Thing["rdfs:comment"]).toContain("multi-line");
-      expect(result.ontology.classes.Thing["rdfs:comment"]).toContain("\n");
+      const thing = result.ontology.classes.get(`${NS}Thing`)!;
+      expect(thing.comment).toContain("multi-line");
+      expect(thing.comment).toContain("\n");
     });
 
     it("parses object properties with domain and range", () => {
       const ttl = `@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix : <http://example.org/onto#> .
+@prefix : <${NS}> .
 
 :Person a owl:Class .
 :Organization a owl:Class .
@@ -111,17 +132,17 @@ that spans several lines."""@en .`;
     rdfs:range :Organization .`;
 
       const result = OntologyImporter.import(ttl);
-      expect(result.ontology.objectProperties).toHaveProperty("worksFor");
-      const prop = result.ontology.objectProperties.worksFor;
-      expect(prop["rdfs:domain"]).toBe("Person");
-      expect(prop["rdfs:range"]).toBe("Organization");
+      expect(result.ontology.objectProperties.has(`${NS}worksFor`)).toBe(true);
+      const prop = result.ontology.objectProperties.get(`${NS}worksFor`)!;
+      expect(prop.domain).toBe(`${NS}Person`);
+      expect(prop.range).toBe(`${NS}Organization`);
     });
 
     it("parses datatype properties", () => {
       const ttl = `@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix : <http://example.org/onto#> .
+@prefix : <${NS}> .
 
 :Person a owl:Class .
 
@@ -131,23 +152,24 @@ that spans several lines."""@en .`;
     rdfs:range xsd:string .`;
 
       const result = OntologyImporter.import(ttl);
-      expect(result.ontology.datatypeProperties).toHaveProperty("hasName");
-      const prop = result.ontology.datatypeProperties.hasName;
-      expect(prop["rdfs:domain"]).toBe("Person");
-      expect(prop["rdfs:range"]).toBe("http://www.w3.org/2001/XMLSchema#string");
+      expect(result.ontology.datatypeProperties.has(`${NS}hasName`)).toBe(true);
+      const prop = result.ontology.datatypeProperties.get(`${NS}hasName`)!;
+      expect(prop.domain).toBe(`${NS}Person`);
+      expect(prop.range).toBe("http://www.w3.org/2001/XMLSchema#string");
     });
 
     it("handles subclass relationships", () => {
       const ttl = `@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix : <http://example.org/onto#> .
+@prefix : <${NS}> .
 
 :Animal a owl:Class .
 :Dog a owl:Class ;
     rdfs:subClassOf :Animal .`;
 
       const result = OntologyImporter.import(ttl);
-      expect(result.ontology.classes.Dog["rdfs:subClassOf"]).toBe("Animal");
+      const dog = result.ontology.classes.get(`${NS}Dog`)!;
+      expect(dog.subClassOf).toContain(`${NS}Animal`);
     });
 
     it("handles dcterms metadata fallback", () => {
@@ -166,7 +188,7 @@ that spans several lines."""@en .`;
     it("silently skips non-OWL types", () => {
       const ttl = `@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix : <http://example.org/onto#> .
+@prefix : <${NS}> .
 
 :myAnnotation a owl:AnnotationProperty .
 :myIndividual a owl:NamedIndividual .
@@ -175,18 +197,19 @@ that spans several lines."""@en .`;
 
       const result = OntologyImporter.import(ttl);
       expect(result.warnings).toHaveLength(0);
-      expect(Object.keys(result.ontology.classes)).toEqual(["RealClass"]);
+      expect([...result.ontology.classes.keys()]).toEqual([`${NS}RealClass`]);
     });
 
     it("handles comma-separated objects", () => {
       const ttl = `@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix : <http://example.org/onto#> .
+@prefix : <${NS}> .
 
 :multiProp a owl:ObjectProperty , owl:FunctionalProperty .`;
 
       const result = OntologyImporter.import(ttl);
-      expect(result.ontology.objectProperties.multiProp["owl:functionalProperty"]).toBe(true);
+      const prop = result.ontology.objectProperties.get(`${NS}multiProp`)!;
+      expect(prop.functional).toBe(true);
     });
 
     it("warns when no classes or name found", () => {
@@ -202,7 +225,7 @@ that spans several lines."""@en .`;
   // OWL/XML tests require full XML namespace support (getElementsByTagNameNS)
   // which happy-dom doesn't implement — these run in real browsers only
   describe.skip("OWL/XML parser", () => {
-    const makeOWL = (body: string, ns = "http://example.org/onto#") => `<?xml version="1.0"?>
+    const makeOWL = (body: string, ns = NS) => `<?xml version="1.0"?>
 <rdf:RDF xmlns="${ns}"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
@@ -213,7 +236,7 @@ that spans several lines."""@en .`;
 
     it("parses ontology metadata", () => {
       const xml = makeOWL(`
-        <owl:Ontology rdf:about="http://example.org/onto#">
+        <owl:Ontology rdf:about="${NS}">
           <rdfs:label xml:lang="en">My Ontology</rdfs:label>
           <rdfs:comment xml:lang="en">A test ontology</rdfs:comment>
           <owl:versionInfo>1.0</owl:versionInfo>
@@ -223,69 +246,72 @@ that spans several lines."""@en .`;
       expect(result.ontology.metadata.name).toBe("My Ontology");
       expect(result.ontology.metadata.description).toBe("A test ontology");
       expect(result.ontology.metadata.version).toBe("1.0");
-      expect(result.ontology.metadata.namespace).toBe("http://example.org/onto#");
+      expect(result.ontology.metadata.id).toBe(NS);
     });
 
     it("parses classes with labels and comments", () => {
       const xml = makeOWL(`
-        <owl:Ontology rdf:about="http://example.org/onto#"/>
-        <owl:Class rdf:about="http://example.org/onto#Person">
+        <owl:Ontology rdf:about="${NS}"/>
+        <owl:Class rdf:about="${NS}Person">
           <rdfs:label xml:lang="en">Person</rdfs:label>
           <rdfs:comment>A human being</rdfs:comment>
         </owl:Class>`);
 
       const result = OntologyImporter.import(xml);
-      expect(result.ontology.classes.Person).toBeDefined();
-      expect(result.ontology.classes.Person["rdfs:label"]?.[0].value).toBe("Person");
-      expect(result.ontology.classes.Person["rdfs:comment"]).toBe("A human being");
+      const person = result.ontology.classes.get(`${NS}Person`)!;
+      expect(person).toBeDefined();
+      expect(person.labels[0].value).toBe("Person");
+      expect(person.comment).toBe("A human being");
     });
 
     it("parses subclass relationships", () => {
       const xml = makeOWL(`
-        <owl:Ontology rdf:about="http://example.org/onto#"/>
-        <owl:Class rdf:about="http://example.org/onto#Animal"/>
-        <owl:Class rdf:about="http://example.org/onto#Dog">
-          <rdfs:subClassOf rdf:resource="http://example.org/onto#Animal"/>
+        <owl:Ontology rdf:about="${NS}"/>
+        <owl:Class rdf:about="${NS}Animal"/>
+        <owl:Class rdf:about="${NS}Dog">
+          <rdfs:subClassOf rdf:resource="${NS}Animal"/>
         </owl:Class>`);
 
       const result = OntologyImporter.import(xml);
-      expect(result.ontology.classes.Dog["rdfs:subClassOf"]).toBe("Animal");
+      const dog = result.ontology.classes.get(`${NS}Dog`)!;
+      expect(dog.subClassOf).toContain(`${NS}Animal`);
     });
 
     it("parses object properties", () => {
       const xml = makeOWL(`
-        <owl:Ontology rdf:about="http://example.org/onto#"/>
-        <owl:Class rdf:about="http://example.org/onto#Person"/>
-        <owl:Class rdf:about="http://example.org/onto#Company"/>
-        <owl:ObjectProperty rdf:about="http://example.org/onto#worksFor">
+        <owl:Ontology rdf:about="${NS}"/>
+        <owl:Class rdf:about="${NS}Person"/>
+        <owl:Class rdf:about="${NS}Company"/>
+        <owl:ObjectProperty rdf:about="${NS}worksFor">
           <rdfs:label xml:lang="en">works for</rdfs:label>
-          <rdfs:domain rdf:resource="http://example.org/onto#Person"/>
-          <rdfs:range rdf:resource="http://example.org/onto#Company"/>
+          <rdfs:domain rdf:resource="${NS}Person"/>
+          <rdfs:range rdf:resource="${NS}Company"/>
         </owl:ObjectProperty>`);
 
       const result = OntologyImporter.import(xml);
-      const prop = result.ontology.objectProperties.worksFor;
+      const prop = result.ontology.objectProperties.get(`${NS}worksFor`)!;
       expect(prop).toBeDefined();
-      expect(prop["rdfs:domain"]).toBe("Person");
-      expect(prop["rdfs:range"]).toBe("Company");
+      expect(prop.domain).toBe(`${NS}Person`);
+      expect(prop.range).toBe(`${NS}Company`);
     });
 
     it("parses datatype properties", () => {
       const xml = makeOWL(`
-        <owl:Ontology rdf:about="http://example.org/onto#"/>
-        <owl:DatatypeProperty rdf:about="http://example.org/onto#hasAge">
+        <owl:Ontology rdf:about="${NS}"/>
+        <owl:DatatypeProperty rdf:about="${NS}hasAge">
           <rdfs:label xml:lang="en">has age</rdfs:label>
           <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
         </owl:DatatypeProperty>`);
 
       const result = OntologyImporter.import(xml);
-      expect(result.ontology.datatypeProperties.hasAge).toBeDefined();
-      expect(result.ontology.datatypeProperties.hasAge["rdfs:range"]).toBe("http://www.w3.org/2001/XMLSchema#integer");
+      const prop = result.ontology.datatypeProperties.get(`${NS}hasAge`)!;
+      expect(prop).toBeDefined();
+      expect(prop.range).toBe("http://www.w3.org/2001/XMLSchema#integer");
     });
 
     it("falls back to dcterms metadata", () => {
       const xml = makeOWL(`
-        <owl:Ontology rdf:about="http://example.org/onto#">
+        <owl:Ontology rdf:about="${NS}">
           <dcterms:title>DC Ontology</dcterms:title>
           <dcterms:description>Described via Dublin Core</dcterms:description>
         </owl:Ontology>`);
