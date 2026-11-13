@@ -39,17 +39,17 @@
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
-    "@vitest/ui": "^4.1.10",
+    "@vitest/ui": "^5.1.0",
     "eslint": "^9.39.3",
     "globals": "^16.4.0",
-    "happy-dom": "^20.0.10",
+    "happy-dom": "^21.0.4",
     "jiti": "^2.6.1",
     "prettier": "^3.6.2",
     "rollup": "^4.9.0",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.46.0",
-    "vitest": "^4.1.10"
+    "vitest": "^5.1.0"
   },
   "directories": {
     "doc": "docs"
