@@ -23,6 +23,6 @@
     "@trustgraph/trustkit": "*",
     "@trustgraph/react-provider": "*",
     "@trustgraph/react-state": "*",
-    "vite": "^7.3.1"
+    "vite": "^7.3.8"
   }
 }

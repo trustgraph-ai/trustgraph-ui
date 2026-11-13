@@ -10,6 +10,10 @@
     "lint": "eslint .",
     "test": "npm -w @trustgraph/client -w @trustgraph/react-provider -w @trustgraph/react-state -w @trustgraph/trustkit run test"
   },
+  "overrides": {
+    "fast-uri": "^3.1.9",
+    "source-map-js": "1.2.2"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.6.0",
